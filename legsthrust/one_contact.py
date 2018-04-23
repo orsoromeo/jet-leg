@@ -37,7 +37,7 @@ grav = array([[0.], [0.], [mass*g]])
 r1 = array([0.0, 5.0, 0.0])
 
 # contact surface normal
-n1 = array([[0.0], [1.0], [1.0]])
+n1 = array([[0.0], [0.0], [1.0]])
 
 # projection matrix
 P = array([[1., 0., 0.],
@@ -46,7 +46,7 @@ Pt = np.transpose(P)
 
 ## Definition of the equality constraints
 m_eq = 6
-grav_skew = skew(grav);
+#grav_skew = skew(grav);
 #A2 = vstack([zeros((3,2)), -np.dot(grav_skew,Pt)])
 
 a1 = vstack([+eye(3), skew(r1)])
@@ -58,15 +58,24 @@ C = a1#np.hstack((a1,A2))
 d = vstack([-grav, zeros((3,1))]).reshape((6))
 #print(A)
 #print(t)
-eq = (C, d)  # A * x == t
+C = zeros((6,3))
+d = zeros((6,1)).reshape((6))
+eq = (C, d)  # C * x == d
 
 ## Definition of the inequality constraints
 n1_t = np.transpose(n1)
 
 C = +eye(3) - np.dot(n1, n1_t)
+print(C)
+C = C[0:2,0:3]
+print(C)
 u = mu*n1
-U = np.transpose(u)
+print(u)
+U = vstack([np.transpose(u),
+            np.transpose(u)])
+print(U)
 c1 = C - U
+#print(C)
 c2 = C + U
 #d1 = np.block([[c1, zeros((3,2))],
 #              [zeros((2,3)), +eye(2)]])
@@ -76,10 +85,10 @@ c2 = C + U
 A = vstack([c1, c2])
 #b1 = vstack([zeros((3,1)), +1000.*ones((2,1))])
 #b2 = vstack([zeros((3,1)), +1000.*ones((2,1))])
-b = zeros((6,1)).reshape((6))
-#print(D)
-#print(b)
-ineq = (A, b)  # C * x <= b
+b = zeros((4,1)).reshape((4))
+print(A)
+print(b)
+ineq = (A, b)  # A * x <= b
 
 vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
 pylab.ion()
