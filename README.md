@@ -4,6 +4,15 @@ This library uses common operations over [convex
 polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in order to assess the problem of stability and motion feasibility of legged robots.
 
 ## Installation
+APT dependencies:
+- CVXOPT
+- GLPK
+- Cython
+
+Python dependencies:
+- scipy
+- numpy
+- pycddlib
 
 Install dependencies by:
 ```
