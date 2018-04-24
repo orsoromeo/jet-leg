@@ -30,7 +30,7 @@ E[1, 1] = 1.
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
 
-g = -9.81
+g = -7.5
 mass = 1.
 mu = 0.25
 grav = array([[0.], [0.], [mass*g]])
