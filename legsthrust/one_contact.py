@@ -56,24 +56,25 @@ a1 = vstack([+eye(3), skew(r1)])
 C = a1#np.hstack((a1,A2))
 
 d = vstack([-grav, zeros((3,1))]).reshape((6))
-#print(A)
-#print(t)
-C = zeros((6,3))
+C = zeros((6,6))
 d = zeros((6,1)).reshape((6))
+#print(C)
+#print(d)
+
 eq = (C, d)  # C * x == d
 
 ## Definition of the inequality constraints
 n1_t = np.transpose(n1)
 
 C = +eye(3) - np.dot(n1, n1_t)
-print(C)
+#print(C)
 C = C[0:2,0:3]
-print(C)
+#print(C)
 u = mu*n1
-print(u)
+#print(u)
 U = vstack([np.transpose(u),
             np.transpose(u)])
-print(U)
+#print(U)
 c1 = C - U
 #print(C)
 c2 = C + U
@@ -82,10 +83,12 @@ c2 = C + U
 #d2 = np.block([[c2, zeros((3,2))],
 #              [zeros((2,3)), -eye(2)]])
 
-A = vstack([c1, c2])
+A1 = vstack([c1, c2])
+A = np.block([[A1, zeros((4,3))],
+               [zeros((4,3)), A1]])
 #b1 = vstack([zeros((3,1)), +1000.*ones((2,1))])
 #b2 = vstack([zeros((3,1)), +1000.*ones((2,1))])
-b = zeros((4,1)).reshape((4))
+b = zeros((8,1)).reshape((8))
 print(A)
 print(b)
 ineq = (A, b)  # A * x <= b
