@@ -24,44 +24,49 @@ nc = 3
 n = nc*3
 
 # postions of the 4 contacts
-r3x = 1.
-r3y = -1.
-r3z = 1.
+r1 = array([0.0, 10.0, 0.0])
+r2 = array([-10.0,-10.0, 0.0])
+r3 = array([10.0, -10.0, 0.0])
 
-r1 = array([0.0, 1.0, 1.0])
-r2 = array([-1.0,-1.0, 2.0])
-r3 = array([r3x+0.1, r3y-0.1, r3z+0.1])
+g = -9.81
+mass = 1.
+mu = 1.
+grav = array([[0.], [0.], [g]])
 
+std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/100.
+print ""
+print "standard dev:"
+print std_dev
+noise = np.random.normal(0,std_dev,12)
+print ""
+print "noise:"
+print noise
 # I set the com coordinates to be in the bottom of the state array:
 # x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
 E = zeros((2, n))
 # tau_0x
-E[0, 1] = -r1[2]
-E[0, 2] = +r1[1]
+E[0, 1] = -r1[2]/mass+noise[0]
+E[0, 2] = +r1[1]/mass+noise[1]
 
-E[0, 4] = -r2[2]
-E[0, 5] = +r2[1]
+E[0, 4] = -r2[2]/mass+noise[2]
+E[0, 5] = +r2[1]/mass+noise[3]
 
-E[0, 7] = -r3z
-E[0, 8] = +r3y
+E[0, 7] = -r3[2]/mass+noise[4]
+E[0, 8] = +r3[1]/mass+noise[5]
 
 #tau_0y
-E[1, 0] = +r1[2]
-E[1, 2] = -r1[0]
+E[1, 0] = +r1[2]/mass+noise[6]
+E[1, 2] = -r1[0]/mass+noise[7]
 
-E[1, 3] = +r2[2]
-E[1, 5] = -r2[0]
+E[1, 3] = +r2[2]/mass+noise[8]
+E[1, 5] = -r2[0]/mass+noise[9]
 
-E[1, 6] = +r3z
-E[1, 8] = -r3x
+E[1, 6] = +r3[2]/mass+noise[10]
+E[1, 8] = -r3[0]/mass+noise[11]
 
+print E
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
-
-g = -9.81
-mass = 1.
-mu = 0.15
-grav = array([[0.], [0.], [mass*g]])
 
 # contact surface normals
 n1 = array([[0.0], [0.0], [1.0]])
@@ -131,22 +136,18 @@ vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
 pylab.ion()
 pylab.figure()
 print(vertices)
-#pypoman.plot_polygon(vertices)
+pypoman.plot_polygon(vertices)
 
 # Project Tau_0 into CoM coordinates as in Eq. 53
 # p_g = (n/mg) x tau_0 + z_g*n
-n = array([0., 0., 1./(mass*g)])
-v1, v2, v3 = vertices
-tau_1 = array([v1[0], v1[1], 0.])
-tau_2 = array([v2[0], v2[1], 0.])
-tau_3 = array([v3[0], v3[1], 0.])
-
-p1 = np.cross(n,tau_1)
-p2 = np.cross(n,tau_2)
-p3 = np.cross(n,tau_3)
-#print p1, p2, p3
-points = array([[p1[0], p1[1]],
-                [p2[0], p2[1]],
-                [p3[0], p3[1]]])
+n = array([0., 0., 1./(g)])
+points = []
+for j in range(0,len(vertices)):
+    vx = vertices[j][0]
+    vy = vertices[j][1]
+    tau = array([vx, vy, 0.])
+    p = np.cross(n,tau)
+    points.append([p[0],p[1]])
+    
 print points
 pypoman.plot_polygon(points)
