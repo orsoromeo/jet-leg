@@ -2,7 +2,7 @@
 """
 Created on Sat May  5 14:35:48 2018
 
-@author: romeo
+@author: Romeo Orsolino
 """
 
 import pylab
@@ -36,10 +36,11 @@ print ""
 print "grasp matrix:"
 print getGraspMatrix(r1)
 
-g = -9.81
+g = 9.81
 mass = 1.
-mu = .5
-grav = array([[0.], [0.], [g]])
+
+mu = 1.
+grav = array([[0.], [0.], [-g]])
 
 std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/1000.
 print ""
@@ -53,12 +54,32 @@ print noise
 # x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
 #E = zeros((2, n))
 # tau_0x
+
 G1 = getGraspMatrix(r1)
 G2 = getGraspMatrix(r2)
 G3 = getGraspMatrix(r3)
 Ex = np.hstack((G1[4,:],G2[4,:],G3[4,:])) 
 Ey = np.hstack((G1[3,:],G2[3,:],G3[3,:]))
 E = vstack((Ex, Ey))/(g*mass)
+
+#E[0, 1] = -r1[2]/(mass*g)+noise[0]
+#E[0, 2] = +r1[1]/(mass*g)+noise[1]
+
+#E[0, 4] = -r2[2]/(mass*g)+noise[2]
+#E[0, 5] = +r2[1]/(mass*g)+noise[3]
+
+#E[0, 7] = -r3[2]/(mass*g)+noise[4]
+#E[0, 8] = +r3[1]/(mass*g)+noise[5]
+
+#tau_0y
+#E[1, 0] = +r1[2]/(mass*g)+noise[6]
+#E[1, 2] = -r1[0]/(mass*g)+noise[7]
+
+#E[1, 3] = +r2[2]/(mass*g)+noise[8]
+#E[1, 5] = -r2[0]/(mass*g)+noise[9]
+
+#E[1, 6] = +r3[2]/(mass*g)+noise[10]
+#E[1, 8] = -r3[0]/(mass*g)+noise[11]
 
 print ""
 print E
