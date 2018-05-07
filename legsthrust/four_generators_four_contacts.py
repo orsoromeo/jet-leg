@@ -95,6 +95,7 @@ A1 = np.hstack((a1, a2, a3, a4))
 #A = np.hstack((A1,A2))
 A = A1
 t = vstack([-grav, zeros((3,1))]).reshape((6))
+print A, t
 eq = (A, t)  # A * x == t
 
 ## Definition of the inequality constraints
