@@ -28,10 +28,10 @@ r1 = array([0.0, 10.0, 0.0])
 r2 = array([-10.0,-10.0, 0.0])
 r3 = array([10.0, -10.0, 0.0])
 
-g = -9.81
+g = 9.81
 mass = 1.
 mu = 1.
-grav = array([[0.], [0.], [g]])
+grav = array([[0.], [0.], [-g]])
 
 std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/100.
 print ""
@@ -45,24 +45,24 @@ print noise
 # x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
 E = zeros((2, n))
 # tau_0x
-E[0, 1] = -r1[2]/mass+noise[0]
-E[0, 2] = +r1[1]/mass+noise[1]
+E[0, 1] = -r1[2]/(mass*g)+noise[0]
+E[0, 2] = +r1[1]/(mass*g)+noise[1]
 
-E[0, 4] = -r2[2]/mass+noise[2]
-E[0, 5] = +r2[1]/mass+noise[3]
+E[0, 4] = -r2[2]/(mass*g)+noise[2]
+E[0, 5] = +r2[1]/(mass*g)+noise[3]
 
-E[0, 7] = -r3[2]/mass+noise[4]
-E[0, 8] = +r3[1]/mass+noise[5]
+E[0, 7] = -r3[2]/(mass*g)+noise[4]
+E[0, 8] = +r3[1]/(mass*g)+noise[5]
 
 #tau_0y
-E[1, 0] = +r1[2]/mass+noise[6]
-E[1, 2] = -r1[0]/mass+noise[7]
+E[1, 0] = +r1[2]/(mass*g)+noise[6]
+E[1, 2] = -r1[0]/(mass*g)+noise[7]
 
-E[1, 3] = +r2[2]/mass+noise[8]
-E[1, 5] = -r2[0]/mass+noise[9]
+E[1, 3] = +r2[2]/(mass*g)+noise[8]
+E[1, 5] = -r2[0]/(mass*g)+noise[9]
 
-E[1, 6] = +r3[2]/mass+noise[10]
-E[1, 8] = -r3[0]/mass+noise[11]
+E[1, 6] = +r3[2]/(mass*g)+noise[10]
+E[1, 8] = -r3[0]/(mass*g)+noise[11]
 
 print E
 f = zeros(2)
