@@ -1,7 +1,7 @@
 # Python library for equilibrium of legged robots
 
 This library uses common operations over [convex
-polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in order to assess the problem of stability and motion feasibility of legged robots.
+polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions in order to assess the problem of stability and motion feasibility of legged robots.
 
 ## Installation
 APT dependencies:
