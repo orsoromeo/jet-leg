@@ -65,39 +65,40 @@ h = matrix(np.zeros((m_ineq,1)).reshape(m_ineq)) #matrix([0.0,0.0])
 print G, h
 print np.size(G,0), np.size(G,1)
 
-# Equality constraints
-com = np.array([-20.0, -10.0, 0.0])
-print com, grav
-torque = -np.cross(com, np.transpose(grav))
-print 'torque: ', torque
-A = np.zeros((6,0))
-for j in range(0,nc):
-    r = contacts[j,:]
-    GraspMat = getGraspMatrix(r)
-    A = np.hstack((A, GraspMat[:,0:3]))
-A = matrix(A)
-b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
-#A = matrix([1.0, 1.0], (1,2))
-#b = matrix(1.0)
-print A, b
-print np.size(A,0), np.size(A,1)
-
-sol=solvers.lp(p, G, h, A, b)
-x = sol['x']
-print sol
-status = sol['status']
-print status
-print x
-print(sol['primal objective'])
-
 feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
-print len(com), len(feasible_points)
-if status == 'optimal':
-    feasible_points = np.vstack([feasible_points,com])
-else:
-    unfeasible_points = np.vstack([unfeasible_points,com])
-   
+# Equality constraints
+for com_x in range(-15,15):
+    for com_y in range(-15,15):
+        com = np.array([com_x, com_y, 0.0])
+        torque = -np.cross(com, np.transpose(grav))
+        A = np.zeros((6,0))
+        for j in range(0,nc):
+            r = contacts[j,:]
+            GraspMat = getGraspMatrix(r)
+            A = np.hstack((A, GraspMat[:,0:3]))
+        A = matrix(A)
+        b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
+        #A = matrix([1.0, 1.0], (1,2))
+        #b = matrix(1.0)
+        print A, b
+        print np.size(A,0), np.size(A,1)
+
+        sol=solvers.lp(p, G, h, A, b)
+        x = sol['x']
+        print sol
+        status = sol['status']
+        print status
+        print x
+        print(sol['primal objective'])
+
+        if status == 'optimal':
+            feasible_points = np.vstack([feasible_points,com])
+        else:
+            unfeasible_points = np.vstack([unfeasible_points,com])
+        print 'iteration ', com_x
+
+# Plotting the results   
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(contacts[:,0], contacts[:,1], contacts[:,2],c='b',s=70)
