@@ -46,7 +46,7 @@ def linear_cone_constraint(n, mu):
 def actuation_polygon_constraint():
     dx = 100
     dy = 100
-    dz = 700
+    dz = 600
     constraint = np.vstack([np.eye(3), -np.eye(3)])
     print constraint
     known_term = np.array([[dx],[dy],[dz],[dx],[dy],[dz]])
@@ -57,7 +57,7 @@ def normalize(n):
     n = np.true_divide(n, norm1)
     return n
 
-nc = 3;
+nc = 4;
 g = 9.81
 mass = 100
 grav = np.array([[0.], [0.], [-g*mass]])
@@ -102,8 +102,18 @@ for j in range(0,nc):
                   [np.zeros((np.size(c,0),np.size(cons2,1))), c]])
     h_vec2 = np.vstack([h_vec2, h_term])
 
-cons = np.vstack([cons1, cons2])
-h_vec = np.vstack([h_vec1, h_vec2])
+constraint_mode = 'friction_and_actuation'
+
+if constraint_mode == 'only_friction':
+    cons = cons1
+    h_vec = h_vec1
+elif constraint_mode == 'only_actuation':
+    cons = cons2
+    h_vec = h_vec2
+elif constraint_mode == 'friction_and_actuation':
+    cons = np.vstack([cons1, cons2])
+    h_vec = np.vstack([h_vec1, h_vec2])
+
 # Inequality constraints
 m_ineq = np.size(cons,0)
 #A=A.astype(double) 
@@ -117,7 +127,7 @@ feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 # Equality constraints
 for com_x in np.arange(-25,25,1.):
-    for com_y in np.arange(-20,15,1.):
+    for com_y in np.arange(-35,15,1.):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
