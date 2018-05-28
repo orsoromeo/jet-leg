@@ -44,3 +44,13 @@ class Plotter:
                          np.hstack([vy[0],vy[3],vy[7],vy[4],vy[0]]),
                          np.hstack([vz[0],vz[3],vz[7],vz[4],vz[0]])])
       self.plot_facet(ax,face6)
+      
+  def plot_actuation_polygon(self, ax, vertices, foot_pos):
+      scaling_factor = 3
+      for j in range(0,8):
+          vertices[0,j] /= scaling_factor
+          vertices[1,j] /= scaling_factor
+          vertices[2,j] /= scaling_factor
+          vertices[:,j] += np.transpose(foot_pos)
+          
+      self.plot_cube(ax,vertices)

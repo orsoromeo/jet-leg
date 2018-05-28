@@ -8,11 +8,12 @@ import cvxopt
 from cvxopt import matrix, solvers
 import numpy as np
 from kinematics import Kinematics
+from constraints import Constraints
 # for plotting
 from plotting_tools import Plotter
 from arrow3D import Arrow3D
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
 
 def skew(v):
     if len(v) == 4: v = v[:3]/v[3]
@@ -24,23 +25,6 @@ def getGraspMatrix(r):
                    [skew(r), np.eye(3)]])
     return G
     
-def linear_cone_constraint(n, mu):
-    m = np.eye(3) - np.dot(n,np.transpose(n))
-    u = np.dot(n,mu)
-    #cone_constraints = m - np.transpose(u)
-    cone_constraints = np.vstack((m - np.transpose(u), - m - np.transpose(u)))
-    known_term = np.zeros((6,1))
-    return cone_constraints, known_term
-    
-def actuation_polygon_constraint():
-    dx = 200
-    dy = 200
-    dz = 700
-    constraint = np.vstack([np.eye(3), -np.eye(3)])
-    print constraint
-    known_term = np.array([[dx],[dy],[dz],[dx],[dy],[dz]])
-    return constraint, known_term
-    
 def normalize(n):
     norm1 = np.linalg.norm(n)
     n = np.true_divide(n, norm1)
@@ -51,11 +35,11 @@ g = 9.81
 mass = 100
 grav = np.array([[0.], [0.], [-g*mass]])
 # contact points
-r1 = np.array([0.3, 0.2, -.5])
-r2 = np.array([0.3, -0.2, -.5])
-r3 = np.array([-0.3, 0.2, -.5])
-r4 = np.array([-0.3, -0.2, -.5])
-contacts = np.vstack((r1, r2, r3, r4))
+LF_foot = np.array([0.3, 0.2, -.5])
+RF_foot = np.array([0.3, -0.2, -.5])
+LH_foot = np.array([-0.3, 0.2, -.5])
+RH_foot = np.array([-0.3, -0.2, -.5])
+contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 # contact surface normals
 n1 = np.array([[0.0], [0.0], [1.0]])
 n1 = normalize(n1)
@@ -67,7 +51,6 @@ n4 = np.array([[0.0], [0.0], [1.0]])
 n4 = normalize(n4)
 
 normals = np.hstack((n1, n2, n3, n4))
-
 
 friction_coeff = 1.0
 
@@ -81,12 +64,14 @@ cons1 = np.zeros((0,0))
 h_vec1 = np.zeros((0,1))
 cons2 = np.zeros((0,0))
 h_vec2 = np.zeros((0,1))
+
+constraint = Constraints()
 for j in range(0,nc):
-    c, h_term = linear_cone_constraint(normals[:,j],friction_coeff)
+    c, h_term = constraint.linear_cone(normals[:,j],friction_coeff)
     cons1 = np.block([[cons1, np.zeros((np.size(cons1,0),np.size(c,1)))],
                   [np.zeros((np.size(c,0),np.size(cons1,1))), c]])
     h_vec1 = np.vstack([h_vec1, h_term])
-    c, h_term = actuation_polygon_constraint()
+    c, h_term = constraint.zonotope()
     cons2 = np.block([[cons2, np.zeros((np.size(cons2,0),np.size(c,1)))],
                   [np.zeros((np.size(c,0),np.size(cons2,1))), c]])
     h_vec2 = np.vstack([h_vec2, h_term])
@@ -159,20 +144,18 @@ if np.size(feasible_points,0) != 0:
 if np.size(unfeasible_points,0) != 0:
     ax.scatter(unfeasible_points[:,0], unfeasible_points[:,1], unfeasible_points[:,2],c='r',s=50)
 
-
-
 vertices = np.array([[1, 1, -1, -1, 1, 1, -1, -1],
                      [1.1, -1.1, -1, 1, 1, -1, -1, 1],
                      [1, 1, 1, 1, -1, -1, -1, -1]])
 
 vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
-print vertices_xz
 actuation_polygon_xy = np.matmul(np.transpose(J_LF),vertices_xz) 
-print actuation_polygon_xy
-actuation_polygon = np.vstack([actuation_polygon_xy[0,:],vertices[1,:],actuation_polygon_xy[1,:]])
+actuation_polygon_LF = np.vstack([actuation_polygon_xy[0,:],
+                               vertices[1,:],
+                               actuation_polygon_xy[1,:]])
 
 plotter = Plotter()                    
-plotter.plot_cube(ax,actuation_polygon)
+plotter.plot_actuation_polygon(ax, actuation_polygon_LF, LF_foot)
 
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')
