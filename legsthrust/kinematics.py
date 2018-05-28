@@ -8,64 +8,157 @@ import numpy as np
 
 class Kinematics:
         
-    def computeIK(self, x, x_dot, z, z_dot):
+    def compute_xy_IK(self, x, x_dot, z, z_dot):
         footPosDes = np.vstack([x,z])
         BASE2HAA_offsets = np.array([[0.3735,0.3735,-0.3735,-0.3735],
                                  [-.08, -.08, -.08, -.08]]);
         upperLegLength = 0.35;
         lowerLegLength = 0.341;
         footPosHAA = np.subtract(footPosDes, BASE2HAA_offsets)
+
         haa2hfeLength = 0.045;
         M_PI = 3.1415;
     
-        sz = np.size(x,0);
+        sz = np.size(x,0)
         # 1 -> LF
         # 2 -> RF
         # 3 -> LH
         # 4 -> RH
-        q = np.zeros(12,sz);
-        q_dot = np.zeros(12,sz);
+        q = np.zeros((12,1))
+        q_dot = np.zeros((12,1))
     
         # remove the haa2hfe offset and rotate in the sagittal plane of the leg
-        hfe2foot = np.sqrt(footPosHAA(1)^2 + footPosHAA(2)^2) - haa2hfeLength;
+        hfe2foot = np.sqrt(np.square(footPosHAA[0]) + np.square(footPosHAA[1])) - haa2hfeLength;
         # add the x component
         # hfe2foot = sqrt(hfe2foot * hfe2foot);
         # HAA joints
         q[0] = -np.arctan2(footPosHAA[0,0],-footPosHAA[1,0]); # LF HAA
-        q[6] = -np.arctan2(footPosHAA(0,1),-footPosHAA(1,1)); # LH HAA
-        q[3] = -np.arctan2(-footPosHAA(0,2),-footPosHAA(1,2));# RF HAA
-        q[9] = -np.arctan2(-footPosHAA(0,3),-footPosHAA(1,3));# RH HAA
+        q[6] = -np.arctan2(footPosHAA[0,1],-footPosHAA[1,1]); # LH HAA
+        q[3] = -np.arctan2(-footPosHAA[0,2],-footPosHAA[1,2]);# RF HAA
+        q[9] = -np.arctan2(-footPosHAA[0,3],-footPosHAA[1,3]);# RH HAA
     
         # HFE and KFE joints (use cosine law)
         cos_arg = (upperLegLength * upperLegLength + lowerLegLength * lowerLegLength - hfe2foot * hfe2foot) / (2 * upperLegLength * lowerLegLength);
-        q[3] = - M_PI + acos(cos_arg); # LF KFE
-        q[6] = - M_PI + acos(cos_arg); # RF KFE
-        cos_arg = (upperLegLength^2 + hfe2foot^2 - lowerLegLength^2) / (2 * upperLegLength * hfe2foot) ;
-        sin_arg = footPosHAA(1) / hfe2foot; #it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)	
-        q[2] = -asin(sin_arg) + acos(cos_arg);# LF HFE
-        q[5] = -asin(sin_arg) + acos(cos_arg);# RF HFE
+        q[2] = - M_PI + np.arccos(cos_arg[0]); # LF KFE
+        q[5] = - M_PI + np.arccos(cos_arg[0]); # RF KFE
+        cos_arg = (np.square(upperLegLength) + np.square(hfe2foot) - np.square(lowerLegLength)) / (2 * upperLegLength * hfe2foot);
+        sin_arg = footPosHAA[0] / hfe2foot; #it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)	
+        q[1] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# LF HFE
+        q[4] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# RF HFE
     
         cos_arg = (upperLegLength * upperLegLength + lowerLegLength * lowerLegLength - hfe2foot * hfe2foot)/ (2 * upperLegLength * lowerLegLength);
-        q[9]= + M_PI- acos(cos_arg); # LH KFE
-        q[12] = + M_PI- acos(cos_arg); # RH KFE
+        q[8]= + M_PI- np.arccos(cos_arg[0]); # LH KFE
+        q[11] = + M_PI - np.arccos(cos_arg[0]); # RH KFE
         cos_arg = (upperLegLength * upperLegLength + hfe2foot * hfe2foot- lowerLegLength * lowerLegLength) / (2 * upperLegLength * hfe2foot);
-        sin_arg = footPosHAA(1,3) / hfe2foot; # it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)
-        q[8] = -asin(sin_arg)- acos(cos_arg);# LH HFE
-        q[11] = -asin(sin_arg)- acos(cos_arg);# RH HFE
+        sin_arg = footPosHAA[0,2] / hfe2foot; # it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)
+        q[7] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# LH HFE
+        q[10] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# RH HFE
     
         # compute joint velocities updating the jac with the computed position
         l1 = upperLegLength;
         l2 = lowerLegLength;
-        
-        Jac_LF = np.array([[-l1*cos(q(2)) - l2 * cos(q(2) + q(3)), - l2 * cos(q(2) + q(3))],
-                            [l1*sin(q(2)) + l2 * sin(q(2)+q(3)),  l2 * sin(q(2)+q(3))]]);
-        Jac_RF = np.array([[l1*cos(q(5)) + l2 * cos(q(5)+q(6)),  l2 * cos(q(5) + q(6))],
-                 [l1*sin(q(5)) + l2 * sin(q(5)+q(6)),  l2 * sin(q(5) + q(6))]]);
-         
-        Jac_LH = np.array([[-l1*cos(q(8)) - l2 * cos(q(8)+q(9)),  -l2 * cos(q(8)+q(9))],
-                  [l1*sin(q(8)) + l2 * sin(q(8)+q(9)),  l2 * sin(q(8)+q(9))]]);
-        Jac_RH = np.array([[l1*cos(q(11)) + l2 * cos(q(11)+q(12)),  l2 * cos(q(11)+q(12))],
-                  [l1*sin(q(11)) + l2 * sin(q(11)+q(12)),  l2 * sin(q(11)+q(12))]]);
-        
+        Jac_LF = np.array([[np.asscalar(-l1*np.cos([q[1]]) - l2 * np.cos([q[1] + q[2]])),np.asscalar( - l2 * np.cos([q[1] + q[2]]))],
+                            [np.asscalar(l1*np.sin([q[1]]) + l2 * np.sin([q[1] + q[2]])),np.asscalar(   l2 * np.sin([q[1] + q[2]]))]])
+        #Jac_LF = np.array([[np.asscalar(-l1*np.cos([q[1]])+ l2 * np.cos(q[4]+q[5])),0],[0,0]])
+        Jac_RF = np.array([[np.asscalar(l1*np.cos(q[4]) + l2 * np.cos(q[4]+q[5])), np.asscalar( l2 * np.cos(q[4] + q[4]))],
+                            [np.asscalar(l1*np.sin(q[4]) + l2 * np.sin(q[4]+q[5])), np.asscalar( l2 * np.sin(q[4] + q[4]))]])
+                            
+        Jac_LH = np.array([[np.asscalar(-l1*np.cos(q[7]) - l2 * np.cos(q[7]+q[8])), np.asscalar( -l2 * np.cos(q[7] + q[8]))],
+                            [np.asscalar(l1*np.sin(q[7]) + l2 * np.sin(q[7]+q[8])), np.asscalar(  l2 * np.sin(q[7] + q[8]))]])
+                            
+        Jac_RH = np.array([[np.asscalar(l1*np.cos(q[10]) + l2 * np.cos(q[10]+q[11])), np.asscalar( l2 * np.cos(q[10] + q[11]))],
+                           [np.asscalar(l1*np.sin(q[10]) + l2 * np.sin(q[10]+q[11])), np.asscalar( l2 * np.sin(q[10] + q[11]))]])     
+
         footVelDes = np.vstack([x_dot, z_dot]); 
-        return q, Jac_LF, Jac_RF, Jac_LH, Jac_RH
+        #print footVelDes
+        #q_dot[1:2] = np.linalg.inv(Jac_LF)*footVelDes;
+        #q_dot[4:5] = np.linalg.inv(Jac_RF)*footVelDes;
+        #q_dot[7:8] = np.linalg.inv(Jac_LH)*footVelDes;
+        #q_dot[10:11] = np.linalg.inv(Jac_RH)*footVelDes;   
+        return q, q_dot, Jac_LF, Jac_RF, Jac_LH, Jac_RH
+    
+    def computed_IK_HyQ(self, x, x_dot, z, z_dot):
+       # s__q_LF_HAA = sin( q(1));
+       # s__q_LF_HFE = sin( q(2));
+       # s__q_LF_KFE = sin( q(3));
+       # c__q_LF_HAA = cos( q(1));
+       # c__q_LF_HFE = cos( q(2));
+       # c__q_LF_KFE = cos( q(3));
+       # 
+       # fr_trunk_J_LF_foot(2,2) =  c__q_LF_HAA;
+       # fr_trunk_J_LF_foot(2,3) =  c__q_LF_HAA;
+       # fr_trunk_J_LF_foot(3,2) = - s__q_LF_HAA;
+       # fr_trunk_J_LF_foot(3,3) = - s__q_LF_HAA;
+       # fr_trunk_J_LF_foot(4,2) = ( 0.341 *  s__q_LF_HFE *  s__q_LF_KFE) - ( 0.341 *  c__q_LF_HFE *  c__q_LF_KFE) - ( 0.35 *  c__q_LF_HFE);
+       # fr_trunk_J_LF_foot(4,3) = ( 0.341 *  s__q_LF_HFE *  s__q_LF_KFE) - ( 0.341 *  c__q_LF_HFE *  c__q_LF_KFE);
+       # fr_trunk_J_LF_foot(5,1) = ( 0.341 *  c__q_LF_HAA *  s__q_LF_HFE *  s__q_LF_KFE) - ( 0.341 *  c__q_LF_HAA *  c__q_LF_HFE *  c__q_LF_KFE) - ( 0.35 *  c__q_LF_HAA *  c__q_LF_HFE) - ( 0.08 *  c__q_LF_HAA);
+       # fr_trunk_J_LF_foot(5,2) = ( 0.341 *  s__q_LF_HAA *  c__q_LF_HFE *  s__q_LF_KFE) + ( 0.341 *  s__q_LF_HAA *  s__q_LF_HFE *  c__q_LF_KFE) + ( 0.35 *  s__q_LF_HAA *  s__q_LF_HFE);
+       # fr_trunk_J_LF_foot(5,3) = ( 0.341 *  s__q_LF_HAA *  c__q_LF_HFE *  s__q_LF_KFE) + ( 0.341 *  s__q_LF_HAA *  s__q_LF_HFE *  c__q_LF_KFE);
+       # fr_trunk_J_LF_foot(6,1) = (- 0.341 *  s__q_LF_HAA *  s__q_LF_HFE *  s__q_LF_KFE) + ( 0.341 *  s__q_LF_HAA *  c__q_LF_HFE *  c__q_LF_KFE) + ( 0.35 *  s__q_LF_HAA *  c__q_LF_HFE) + ( 0.08 *  s__q_LF_HAA);
+       # fr_trunk_J_LF_foot(6,2) = ( 0.341 *  c__q_LF_HAA *  c__q_LF_HFE *  s__q_LF_KFE) + ( 0.341 *  c__q_LF_HAA *  s__q_LF_HFE *  c__q_LF_KFE) + ( 0.35 *  c__q_LF_HAA *  s__q_LF_HFE);
+       # fr_trunk_J_LF_foot(6,3) = ( 0.341 *  c__q_LF_HAA *  c__q_LF_HFE *  s__q_LF_KFE) + ( 0.341 *  c__q_LF_HAA *  s__q_LF_HFE *  c__q_LF_KFE);
+       # 
+       # 
+       # s__q_RF_HAA = sin( q(4));
+       # s__q_RF_HFE = sin( q(5));
+       # s__q_RF_KFE = sin( q(6));
+       # c__q_RF_HAA = cos( q(4));
+       # c__q_RF_HFE = cos( q(5));
+       # c__q_RF_KFE = cos( q(6));
+       # 
+       # fr_trunk_J_RF_foot(2,2) =  c__q_RF_HAA;
+       # fr_trunk_J_RF_foot(2,3) =  c__q_RF_HAA;
+       # fr_trunk_J_RF_foot(3,2) =  s__q_RF_HAA;
+       # fr_trunk_J_RF_foot(3,3) =  s__q_RF_HAA;
+       # fr_trunk_J_RF_foot(4,2) = ( 0.341 *  s__q_RF_HFE *  s__q_RF_KFE) - ( 0.341 *  c__q_RF_HFE *  c__q_RF_KFE) - ( 0.35 *  c__q_RF_HFE);
+       # fr_trunk_J_RF_foot(4,3) = ( 0.341 *  s__q_RF_HFE *  s__q_RF_KFE) - ( 0.341 *  c__q_RF_HFE *  c__q_RF_KFE);
+       # fr_trunk_J_RF_foot(5,1) = (- 0.341 *  c__q_RF_HAA *  s__q_RF_HFE *  s__q_RF_KFE) + ( 0.341 *  c__q_RF_HAA *  c__q_RF_HFE *  c__q_RF_KFE) + ( 0.35 *  c__q_RF_HAA *  c__q_RF_HFE) + ( 0.08 *  c__q_RF_HAA);
+       # fr_trunk_J_RF_foot(5,2) = (- 0.341 *  s__q_RF_HAA *  c__q_RF_HFE *  s__q_RF_KFE) - ( 0.341 *  s__q_RF_HAA *  s__q_RF_HFE *  c__q_RF_KFE) - ( 0.35 *  s__q_RF_HAA *  s__q_RF_HFE);
+       # fr_trunk_J_RF_foot(5,3) = (- 0.341 *  s__q_RF_HAA *  c__q_RF_HFE *  s__q_RF_KFE) - ( 0.341 *  s__q_RF_HAA *  s__q_RF_HFE *  c__q_RF_KFE);
+       # fr_trunk_J_RF_foot(6,1) = (- 0.341 *  s__q_RF_HAA *  s__q_RF_HFE *  s__q_RF_KFE) + ( 0.341 *  s__q_RF_HAA *  c__q_RF_HFE *  c__q_RF_KFE) + ( 0.35 *  s__q_RF_HAA *  c__q_RF_HFE) + ( 0.08 *  s__q_RF_HAA);
+       # fr_trunk_J_RF_foot(6,2) = ( 0.341 *  c__q_RF_HAA *  c__q_RF_HFE *  s__q_RF_KFE) + ( 0.341 *  c__q_RF_HAA *  s__q_RF_HFE *  c__q_RF_KFE) + ( 0.35 *  c__q_RF_HAA *  s__q_RF_HFE);
+       # fr_trunk_J_RF_foot(6,3) = ( 0.341 *  c__q_RF_HAA *  c__q_RF_HFE *  s__q_RF_KFE) + ( 0.341 *  c__q_RF_HAA *  s__q_RF_HFE *  c__q_RF_KFE);
+       # 
+       # 
+       # s__q_LH_HAA = sin( q(7));
+       # s__q_LH_HFE = sin( q(8));
+       # s__q_LH_KFE = sin( q(9));
+       # c__q_LH_HAA = cos( q(7));
+       # c__q_LH_HFE = cos( q(8));
+       # c__q_LH_KFE = cos( q(9));
+       # 
+       # fr_trunk_J_LH_foot(2,2) =  c__q_LH_HAA;
+       # fr_trunk_J_LH_foot(2,3) =  c__q_LH_HAA;
+       # fr_trunk_J_LH_foot(3,2) = - s__q_LH_HAA;
+       # fr_trunk_J_LH_foot(3,3) = - s__q_LH_HAA;
+       # fr_trunk_J_LH_foot(4,2) = ( 0.341 *  s__q_LH_HFE *  s__q_LH_KFE) - ( 0.341 *  c__q_LH_HFE *  c__q_LH_KFE) - ( 0.35 *  c__q_LH_HFE);
+       # fr_trunk_J_LH_foot(4,3) = ( 0.341 *  s__q_LH_HFE *  s__q_LH_KFE) - ( 0.341 *  c__q_LH_HFE *  c__q_LH_KFE);
+       # fr_trunk_J_LH_foot(5,1) = ( 0.341 *  c__q_LH_HAA *  s__q_LH_HFE *  s__q_LH_KFE) - ( 0.341 *  c__q_LH_HAA *  c__q_LH_HFE *  c__q_LH_KFE) - ( 0.35 *  c__q_LH_HAA *  c__q_LH_HFE) - ( 0.08 *  c__q_LH_HAA);
+       # fr_trunk_J_LH_foot(5,2) = ( 0.341 *  s__q_LH_HAA *  c__q_LH_HFE *  s__q_LH_KFE) + ( 0.341 *  s__q_LH_HAA *  s__q_LH_HFE *  c__q_LH_KFE) + ( 0.35 *  s__q_LH_HAA *  s__q_LH_HFE);
+       # fr_trunk_J_LH_foot(5,3) = ( 0.341 *  s__q_LH_HAA *  c__q_LH_HFE *  s__q_LH_KFE) + ( 0.341 *  s__q_LH_HAA *  s__q_LH_HFE *  c__q_LH_KFE);
+       # fr_trunk_J_LH_foot(6,1) = (- 0.341 *  s__q_LH_HAA *  s__q_LH_HFE *  s__q_LH_KFE) + ( 0.341 *  s__q_LH_HAA *  c__q_LH_HFE *  c__q_LH_KFE) + ( 0.35 *  s__q_LH_HAA *  c__q_LH_HFE) + ( 0.08 *  s__q_LH_HAA);
+       # fr_trunk_J_LH_foot(6,2) = ( 0.341 *  c__q_LH_HAA *  c__q_LH_HFE *  s__q_LH_KFE) + ( 0.341 *  c__q_LH_HAA *  s__q_LH_HFE *  c__q_LH_KFE) + ( 0.35 *  c__q_LH_HAA *  s__q_LH_HFE);
+       # fr_trunk_J_LH_foot(6,3) = ( 0.341 *  c__q_LH_HAA *  c__q_LH_HFE *  s__q_LH_KFE) + ( 0.341 *  c__q_LH_HAA *  s__q_LH_HFE *  c__q_LH_KFE);
+       # 
+       # 
+       # s__q_RH_HAA = sin( q(10));
+       # s__q_RH_HFE = sin( q(11));
+       # s__q_RH_KFE = sin( q(12));
+       # c__q_RH_HAA = cos( q(10));
+       # c__q_RH_HFE = cos( q(11));
+       # c__q_RH_KFE = cos( q(12));
+       # 
+       # fr_trunk_J_RH_foot(2,2) =  c__q_RH_HAA;
+       # fr_trunk_J_RH_foot(2,3) =  c__q_RH_HAA;
+       # fr_trunk_J_RH_foot(3,2) =  s__q_RH_HAA;
+       # fr_trunk_J_RH_foot(3,3) =  s__q_RH_HAA;
+       # fr_trunk_J_RH_foot(4,2) = ( 0.341 *  s__q_RH_HFE *  s__q_RH_KFE) - ( 0.341 *  c__q_RH_HFE *  c__q_RH_KFE) - ( 0.35 *  c__q_RH_HFE);
+       # fr_trunk_J_RH_foot(4,3) = ( 0.341 *  s__q_RH_HFE *  s__q_RH_KFE) - ( 0.341 *  c__q_RH_HFE *  c__q_RH_KFE);
+       # fr_trunk_J_RH_foot(5,1) = (- 0.341 *  c__q_RH_HAA *  s__q_RH_HFE *  s__q_RH_KFE) + ( 0.341 *  c__q_RH_HAA *  c__q_RH_HFE *  c__q_RH_KFE) + ( 0.35 *  c__q_RH_HAA *  c__q_RH_HFE) + ( 0.08 *  c__q_RH_HAA);
+       # fr_trunk_J_RH_foot(5,2) = (- 0.341 *  s__q_RH_HAA *  c__q_RH_HFE *  s__q_RH_KFE) - ( 0.341 *  s__q_RH_HAA *  s__q_RH_HFE *  c__q_RH_KFE) - ( 0.35 *  s__q_RH_HAA *  s__q_RH_HFE);
+       # fr_trunk_J_RH_foot(5,3) = (- 0.341 *  s__q_RH_HAA *  c__q_RH_HFE *  s__q_RH_KFE) - ( 0.341 *  s__q_RH_HAA *  s__q_RH_HFE *  c__q_RH_KFE);
+       # fr_trunk_J_RH_foot(6,1) = (- 0.341 *  s__q_RH_HAA *  s__q_RH_HFE *  s__q_RH_KFE) + ( 0.341 *  s__q_RH_HAA *  c__q_RH_HFE *  c__q_RH_KFE) + ( 0.35 *  s__q_RH_HAA *  c__q_RH_HFE) + ( 0.08 *  s__q_RH_HAA);
+       # fr_trunk_J_RH_foot(6,2) = ( 0.341 *  c__q_RH_HAA *  c__q_RH_HFE *  s__q_RH_KFE) + ( 0.341 *  c__q_RH_HAA *  s__q_RH_HFE *  c__q_RH_KFE) + ( 0.35 *  c__q_RH_HAA *  s__q_RH_HFE);
+       # fr_trunk_J_RH_foot(6,3) = ( 0.341 *  c__q_RH_HAA *  c__q_RH_HFE *  s__q_RH_KFE) + ( 0.341 *  c__q_RH_HAA *  s__q_RH_HFE *  c__q_RH_KFE);
+        aaa = 0
+        return aaa

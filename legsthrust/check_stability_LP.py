@@ -58,15 +58,15 @@ def plot_cube(vertices):
     face2z = np.hstack([vz[4:8],vz[4]])     
     surf = ax.plot_wireframe(face2x, face2y, face2z, alpha = 1.0)
         
-nc = 4;
+nc = 3;
 g = 9.81
 mass = 100
 grav = np.array([[0.], [0.], [-g*mass]])
 # contact points
-r1 = np.array([0.0, 10.0, 2.0])
-r2 = np.array([10.0, -10.0, 1.5])
-r3 = np.array([-10.0, -10.0, 1.0])
-r4 = np.array([0.0, -20.0, 1.0])
+r1 = np.array([0.3, 0.2, -.5])
+r2 = np.array([0.3, -0.2, -.5])
+r3 = np.array([-0.3, 0.2, -.5])
+r4 = np.array([-0.3, -0.2, -.5])
 contacts = np.vstack((r1, r2, r3, r4))
 # contact surface normals
 n1 = np.array([[0.0], [0.0], [1.0]])
@@ -103,7 +103,7 @@ for j in range(0,nc):
                   [np.zeros((np.size(c,0),np.size(cons2,1))), c]])
     h_vec2 = np.vstack([h_vec2, h_term])
 
-constraint_mode = 'friction_and_actuation'
+constraint_mode = 'only_actuation'
 
 if constraint_mode == 'only_friction':
     cons = cons1
@@ -127,8 +127,8 @@ print np.size(G,0), np.size(G,1)
 feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 # Equality constraints
-for com_x in np.arange(-25,25,5.):
-    for com_y in np.arange(-35,15,5.):
+for com_x in np.arange(-0.5,0.6,0.05):
+    for com_y in np.arange(-0.5,0.5,0.05):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
@@ -153,7 +153,12 @@ for com_x in np.arange(-25,25,5.):
 
 kin = Kinematics()
 foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-kin.computeIK(contacts[:,0],foot_vel[0,:],contacts[:,2],foot_vel[0,:])
+q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+                                          np.transpose(foot_vel[:,0]),
+                                            np.transpose(contacts[:,2]),
+                                            np.transpose(foot_vel[:,2]))
+                                        
+print J_LF
 
 # Plotting the results   
 fig = plt.figure()
