@@ -30,7 +30,7 @@ def normalize(n):
     n = np.true_divide(n, norm1)
     return n
 
-nc = 3;
+nc = 4;
 g = 9.81
 mass = 100
 grav = np.array([[0.], [0.], [-g*mass]])
@@ -57,8 +57,8 @@ friction_coeff = 1.0
 #print C
 Q = 2*matrix(np.zeros((3*nc,3*nc)))
 p = matrix(np.ones((3*nc,1)))
-print Q, p
-print np.size(Q,0), np.size(Q,1)
+#print Q, p
+#print np.size(Q,0), np.size(Q,1)
 
 cons1 = np.zeros((0,0))
 h_vec1 = np.zeros((0,1))
@@ -66,14 +66,18 @@ cons2 = np.zeros((0,0))
 h_vec2 = np.zeros((0,1))
 
 constraint = Constraints()
+vertices = np.array([[1, 1, -1, -1, 1, 1, -1, -1],
+                     [1, -1, -1, 1, 1, -1, -1, 1],
+                     [1, 1, 1, 1, -1, -1, -1, -1]])
+                     
 for j in range(0,nc):
     c, h_term = constraint.linear_cone(normals[:,j],friction_coeff)
     cons1 = np.block([[cons1, np.zeros((np.size(cons1,0),np.size(c,1)))],
                   [np.zeros((np.size(c,0),np.size(cons1,1))), c]])
     h_vec1 = np.vstack([h_vec1, h_term])
-    c, h_term = constraint.zonotope()
+    c, h_term = constraint.hexahedron(vertices)
     cons2 = np.block([[cons2, np.zeros((np.size(cons2,0),np.size(c,1)))],
-                  [np.zeros((np.size(c,0),np.size(cons2,1))), c]])
+                  [np.zeros((np.size(c,0),np.size(cons2,1))), c]])    
     h_vec2 = np.vstack([h_vec2, h_term])
 
 constraint_mode = 'only_actuation'
@@ -100,8 +104,8 @@ print np.size(G,0), np.size(G,1)
 feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 # Equality constraints
-for com_x in np.arange(-0.5,0.6,0.05):
-    for com_y in np.arange(-0.5,0.5,0.05):
+for com_x in np.arange(-0.5,0.6,0.15):
+    for com_y in np.arange(-0.5,0.5,0.15):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
@@ -144,9 +148,9 @@ if np.size(feasible_points,0) != 0:
 if np.size(unfeasible_points,0) != 0:
     ax.scatter(unfeasible_points[:,0], unfeasible_points[:,1], unfeasible_points[:,2],c='r',s=50)
 
-vertices = np.array([[1, 1, -1, -1, 1, 1, -1, -1],
-                     [1.1, -1.1, -1, 1, 1, -1, -1, 1],
-                     [1, 1, 1, 1, -1, -1, -1, -1]])
+vertices = np.array([[500, 500, -500, -500, 500, 500, -500, -500],
+                     [500, -500, -500, 500, 500, -500, -500, 500],
+                     [500, 500, 500, 500, -500, -500, -500, -500]])
 
 vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
 actuation_polygon_xy = np.matmul(np.transpose(J_LF),vertices_xz) 
