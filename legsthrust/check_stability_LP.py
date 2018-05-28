@@ -9,6 +9,7 @@ from cvxopt import matrix, solvers
 import numpy as np
 from kinematics import Kinematics
 # for plotting
+from plotting_tools import Plotter
 from arrow3D import Arrow3D
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -44,20 +45,7 @@ def normalize(n):
     norm1 = np.linalg.norm(n)
     n = np.true_divide(n, norm1)
     return n
-    
-def plot_cube(vertices):
-    vx = vertices[0,0:8]
-    vy = vertices[1,0:8]
-    vz = vertices[2,0:8]
-    face1x = np.hstack([vx[0:4],vx[0]])
-    face1y = np.hstack([vy[0:4],vy[0]]) 
-    face1z = np.hstack([vz[0:4],vz[0]])     
-    surf = ax.plot_wireframe(face1x, face1y, face1z, alpha = 1.0)
-    face2x = np.hstack([vx[4:8],vx[4]])
-    face2y = np.hstack([vy[4:8],vy[4]]) 
-    face2z = np.hstack([vz[4:8],vz[4]])     
-    surf = ax.plot_wireframe(face2x, face2y, face2z, alpha = 1.0)
-        
+
 nc = 3;
 g = 9.81
 mass = 100
@@ -157,8 +145,6 @@ q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0])
                                           np.transpose(foot_vel[:,0]),
                                             np.transpose(contacts[:,2]),
                                             np.transpose(foot_vel[:,2]))
-                                        
-print J_LF
 
 # Plotting the results   
 fig = plt.figure()
@@ -176,9 +162,17 @@ if np.size(unfeasible_points,0) != 0:
 
 
 vertices = np.array([[1, 1, -1, -1, 1, 1, -1, -1],
-                     [1, -1, -1, 1, 1, -1, -1, 1],
+                     [1.1, -1.1, -1, 1, 1, -1, -1, 1],
                      [1, 1, 1, 1, -1, -1, -1, -1]])
-plot_cube(vertices)
+
+vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
+print vertices_xz
+actuation_polygon_xy = np.matmul(np.transpose(J_LF),vertices_xz) 
+print actuation_polygon_xy
+actuation_polygon = np.vstack([actuation_polygon_xy[0,:],vertices[1,:],actuation_polygon_xy[1,:]])
+
+plotter = Plotter()                    
+plotter.plot_cube(ax,actuation_polygon)
 
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')
