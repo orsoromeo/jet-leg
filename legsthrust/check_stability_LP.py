@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat May 26 15:09:24 2018
+Created on Sat May 20 15:09:24 2018
 
-@author: rorsolino
+@author: Romeo Orsolino
 """
 import cvxopt
 from cvxopt import matrix, solvers
@@ -13,8 +13,46 @@ from constraints import Constraints
 from plotting_tools import Plotter
 from arrow3D import Arrow3D
 import matplotlib.pyplot as plt
+"""
+ General settings that can be changed by the user:
+ 
+  nc = number of contacts
+  mass = mass of the trunk of the robot
+  constraint_mode = type of constraint to be enforced in the LP (three possible types only)
+  LF_foot, .... RH_foot = positions of the feet in the base frame (the names recall the convention used for the HyQ robot)
+  friction_coeff = friction coefficient in the contacts (for now the same values is used for all contacts)
+  tau_lim_HAA, tau_lim_HFE, tau_lim_KFE = torque limits of the HAA, HFE and KFE joints of a single leg of HyQ
 
+"""
 
+constraint_mode = 'only_actuation'
+nc = 4; # Number of contacts
+mass = 80 # Kg
+friction_coeff = 1.0
+tau_lim_HAA = 80 # Nm
+tau_lim_HFE = 100 # Nm
+tau_lim_KFE = 100 # Nm
+
+def computeActuationPolygon(leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
+    """ This function computes the actuation polygon of a given mechanical chain
+    This function assumes the same mechanical structure of the HyQ robot, meaning that 
+    it is restricted to 3 DoFs and point contacts. If the latter assumption is not
+    respected the Jacobian matrix might become not invertible.
+    """
+    dx = tau_HAA
+    dy = tau_HFE
+    dz = tau_KFE
+    vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+                     
+    vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
+    actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(leg_jacobian_2D)),vertices_xz) 
+    actuation_polygon = np.vstack([actuation_polygon_xy[0,:],
+                               vertices[1,:],
+                               actuation_polygon_xy[1,:]])
+    return actuation_polygon
+    
 def skew(v):
     if len(v) == 4: v = v[:3]/v[3]
     skv = np.roll(np.roll(np.diag(v.flatten()), 1, 1), -1, 0)
@@ -30,35 +68,32 @@ def normalize(n):
     n = np.true_divide(n, norm1)
     return n
 
-nc = 3;
 g = 9.81
-mass = 80
 grav = np.array([[0.], [0.], [-g*mass]])
-# contact points
+
+""" contact points """
 LF_foot = np.array([0.3, 0.2, -.5])
 RF_foot = np.array([0.3, -0.2, -.5])
 LH_foot = np.array([-0.3, 0.2, -.5])
 RH_foot = np.array([-0.3, -0.2, -.5])
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-# contact surface normals
-n1 = np.array([[0.0], [0.0], [1.0]])
-n1 = normalize(n1)
-n2 = np.array([[0.0], [0.0], [1.0]])
-n2 = normalize(n2)
-n3 = np.array([[0.0], [0.0], [1.0]])
-n3 = normalize(n3)
-n4 = np.array([[0.0], [0.0], [1.0]])
-n4 = normalize(n4)
 
-normals = np.hstack((n1, n2, n3, n4))
+""" normals of the surface in the contact points """
+LF_normal = np.array([[0.0], [0.0], [1.0]])
+LF_normal = normalize(LF_normal)
+RF_normal = np.array([[0.0], [0.0], [1.0]])
+RF_normal = normalize(RF_normal)
+LH_normal = np.array([[0.0], [0.0], [1.0]])
+LH_normal = normalize(LH_normal)
+RH_normal = np.array([[0.0], [0.0], [1.0]])
+RH_normal = normalize(RH_normal)
+normals = np.hstack((LF_normal, RF_normal, LH_normal, RH_normal))
 
-friction_coeff = 1.0
-
-#print C
-Q = 2*matrix(np.zeros((3*nc,3*nc)))
+"""
+Cost function of the LP program. f = x1 + x2 + ... x_n 
+The state has 3*nc elements where nc is the number of contacts given by the user    
+"""
 p = matrix(np.ones((3*nc,1)))
-#print Q, p
-#print np.size(Q,0), np.size(Q,1)
 
 cons1 = np.zeros((0,0))
 h_vec1 = np.zeros((0,1))
@@ -71,21 +106,14 @@ q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0])
                                           np.transpose(foot_vel[:,0]),
                                             np.transpose(contacts[:,2]),
                                             np.transpose(foot_vel[:,2]))
-                                            
-constraint = Constraints()
-dx = 80
-dy = 120
-dz = 120
-vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-                     
-vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
-actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(J_LF)),vertices_xz) 
-actuation_polygon_LF = np.vstack([actuation_polygon_xy[0,:],
-                               vertices[1,:],
-                               actuation_polygon_xy[1,:]])
-                     
+                                       
+actuation_polygon_LF = computeActuationPolygon(J_LF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+actuation_polygon_RF = computeActuationPolygon(J_RF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+actuation_polygon_LH = computeActuationPolygon(J_LH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+actuation_polygon_RH = computeActuationPolygon(J_RH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+
+""" construct the equations needed for the inequality constraints of the LP """
+constraint = Constraints()     
 for j in range(0,nc):
     c, h_term = constraint.linear_cone(normals[:,j],friction_coeff)
     cons1 = np.block([[cons1, np.zeros((np.size(cons1,0),np.size(c,1)))],
@@ -97,8 +125,6 @@ for j in range(0,nc):
                   [np.zeros((np.size(c,0),np.size(cons2,1))), c]])    
     h_vec2 = np.vstack([h_vec2, h_term])
 
-constraint_mode = 'only_friction'
-
 if constraint_mode == 'only_friction':
     cons = cons1
     h_vec = h_vec1
@@ -109,7 +135,7 @@ elif constraint_mode == 'friction_and_actuation':
     cons = np.vstack([cons1, cons2])
     h_vec = np.vstack([h_vec1, h_vec2])
 
-# Inequality constraints
+"""Definition of the inequality constraints"""
 m_ineq = np.size(cons,0)
 #A=A.astype(double) 
 #cons = cons.astype(np.double)
@@ -120,9 +146,10 @@ print np.size(G,0), np.size(G,1)
 
 feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
-# Equality constraints
-for com_x in np.arange(-0.7,0.7,0.01):
-    for com_y in np.arange(-0.6,0.5,0.01):
+
+""" Defining the equality constraints """
+for com_x in np.arange(-0.7,0.7,0.05):
+    for com_y in np.arange(-0.6,0.5,0.05):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
@@ -146,7 +173,7 @@ for com_x in np.arange(-0.7,0.7,0.01):
         #print 'iteration ', com_x
 
 
-# Plotting the results   
+""" Plotting the results """
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 for j in range(0,nc):
@@ -159,12 +186,11 @@ if np.size(feasible_points,0) != 0:
 if np.size(unfeasible_points,0) != 0:
     ax.scatter(unfeasible_points[:,0], unfeasible_points[:,1], unfeasible_points[:,2],c='r',s=50)
 
-vertices = np.array([[500, 500, -500, -500, 500, 500, -500, -500],
-                     [500, -500, -500, 500, 500, -500, -500, 500],
-                     [500, 500, 500, 500, -500, -500, -500, -500]])
-
 plotter = Plotter()                    
 plotter.plot_actuation_polygon(ax, actuation_polygon_LF, LF_foot)
+plotter.plot_actuation_polygon(ax, actuation_polygon_RF, RF_foot)
+plotter.plot_actuation_polygon(ax, actuation_polygon_LH, LH_foot)
+plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
 
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')

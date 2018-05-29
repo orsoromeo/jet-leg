@@ -2,7 +2,10 @@
 """
 Created on Mon May 28 09:39:54 2018
 
-@author: rorsolino
+@author: Romeo Orsolino
+
+This code computes the inverse kinematics for the HyQ quadruped robot.
+Besides the joint positions and velocities it also returns the 2D jacobians referring to the HFE and KFE joints
 """
 import numpy as np
 
@@ -54,7 +57,7 @@ class Kinematics:
         q[7] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# LH HFE
         q[10] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# RH HFE
     
-        # compute joint velocities updating the jac with the computed position
+        """ compute joint velocities updating the 2D jacobians with the computed position """
         l1 = upperLegLength;
         l2 = lowerLegLength;
         Jac_LF = np.array([[np.asscalar(-l1*np.cos([q[1]]) - l2 * np.cos([q[1] + q[2]])),np.asscalar( - l2 * np.cos([q[1] + q[2]]))],
@@ -77,7 +80,7 @@ class Kinematics:
         #q_dot[10:11] = np.linalg.inv(Jac_RH)*footVelDes;   
         return q, q_dot, Jac_LF, Jac_RF, Jac_LH, Jac_RH
     
-    def computed_IK_HyQ(self, x, x_dot, z, z_dot):
+    def update_jacobians(self, q):
        # s__q_LF_HAA = sin( q(1));
        # s__q_LF_HFE = sin( q(2));
        # s__q_LF_KFE = sin( q(3));
