@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 """
 
 constraint_mode = 'only_actuation'
-nc = 4; # Number of contacts
+nc = 3; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
 mass = 80 # Kg
 friction_coeff = 1.0
 tau_lim_HAA = 80 # Nm
@@ -190,7 +190,7 @@ plotter = Plotter()
 plotter.plot_actuation_polygon(ax, actuation_polygon_LF, LF_foot)
 plotter.plot_actuation_polygon(ax, actuation_polygon_RF, RF_foot)
 plotter.plot_actuation_polygon(ax, actuation_polygon_LH, LH_foot)
-plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
+if nc == 4: plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
 
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')
