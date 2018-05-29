@@ -30,7 +30,7 @@ class Constraints:
         
         h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6 = geom.get_halfspace_rep(v_rep)        
         
-        h_rep = np.vstack([h_rep1, -h_rep2, -h_rep3, -h_rep4, h_rep5, h_rep6])        
+        h_rep = np.vstack([h_rep1, -h_rep2, -h_rep3, -h_rep4, -h_rep5, h_rep6])        
         constraint = h_rep[:,0:3]
         known_term = np.vstack([[-h_rep1[3]],
                                 [h_rep2[3]],

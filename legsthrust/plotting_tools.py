@@ -28,7 +28,7 @@ class Plotter:
       #self.plot_facet(ax,face6)
       
   def plot_actuation_polygon(self, ax, vertices, foot_pos):
-      scaling_factor = 300
+      scaling_factor = 2000
       for j in range(0,8):
           vertices[0,j] /= scaling_factor
           vertices[1,j] /= scaling_factor

@@ -30,9 +30,9 @@ def normalize(n):
     n = np.true_divide(n, norm1)
     return n
 
-nc = 4;
+nc = 3;
 g = 9.81
-mass = 100
+mass = 80
 grav = np.array([[0.], [0.], [-g*mass]])
 # contact points
 LF_foot = np.array([0.3, 0.2, -.5])
@@ -65,22 +65,39 @@ h_vec1 = np.zeros((0,1))
 cons2 = np.zeros((0,0))
 h_vec2 = np.zeros((0,1))
 
+kin = Kinematics()
+foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+                                          np.transpose(foot_vel[:,0]),
+                                            np.transpose(contacts[:,2]),
+                                            np.transpose(foot_vel[:,2]))
+                                            
 constraint = Constraints()
-vertices = np.array([[1, 1, -1, -1, 1, 1, -1, -1],
-                     [1, -1, -1, 1, 1, -1, -1, 1],
-                     [1, 1, 1, 1, -1, -1, -1, -1]])
+dx = 80
+dy = 120
+dz = 120
+vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+                     
+vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
+actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(J_LF)),vertices_xz) 
+actuation_polygon_LF = np.vstack([actuation_polygon_xy[0,:],
+                               vertices[1,:],
+                               actuation_polygon_xy[1,:]])
                      
 for j in range(0,nc):
     c, h_term = constraint.linear_cone(normals[:,j],friction_coeff)
     cons1 = np.block([[cons1, np.zeros((np.size(cons1,0),np.size(c,1)))],
                   [np.zeros((np.size(c,0),np.size(cons1,1))), c]])
     h_vec1 = np.vstack([h_vec1, h_term])
-    c, h_term = constraint.hexahedron(vertices)
+    c, h_term = constraint.hexahedron(actuation_polygon_LF)
+    #c, h_term = constraint.zonotope()    
     cons2 = np.block([[cons2, np.zeros((np.size(cons2,0),np.size(c,1)))],
                   [np.zeros((np.size(c,0),np.size(cons2,1))), c]])    
     h_vec2 = np.vstack([h_vec2, h_term])
 
-constraint_mode = 'only_actuation'
+constraint_mode = 'only_friction'
 
 if constraint_mode == 'only_friction':
     cons = cons1
@@ -104,8 +121,8 @@ print np.size(G,0), np.size(G,1)
 feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 # Equality constraints
-for com_x in np.arange(-0.5,0.6,0.15):
-    for com_y in np.arange(-0.5,0.5,0.15):
+for com_x in np.arange(-0.7,0.7,0.01):
+    for com_y in np.arange(-0.6,0.5,0.01):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
@@ -128,19 +145,13 @@ for com_x in np.arange(-0.5,0.6,0.15):
             unfeasible_points = np.vstack([unfeasible_points,com])
         #print 'iteration ', com_x
 
-kin = Kinematics()
-foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
-                                          np.transpose(foot_vel[:,0]),
-                                            np.transpose(contacts[:,2]),
-                                            np.transpose(foot_vel[:,2]))
 
 # Plotting the results   
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 for j in range(0,nc):
     ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
-    a = Arrow3D([contacts[j,0], contacts[j,0]+normals[0,j]], [contacts[j,1], contacts[j,1]+normals[1,j]],[contacts[j,2], contacts[j,2]+normals[2,j]], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
+    a = Arrow3D([contacts[j,0], contacts[j,0]+normals[0,j]/3], [contacts[j,1], contacts[j,1]+normals[1,j]/3],[contacts[j,2], contacts[j,2]+normals[2,j]/3], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
     ax.add_artist(a)
     
 if np.size(feasible_points,0) != 0:
@@ -151,12 +162,6 @@ if np.size(unfeasible_points,0) != 0:
 vertices = np.array([[500, 500, -500, -500, 500, 500, -500, -500],
                      [500, -500, -500, 500, 500, -500, -500, 500],
                      [500, 500, 500, 500, -500, -500, -500, -500]])
-
-vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
-actuation_polygon_xy = np.matmul(np.transpose(J_LF),vertices_xz) 
-actuation_polygon_LF = np.vstack([actuation_polygon_xy[0,:],
-                               vertices[1,:],
-                               actuation_polygon_xy[1,:]])
 
 plotter = Plotter()                    
 plotter.plot_actuation_polygon(ax, actuation_polygon_LF, LF_foot)
