@@ -29,10 +29,11 @@ class Plotter:
       
   def plot_actuation_polygon(self, ax, vertices, foot_pos):
       scaling_factor = 2000
+      vertex = np.zeros((3,8))
       for j in range(0,8):
-          vertices[0,j] /= scaling_factor
-          vertices[1,j] /= scaling_factor
-          vertices[2,j] /= scaling_factor
-          vertices[:,j] = np.add(vertices[:,j],np.transpose(foot_pos))
+          vertex[0,j] = float(vertices[0,j])/float(scaling_factor)
+          vertex[1,j] = vertices[1,j]/float(scaling_factor)
+          vertex[2,j] = vertices[2,j]/float(scaling_factor)
+          vertex[:,j] = np.add(vertex[:,j],np.transpose(foot_pos))
           
-      self.plot_cube(ax,vertices)
+      self.plot_cube(ax,vertex)

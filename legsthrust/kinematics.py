@@ -10,15 +10,23 @@ Besides the joint positions and velocities it also returns the 2D jacobians refe
 import numpy as np
 
 class Kinematics:
+    
+    def compute_FK(self, q):
+        upperLegLength = 0.35;
+        lowerLegLength = 0.346;
+        l1 = upperLegLength + np.cos(q[2])*lowerLegLength
+        l2 = np.sin(q[2])*lowerLegLength        
+        l = np.sqrt(np.squa)        
+        return foot_pos
         
     def compute_xy_IK(self, x, x_dot, z, z_dot):
         footPosDes = np.vstack([x,z])
         BASE2HAA_offsets = np.array([[0.3735,0.3735,-0.3735,-0.3735],
                                  [-.08, -.08, -.08, -.08]]);
         upperLegLength = 0.35;
-        lowerLegLength = 0.341;
+        lowerLegLength = 0.346;
         footPosHAA = np.subtract(footPosDes, BASE2HAA_offsets)
-
+        print footPosHAA
         haa2hfeLength = 0.045;
         M_PI = 3.1415;
     
@@ -31,7 +39,8 @@ class Kinematics:
         q_dot = np.zeros((12,1))
     
         # remove the haa2hfe offset and rotate in the sagittal plane of the leg
-        hfe2foot = np.sqrt(np.square(footPosHAA[0]) + np.square(footPosHAA[1])) - haa2hfeLength;
+        print footPosHAA[0], footPosHAA[1]
+        hfe2foot = np.sqrt(np.square(footPosHAA[0,0]) + np.square(footPosHAA[1,0])) - haa2hfeLength;
         # add the x component
         # hfe2foot = sqrt(hfe2foot * hfe2foot);
         # HAA joints
@@ -42,37 +51,41 @@ class Kinematics:
     
         # HFE and KFE joints (use cosine law)
         cos_arg = (upperLegLength * upperLegLength + lowerLegLength * lowerLegLength - hfe2foot * hfe2foot) / (2 * upperLegLength * lowerLegLength);
-        q[2] = - M_PI + np.arccos(cos_arg[0]); # LF KFE
-        q[5] = - M_PI + np.arccos(cos_arg[0]); # RF KFE
+        print cos_arg        
+        q[2] = - M_PI + np.arccos(cos_arg); # LF KFE
+        q[5] = - M_PI + np.arccos(cos_arg); # RF KFE
         cos_arg = (np.square(upperLegLength) + np.square(hfe2foot) - np.square(lowerLegLength)) / (2 * upperLegLength * hfe2foot);
-        sin_arg = footPosHAA[0] / hfe2foot; #it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)	
-        q[1] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# LF HFE
-        q[4] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# RF HFE
+        sin_arg = footPosHAA[0,0] / hfe2foot; #it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)	
+        q[1] = -np.arcsin(sin_arg) + np.arccos(cos_arg);# LF HFE
+        sin_arg = footPosHAA[0,1] / hfe2foot;
+        q[4] = -np.arcsin(sin_arg) + np.arccos(cos_arg);# RF HFE
     
         cos_arg = (upperLegLength * upperLegLength + lowerLegLength * lowerLegLength - hfe2foot * hfe2foot)/ (2 * upperLegLength * lowerLegLength);
-        q[8]= + M_PI- np.arccos(cos_arg[0]); # LH KFE
-        q[11] = + M_PI - np.arccos(cos_arg[0]); # RH KFE
+        q[8]= + M_PI- np.arccos(cos_arg); # LH KFE
+        q[11] = + M_PI - np.arccos(cos_arg); # RH KFE
         cos_arg = (upperLegLength * upperLegLength + hfe2foot * hfe2foot- lowerLegLength * lowerLegLength) / (2 * upperLegLength * hfe2foot);
         sin_arg = footPosHAA[0,2] / hfe2foot; # it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)
-        q[7] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# LH HFE
-        q[10] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# RH HFE
+        q[7] = -np.arcsin(sin_arg) - np.arccos(cos_arg);# LH HFE
+        sin_arg = footPosHAA[0,3] / hfe2foot;
+        q[10] = -np.arcsin(sin_arg) - np.arccos(cos_arg);# RH HFE
     
         """ compute joint velocities updating the 2D jacobians with the computed position """
         l1 = upperLegLength;
         l2 = lowerLegLength;
-        Jac_LF = np.array([[np.asscalar(-l1*np.cos([q[1]]) - l2 * np.cos([q[1] + q[2]])),np.asscalar( - l2 * np.cos([q[1] + q[2]]))],
+        Jac_LF = np.array([[-np.asscalar(-l1*np.cos([q[1]]) - l2 * np.cos([q[1] + q[2]])),np.asscalar( - l2 * np.cos([q[1] + q[2]]))],
                             [np.asscalar(l1*np.sin([q[1]]) + l2 * np.sin([q[1] + q[2]])),np.asscalar(   l2 * np.sin([q[1] + q[2]]))]])
         #Jac_LF = np.array([[np.asscalar(-l1*np.cos([q[1]])+ l2 * np.cos(q[4]+q[5])),0],[0,0]])
-        Jac_RF = np.array([[np.asscalar(l1*np.cos(q[4]) + l2 * np.cos(q[4]+q[5])), np.asscalar( l2 * np.cos(q[4] + q[4]))],
-                            [np.asscalar(l1*np.sin(q[4]) + l2 * np.sin(q[4]+q[5])), np.asscalar( l2 * np.sin(q[4] + q[4]))]])
+        Jac_RF = np.array([[np.asscalar(l1*np.cos(q[4]) + l2 * np.cos(q[4]+q[5])), np.asscalar( l2 * np.cos(q[4] + q[6]))],
+                           [np.asscalar(l1*np.sin(q[4]) + l2 * np.sin(q[4]+q[5])), np.asscalar( l2 * np.sin(q[4] + q[6]))]])
                             
-        Jac_LH = np.array([[np.asscalar(-l1*np.cos(q[7]) - l2 * np.cos(q[7]+q[8])), np.asscalar( -l2 * np.cos(q[7] + q[8]))],
+        Jac_LH = np.array([[-np.asscalar(-l1*np.cos(q[7]) - l2 * np.cos(q[7]+q[8])), np.asscalar( -l2 * np.cos(q[7] + q[8]))],
                             [np.asscalar(l1*np.sin(q[7]) + l2 * np.sin(q[7]+q[8])), np.asscalar(  l2 * np.sin(q[7] + q[8]))]])
                             
         Jac_RH = np.array([[np.asscalar(l1*np.cos(q[10]) + l2 * np.cos(q[10]+q[11])), np.asscalar( l2 * np.cos(q[10] + q[11]))],
                            [np.asscalar(l1*np.sin(q[10]) + l2 * np.sin(q[10]+q[11])), np.asscalar( l2 * np.sin(q[10] + q[11]))]])     
 
         footVelDes = np.vstack([x_dot, z_dot]); 
+        print q
         #print footVelDes
         #q_dot[1:2] = np.linalg.inv(Jac_LF)*footVelDes;
         #q_dot[4:5] = np.linalg.inv(Jac_RF)*footVelDes;

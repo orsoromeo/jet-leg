@@ -26,12 +26,12 @@ import matplotlib.pyplot as plt
 """
 
 constraint_mode = 'only_actuation'
-nc = 3; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
+nc = 4; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
 mass = 80 # Kg
 friction_coeff = 1.0
 tau_lim_HAA = 80 # Nm
 tau_lim_HFE = 100 # Nm
-tau_lim_KFE = 100 # Nm
+tau_lim_KFE = 500 # Nm
 
 def computeActuationPolygon(leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
     """ This function computes the actuation polygon of a given mechanical chain
@@ -51,6 +51,8 @@ def computeActuationPolygon(leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
     actuation_polygon = np.vstack([actuation_polygon_xy[0,:],
                                vertices[1,:],
                                actuation_polygon_xy[1,:]])
+    # Only for debugging:                          
+    #actuation_polygon = vertices
     return actuation_polygon
     
 def skew(v):
@@ -109,8 +111,14 @@ q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0])
                                        
 actuation_polygon_LF = computeActuationPolygon(J_LF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
 actuation_polygon_RF = computeActuationPolygon(J_RF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+actuation_polygon_RF = actuation_polygon_LF
 actuation_polygon_LH = computeActuationPolygon(J_LH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
 actuation_polygon_RH = computeActuationPolygon(J_RH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+actuation_polygon_RH = actuation_polygon_LH
+print 'actuation polygon LF: ',actuation_polygon_LF
+print 'actuation polygon RF: ',actuation_polygon_RF
+print 'actuation polygon LH: ',actuation_polygon_LH
+print 'actuation polygon RH: ',actuation_polygon_RH
 
 """ construct the equations needed for the inequality constraints of the LP """
 constraint = Constraints()     
@@ -148,8 +156,8 @@ feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 
 """ Defining the equality constraints """
-for com_x in np.arange(-0.7,0.7,0.05):
-    for com_y in np.arange(-0.6,0.5,0.05):
+for com_x in np.arange(-0.6,0.6,0.2):
+    for com_y in np.arange(-0.6,0.5,0.2):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
