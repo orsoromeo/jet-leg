@@ -31,7 +31,7 @@ mass = 80 # Kg
 friction_coeff = 1.0
 tau_lim_HAA = 80 # Nm
 tau_lim_HFE = 100 # Nm
-tau_lim_KFE = 500 # Nm
+tau_lim_KFE = 100 # Nm
 
 def computeActuationPolygon(leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
     """ This function computes the actuation polygon of a given mechanical chain
@@ -156,8 +156,8 @@ feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 
 """ Defining the equality constraints """
-for com_x in np.arange(-0.6,0.6,0.2):
-    for com_y in np.arange(-0.6,0.5,0.2):
+for com_x in np.arange(-0.6,0.7,0.02):
+    for com_y in np.arange(-0.6,0.5,0.02):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
