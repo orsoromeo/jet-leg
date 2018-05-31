@@ -26,12 +26,12 @@ import matplotlib.pyplot as plt
 """
 
 constraint_mode = 'only_actuation'
-nc = 4; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
+nc = 3; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
 mass = 80 # Kg
 friction_coeff = 1.0
-tau_lim_HAA = 80 # Nm
-tau_lim_HFE = 100 # Nm
-tau_lim_KFE = 100 # Nm
+tau_lim_HAA = 1 # Nm
+tau_lim_HFE = 1 # Nm
+tau_lim_KFE = 500 # Nm
 
 def computeActuationPolygon(leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
     """ This function computes the actuation polygon of a given mechanical chain
@@ -52,7 +52,7 @@ def computeActuationPolygon(leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
                                vertices[1,:],
                                actuation_polygon_xy[1,:]])
     # Only for debugging:                          
-    #actuation_polygon = vertices
+    actuation_polygon = vertices
     return actuation_polygon
     
 def skew(v):
@@ -69,6 +69,48 @@ def normalize(n):
     norm1 = np.linalg.norm(n)
     n = np.true_divide(n, norm1)
     return n
+    
+def computeActuationRegion(force_polygons, mass, contacts):
+    
+    points_number = np.size(force_polygons,1)
+    A1 = np.zeros((3,points_number))
+    A2 = np.zeros((3,points_number))
+    A3 = np.zeros((3,points_number))
+    A4 = np.zeros((3,points_number))    
+    p1 = contacts[:,0]    
+    p2 = contacts[:,1]
+    p3 = contacts[:,2]
+    d = p2[0]-p3[0]
+    a = (p1[1]-p3[1])/(p1[0]-p3[0])
+    b = (p2[1]-p3[1]) - a * (p2[0]-p3[0])
+    e = (p3[1] + p3[0] * a) * d
+    g = 9.81    
+    f = mass*g/(p1[0]-p3[0]) 
+
+    for j in range(0,points_number):
+        fz_lim = force_polygons[2,j]
+        A1[0,j] = - a * mass * g / b
+        A1[1,j] = - mass * g / b
+        tmp = -mass * g / b *(p3[1] + a*p3[0])
+        A1[2,j] = tmp - fz_lim
+        A2[0,j] = -A1[0,j]
+        A2[1,j] = -A1[1,j]
+        A2[2,j] = - tmp - fz_lim
+       
+    for j in range(0,points_number):
+        fz_lim = force_polygons[2,j]
+        A3[0,j] = f
+        A3[1,j] = - f * d
+        tmp = f* (e / b - a * d / b)
+        A3[2,j] = tmp - fz_lim
+        A4[0,j] = - A3[0,j]
+        A4[1,j] = - A3[1,j]
+        A4[2,j] = - tmp - fz_lim
+        
+    A = np.hstack([A1, A2, A3, A4])
+    print A
+ 
+    return A
 
 g = 9.81
 grav = np.array([[0.], [0.], [-g*mass]])
@@ -156,8 +198,8 @@ feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 
 """ Defining the equality constraints """
-for com_x in np.arange(-0.6,0.7,0.02):
-    for com_y in np.arange(-0.6,0.5,0.02):
+for com_x in np.arange(-0.6,0.7,0.025):
+    for com_y in np.arange(-0.6,0.5,0.025):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
@@ -199,6 +241,15 @@ plotter.plot_actuation_polygon(ax, actuation_polygon_LF, LF_foot)
 plotter.plot_actuation_polygon(ax, actuation_polygon_RF, RF_foot)
 plotter.plot_actuation_polygon(ax, actuation_polygon_LH, LH_foot)
 if nc == 4: plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
+
+dx = tau_lim_HAA
+dy = tau_lim_HFE
+dz = tau_lim_KFE
+vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+edges = computeActuationRegion(vertices, mass, contacts)
+plotter.plot_actuation_region(ax,edges)
 
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')

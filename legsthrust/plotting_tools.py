@@ -10,11 +10,29 @@ import numpy as np
 from computational_geometry import ComputationalGeometry
 
 class Plotter:
+  def plot_line(self, ax, coefficients):
+      a = coefficients[0]
+      b = coefficients[1]
+      c = coefficients[2]          
+      x1 = -2
+      y1 = -a/b*x1 - c/b
+ 
+      x2 = 2
+      y2 = -a/b*x2 - c/b
+      x = np.array([x1, x2])
+      y = np.array([y1, y2])      
+      ax.plot(x,y) 
+
+  def plot_actuation_region(self, ax, coefficients):
+      edges_number = np.size(coefficients,1)
+      for j in range(0, edges_number):
+          self.plot_line(ax, coefficients[:,j])     
+      
   def plot_facet(self,ax,facet):
       facet_x = facet[0,:]
       facet_y = facet[1,:]
       facet_z = facet[2,:]
-      surf = ax.plot_trisurf(facet_x, facet_y, facet_z,  linewidth=0., alpha = 0.3)
+      #surf = ax.plot_trisurf(facet_x, facet_y, facet_z,  linewidth=0., alpha = 0.3)
       surf = ax.plot_wireframe(facet_x, facet_y, facet_z, linewidth=1.) 
   
   def plot_cube(self,ax,vertices):
@@ -35,5 +53,7 @@ class Plotter:
           vertex[1,j] = vertices[1,j]/float(scaling_factor)
           vertex[2,j] = vertices[2,j]/float(scaling_factor)
           vertex[:,j] = np.add(vertex[:,j],np.transpose(foot_pos))
+          
+        
           
       self.plot_cube(ax,vertex)
