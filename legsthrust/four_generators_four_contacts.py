@@ -17,11 +17,18 @@ def skew(v):
     skv = np.roll(np.roll(np.diag(v.flatten()), 1, 1), -1, 0)
     return skv - skv.T
 
+def getGraspMatrix(r):
+    G = np.block([[np.eye(3), zeros((3,3))],
+                   [skew(r), np.eye(3)]])
+    return G
+
 # number of contacts
 nc = 4
 # number of decision variables of the problem 
 # (3 contact forces for each contact + 2 com coordinates x and y)
 n = nc*3
+
+use_grasp_matrix = True
 
 # postions of the 4 contacts
 r1 = array([10.0, 10.0, 0.0])
@@ -36,32 +43,42 @@ print std_dev
 noise = np.random.normal(0,std_dev,16)
 # I set the com coordinates to be in the bottom of the state array:
 # x = [f1_x, f1_y, f1_z, f2_x, f2_y, f2_z, ... , f4_x, f4_y, f4_z, com_x, com_y]
-E = zeros((2, n))
-# tau_0x
-E[0, 1] = -r1[2]+noise[0]
-E[0, 2] = +r1[1]+noise[1]
 
-E[0, 4] = -r2[2]+noise[2]
-E[0, 5] = +r2[1]+noise[3]
-
-E[0, 7] = -r3[2]+noise[4]
-E[0, 8] = +r3[1]+noise[5]
-
-E[0, 10] = -r4[2]+noise[6]
-E[0, 11] = +r4[1]+noise[7]
-
-#tau_0y
-E[1, 0] = +r1[2]+noise[8]
-E[1, 2] = -r1[0]+noise[9]
-
-E[1, 3] = +r2[2]+noise[10]
-E[1, 5] = -r2[0]+noise[11]
-
-E[1, 6] = +r3[2]+noise[12]
-E[1, 8] = -r3[0]+noise[13]
-
-E[1, 9] = +r4[2]+noise[14]
-E[1, 11] = -r4[0]+noise[15]
+if use_grasp_matrix == 'True':
+    G1 = getGraspMatrix(r1)
+    G2 = getGraspMatrix(r2)
+    G3 = getGraspMatrix(r3)
+    G4 = getGraspMatrix(r4)
+    Ex = np.hstack((G1[4,0:3],G2[4,0:3],G3[4,0:3],G3[4,0:3])) 
+    Ey = np.hstack((G1[3,0:3],G2[3,0:3],G3[3,0:3],G3[3,0:3]))
+    E = vstack((Ex, Ey))
+else:
+    E = zeros((2, nc*3))
+    # tau_0x
+    E[0, 1] = -r1[2]+noise[0]
+    E[0, 2] = +r1[1]+noise[1]
+    
+    E[0, 4] = -r2[2]+noise[2]
+    E[0, 5] = +r2[1]+noise[3]
+    
+    E[0, 7] = -r3[2]+noise[4]
+    E[0, 8] = +r3[1]+noise[5]
+    
+    E[0, 10] = -r4[2]+noise[6]
+    E[0, 11] = +r4[1]+noise[7]
+    
+    #tau_0y
+    E[1, 0] = +r1[2]+noise[8]
+    E[1, 2] = -r1[0]+noise[9]
+    
+    E[1, 3] = +r2[2]+noise[10]
+    E[1, 5] = -r2[0]+noise[11]
+    
+    E[1, 6] = +r3[2]+noise[12]
+    E[1, 8] = -r3[0]+noise[13]
+    
+    E[1, 9] = +r4[2]+noise[14]
+    E[1, 11] = -r4[0]+noise[15]
 
 f = zeros(2)
 proj = (E, f)  # y = E * x + f

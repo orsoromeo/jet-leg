@@ -241,15 +241,15 @@ plotter.plot_actuation_polygon(ax, actuation_polygon_LF, LF_foot)
 plotter.plot_actuation_polygon(ax, actuation_polygon_RF, RF_foot)
 plotter.plot_actuation_polygon(ax, actuation_polygon_LH, LH_foot)
 if nc == 4: plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
-
-dx = tau_lim_HAA
-dy = tau_lim_HFE
-dz = tau_lim_KFE
-vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-edges = computeActuationRegion(vertices, mass, contacts)
-plotter.plot_actuation_region(ax,edges)
+'''test the analytic computation of the actuation region'''
+#dx = tau_lim_HAA
+#dy = tau_lim_HFE
+#dz = tau_lim_KFE
+#vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+#                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+#                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+#edges = computeActuationRegion(vertices, mass, contacts)
+#plotter.plot_actuation_region(ax,edges)
 
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')

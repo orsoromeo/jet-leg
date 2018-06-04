@@ -38,6 +38,7 @@ print getGraspMatrix(r1)
 
 g = 9.81
 mass = 1.
+contact_wrench = 'with_torque'
 
 mu = 1.
 grav = array([[0.], [0.], [-g]])
@@ -46,7 +47,7 @@ std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/1000.
 print ""
 print "standard dev:"
 print std_dev
-noise = np.random.normal(0,std_dev,12)
+noise = np.random.normal(0,std_dev,18)
 print ""
 print "noise:"
 print noise
@@ -58,8 +59,14 @@ print noise
 G1 = getGraspMatrix(r1)
 G2 = getGraspMatrix(r2)
 G3 = getGraspMatrix(r3)
-Ex = np.hstack((G1[4,:],G2[4,:],G3[4,:])) 
-Ey = np.hstack((G1[3,:],G2[3,:],G3[3,:]))
+#print G1
+if contact_wrench == 'with_torque':
+    Ex = np.hstack((G1[4,:],G2[4,:],G3[4,:])) 
+    Ey = np.hstack((G1[3,:],G2[3,:],G3[3,:]))
+elif contact_wrench == 'pure_force':
+    Ex = np.hstack((G1[4,0:3],G2[4,0:3],G3[4,0:3])) 
+    Ey = np.hstack((G1[3,0:3],G2[3,0:3],G3[3,0:3]))
+    
 E = vstack((Ex, Ey))/(g*mass)
 
 #E[0, 1] = -r1[2]/(mass*g)+noise[0]
@@ -81,7 +88,7 @@ E = vstack((Ex, Ey))/(g*mass)
 #E[1, 6] = +r3[2]/(mass*g)+noise[10]
 #E[1, 8] = -r3[0]/(mass*g)+noise[11]
 
-print ""
+print "E matrix:"
 print E
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
@@ -116,7 +123,7 @@ eq = (A, t)  # A * x == t
 
 ## Definition of the inequality constraints
 n_generators = 4
-m_ineq = (n_generators+1)*nc
+m_ineq = (n_generators+6+1)*nc
 u1 = np.hstack((np.dot(mu,n1),np.dot(mu,n1),np.dot(1.0,n1)))
 u2 = np.hstack((np.dot(mu,n2),np.dot(mu,n2),np.dot(1.0,n2)))
 u3 = np.hstack((np.dot(mu,n3),np.dot(mu,n3),np.dot(1.0,n3)))
@@ -127,8 +134,8 @@ U = np.block([[w1, zeros((3,6)), zeros((3,6))],
                [zeros((3,6)), w2, zeros((3,6))],
                 [zeros((3,6)), zeros((3,6)), w3]])
 #print(u1)
-### Setting up the linear inequality constraints
-## Linearized friction cone:
+''' Setting up the linear inequality constraints
+Linearized friction cone:'''
 b1 = np.hstack((eye(3)-np.dot(n1,np.transpose(n1)), zeros((3,3))))
 b2 = np.hstack((eye(3)-np.dot(n2,np.transpose(n2)), zeros((3,3))))
 b3 = np.hstack((eye(3)-np.dot(n3,np.transpose(n3)), zeros((3,3))))
@@ -137,11 +144,17 @@ b3 = np.hstack((eye(3)-np.dot(n3,np.transpose(n3)), zeros((3,3))))
 B = np.block([[b1, zeros((3,6)), zeros((3,6))],
             [zeros((3,6)), b2, zeros((3,6))],
              [zeros((3,6)), zeros((3,6)), b3]])
-# fx <= mu*fz, fy <= mu*fz and fz > 0
+#print B
+''' fx <= mu*fz, fy <= mu*fz and fz > 0 '''
 C1 = - B - U
 
-# fx >= -mu*fz and fy >= -mu*fz
+''' fx >= -mu*fz and fy >= -mu*fz '''
 C2 = B - U
+
+C4a = np.hstack([np.zeros((3,3)),np.eye(3),np.zeros((3,12))])
+C4b = np.hstack([np.zeros((3,9)),np.eye(3),np.zeros((3,6))])
+C4c = np.hstack([np.zeros((3,15)),np.eye(3)])
+C4 = np.vstack([C4a, C4b, C4c])
 
 c2a = C2[0:2,:]
 c2b = C2[3:5,:]
@@ -149,8 +162,15 @@ c2c = C2[6:8,:]
 #c2d = C2[9:11,0:12]
 C3 = vstack([c2a, c2b, c2c])
 
-C = vstack([C1, C3])
-b = zeros((m_ineq,1)).reshape(m_ineq)
+C = vstack([C1, C4, C3, -C4])
+if m_ineq == np.size(C,0):
+    if contact_wrench == 'pure_force':
+        b = zeros((m_ineq,1)).reshape(m_ineq)
+    elif contact_wrench == 'with_torque':
+        b = np.vstack([np.zeros((9,1)),np.ones((9,1)),np.zeros((6,1)),np.ones((9,1))]).reshape(m_ineq)
+else:
+    print 'Warning: wrong number of inequality constraints!'
+    print 'm_ineq: ', m_ineq
 
 print ""
 print "Inequality constraints:"
