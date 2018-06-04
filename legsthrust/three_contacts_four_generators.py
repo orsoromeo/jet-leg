@@ -9,7 +9,7 @@ import pylab
 import pypoman
 import numpy as np
 
-from numpy import array, eye, hstack, vstack, zeros
+from numpy import array, dot, eye, hstack, vstack, zeros
 
 pylab.close("all")
 
@@ -22,8 +22,8 @@ def skew(v):
 
 
 def getGraspMatrix(r):
-    G = np.block([[np.eye(3), zeros((3, 3))],
-                  [skew(r), np.eye(3)]])
+    G = np.block([[eye(3), zeros((3, 3))],
+                  [skew(r), eye(3)]])
     return G
 
 
@@ -57,62 +57,53 @@ E = vstack((Ex, Ey)) / (g * mass)
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
 
-# contact surface normals
+# Contact surface normals
 n1 = array([[0.0], [0.0], [1.0]])
 n2 = array([[0.0], [0.0], [1.0]])
 n3 = array([[0.0], [0.0], [1.0]])
 
-# projection matrix
-P = array([[1., 0., 0.],
-          [0., 1., 0.]])
-Pt = np.transpose(P)
-
 # number of the equality constraints
 m_eq = 6
 
-A = np.hstack((G1, G2, G3))
-t = vstack([-grav, zeros((3, 1))]).reshape((6))
+A = hstack((G1, G2, G3))
+t = hstack([-grav, zeros(3)])
 eq = (A, t)  # A * x == t
 
 # Definition of the inequality constraints
 n_generators = 4
 m_ineq = (n_generators+6+1)*nc
-u1 = np.hstack((np.dot(mu, n1), np.dot(mu, n1), np.dot(1.0, n1)))
-u2 = np.hstack((np.dot(mu, n2), np.dot(mu, n2), np.dot(1.0, n2)))
-u3 = np.hstack((np.dot(mu, n3), np.dot(mu, n3), np.dot(1.0, n3)))
-w1 = np.hstack((np.transpose(u1), zeros((3, 3))))
-w2 = np.hstack((np.transpose(u2), zeros((3, 3))))
-w3 = np.hstack((np.transpose(u3), zeros((3, 3))))
+u1 = hstack((dot(mu, n1), dot(mu, n1), dot(1.0, n1)))
+u2 = hstack((dot(mu, n2), dot(mu, n2), dot(1.0, n2)))
+u3 = hstack((dot(mu, n3), dot(mu, n3), dot(1.0, n3)))
+w1 = hstack((np.transpose(u1), zeros((3, 3))))
+w2 = hstack((np.transpose(u2), zeros((3, 3))))
+w3 = hstack((np.transpose(u3), zeros((3, 3))))
 U = np.block([[w1, zeros((3, 6)), zeros((3, 6))],
               [zeros((3, 6)), w2, zeros((3, 6))],
               [zeros((3, 6)), zeros((3, 6)), w3]])
-# print(u1)
 ''' Setting up the linear inequality constraints
 Linearized friction cone:'''
-b1 = np.hstack((eye(3)-np.dot(n1, np.transpose(n1)), zeros((3, 3))))
-b2 = np.hstack((eye(3)-np.dot(n2, np.transpose(n2)), zeros((3, 3))))
-b3 = np.hstack((eye(3)-np.dot(n3, np.transpose(n3)), zeros((3, 3))))
+b1 = hstack((eye(3)-dot(n1, np.transpose(n1)), zeros((3, 3))))
+b2 = hstack((eye(3)-dot(n2, np.transpose(n2)), zeros((3, 3))))
+b3 = hstack((eye(3)-dot(n3, np.transpose(n3)), zeros((3, 3))))
 
-# print(b1)
 B = np.block([[b1, zeros((3, 6)), zeros((3, 6))],
               [zeros((3, 6)), b2, zeros((3, 6))],
               [zeros((3, 6)), zeros((3, 6)), b3]])
-# print B
 ''' fx <= mu*fz, fy <= mu*fz and fz > 0 '''
 C1 = - B - U
 
 ''' fx >= -mu*fz and fy >= -mu*fz '''
 C2 = B - U
 
-C4a = np.hstack([np.zeros((3, 3)), np.eye(3), np.zeros((3, 12))])
-C4b = np.hstack([np.zeros((3, 9)), np.eye(3), np.zeros((3, 6))])
-C4c = np.hstack([np.zeros((3, 15)), np.eye(3)])
-C4 = np.vstack([C4a, C4b, C4c])
+C4a = hstack([zeros((3, 3)), eye(3), zeros((3, 12))])
+C4b = hstack([zeros((3, 9)), eye(3), zeros((3, 6))])
+C4c = hstack([zeros((3, 15)), eye(3)])
+C4 = vstack([C4a, C4b, C4c])
 
 c2a = C2[0:2, :]
 c2b = C2[3:5, :]
 c2c = C2[6:8, :]
-# c2d = C2[9:11,0:12]
 C3 = vstack([c2a, c2b, c2c])
 
 C = vstack([C1, C4, C3, -C4])
@@ -127,9 +118,9 @@ print "Inequality constraints:"
 print C, b
 
 ineq = (C, b)  # C * x <= b
-ineq = (np.vstack([np.eye(6), -np.eye(6)]), np.hstack([1] * 12))
 
 vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
+
 pylab.ion()
 pylab.figure()
 print(vertices)
