@@ -12,9 +12,16 @@ import numpy as np
 from numpy import array, cross, dot, eye, hstack, vstack, zeros
 from numpy.linalg import norm
 from scipy.linalg import block_diag
+from plotting_tools import Plotter
+from constraints import Constraints
+from kinematics import Kinematics
 
 pylab.close("all")
 
+def normalize(n):
+    norm1 = np.linalg.norm(n)
+    n = np.true_divide(n, norm1)
+    return n
 
 def skew(v):
     if len(v) == 4:
@@ -31,28 +38,37 @@ def getGraspMatrix(r):
 
 # number of contacts
 nc = 3
+# number of generators, i.e. rays used to linearize the friction cone
+ng = 8
 
+constraint_mode = 'only_actuation'
 # number of decision variables of the problem
 n = nc*6
 
 # contact positions
-r1 = array([10.0, 10.0, 0.0])
-r2 = array([-10.0, -10.0, 0.0])
-r3 = array([10.0, -10.0, 0.0])
+""" contact points """
+LF_foot = np.array([0.3, 0.2, -.5])
+RF_foot = np.array([0.3, -0.2, -.5])
+LH_foot = np.array([-0.3, 0.2, -.5])
+RH_foot = np.array([-0.3, -0.2, -.5])
+contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 ''' parameters to be tuned'''
 g = 9.81
-mass = 1.
+mass = 80.
 mu = 1.
 grav = array([0., 0., -g])
+tau_lim_HAA = 80 # Nm
+tau_lim_HFE = 100 # Nm
+tau_lim_KFE = 100 # Nm
 
 # Unprojected state is:
 #
 #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
 
-G1 = getGraspMatrix(r1)[:, 0:3]
-G2 = getGraspMatrix(r2)[:, 0:3]
-G3 = getGraspMatrix(r3)[:, 0:3]
+G1 = getGraspMatrix(LF_foot)[:, 0:3]
+G2 = getGraspMatrix(RF_foot)[:, 0:3]
+G3 = getGraspMatrix(LH_foot)[:, 0:3]
 
 # Projection matrix
 Ex = -hstack((G1[4], G2[4], G3[4]))
@@ -75,13 +91,16 @@ A_f_and_tauz = array([
     [0, 0, 0, 0, 0, 1]])
 A = dot(A_f_and_tauz, G)
 t = hstack([0, 0, g, 0])
+print A,t
 eq = (A, t)  # A * x == t
 
 # Contact surface normals
 n1 = array([[0.0], [0.0], [1.0]])
+n1 = normalize(n1)
 n2 = array([[0.0], [0.0], [1.0]])
+n2 = normalize(n2)
 n3 = array([[0.0], [0.0], [1.0]])
-
+n3 = normalize(n3)
 
 def rotation_matrix_from_normal(n):
     n = n.reshape((3,))
@@ -95,18 +114,46 @@ def rotation_matrix_from_normal(n):
 R1, R2, R3 = (rotation_matrix_from_normal(n) for n in [n1, n2, n3])
 
 # Inequality matrix for a contact force in local contact frame:
-C_force = array([
+if ng == 4:
+    C_force = array([
     [-1, 0, -mu],
     [+1, 0, -mu],
     [0, -1, -mu],
     [0, +1, -mu]])
-
+elif ng ==8:
+    C_force = array([
+    [-1, 0, -mu],
+    [+1, 0, -mu],
+    [0.7, 0.7, -mu],
+    [0.7, -0.7, -mu],
+    [0, -1, -mu],
+    [0, +1, -mu],
+    [-0.7, -0.7, -mu],
+    [-0.7, 0.7, -mu]])    
 # Inequality matrix for stacked contact forces in world frame:
-C = block_diag(
+if constraint_mode == 'only_friction':
+    C = block_diag(
     dot(C_force, R1.T),
     dot(C_force, R2.T),
     dot(C_force, R3.T))
-d = zeros(C.shape[0])
+    d = zeros(C.shape[0])
+elif constraint_mode == 'only_actuation':
+    kin = Kinematics()
+    foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+    q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+                                          np.transpose(foot_vel[:,0]),
+                                            np.transpose(contacts[:,2]),
+                                            np.transpose(foot_vel[:,2]))
+    constr = Constraints()
+    act_LF = constr.computeActuationPolygon(J_LF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+    act_LH = constr.computeActuationPolygon(J_LH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+    c1, e1 = constr.hexahedron(act_LF)
+    c2, e2 = constr.hexahedron(act_LF)
+    c3, e3 = constr.hexahedron(act_LF)
+    C = block_diag(c1, c2, c3)
+    d = np.vstack([e1, e2, e3]).reshape(18)
+print C, d
+
 ineq = (C, d)  # C * x <= d
 
 vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
@@ -128,4 +175,9 @@ for j in range(0, len(vertices)):
     points.append([p[0], p[1]])
 
 print points
+
+plotter = Plotter()
+plotter.plot_polygon(contacts[0:3,:])
+
+
 # pypoman.plot_polygon(points)

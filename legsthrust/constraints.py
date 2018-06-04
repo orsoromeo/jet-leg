@@ -17,10 +17,7 @@ class Constraints:
         known_term = np.zeros((6,1))
         return cone_constraints, known_term
     
-    def zonotope(self):
-        dx = 200
-        dy = 200
-        dz = 700
+    def zonotope(self, dx = 100, dy = 100 ,dz = 100):
         constraint = np.vstack([np.eye(3), -np.eye(3)])
         known_term = np.array([[dx],[dy],[dz],[dx],[dy],[dz]])
         return constraint, known_term
@@ -40,3 +37,25 @@ class Constraints:
                                 [-h_rep6[3]]])
         print constraint, known_term
         return constraint, known_term
+        
+    def computeActuationPolygon(self, leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
+        """ This function computes the actuation polygon of a given mechanical chain
+        This function assumes the same mechanical structure of the HyQ robot, meaning that 
+        it is restricted to 3 DoFs and point contacts. If the latter assumption is not
+        respected the Jacobian matrix might become not invertible.
+        """
+        dx = tau_HAA
+        dy = tau_HFE
+        dz = tau_KFE
+        vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                         [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                         [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+                         
+        vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
+        actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(leg_jacobian_2D)),vertices_xz) 
+        actuation_polygon = np.vstack([actuation_polygon_xy[0,:],
+                                   vertices[1,:],
+                                   actuation_polygon_xy[1,:]])
+        # Only for debugging:                          
+        actuation_polygon = vertices
+        return actuation_polygon

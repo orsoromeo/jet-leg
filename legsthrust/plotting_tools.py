@@ -10,10 +10,15 @@ import numpy as np
 from computational_geometry import ComputationalGeometry
 
 class Plotter:
-  def plot_line(self, ax, coefficients):
-      a = coefficients[0]
-      b = coefficients[1]
-      c = coefficients[2]          
+  def plot_polygon(self, points):
+      x = np.hstack([points[:,0], points[0,0]])
+      y = np.hstack([points[:,1], points[0,1]])
+      plt.plot(x, y)
+    
+  def plot_line(self, ax, line_coefficients):
+      a = line_coefficients[0]
+      b = line_coefficients[1]
+      c = line_coefficients[2]          
       x1 = -2
       y1 = -a/b*x1 - c/b
  
@@ -23,10 +28,10 @@ class Plotter:
       y = np.array([y1, y2])      
       ax.plot(x,y) 
 
-  def plot_actuation_region(self, ax, coefficients):
-      edges_number = np.size(coefficients,1)
+  def plot_actuation_region(self, ax, line_coefficients):
+      edges_number = np.size(line_coefficients,1)
       for j in range(0, edges_number):
-          self.plot_line(ax, coefficients[:,j])     
+          self.plot_line(ax, line_coefficients[:,j])     
       
   def plot_facet(self,ax,facet):
       facet_x = facet[0,:]
