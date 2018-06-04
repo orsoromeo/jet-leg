@@ -9,7 +9,7 @@ import pylab
 import pypoman
 import numpy as np
 
-from numpy import array, eye, vstack, zeros
+from numpy import array, eye, hstack, vstack, zeros
 
 pylab.close("all")
 
@@ -29,72 +29,31 @@ def getGraspMatrix(r):
 
 # number of contacts
 nc = 3
+
 # number of decision variables of the problem
-# (3 contact forces for each contact + 2 com coordinates x and y)
 n = nc*6
 
-# postions of the 4 contacts
+# contact positions
 r1 = array([10.0, 10.0, 0.0])
 r2 = array([-10.0, -10.0, 0.0])
 r3 = array([10.0, -10.0, 0.0])
-print ""
-print "grasp matrix:"
-print getGraspMatrix(r1)
 
 g = 9.81
 mass = 1.
-contact_wrench = 'with_torque'
-
 mu = 1.
-grav = array([[0.], [0.], [-g]])
+grav = array([0., 0., -g])
 
-std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/1000.
-print ""
-print "standard dev:"
-print std_dev
-noise = np.random.normal(0, std_dev, 18)
-print ""
-print "noise:"
-print noise
-# I set the com coordinates to be in the bottom of the state array:
-# x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
-# E = zeros((2, n))
-# tau_0x
+# Unprojected state is:
+#
+#     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
 
 G1 = getGraspMatrix(r1)
 G2 = getGraspMatrix(r2)
 G3 = getGraspMatrix(r3)
-# print G1
-if contact_wrench == 'with_torque':
-    Ex = np.hstack((G1[4, :], G2[4, :], G3[4, :]))
-    Ey = np.hstack((G1[3, :], G2[3, :], G3[3, :]))
-elif contact_wrench == 'pure_force':
-    Ex = np.hstack((G1[4, 0:3], G2[4, 0:3], G3[4, 0:3]))
-    Ey = np.hstack((G1[3, 0:3], G2[3, 0:3], G3[3, 0:3]))
 
-E = vstack((Ex, Ey))/(g*mass)
-
-# E[0, 1] = -r1[2]/(mass*g)+noise[0]
-# E[0, 2] = +r1[1]/(mass*g)+noise[1]
-
-# E[0, 4] = -r2[2]/(mass*g)+noise[2]
-# E[0, 5] = +r2[1]/(mass*g)+noise[3]
-
-# E[0, 7] = -r3[2]/(mass*g)+noise[4]
-# E[0, 8] = +r3[1]/(mass*g)+noise[5]
-
-# tau_0y
-# E[1, 0] = +r1[2]/(mass*g)+noise[6]
-# E[1, 2] = -r1[0]/(mass*g)+noise[7]
-
-# E[1, 3] = +r2[2]/(mass*g)+noise[8]
-# E[1, 5] = -r2[0]/(mass*g)+noise[9]
-
-# E[1, 6] = +r3[2]/(mass*g)+noise[10]
-# E[1, 8] = -r3[0]/(mass*g)+noise[11]
-
-print "E matrix:"
-print E
+Ex = hstack((G1[4, 0:3], G2[4, 0:3], G3[4, 0:3]))
+Ey = hstack((G1[3, 0:3], G2[3, 0:3], G3[3, 0:3]))
+E = vstack((Ex, Ey)) / (g * mass)
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
 
@@ -108,22 +67,11 @@ P = array([[1., 0., 0.],
           [0., 1., 0.]])
 Pt = np.transpose(P)
 
-# Definition of the equality constraints
+# number of the equality constraints
 m_eq = 6
-# A2 = vstack([zeros((3,2)), -np.dot(skew(grav),Pt)])
-
-# a1 = vstack([+eye(3), skew(r1)])
-# a2 = vstack([+eye(3), skew(r2)])
-# a3 = vstack([+eye(3), skew(r3)])
 
 A = np.hstack((G1, G2, G3))
-
-# A = np.hstack((A1,A2))
-print ""
-print "Equality constraints:"
-
 t = vstack([-grav, zeros((3, 1))]).reshape((6))
-print A, t
 eq = (A, t)  # A * x == t
 
 # Definition of the inequality constraints
@@ -169,11 +117,7 @@ C3 = vstack([c2a, c2b, c2c])
 
 C = vstack([C1, C4, C3, -C4])
 if m_ineq == np.size(C, 0):
-    if contact_wrench == 'pure_force':
-        b = zeros((m_ineq, 1)).reshape(m_ineq)
-    elif contact_wrench == 'with_torque':
-        b = np.vstack([np.zeros((9, 1)), np.ones((9, 1)), np.zeros((6, 1)),
-                       np.ones((9, 1))]).reshape(m_ineq)
+    b = zeros((m_ineq, 1)).reshape(m_ineq)
 else:
     print 'Warning: wrong number of inequality constraints!'
     print 'm_ineq: ', m_ineq
@@ -183,7 +127,7 @@ print "Inequality constraints:"
 print C, b
 
 ineq = (C, b)  # C * x <= b
-ineq = (np.vstack([np.eye(3), -np.eye(3)]), np.hstack([1] * 6))
+ineq = (np.vstack([np.eye(6), -np.eye(6)]), np.hstack([1] * 12))
 
 vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
 pylab.ion()
