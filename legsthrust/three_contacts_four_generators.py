@@ -105,8 +105,8 @@ C = block_diag(
     dot(C_force, R1.T),
     dot(C_force, R2.T),
     dot(C_force, R3.T))
-
-ineq = (C, zeros(C.shape[0]))  # C * x <= 0
+d = zeros(C.shape[0])
+ineq = (C, d)  # C * x <= d
 
 vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
 
