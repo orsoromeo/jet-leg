@@ -30,20 +30,19 @@ n = nc*6
 
 # postions of the 4 contacts
 r1 = array([10.0, 10.0, 0.0])
-r2 = array([-10.0,-10.0, 0.0])
-r3 = array([10.0, -10.0, 0.0])
-print ""
-print "grasp matrix:"
-print getGraspMatrix(r1)
+r2 = array([-10.0, 10.0, 0.0])
+r3 = array([0.0, -10.0, 0.0])
 
+''' parameters to be tuned'''
 g = 9.81
 mass = 1.
 contact_wrench = 'with_torque'
+use_grasp_matrix = True
 
-mu = 1.
+mu = 0.6
 grav = array([[0.], [0.], [-g]])
 
-std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/1000.
+std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/100000.
 print ""
 print "standard dev:"
 print std_dev
@@ -60,14 +59,50 @@ G1 = getGraspMatrix(r1)
 G2 = getGraspMatrix(r2)
 G3 = getGraspMatrix(r3)
 #print G1
-if contact_wrench == 'with_torque':
-    Ex = np.hstack((G1[4,:],G2[4,:],G3[4,:])) 
-    Ey = np.hstack((G1[3,:],G2[3,:],G3[3,:]))
-elif contact_wrench == 'pure_force':
-    Ex = np.hstack((G1[4,0:3],G2[4,0:3],G3[4,0:3])) 
-    Ey = np.hstack((G1[3,0:3],G2[3,0:3],G3[3,0:3]))
+if use_grasp_matrix == 'True':
+    if contact_wrench == 'with_torque':
+        Ex = np.hstack((G1[4,:],G2[4,:],G3[4,:])) 
+        Ey = np.hstack((G1[3,:],G2[3,:],G3[3,:]))
+    elif contact_wrench == 'pure_force':
+        Ex = np.hstack((G1[4,0:3],G2[4,0:3],G3[4,0:3])) 
+        Ey = np.hstack((G1[3,0:3],G2[3,0:3],G3[3,0:3]))
     
-E = vstack((Ex, Ey))/(g*mass)
+    E = vstack((Ex, Ey))/(g*mass)
+else:    
+    if contact_wrench == 'with_torque':
+        E = zeros((2, nc*6))
+        # tau_0x
+        E[0, 1] = -r1[2]
+        E[0, 2] = +r1[1]
+        E[0, 7] = -r2[2]
+        E[0, 8] = +r2[1]
+        E[0, 13] = -r3[2]
+        E[0, 14] = +r3[1]
+        
+        E[1, 0] = +r1[2]
+        E[1, 2] = -r1[0]
+        E[1, 6] = +r2[2]
+        E[1, 8] = -r2[0]
+        E[1, 12] = +r3[2]
+        E[1, 14] = -r3[0]
+   
+    elif contact_wrench == 'pure_force':
+        E = zeros((2, nc*3))
+        # tau_0x
+        E[0, 1] = -r1[2]
+        E[0, 2] = +r1[1]    
+        E[0, 4] = -r2[2]
+        E[0, 5] = +r2[1]
+        E[0, 7] = -r3[2]
+        E[0, 8] = +r3[1]
+        #tau_0y
+        E[1, 0] = +r1[2]
+        E[1, 2] = -r1[0]
+        E[1, 3] = +r2[2]
+        E[1, 5] = -r2[0]
+        E[1, 6] = +r3[2]
+        E[1, 8] = -r3[0]
+    E = E/(g*mass)
 
 #E[0, 1] = -r1[2]/(mass*g)+noise[0]
 #E[0, 2] = +r1[1]/(mass*g)+noise[1]
@@ -123,7 +158,6 @@ eq = (A, t)  # A * x == t
 
 ## Definition of the inequality constraints
 n_generators = 4
-m_ineq = (n_generators+6+1)*nc
 u1 = np.hstack((np.dot(mu,n1),np.dot(mu,n1),np.dot(1.0,n1)))
 u2 = np.hstack((np.dot(mu,n2),np.dot(mu,n2),np.dot(1.0,n2)))
 u3 = np.hstack((np.dot(mu,n3),np.dot(mu,n3),np.dot(1.0,n3)))
@@ -161,16 +195,20 @@ c2b = C2[3:5,:]
 c2c = C2[6:8,:]
 #c2d = C2[9:11,0:12]
 C3 = vstack([c2a, c2b, c2c])
+#C = vstack([C1, C4, C3, -C4])
 
-C = vstack([C1, C4, C3, -C4])
-if m_ineq == np.size(C,0):
-    if contact_wrench == 'pure_force':
-        b = zeros((m_ineq,1)).reshape(m_ineq)
-    elif contact_wrench == 'with_torque':
-        b = np.vstack([np.zeros((9,1)),np.ones((9,1)),np.zeros((6,1)),np.ones((9,1))]).reshape(m_ineq)
-else:
-    print 'Warning: wrong number of inequality constraints!'
-    print 'm_ineq: ', m_ineq
+#if m_ineq == np.size(C,0):
+if contact_wrench == 'pure_force':
+    m_ineq = (n_generators+1)*nc
+    b = zeros((m_ineq,1)).reshape(m_ineq)
+    C = vstack([C1, C3])
+elif contact_wrench == 'with_torque':
+    m_ineq = (n_generators+6+1)*nc
+    b = np.vstack([np.zeros((9,1)),np.ones((9,1)),np.zeros((6,1)),np.ones((9,1))]).reshape(m_ineq)
+    C = vstack([C1, C4, C3, -C4])
+#else:
+#    print 'Warning: wrong number of inequality constraints!'
+#    print 'm_ineq: ', m_ineq
 
 print ""
 print "Inequality constraints:"
