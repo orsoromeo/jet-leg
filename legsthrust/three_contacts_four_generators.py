@@ -63,8 +63,17 @@ proj = (E, f)  # y = E * x + f
 # number of the equality constraints
 m_eq = 6
 
-A = hstack((G1, G2, G3))
-t = hstack([-grav, zeros(3)])
+# grasp matrix for the stacked vector of contact forces
+G = hstack((G1, G2, G3))
+
+# see Equation (52) in "ZMP Support Areas for Multicontact..."
+A_f_and_tauz = array([
+    [1, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1]])
+A = dot(A_f_and_tauz, G)
+t = hstack([0, 0, g, 0])
 eq = (A, t)  # A * x == t
 
 # Contact surface normals
