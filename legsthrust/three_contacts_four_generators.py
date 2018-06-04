@@ -40,6 +40,7 @@ r1 = array([10.0, 10.0, 0.0])
 r2 = array([-10.0, -10.0, 0.0])
 r3 = array([10.0, -10.0, 0.0])
 
+''' parameters to be tuned'''
 g = 9.81
 mass = 1.
 mu = 1.
