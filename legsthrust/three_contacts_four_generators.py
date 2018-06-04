@@ -54,8 +54,8 @@ G2 = getGraspMatrix(r2)[:, 0:3]
 G3 = getGraspMatrix(r3)[:, 0:3]
 
 # Projection matrix
-Ex = hstack((G1[4], G2[4], G3[4]))
-Ey = hstack((G1[3], G2[3], G3[3]))
+Ex = -hstack((G1[4], G2[4], G3[4]))
+Ey = +hstack((G1[3], G2[3], G3[3]))
 E = vstack((Ex, Ey)) / (g * mass)
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
