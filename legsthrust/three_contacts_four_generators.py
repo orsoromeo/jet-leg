@@ -60,11 +60,6 @@ E = vstack((Ex, Ey)) / (g * mass)
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
 
-# Contact surface normals
-n1 = array([[0.0], [0.0], [1.0]])
-n2 = array([[0.0], [0.0], [1.0]])
-n3 = array([[0.0], [0.0], [1.0]])
-
 # number of the equality constraints
 m_eq = 6
 
@@ -72,55 +67,37 @@ A = hstack((G1, G2, G3))
 t = hstack([-grav, zeros(3)])
 eq = (A, t)  # A * x == t
 
-# Definition of the inequality constraints
-n_generators = 4
-m_ineq = (n_generators+6+1)*nc
-u1 = hstack((dot(mu, n1), dot(mu, n1), dot(1.0, n1)))
-u2 = hstack((dot(mu, n2), dot(mu, n2), dot(1.0, n2)))
-u3 = hstack((dot(mu, n3), dot(mu, n3), dot(1.0, n3)))
-w1 = hstack((np.transpose(u1), zeros((3, 3))))
-w2 = hstack((np.transpose(u2), zeros((3, 3))))
-w3 = hstack((np.transpose(u3), zeros((3, 3))))
-U = np.block([[w1, zeros((3, 6)), zeros((3, 6))],
-              [zeros((3, 6)), w2, zeros((3, 6))],
-              [zeros((3, 6)), zeros((3, 6)), w3]])
-''' Setting up the linear inequality constraints
-Linearized friction cone:'''
-b1 = hstack((eye(3)-dot(n1, np.transpose(n1)), zeros((3, 3))))
-b2 = hstack((eye(3)-dot(n2, np.transpose(n2)), zeros((3, 3))))
-b3 = hstack((eye(3)-dot(n3, np.transpose(n3)), zeros((3, 3))))
+# Contact surface normals
+n1 = array([[0.0], [0.0], [1.0]])
+n2 = array([[0.0], [0.0], [1.0]])
+n3 = array([[0.0], [0.0], [1.0]])
 
-B = np.block([[b1, zeros((3, 6)), zeros((3, 6))],
-              [zeros((3, 6)), b2, zeros((3, 6))],
-              [zeros((3, 6)), zeros((3, 6)), b3]])
-''' fx <= mu*fz, fy <= mu*fz and fz > 0 '''
-C1 = - B - U
 
-''' fx >= -mu*fz and fy >= -mu*fz '''
-C2 = B - U
+def rotation_matrix_from_normal(n):
+    n = n.reshape((3,))
+    e_x = array([1., 0., 0.])
+    t = e_x - dot(e_x, n) * n
+    t = t / norm(t)
+    b = cross(n, t)
+    return vstack([t, b, n]).T
 
-C4a = hstack([zeros((3, 3)), eye(3), zeros((3, 12))])
-C4b = hstack([zeros((3, 9)), eye(3), zeros((3, 6))])
-C4c = hstack([zeros((3, 15)), eye(3)])
-C4 = vstack([C4a, C4b, C4c])
 
-c2a = C2[0:2, :]
-c2b = C2[3:5, :]
-c2c = C2[6:8, :]
-C3 = vstack([c2a, c2b, c2c])
+R1, R2, R3 = (rotation_matrix_from_normal(n) for n in [n1, n2, n3])
 
-C = vstack([C1, C4, C3, -C4])
-if m_ineq == np.size(C, 0):
-    b = zeros((m_ineq, 1)).reshape(m_ineq)
-else:
-    print 'Warning: wrong number of inequality constraints!'
-    print 'm_ineq: ', m_ineq
+# Inequality matrix for a contact force in local contact frame:
+C_force = array([
+    [-1, 0, -mu],
+    [+1, 0, -mu],
+    [0, -1, -mu],
+    [0, +1, -mu]])
 
-print ""
-print "Inequality constraints:"
-print C, b
+# Inequality matrix for stacked contact forces in world frame:
+C = block_diag(
+    dot(C_force, R1.T),
+    dot(C_force, R2.T),
+    dot(C_force, R3.T))
 
-ineq = (C, b)  # C * x <= b
+ineq = (C, zeros(C.shape[0]))  # C * x <= 0
 
 vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
 
