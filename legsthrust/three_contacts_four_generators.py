@@ -9,7 +9,9 @@ import pylab
 import pypoman
 import numpy as np
 
-from numpy import array, dot, eye, hstack, vstack, zeros
+from numpy import array, cross, dot, eye, hstack, vstack, zeros
+from numpy.linalg import norm
+from scipy.linalg import block_diag
 
 pylab.close("all")
 
@@ -47,12 +49,13 @@ grav = array([0., 0., -g])
 #
 #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
 
-G1 = getGraspMatrix(r1)
-G2 = getGraspMatrix(r2)
-G3 = getGraspMatrix(r3)
+G1 = getGraspMatrix(r1)[:, 0:3]
+G2 = getGraspMatrix(r2)[:, 0:3]
+G3 = getGraspMatrix(r3)[:, 0:3]
 
-Ex = hstack((G1[4, 0:3], G2[4, 0:3], G3[4, 0:3]))
-Ey = hstack((G1[3, 0:3], G2[3, 0:3], G3[3, 0:3]))
+# Projection matrix
+Ex = hstack((G1[4], G2[4], G3[4]))
+Ey = hstack((G1[3], G2[3], G3[3]))
 E = vstack((Ex, Ey)) / (g * mass)
 f = zeros(2)
 proj = (E, f)  # y = E * x + f
