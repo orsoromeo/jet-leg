@@ -83,11 +83,9 @@ eq = (A, t)  # A * x == t
 # Contact surface normals
 
 n1 = array([[0.0], [0.0], [1.0]])
-n1 = math.normalize(n1)
 n2 = array([[0.0], [0.0], [1.0]])
-n2 = math.normalize(n2)
 n3 = array([[0.0], [0.0], [1.0]])
-n3 = math.normalize(n3)
+n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
 
 R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
 
