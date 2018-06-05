@@ -10,15 +10,16 @@ from computational_geometry import ComputationalGeometry
 
 class Constraints:
     
-    def linearized_cone(self, mu, ng):
+    def linearized_cone_local_frame(self, mu, ng):
+        ''' Inequality matrix for a contact force in local contact frame: '''
         if ng == 4:
-            c_force = array([
+            c_force = np.array([
             [-1, 0, -mu],
             [+1, 0, -mu],
             [0, -1, -mu],
             [0, +1, -mu]])
         elif ng ==8:
-            c_force = array([
+            c_force = np.array([
             [-1, 0, -mu],
             [+1, 0, -mu],
             [0.7, 0.7, -mu],

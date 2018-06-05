@@ -24,3 +24,9 @@ class Math:
         t = t / np.linalg.norm(t)
         b = np.cross(n, t)
         return np.vstack([t, b, n]).T
+        
+    def getGraspMatrix(self, r):
+        math = Math()
+        G = np.block([[np.eye(3), np.zeros((3, 3))],
+                       [math.skew(r), np.eye(3)]])
+        return G    

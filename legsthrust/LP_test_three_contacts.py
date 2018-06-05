@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 
 """
 
-constraint_mode = 'only_friction'
+constraint_mode = 'only_actuation'
 nc = 3; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
 mass = 10 # Kg
 friction_coeff = 1.0
@@ -96,13 +96,10 @@ contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 """ normals of the surface in the contact points """
 math = Math()
 LF_normal = np.array([[0.0], [0.0], [1.0]])
-LF_normal = math.normalize(LF_normal)
 RF_normal = np.array([[0.0], [0.0], [1.0]])
-RF_normal = math.normalize(RF_normal)
 LH_normal = np.array([[0.0], [0.0], [1.0]])
-LH_normal = math.normalize(LH_normal)
 RH_normal = np.array([[0.0], [0.0], [1.0]])
-RH_normal = math.normalize(RH_normal)
+LF_normal, RF_normal, LH_normal, RH_normal = (math.normalize(n) for n in [LF_normal, RF_normal, LH_normal, RH_normal])
 normals = np.hstack((LF_normal, RF_normal, LH_normal, RH_normal))
 
 """

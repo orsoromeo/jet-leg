@@ -10,10 +10,11 @@ import numpy as np
 from computational_geometry import ComputationalGeometry
 
 class Plotter:
-  def plot_polygon(self, points):
+    
+  def plot_polygon(self, points, color = '--b'):
       x = np.hstack([points[:,0], points[0,0]])
       y = np.hstack([points[:,1], points[0,1]])
-      plt.plot(x, y)
+      plt.plot(x, y, color)
     
   def plot_line(self, ax, line_coefficients):
       a = line_coefficients[0]
