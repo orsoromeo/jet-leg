@@ -14,15 +14,20 @@ from math_tools import Math
 from plotting_tools import Plotter
 from arrow3D import Arrow3D
 import matplotlib.pyplot as plt
+
 """
- General settings that can be changed by the user:
+    In this file we can test whether, given a predefined position of the feet, there exist a set of contact forces
+    that can ensure static stability and/or actuation consistency. This is done by solving a Linear Program where
+    the contact forces are the optimization variables.
+    
+    General settings that can be changed by the user:
  
-  nc = number of contacts
-  mass = mass of the trunk of the robot
-  constraint_mode = type of constraint to be enforced in the LP (three possible types only)
-  LF_foot, .... RH_foot = positions of the feet in the base frame (the names recall the convention used for the HyQ robot)
-  friction_coeff = friction coefficient in the contacts (for now the same values is used for all contacts)
-  tau_lim_HAA, tau_lim_HFE, tau_lim_KFE = torque limits of the HAA, HFE and KFE joints of a single leg of HyQ
+    nc = number of contacts
+    mass = mass of the trunk of the robot
+    constraint_mode = type of constraint to be enforced in the LP (three possible types only)
+    LF_foot, .... RH_foot = positions of the feet in the base frame (the names recall the convention used for the HyQ robot)
+    friction_coeff = friction coefficient in the contacts (for now the same values is used for all contacts)
+    tau_lim_HAA, tau_lim_HFE, tau_lim_KFE = torque limits of the HAA, HFE and KFE joints of a single leg of HyQ
 
 """
 
@@ -36,7 +41,7 @@ def getGraspMatrix(r):
                    [math.skew(r), np.eye(3)]])
     return G
     
-def computeActuationRegion(force_polygons, mass, contacts):
+def computeActuationRegionAnalytical(force_polygons, mass, contacts):
     
     points_number = np.size(force_polygons,1)
     A1 = np.zeros((3,points_number))
@@ -215,7 +220,7 @@ if nc == 4: plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
 #vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
 #                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
 #                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-#edges = computeActuationRegion(vertices, mass, contacts)
+#edges = computeActuationRegionAnalytical(vertices, mass, contacts)
 #plotter.plot_actuation_region(ax,edges)
 
 ax.set_xlabel('X Label')
