@@ -9,6 +9,7 @@ from cvxopt import matrix, solvers
 import numpy as np
 from kinematics import Kinematics
 from constraints import Constraints
+from math_tools import Math
 # for plotting
 from plotting_tools import Plotter
 from arrow3D import Arrow3D
@@ -25,28 +26,15 @@ import matplotlib.pyplot as plt
 
 """
 
-constraint_mode = 'only_actuation'
+constraint_mode = 'only_friction'
 nc = 3; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
-mass = 80 # Kg
+mass = 10 # Kg
 friction_coeff = 1.0
-tau_lim_HAA = 1 # Nm
-tau_lim_HFE = 1 # Nm
-tau_lim_KFE = 500 # Nm
-    
-def skew(v):
-    if len(v) == 4: v = v[:3]/v[3]
-    skv = np.roll(np.roll(np.diag(v.flatten()), 1, 1), -1, 0)
-    return skv - skv.T
     
 def getGraspMatrix(r):
     G = np.block([[np.eye(3), np.zeros((3,3))],
-                   [skew(r), np.eye(3)]])
+                   [math.skew(r), np.eye(3)]])
     return G
-    
-def normalize(n):
-    norm1 = np.linalg.norm(n)
-    n = np.true_divide(n, norm1)
-    return n
     
 def computeActuationRegion(force_polygons, mass, contacts):
     
@@ -101,14 +89,15 @@ RH_foot = np.array([-0.3, -0.2, -.5])
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 """ normals of the surface in the contact points """
+math = Math()
 LF_normal = np.array([[0.0], [0.0], [1.0]])
-LF_normal = normalize(LF_normal)
+LF_normal = math.normalize(LF_normal)
 RF_normal = np.array([[0.0], [0.0], [1.0]])
-RF_normal = normalize(RF_normal)
+RF_normal = math.normalize(RF_normal)
 LH_normal = np.array([[0.0], [0.0], [1.0]])
-LH_normal = normalize(LH_normal)
+LH_normal = math.normalize(LH_normal)
 RH_normal = np.array([[0.0], [0.0], [1.0]])
-RH_normal = normalize(RH_normal)
+RH_normal = math.normalize(RH_normal)
 normals = np.hstack((LF_normal, RF_normal, LH_normal, RH_normal))
 
 """
@@ -129,11 +118,11 @@ q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0])
                                             np.transpose(contacts[:,2]),
                                             np.transpose(foot_vel[:,2]))
 constraint = Constraints()                              
-actuation_polygon_LF = constraint.computeActuationPolygon(J_LF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
-actuation_polygon_RF = constraint.computeActuationPolygon(J_RF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+actuation_polygon_LF = constraint.computeActuationPolygon(J_LF)
+actuation_polygon_RF = constraint.computeActuationPolygon(J_RF)
 actuation_polygon_RF = actuation_polygon_LF
-actuation_polygon_LH = constraint.computeActuationPolygon(J_LH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
-actuation_polygon_RH = constraint.computeActuationPolygon(J_RH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+actuation_polygon_LH = constraint.computeActuationPolygon(J_LH)
+actuation_polygon_RH = constraint.computeActuationPolygon(J_RH)
 actuation_polygon_RH = actuation_polygon_LH
 print 'actuation polygon LF: ',actuation_polygon_LF
 print 'actuation polygon RF: ',actuation_polygon_RF

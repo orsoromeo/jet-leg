@@ -38,7 +38,7 @@ class Constraints:
         print constraint, known_term
         return constraint, known_term
         
-    def computeActuationPolygon(self, leg_jacobian_2D, tau_HAA, tau_HFE, tau_KFE):
+    def computeActuationPolygon(self, leg_jacobian_2D, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):
         """ This function computes the actuation polygon of a given mechanical chain
         This function assumes the same mechanical structure of the HyQ robot, meaning that 
         it is restricted to 3 DoFs and point contacts. If the latter assumption is not

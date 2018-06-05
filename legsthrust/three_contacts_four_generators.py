@@ -15,24 +15,13 @@ from scipy.linalg import block_diag
 from plotting_tools import Plotter
 from constraints import Constraints
 from kinematics import Kinematics
+from math_tools import Math
 
-pylab.close("all")
-
-def normalize(n):
-    norm1 = np.linalg.norm(n)
-    n = np.true_divide(n, norm1)
-    return n
-
-def skew(v):
-    if len(v) == 4:
-        v = v[:3]/v[3]
-    skv = np.roll(np.roll(np.diag(v.flatten()), 1, 1), -1, 0)
-    return skv - skv.T
-
+#pylab.close("all")
 
 def getGraspMatrix(r):
     G = np.block([[eye(3), zeros((3, 3))],
-                  [skew(r), eye(3)]])
+                  [math.skew(r), eye(3)]])
     return G
 
 
@@ -41,7 +30,7 @@ nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 8
 
-constraint_mode = 'only_actuation'
+constraint_mode = 'only_friction'
 # number of decision variables of the problem
 n = nc*6
 
@@ -55,17 +44,14 @@ contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 ''' parameters to be tuned'''
 g = 9.81
-mass = 80.
+mass = 10.
 mu = 1.
 grav = array([0., 0., -g])
-tau_lim_HAA = 80 # Nm
-tau_lim_HFE = 100 # Nm
-tau_lim_KFE = 100 # Nm
 
 # Unprojected state is:
 #
 #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
-
+math = Math()
 G1 = getGraspMatrix(LF_foot)[:, 0:3]
 G2 = getGraspMatrix(RF_foot)[:, 0:3]
 G3 = getGraspMatrix(LH_foot)[:, 0:3]
@@ -95,23 +81,15 @@ print A,t
 eq = (A, t)  # A * x == t
 
 # Contact surface normals
+
 n1 = array([[0.0], [0.0], [1.0]])
-n1 = normalize(n1)
+n1 = math.normalize(n1)
 n2 = array([[0.0], [0.0], [1.0]])
-n2 = normalize(n2)
+n2 = math.normalize(n2)
 n3 = array([[0.0], [0.0], [1.0]])
-n3 = normalize(n3)
+n3 = math.normalize(n3)
 
-def rotation_matrix_from_normal(n):
-    n = n.reshape((3,))
-    e_x = array([1., 0., 0.])
-    t = e_x - dot(e_x, n) * n
-    t = t / norm(t)
-    b = cross(n, t)
-    return vstack([t, b, n]).T
-
-
-R1, R2, R3 = (rotation_matrix_from_normal(n) for n in [n1, n2, n3])
+R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
 
 # Inequality matrix for a contact force in local contact frame:
 if ng == 4:
@@ -145,11 +123,12 @@ elif constraint_mode == 'only_actuation':
                                             np.transpose(contacts[:,2]),
                                             np.transpose(foot_vel[:,2]))
     constr = Constraints()
-    act_LF = constr.computeActuationPolygon(J_LF, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
-    act_LH = constr.computeActuationPolygon(J_LH, tau_lim_HAA, tau_lim_HFE, tau_lim_KFE)
+    act_LF = constr.computeActuationPolygon(J_LF)
+    act_LH = constr.computeActuationPolygon(J_LH)
+    act_RF = constr.computeActuationPolygon(J_LF)
     c1, e1 = constr.hexahedron(act_LF)
-    c2, e2 = constr.hexahedron(act_LF)
-    c3, e3 = constr.hexahedron(act_LF)
+    c2, e2 = constr.hexahedron(act_LH)
+    c3, e3 = constr.hexahedron(act_RF)
     C = block_diag(c1, c2, c3)
     d = np.vstack([e1, e2, e3]).reshape(18)
 print C, d
