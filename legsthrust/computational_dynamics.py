@@ -52,21 +52,21 @@ class ComputationalDynamics():
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
         t = hstack([0, 0, g, 0])
-        #print A,t
+        
+        print A,t
         eq = (A, t)  # A * x == t
         
         # Contact surface normals
         n1 = np.transpose(normals[0,:])
         n2 = normals[1,:]
         n3 = normals[2,:]
-        print n1
         n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
-        
         R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
         
         constr = Constraints()
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'only_friction':
+            print 'only friction'
             C_force = constr.linearized_cone_local_frame(mu, ng)
             C = block_diag(
             dot(C_force, R1.T),
@@ -75,6 +75,7 @@ class ComputationalDynamics():
             d = zeros(C.shape[0])
             
         elif constraint_mode == 'only_actuation':
+            print 'only actuation'
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
@@ -88,7 +89,7 @@ class ComputationalDynamics():
             #print c1
             C = block_diag(c1, c2, c3)
             d = np.vstack([e1, e2, e3]).reshape(18)
-        #print C, d
+        print C, d
         
         ineq = (C, d)  # C * x <= d
         

@@ -25,7 +25,7 @@ from computational_dynamics import ComputationalDynamics as CompDyn
 # number of contacts
 nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
-ng = 8
+ng = 4
 
 constraint_mode = 'only_friction'
 
