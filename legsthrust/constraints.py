@@ -9,6 +9,26 @@ from computational_geometry import ComputationalGeometry
 
 
 class Constraints:
+    
+    def linearized_cone(self, mu, ng):
+        if ng == 4:
+            c_force = array([
+            [-1, 0, -mu],
+            [+1, 0, -mu],
+            [0, -1, -mu],
+            [0, +1, -mu]])
+        elif ng ==8:
+            c_force = array([
+            [-1, 0, -mu],
+            [+1, 0, -mu],
+            [0.7, 0.7, -mu],
+            [0.7, -0.7, -mu],
+            [0, -1, -mu],
+            [0, +1, -mu],
+            [-0.7, -0.7, -mu],
+            [-0.7, 0.7, -mu]])
+        return c_force
+
     def linear_cone(self, n, mu):
         m = np.eye(3) - np.dot(n,np.transpose(n))
         u = np.dot(n,mu)
