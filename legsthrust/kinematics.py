@@ -10,13 +10,23 @@ Besides the joint positions and velocities it also returns the 2D jacobians refe
 import numpy as np
 
 class Kinematics:
+    
+    def compute_FK(self, q):
+        x = [None]
+        return x        
         
     def compute_xy_IK(self, x, x_dot, z, z_dot):
+        ''' 
+        This funciton computes the joint positions given the feet positions and velocities.
+        Only the X Y feet coordinates are considered inthis version.
+        Besides the joint positions, this function also returns the 2D jacobians referred to the
+        HFE and KFE joints of the HyQ robot.
+        '''
         footPosDes = np.vstack([x,z])
         BASE2HAA_offsets = np.array([[0.3735,0.3735,-0.3735,-0.3735],
                                  [-.08, -.08, -.08, -.08]]);
         upperLegLength = 0.35;
-        lowerLegLength = 0.341;
+        lowerLegLength = 0.346;
         footPosHAA = np.subtract(footPosDes, BASE2HAA_offsets)
 
         haa2hfeLength = 0.045;
@@ -81,6 +91,11 @@ class Kinematics:
         return q, q_dot, Jac_LF, Jac_RF, Jac_LH, Jac_RH
     
     def update_jacobians(self, q):
+        '''
+        Here in the following I copy pasted the "update_jacobians.m" file by Michele Focchi.
+        Once translated into python, this will update the 3D jacobians of HyQ's legs given 
+        the current joint positions.
+        '''
        # s__q_LF_HAA = sin( q(1));
        # s__q_LF_HFE = sin( q(2));
        # s__q_LF_KFE = sin( q(3));
