@@ -38,7 +38,7 @@ contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 ''' parameters to be tuned'''
 g = 9.81
-mass = 10.
+mass = 100.
 mu = 1.
 
 n1 = array([0.0, 0.0, 1.0])
@@ -47,9 +47,6 @@ n3 = array([0.0, 0.0, 1.0])
 math = Math()
 n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
 normals = np.vstack([n1, n2, n3])
-
-#compute_bretl(constraint_mode, contacts, normals, mass, g)
-
 
 comp_dyn = ComputationalDynamics()
 comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
