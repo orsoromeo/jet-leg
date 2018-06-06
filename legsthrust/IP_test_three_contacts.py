@@ -16,19 +16,16 @@ from plotting_tools import Plotter
 from constraints import Constraints
 from kinematics import Kinematics
 from math_tools import Math
-from computational_dynamics import ComputationalDynamics as CompDyn
-
-#pylab.close("all")
-    
-    # pypoman.plot_polygon(points)
+from computational_dynamics import ComputationalDynamics
 
 # number of contacts
 nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
-ng = 4
+ng = 8
 
 constraint_mode = 'only_friction'
-
+# number of decision variables of the problem
+n = nc*6
 
 # contact positions
 """ contact points """
@@ -38,13 +35,22 @@ LH_foot = np.array([-0.3, 0.2, -.5])
 RH_foot = np.array([-0.3, -0.2, -.5])
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
-normal1 = array([0.0, 0.0, 1.0])
-normal2 = array([0.0, 0.0, 1.0])
-normal3 = array([0.0, 0.0, 1.0])
-normals  = np.vstack([normal1 ,normal2, normal3])
 ''' parameters to be tuned'''
+g = 9.81
 mass = 10.
 mu = 1.
 
-comp_dyn = CompDyn()
-comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mu, mass, nc, ng)
+n1 = array([0.0, 0.0, 1.0])
+n2 = array([0.0, 0.0, 1.0])
+n3 = array([0.0, 0.0, 1.0])
+math = Math()
+#n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
+normals = np.hstack([n1, n2, n3])
+
+#compute_bretl(constraint_mode, contacts, normals, mass, g)
+
+
+comp_dyn = ComputationalDynamics()
+comp_dyn.compute_bretl(constraint_mode, contacts, normals, mass, ng, mu)
+
+# pypoman.plot_polygon(points)
