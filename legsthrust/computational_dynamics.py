@@ -23,19 +23,19 @@ class ComputationalDynamics():
                   [math.skew(r), eye(3)]])
         return G
     
-    def compute_bretl(self, constraint_mode, contacts, normals, mass, ng, mu):
+    def iterative_projection_bretl(self, constraint_mode, contacts, normals, mass, ng, mu):
         g = 9.81
         grav = array([0., 0., -g])
         # Unprojected state is:
         #
         #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
         math = Math()
-        LF_foot = np.array([0.3, 0.2, -.5])
-        RF_foot = np.array([0.3, -0.2, -.5])
-        LH_foot = np.array([-0.3, 0.2, -.5])
-        G1 = self.getGraspMatrix(LF_foot)[:, 0:3]
-        G2 = self.getGraspMatrix(RF_foot)[:, 0:3]
-        G3 = self.getGraspMatrix(LH_foot)[:, 0:3]
+        r1 = contacts[0,:]
+        r2 = contacts[1,:]
+        r3 = contacts[2,:]
+        G1 = self.getGraspMatrix(r1)[:, 0:3]
+        G2 = self.getGraspMatrix(r2)[:, 0:3]
+        G3 = self.getGraspMatrix(r3)[:, 0:3]
         
         # Projection matrix
         Ex = -hstack((G1[4], G2[4], G3[4]))
@@ -63,9 +63,9 @@ class ComputationalDynamics():
         
         # Contact surface normals
         
-        n1 = array([0.0, 0.0, 1.0])
-        n2 = array([0.0, 0.0, 1.0])
-        n3 = array([0.0, 0.0, 1.0])
+        n1 = normals[0,:]
+        n2 = normals[1,:]
+        n3 = normals[2,:]
         n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
         print n1, n2, n3
         R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])

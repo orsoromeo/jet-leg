@@ -30,6 +30,7 @@ n = nc*6
 # contact positions
 """ contact points """
 LF_foot = np.array([0.3, 0.2, -.5])
+print LF_foot
 RF_foot = np.array([0.3, -0.2, -.5])
 LH_foot = np.array([-0.3, 0.2, -.5])
 RH_foot = np.array([-0.3, -0.2, -.5])
@@ -44,13 +45,13 @@ n1 = array([0.0, 0.0, 1.0])
 n2 = array([0.0, 0.0, 1.0])
 n3 = array([0.0, 0.0, 1.0])
 math = Math()
-#n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
-normals = np.hstack([n1, n2, n3])
+n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
+normals = np.vstack([n1, n2, n3])
 
 #compute_bretl(constraint_mode, contacts, normals, mass, g)
 
 
 comp_dyn = ComputationalDynamics()
-comp_dyn.compute_bretl(constraint_mode, contacts, normals, mass, ng, mu)
+comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
 
 # pypoman.plot_polygon(points)
