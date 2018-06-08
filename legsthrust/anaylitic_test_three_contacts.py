@@ -61,12 +61,12 @@ contacts = np.vstack([r1, r2, r3, r1])
 dx = 100
 dy = 100
 dz = 100
-vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-                         [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-                         [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-#vertices = np.array([[0., dx, dx, -dx, -dx],
-#                         [0., dy, -dy, -dy, dy],
-#                         [0., dz, dz, dz, dz]])
+#vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+#                         [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+#                         [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+vertices = np.array([[0., dx, dx, -dx, -dx],
+                         [0., dy, -dy, -dy, dy],
+                         [0., dz, dz, dz, dz]])
 tau1 = np.zeros((3,np.size(vertices,1)))
 tau2 = np.zeros((3,np.size(vertices,1)))
 tau3 = np.zeros((3,np.size(vertices,1)))             
@@ -82,7 +82,7 @@ w12 = minksum(w1, w2)
 w123 = minksum(w12, w3)
 #print w123, np.size(w123,1)
 
-mass = 50
+mass = 170
 points, points_num = compute_points(w123, mass)
 points2d = project_points(points, mass)
 print np.size(points2d,0)
