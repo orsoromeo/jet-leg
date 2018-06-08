@@ -44,10 +44,12 @@ def convex_hull(input_matrix):#requires 6XN
 
 
 def compute_points(a, mg):
+    
+    #this has complexity n!/2!(n-2) = n^2/2 instead of n^2 (with the normal for)
     n_a = np.size(a,1)
     points = np.zeros((0,6))
     for j in range(0,n_a):
-        for i in range(0,n_a):
+        for i in range(j+1,n_a):
             lambda1 = a[:,j]
             lambda2 = a[:,i]
             if lambda1[5]!=lambda2[5]:
@@ -80,15 +82,15 @@ r2 = np.array([2.3, 1.5, 0.0])
 r3 = np.array([3.0, 0.2, 0.0])
 contacts = np.vstack([r1, r2, r3, r1])
 mg = 170
-dx = 100*mg
-dy = 100*mg
-dz = 100*mg
-#vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-#                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-#                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-vertices = np.array([[0., dx, dx, -dx, -dx],
-                         [0., dy, -dy, -dy, dy],
-                         [0., dz, dz, dz, dz]])
+dx = 100;#100*mg
+dy = 100;#100*mg
+dz = 100;#100*mg
+vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+#vertices = np.array([[0., dx, dx, -dx, -dx],
+#                         [0., dy, -dy, -dy, dy],
+#                         [0., dz, dz, dz, dz]])
 tau1 = np.zeros((3,np.size(vertices,1)))
 tau2 = np.zeros((3,np.size(vertices,1)))
 tau3 = np.zeros((3,np.size(vertices,1)))             
