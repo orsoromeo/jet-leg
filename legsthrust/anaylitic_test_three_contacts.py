@@ -9,7 +9,8 @@ Created on Thu Jun  7 22:14:22 2018
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy
+import scipy.spatial
+
 
 start_time = time.time()
 
@@ -25,7 +26,7 @@ def minksum(a,b):
         
     return np.transpose(sum)    
 
-def compute_points(a, mass):
+def compute_points(a, mg):
     n_a = np.size(a,1)
     points = np.zeros((0,6))
     for j in range(0,n_a):
@@ -33,14 +34,16 @@ def compute_points(a, mass):
             lambda1 = a[:,j]
             lambda2 = a[:,i]
             if lambda1[5]!=lambda2[5]:
-                alpha = (mass - lambda1[5])/(lambda2[5] - lambda1[5])
+                alpha = (mg - lambda1[5])/(lambda2[5] - lambda1[5])
                 #print alpha
-                if(alpha>=-10e-2)&(alpha<=1.0+10e-2):
+                if(alpha>=0.0)&(alpha<=1.0):
                     new_point = lambda1 + (lambda2 - lambda1)*alpha
                     points = np.vstack([points, new_point])
     print np.size(points,0)
     return np.transpose(points), np.size(points,0)
+    
 
+     
 def project_points(vertices, mass):
     n = np.size(vertices,1)
     vertices2d = np.zeros((2,0))
@@ -54,19 +57,19 @@ def project_points(vertices, mass):
     print np.size(vertices2d,1)
     return vertices2d
     
-r1 = array([1.0, 0.0, 0.0])
-r2 = array([2.3, 1.5, 0.0])
-r3 = array([3.0, 0.2, 0.0])
+r1 = np.array([1.0, 0.0, 0.0])
+r2 = np.array([2.3, 1.5, 0.0])
+r3 = np.array([3.0, 0.2, 0.0])
 contacts = np.vstack([r1, r2, r3, r1])
 dx = 100
 dy = 100
 dz = 100
-#vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-#                         [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-#                         [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-vertices = np.array([[0., dx, dx, -dx, -dx],
-                         [0., dy, -dy, -dy, dy],
-                         [0., dz, dz, dz, dz]])
+vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+#vertices = np.array([[0., dx, dx, -dx, -dx],
+#                         [0., dy, -dy, -dy, dy],
+#                         [0., dz, dz, dz, dz]])
 tau1 = np.zeros((3,np.size(vertices,1)))
 tau2 = np.zeros((3,np.size(vertices,1)))
 tau3 = np.zeros((3,np.size(vertices,1)))             
@@ -79,11 +82,28 @@ w2 = np.vstack([tau2, vertices])
 w3 = np.vstack([tau3, vertices])
 print w1, w2, w3
 w12 = minksum(w1, w2)
-w123 = minksum(w12, w3)
+w123 = minksum(w12, w3) #CWC con punti interni 6XN
+w123_t = np.transpose(w123);  #CWC con punti interni NX6
+
+chull_w123 = scipy.spatial.ConvexHull(w123_t, qhull_options="Qx")
+#get the matrix
+#w123_hull = w123_t[chull_w123]
+indices = chull_w123.vertices
+n = np.size(indices,0)
+w123_hull = np.zeros((0,6))
+
+for i in range(len(indices)):
+		  w123_hull = np.vstack([w123_hull, w123_t[indices[i]]])
+
+
+
+#fill in a new matrix
+#print w123_hull
+
 #print w123, np.size(w123,1)
 
 mass = 170
-points, points_num = compute_points(w123, mass)
+points, points_num = compute_points(np.transpose(w123_hull), mass)
 points2d = project_points(points, mass)
 print np.size(points2d,0)
 #print points
@@ -94,8 +114,6 @@ print("--- %s seconds ---" % (time.time() - start_time))
 
 plt.plot(contacts[:,0],contacts[:,1],'--b')
 plt.plot(points2d[0,:], points2d[1,:], 'ro')
-plt.plot(vertices2d[chull.vertices[0],0], vertices2d[chull.vertices[0],1], 'r')
-
 
 for simplex in chull.simplices:
     plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'k-')
