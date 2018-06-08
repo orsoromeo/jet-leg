@@ -4,7 +4,7 @@ Created on Sat May  5 14:35:48 2018
 
 @author: Romeo Orsolino
 """
-
+import time
 import pylab
 import pypoman
 import numpy as np
@@ -18,6 +18,8 @@ from kinematics import Kinematics
 from math_tools import Math
 from computational_dynamics import ComputationalDynamics
 
+
+start_time = time.time()
 # number of contacts
 nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
@@ -50,5 +52,7 @@ normals = np.vstack([n1, n2, n3])
 
 comp_dyn = ComputationalDynamics()
 comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
+
+print("--- %s seconds ---" % (time.time() - start_time))
 
 # pypoman.plot_polygon(points)

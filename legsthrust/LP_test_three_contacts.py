@@ -4,6 +4,7 @@ Created on Sat May 20 15:09:24 2018
 
 @author: Romeo Orsolino
 """
+import time
 import cvxopt
 from cvxopt import matrix, solvers
 import numpy as np
@@ -30,6 +31,8 @@ import matplotlib.pyplot as plt
     tau_lim_HAA, tau_lim_HFE, tau_lim_KFE = torque limits of the HAA, HFE and KFE joints of a single leg of HyQ
 
 """
+
+start_time = time.time()
 
 constraint_mode = 'only_actuation'
 nc = 3; # Number of contacts. This has been tested mainly for 3 and 4 contact points (keeping in mind a quadruped robot, but this is not mandatory)
@@ -166,8 +169,8 @@ feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 
 """ Defining the equality constraints """
-for com_x in np.arange(-0.6,0.7,0.025):
-    for com_y in np.arange(-0.6,0.5,0.025):
+for com_x in np.arange(-0.6,0.7,0.5):
+    for com_y in np.arange(-0.6,0.5,0.5):
         com = np.array([com_x, com_y, 0.0])
         torque = -np.cross(com, np.transpose(grav))
         A = np.zeros((6,0))
@@ -188,8 +191,9 @@ for com_x in np.arange(-0.6,0.7,0.025):
             feasible_points = np.vstack([feasible_points,com])
         else:
             unfeasible_points = np.vstack([unfeasible_points,com])
-        #print 'iteration ', com_x
 
+
+print("--- %s seconds ---" % (time.time() - start_time))
 
 """ Plotting the results """
 fig = plt.figure()
