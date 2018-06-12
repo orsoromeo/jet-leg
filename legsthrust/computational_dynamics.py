@@ -28,6 +28,7 @@ class ComputationalDynamics():
         return G
     
     def iterative_projection_bretl(self, constraint_mode, contacts, normals, mass, ng, mu):
+        start_t_IP = time.time()
         g = 9.81
         grav = array([0., 0., -g])
         # Unprojected state is:
@@ -62,7 +63,7 @@ class ComputationalDynamics():
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
         t = hstack([0, 0, g, 0])
-        print A,t
+        #print A,t
         eq = (A, t)  # A * x == t
         
         # Contact surface normals
@@ -71,7 +72,7 @@ class ComputationalDynamics():
         n2 = normals[1,:]
         n3 = normals[2,:]
         n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
-        print n1, n2, n3
+        #print n1, n2, n3
         R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
         
         # Inequality matrix for a contact force in local contact frame:
@@ -114,15 +115,15 @@ class ComputationalDynamics():
             c3, e3 = constr.hexahedron(act_RF)
             C = block_diag(c1, c2, c3)
             d = np.vstack([e1, e2, e3]).reshape(18)
-        print C, d
+        #print C, d
         
         ineq = (C, d)  # C * x <= d
         
         vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
         
-        pylab.ion()
-        pylab.figure()
-        print(vertices)
+        #pylab.ion()
+        #pylab.figure()
+        #print(vertices)
         #pypoman.plot_polygon(vertices)
         
         # Project Tau_0 into CoM coordinates as in Eq. 53
@@ -140,10 +141,11 @@ class ComputationalDynamics():
         
         #plotter = Plotter()
         #plotter.plot_polygon(contacts[0:3,:])
+        print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IP))
         return vertices
 
     def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc):
-        start_time = time.time()
+        start_t_LP = time.time()
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
         p = matrix(np.ones((3*nc,1)))    
@@ -165,10 +167,10 @@ class ComputationalDynamics():
         actuation_polygon_LH = constraint.computeActuationPolygon(J_LH)
         actuation_polygon_RH = constraint.computeActuationPolygon(J_RH)
         actuation_polygon_RH = actuation_polygon_LH
-        print 'actuation polygon LF: ',actuation_polygon_LF
-        print 'actuation polygon RF: ',actuation_polygon_RF
-        print 'actuation polygon LH: ',actuation_polygon_LH
-        print 'actuation polygon RH: ',actuation_polygon_RH
+        #print 'actuation polygon LF: ',actuation_polygon_LF
+        #print 'actuation polygon RF: ',actuation_polygon_RF
+        #print 'actuation polygon LH: ',actuation_polygon_LH
+        #print 'actuation polygon RH: ',actuation_polygon_RH
         
         """ construct the equations needed for the inequality constraints of the LP """   
         for j in range(0,nc):
@@ -198,8 +200,8 @@ class ComputationalDynamics():
         #cons = cons.astype(np.double)
         G = matrix(cons) #matrix([[-1.0,0.0],[0.0,-1.0]])
         h = matrix(h_vec.reshape(m_ineq)) #matrix([0.0,0.0])
-        print G, h
-        print np.size(G,0), np.size(G,1)
+        #print G, h
+        #print np.size(G,0), np.size(G,1)
         
         feasible_points = np.zeros((0,3))
         unfeasible_points = np.zeros((0,3))
@@ -229,7 +231,7 @@ class ComputationalDynamics():
                     unfeasible_points = np.vstack([unfeasible_points,com])
         
         
-        print("--- %s seconds ---" % (time.time() - start_time))
+        print("LP test: --- %s seconds ---" % (time.time() - start_t_LP))
         
         """ Plotting the results """
         #fig = plt.figure()

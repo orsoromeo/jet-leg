@@ -77,35 +77,49 @@ class AnalyticProjection():
     
     
     def analytic_projection(self, constraint_mode, contacts, normals, mass, ng, mu):
+        start_t = time.time()
+        r1 = contacts[0,:]
+        r2 = contacts[1,:]
+        r3 = contacts[2,:]        
         g = 9.81
         mg = mass*g
-        dx = 100*mg
-        dy = 100*mg
-        dz = 100*mg
-        #vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-        #                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-        #                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-        vertices = np.array([[0., dx, dx, -dx, -dx],
+
+        if constraint_mode == 'only_actuation':
+            dx = 100*mg
+            dy = 100*mg
+            dz = 100*mg
+            vertices_cl = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                                 [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                                 [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+        else:
+            tau_HAA = 80
+            tau_HFE = 120
+            tau_KFE = 120
+            dx = tau_HAA
+            dy = tau_HFE
+            dz = tau_KFE
+            vertices_cl = np.array([[0., dx, dx, -dx, -dx],
                                  [0., dy, -dy, -dy, dy],
                                  [0., dz, dz, dz, dz]])
-        tau1 = np.zeros((3,np.size(vertices,1)))
-        tau2 = np.zeros((3,np.size(vertices,1)))
-        tau3 = np.zeros((3,np.size(vertices,1)))             
-        for j in range(0,np.size(vertices,1)):
-            tau1[:,j] = np.cross(r1, vertices[:,j])
-            tau2[:,j] = np.cross(r2, vertices[:,j])
-            tau3[:,j] = np.cross(r3, vertices[:,j])
-        w1 = np.vstack([tau1, vertices])
-        w2 = np.vstack([tau2, vertices])
-        w3 = np.vstack([tau3, vertices]) #6XN
-        print w1, w2, w3
+                                 
+        tau1 = np.zeros((3,np.size(vertices_cl,1)))
+        tau2 = np.zeros((3,np.size(vertices_cl,1)))
+        tau3 = np.zeros((3,np.size(vertices_cl,1)))             
+        for j in range(0,np.size(vertices_cl,1)):
+            tau1[:,j] = np.cross(r1, vertices_cl[:,j])
+            tau2[:,j] = np.cross(r2, vertices_cl[:,j])
+            tau3[:,j] = np.cross(r3, vertices_cl[:,j])
+        w1 = np.vstack([tau1, vertices_cl])
+        w2 = np.vstack([tau2, vertices_cl])
+        w3 = np.vstack([tau3, vertices_cl]) #6XN
+        #print w1, w2, w3
         w12 = self.minksum(w1, w2)
         w123 = self.minksum(w12, w3) #CWC con punti interni 6XN
         
         
-        print 'number of vertex before convex hull', np.size(w123,1)
+        #print 'number of vertex before convex hull', np.size(w123,1)
         w123_hull = self.convex_hull(w123)
-        print 'number of vertex after convex hull', np.size(w123_hull,1)
+        #print 'number of vertex after convex hull', np.size(w123_hull,1)
         
         points, points_num = self.compute_points(w123_hull, mg) #compute edges and slice them with mg
         points2d = self.project_points(points, mg) #cimpute com points
@@ -114,8 +128,9 @@ class AnalyticProjection():
         vertices2d = np.transpose(points2d)
         chull = scipy.spatial.ConvexHull(vertices2d)
         #print chull.vertices[0]
-        print("--- %s seconds ---" % (time.time() - start_time))
+        print("Closed form algorith: --- %s seconds ---" % (time.time() - start_t))
         
+        return vertices2d, chull.simplices
         #plt.plot(contacts[:,0],contacts[:,1],'--b')
         #plt.plot(points2d[0,:], points2d[1,:], 'ro')
         #
@@ -124,8 +139,6 @@ class AnalyticProjection():
         #plt.show()
     
 '''MAIN'''
-
-start_time = time.time()
 
 r1 = np.array([0.3, 0.2, 0.0])
 r2 = np.array([0.3, -0.2, 0.0])
