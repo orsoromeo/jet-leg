@@ -56,7 +56,7 @@ class Constraints:
                                 [h_rep4[3]],
                                 [h_rep5[3]],
                                 [-h_rep6[3]]])
-        print constraint, known_term
+        #print constraint, known_term
         return constraint, known_term
         
     def computeActuationPolygon(self, leg_jacobian_2D, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):

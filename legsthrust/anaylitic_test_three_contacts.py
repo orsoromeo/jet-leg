@@ -140,24 +140,24 @@ class AnalyticProjection():
     
 '''MAIN'''
 
-r1 = np.array([0.3, 0.2, 0.0])
-r2 = np.array([0.3, -0.2, 0.0])
-r3 = np.array([-0.3, 0.2, 0.0])
-contacts = np.vstack([r1, r2, r3, r1])
-mass = 10
-ng = 3
-mu = 1.0
-
-n1 = np.array([0.0, 0.0, 1.0])
-n2 = np.array([0.0, 0.0, 1.0])
-n3 = np.array([0.0, 0.0, 1.0])
-math = Math()
-n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
-normals = np.vstack([n1, n2, n3])
-constraint_mode = 'only_friction'
-
-analytic_proj = AnalyticProjection()
-analytic_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)
+#r1 = np.array([0.3, 0.2, 0.0])
+#r2 = np.array([0.3, -0.2, 0.0])
+#r3 = np.array([-0.3, 0.2, 0.0])
+#contacts = np.vstack([r1, r2, r3, r1])
+#mass = 10
+#ng = 3
+#mu = 1.0
+#
+#n1 = np.array([0.0, 0.0, 1.0])
+#n2 = np.array([0.0, 0.0, 1.0])
+#n3 = np.array([0.0, 0.0, 1.0])
+#math = Math()
+#n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
+#normals = np.vstack([n1, n2, n3])
+#constraint_mode = 'only_friction'
+#
+#analytic_proj = AnalyticProjection()
+#analytic_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)
 
 
 #mg = 170
