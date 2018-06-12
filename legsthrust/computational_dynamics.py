@@ -76,22 +76,8 @@ class ComputationalDynamics():
         R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
         
         # Inequality matrix for a contact force in local contact frame:
-        if ng == 4:
-            C_force = array([
-            [-1, 0, -mu],
-            [+1, 0, -mu],
-            [0, -1, -mu],
-            [0, +1, -mu]])
-        elif ng ==8:
-            C_force = array([
-            [-1, 0, -mu],
-            [+1, 0, -mu],
-            [0.7, 0.7, -mu],
-            [0.7, -0.7, -mu],
-            [0, -1, -mu],
-            [0, +1, -mu],
-            [-0.7, -0.7, -mu],
-            [-0.7, 0.7, -mu]])    
+        constr = Constraints()
+        C_force = constr.linearized_cone_local_frame(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'only_friction':
             C = block_diag(
@@ -99,6 +85,7 @@ class ComputationalDynamics():
             dot(C_force, R2.T),
             dot(C_force, R3.T))
             d = zeros(C.shape[0])
+            
         elif constraint_mode == 'only_actuation':
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
@@ -106,7 +93,7 @@ class ComputationalDynamics():
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contacts[:,2]),
                                                     np.transpose(foot_vel[:,2]))
-            constr = Constraints()
+
             act_LF = constr.computeActuationPolygon(J_LF)
             act_LH = constr.computeActuationPolygon(J_LH)
             act_RF = constr.computeActuationPolygon(J_LF)
@@ -144,7 +131,7 @@ class ComputationalDynamics():
         print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IP))
         return vertices
 
-    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc):
+    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu):
         start_t_LP = time.time()
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
@@ -184,9 +171,26 @@ class ComputationalDynamics():
                           [np.zeros((np.size(c,0),np.size(cons2,1))), c]])    
             h_vec2 = np.vstack([h_vec2, h_term])
         
+        n1 = normals[0,:]
+        n2 = normals[1,:]
+        n3 = normals[2,:]
+        math_lp = Math()
+        n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
+        R1, R2, R3 = (math_lp.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
+        # Inequality matrix for a contact force in local contact frame:
+        constr = Constraints()
+        C_force = constr.linearized_cone_local_frame(ng, mu)
+        
         if constraint_mode == 'only_friction':
-            cons = cons1
-            h_vec = h_vec1
+            #cons = cons1
+            #h_vec = h_vec1
+            
+            cons = block_diag(
+            dot(C_force, R1.T),
+            dot(C_force, R2.T),
+            dot(C_force, R3.T))
+            h_vec = zeros(cons.shape[0])
+            
         elif constraint_mode == 'only_actuation':
             cons = cons2
             h_vec = h_vec2
@@ -207,8 +211,8 @@ class ComputationalDynamics():
         unfeasible_points = np.zeros((0,3))
         
         """ Defining the equality constraints """
-        for com_x in np.arange(-0.6,0.7,0.025):
-            for com_y in np.arange(-0.6,0.5,0.025):
+        for com_x in np.arange(-0.6,0.7,0.05):
+            for com_y in np.arange(-0.6,0.5,0.05):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))
