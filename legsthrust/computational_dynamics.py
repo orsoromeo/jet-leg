@@ -15,6 +15,10 @@ from plotting_tools import Plotter
 from constraints import Constraints
 from kinematics import Kinematics
 from math_tools import Math
+from cvxopt import matrix, solvers
+import time
+import matplotlib.pyplot as plt
+from arrow3D import Arrow3D
 
 class ComputationalDynamics():
     def getGraspMatrix(self, r):
@@ -119,20 +123,149 @@ class ComputationalDynamics():
         pylab.ion()
         pylab.figure()
         print(vertices)
-        pypoman.plot_polygon(vertices)
+        #pypoman.plot_polygon(vertices)
         
         # Project Tau_0 into CoM coordinates as in Eq. 53
         # p_g = (n/mg) x tau_0 + z_g*n
-        n = array([0., 0., 1./(g)])
-        points = []
-        for j in range(0, len(vertices)):
-            vx = vertices[j][0]
-            vy = vertices[j][1]
-            tau = array([vx, vy, 0.])
-            p = np.cross(n, tau)
-            points.append([p[0], p[1]])
+        #n = array([0., 0., 1./(g)])
+        #points = []
+        #for j in range(0, len(vertices)):
+        #    vx = vertices[j][0]
+        #    vy = vertices[j][1]
+        #    tau = array([vx, vy, 0.])
+        #    p = np.cross(n, tau)
+        #    points.append([p[0], p[1]])
+        #
+        #print points
         
-        print points
+        #plotter = Plotter()
+        #plotter.plot_polygon(contacts[0:3,:])
+        return vertices
+
+    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc):
+        start_time = time.time()
+        g = 9.81    
+        grav = np.array([[0.], [0.], [-g*mass]])
+        p = matrix(np.ones((3*nc,1)))    
+        cons1 = np.zeros((0,0))
+        h_vec1 = np.zeros((0,1))
+        cons2 = np.zeros((0,0))
+        h_vec2 = np.zeros((0,1))
         
-        plotter = Plotter()
-        plotter.plot_polygon(contacts[0:3,:])
+        kin = Kinematics()
+        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+        q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+                                                  np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contacts[:,2]),
+                                                    np.transpose(foot_vel[:,2]))
+        constraint = Constraints()                              
+        actuation_polygon_LF = constraint.computeActuationPolygon(J_LF)
+        actuation_polygon_RF = constraint.computeActuationPolygon(J_RF)
+        actuation_polygon_RF = actuation_polygon_LF
+        actuation_polygon_LH = constraint.computeActuationPolygon(J_LH)
+        actuation_polygon_RH = constraint.computeActuationPolygon(J_RH)
+        actuation_polygon_RH = actuation_polygon_LH
+        print 'actuation polygon LF: ',actuation_polygon_LF
+        print 'actuation polygon RF: ',actuation_polygon_RF
+        print 'actuation polygon LH: ',actuation_polygon_LH
+        print 'actuation polygon RH: ',actuation_polygon_RH
+        
+        """ construct the equations needed for the inequality constraints of the LP """   
+        for j in range(0,nc):
+            c, h_term = constraint.linear_cone(normals[j,:],friction_coeff)
+            cons1 = np.block([[cons1, np.zeros((np.size(cons1,0),np.size(c,1)))],
+                          [np.zeros((np.size(c,0),np.size(cons1,1))), c]])
+            h_vec1 = np.vstack([h_vec1, h_term])
+            c, h_term = constraint.hexahedron(actuation_polygon_LF)
+            #c, h_term = constraint.zonotope()    
+            cons2 = np.block([[cons2, np.zeros((np.size(cons2,0),np.size(c,1)))],
+                          [np.zeros((np.size(c,0),np.size(cons2,1))), c]])    
+            h_vec2 = np.vstack([h_vec2, h_term])
+        
+        if constraint_mode == 'only_friction':
+            cons = cons1
+            h_vec = h_vec1
+        elif constraint_mode == 'only_actuation':
+            cons = cons2
+            h_vec = h_vec2
+        elif constraint_mode == 'friction_and_actuation':
+            cons = np.vstack([cons1, cons2])
+            h_vec = np.vstack([h_vec1, h_vec2])
+        
+        """Definition of the inequality constraints"""
+        m_ineq = np.size(cons,0)
+        #A=A.astype(double) 
+        #cons = cons.astype(np.double)
+        G = matrix(cons) #matrix([[-1.0,0.0],[0.0,-1.0]])
+        h = matrix(h_vec.reshape(m_ineq)) #matrix([0.0,0.0])
+        print G, h
+        print np.size(G,0), np.size(G,1)
+        
+        feasible_points = np.zeros((0,3))
+        unfeasible_points = np.zeros((0,3))
+        
+        """ Defining the equality constraints """
+        for com_x in np.arange(-0.6,0.7,0.025):
+            for com_y in np.arange(-0.6,0.5,0.025):
+                com = np.array([com_x, com_y, 0.0])
+                torque = -np.cross(com, np.transpose(grav))
+                A = np.zeros((6,0))
+                for j in range(0,nc):
+                    r = contacts[j,:]
+                    GraspMat = self.getGraspMatrix(r)
+                    A = np.hstack((A, GraspMat[:,0:3]))
+                A = matrix(A)
+                b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
+                #A = matrix([1.0, 1.0], (1,2))
+                #b = matrix(1.0)
+        
+                sol=solvers.lp(p, G, h, A, b)
+                x = sol['x']
+                status = sol['status']
+                #print status
+                if status == 'optimal':
+                    feasible_points = np.vstack([feasible_points,com])
+                else:
+                    unfeasible_points = np.vstack([unfeasible_points,com])
+        
+        
+        print("--- %s seconds ---" % (time.time() - start_time))
+        
+        """ Plotting the results """
+        #fig = plt.figure()
+        #ax = fig.add_subplot(111, projection='3d')
+        #for j in range(0,nc):
+        #    ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
+        #    a = Arrow3D([contacts[j,0], contacts[j,0]+normals[0,j]/3], [contacts[j,1], contacts[j,1]+normals[1,j]/3],[contacts[j,2], contacts[j,2]+normals[2,j]/3], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
+        #    ax.add_artist(a)
+        #    
+        #if np.size(feasible_points,0) != 0:
+        #    ax.scatter(feasible_points[:,0], feasible_points[:,1], feasible_points[:,2],c='g',s=50)
+        #if np.size(unfeasible_points,0) != 0:
+        #    ax.scatter(unfeasible_points[:,0], unfeasible_points[:,1], unfeasible_points[:,2],c='r',s=50)
+        
+        #plotter = Plotter()
+        #r1 = contacts[0,:]
+        #r2 = contacts[1,:]
+        #r3 = contacts[2,:]                    
+        #plotter.plot_actuation_polygon(ax, actuation_polygon_LF, r1)
+        #plotter.plot_actuation_polygon(ax, actuation_polygon_RF, r2)
+        #plotter.plot_actuation_polygon(ax, actuation_polygon_LH, r3)
+        #if nc == 4: plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
+        #
+        #'''test the analytic computation of the actuation region'''
+        ##dx = tau_lim_HAA
+        ##dy = tau_lim_HFE
+        ##dz = tau_lim_KFE
+        ##vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+        ##                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+        ##                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+        ##edges = computeActuationRegionAnalytical(vertices, mass, contacts)
+        ##plotter.plot_actuation_region(ax,edges)
+        #
+        #ax.set_xlabel('X Label')
+        #ax.set_ylabel('Y Label')
+        #ax.set_zlabel('Z Label')
+        #plt.draw()
+        #plt.show()
+        return feasible_points, unfeasible_points
