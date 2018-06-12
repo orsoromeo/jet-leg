@@ -10,8 +10,32 @@ from computational_geometry import ComputationalGeometry
 
 class Constraints:
     
-    def linearized_cone_local_frame(self, ng, mu):
-        print ng
+    def linearized_cone_vertices(self, ng, mu, cone_height = 100.):
+        if ng == 4:
+            c_force = np.array([
+            [0., 0., 0.],
+            [+mu*cone_height, +mu*cone_height, cone_height],
+            [-mu*cone_height, +mu*cone_height, cone_height],
+            [-mu*cone_height, -mu*cone_height, cone_height],
+            [+mu*cone_height, -mu*cone_height, cone_height]])
+        elif ng == 8:
+            angle = 6.283/8.+np.arange(0,6.283,6.283/8.)
+            #print angle
+            c_force = np.array([
+            [0., 0., 0.],
+            [+mu*cone_height*np.cos(angle[0]), +mu*cone_height*np.sin(angle[0]), cone_height],
+            [+mu*cone_height*np.cos(angle[1]), +mu*cone_height*np.sin(angle[1]), cone_height],
+            [+mu*cone_height*np.cos(angle[2]), +mu*cone_height*np.sin(angle[2]), cone_height],
+            [+mu*cone_height*np.cos(angle[3]), +mu*cone_height*np.sin(angle[3]), cone_height],
+            [+mu*cone_height*np.cos(angle[4]), +mu*cone_height*np.sin(angle[4]), cone_height],
+            [+mu*cone_height*np.cos(angle[5]), +mu*cone_height*np.sin(angle[5]), cone_height],
+            [+mu*cone_height*np.cos(angle[6]), +mu*cone_height*np.sin(angle[6]), cone_height],
+            [+mu*cone_height*np.cos(angle[7]), +mu*cone_height*np.sin(angle[7]), cone_height]])
+            #print c_force
+        return c_force
+        
+    def linearized_cone_halfspaces(self, ng, mu):
+        #print ng
         ''' Inequality matrix for a contact force in local contact frame: '''
         if ng == 4:
             c_force = np.array([

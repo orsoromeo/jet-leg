@@ -77,7 +77,7 @@ class ComputationalDynamics():
         
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
-        C_force = constr.linearized_cone_local_frame(ng, mu)
+        C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'only_friction':
             C = block_diag(
@@ -95,11 +95,11 @@ class ComputationalDynamics():
                                                     np.transpose(foot_vel[:,2]))
 
             act_LF = constr.computeActuationPolygon(J_LF)
-            act_LH = constr.computeActuationPolygon(J_LH)
+            act_LH = constr.computeActuationPolygon(J_LF)
             act_RF = constr.computeActuationPolygon(J_LF)
             c1, e1 = constr.hexahedron(act_LF)
-            c2, e2 = constr.hexahedron(act_LH)
-            c3, e3 = constr.hexahedron(act_RF)
+            c2, e2 = constr.hexahedron(act_LF)
+            c3, e3 = constr.hexahedron(act_LF)
             C = block_diag(c1, c2, c3)
             d = np.vstack([e1, e2, e3]).reshape(18)
         #print C, d
@@ -179,7 +179,7 @@ class ComputationalDynamics():
         R1, R2, R3 = (math_lp.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
-        C_force = constr.linearized_cone_local_frame(ng, mu)
+        C_force = constr.linearized_cone_halfspaces(ng, mu)
         
         if constraint_mode == 'only_friction':
             #cons = cons1

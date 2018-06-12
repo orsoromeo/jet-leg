@@ -11,6 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.spatial
 from math_tools import Math
+from constraints import Constraints
+from kinematics import Kinematics
 
 class AnalyticProjection():
     def minksum(self, a,b):
@@ -83,35 +85,71 @@ class AnalyticProjection():
         r3 = contacts[2,:]        
         g = 9.81
         mg = mass*g
-
+        
+        n1 = normals[0,:]
+        n2 = normals[1,:]
+        n3 = normals[2,:]
+        math_lp = Math()
+        constr = Constraints()
+        
         if constraint_mode == 'only_actuation':
-            dx = 100*mg
-            dy = 100*mg
-            dz = 100*mg
-            vertices_cl = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-                                 [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-                                 [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-        else:
             tau_HAA = 80
             tau_HFE = 120
             tau_KFE = 120
             dx = tau_HAA
             dy = tau_HFE
             dz = tau_KFE
-            vertices_cl = np.array([[0., dx, dx, -dx, -dx],
-                                 [0., dy, -dy, -dy, dy],
-                                 [0., dz, dz, dz, dz]])
-                                 
-        tau1 = np.zeros((3,np.size(vertices_cl,1)))
-        tau2 = np.zeros((3,np.size(vertices_cl,1)))
-        tau3 = np.zeros((3,np.size(vertices_cl,1)))             
+            vertices_cl = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+                                 [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+                                 [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+            kin = Kinematics()
+            foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+            q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+                                                    np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contacts[:,2]),
+                                                    np.transpose(foot_vel[:,2]))
+            vertices_1 = np.transpose(constr.computeActuationPolygon(J_LF))
+            vertices_2 = np.transpose(constr.computeActuationPolygon(J_LF))
+            vertices_3 = np.transpose(constr.computeActuationPolygon(J_LF))
+            print vertices_1
+            print vertices_2
+            print vertices_3
+            
+        elif constraint_mode == 'only_friction':
+        
+            n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
+            R1, R2, R3 = (math_lp.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
+            # Inequality matrix for a contact force in local contact frame:
+            #constr = Constraints()
+            #C_force = constr.linearized_cone_local_frame(ng, mu)
+            dx = 100*mg
+            dy = 100*mg
+            dz = 100*mg
+        
+            vertices_cl = constr.linearized_cone_vertices(ng, mu, 100.)
+            #vertices_cl = np.array([[0., dx, dx, -dx, -dx],
+            #                     [0., dy, -dy, -dy, dy],
+            #                     [0., dz, dz, dz, dz]])
+            vertices_1 = np.dot(vertices_cl, R1.T)
+            vertices_2 = np.dot(vertices_cl, R2.T)
+            vertices_3 = np.dot(vertices_cl, R3.T)
+
+        
+        vertices_1 = np.transpose(vertices_1)
+        vertices_2 = np.transpose(vertices_2)
+        vertices_3 = np.transpose(vertices_3)
+
+        tau1 = np.zeros((3,np.size(vertices_1,1)))
+        tau2 = np.zeros((3,np.size(vertices_2,1)))
+        tau3 = np.zeros((3,np.size(vertices_3,1)))     
+        print tau1        
         for j in range(0,np.size(vertices_cl,1)):
-            tau1[:,j] = np.cross(r1, vertices_cl[:,j])
-            tau2[:,j] = np.cross(r2, vertices_cl[:,j])
-            tau3[:,j] = np.cross(r3, vertices_cl[:,j])
-        w1 = np.vstack([tau1, vertices_cl])
-        w2 = np.vstack([tau2, vertices_cl])
-        w3 = np.vstack([tau3, vertices_cl]) #6XN
+            tau1[:,j] = np.cross(r1, vertices_1[:,j])
+            tau2[:,j] = np.cross(r2, vertices_2[:,j])
+            tau3[:,j] = np.cross(r3, vertices_3[:,j])
+        w1 = np.vstack([tau1, vertices_1])
+        w2 = np.vstack([tau2, vertices_2])
+        w3 = np.vstack([tau3, vertices_3]) #6XN
         #print w1, w2, w3
         w12 = self.minksum(w1, w2)
         w123 = self.minksum(w12, w3) #CWC con punti interni 6XN
