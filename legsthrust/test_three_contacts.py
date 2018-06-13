@@ -31,13 +31,13 @@ nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
-constraint_mode = 'only_friction'
+constraint_mode = 'ONLY_FRICTION'
 # number of decision variables of the problem
 n = nc*6
 
 # contact positions
 """ contact points """
-LF_foot = np.array([0.3, 0.2, -.5])
+LF_foot = np.array([0.3, 0.2, -.9])
 RF_foot = np.array([0.3, -0.2, -0.5])
 LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
@@ -46,7 +46,7 @@ contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 ''' parameters to be tuned'''
 g = 9.81
 mass = 10.
-mu = 0.1
+mu = 0.8
 
 
 
@@ -57,7 +57,7 @@ axisZ= array([[0.0], [0.0], [1.0]])
 #math = Math()
 #n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
 
-n1 = np.transpose(np.transpose(math.rpyToRot(0.5,0.0,0.0)).dot(axisZ))
+n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 
@@ -83,14 +83,13 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
-
-#IP_points = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
+IP_points = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
 
 ''' plotting Iterative Projection points '''
 
 plotter = Plotter()
-#plotter.plot_polygon(np.transpose(IP_points))
-#
+plotter.plot_polygon(np.transpose(IP_points))
+
 feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, contacts, normals, mass, mu, ng, nc, mu)
 #print contact_forces
 #for i in range(0, np.size(contact_forces,0)):
@@ -106,7 +105,7 @@ if np.size(feasible,0) != 0:
 if np.size(unfeasible,0) != 0:
     ax.scatter(unfeasible[:,0], unfeasible[:,1], unfeasible[:,2],c='r',s=50)
 
-#ROMEOS's way
+''' ROMEOS's way '''
 
 an_proj = AnalyticProjection()
 vertices2d, simplices = an_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)
