@@ -211,8 +211,8 @@ class ComputationalDynamics():
         unfeasible_points = np.zeros((0,3))
         
         """ Defining the equality constraints """
-        for com_x in np.arange(-0.6,0.7,0.05):
-            for com_y in np.arange(-0.6,0.5,0.05):
+        for com_x in np.arange(-0.6,1.1,0.05):
+            for com_y in np.arange(-0.6,0.9,0.05):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))
@@ -237,41 +237,4 @@ class ComputationalDynamics():
         
         print("LP test: --- %s seconds ---" % (time.time() - start_t_LP))
         
-        """ Plotting the results """
-        #fig = plt.figure()
-        #ax = fig.add_subplot(111, projection='3d')
-        #for j in range(0,nc):
-        #    ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
-        #    a = Arrow3D([contacts[j,0], contacts[j,0]+normals[0,j]/3], [contacts[j,1], contacts[j,1]+normals[1,j]/3],[contacts[j,2], contacts[j,2]+normals[2,j]/3], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
-        #    ax.add_artist(a)
-        #    
-        #if np.size(feasible_points,0) != 0:
-        #    ax.scatter(feasible_points[:,0], feasible_points[:,1], feasible_points[:,2],c='g',s=50)
-        #if np.size(unfeasible_points,0) != 0:
-        #    ax.scatter(unfeasible_points[:,0], unfeasible_points[:,1], unfeasible_points[:,2],c='r',s=50)
-        
-        #plotter = Plotter()
-        #r1 = contacts[0,:]
-        #r2 = contacts[1,:]
-        #r3 = contacts[2,:]                    
-        #plotter.plot_actuation_polygon(ax, actuation_polygon_LF, r1)
-        #plotter.plot_actuation_polygon(ax, actuation_polygon_RF, r2)
-        #plotter.plot_actuation_polygon(ax, actuation_polygon_LH, r3)
-        #if nc == 4: plotter.plot_actuation_polygon(ax, actuation_polygon_RH, RH_foot)
-        #
-        #'''test the analytic computation of the actuation region'''
-        ##dx = tau_lim_HAA
-        ##dy = tau_lim_HFE
-        ##dz = tau_lim_KFE
-        ##vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-        ##                     [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-        ##                     [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-        ##edges = computeActuationRegionAnalytical(vertices, mass, contacts)
-        ##plotter.plot_actuation_region(ax,edges)
-        #
-        #ax.set_xlabel('X Label')
-        #ax.set_ylabel('Y Label')
-        #ax.set_zlabel('Z Label')
-        #plt.draw()
-        #plt.show()
         return feasible_points, unfeasible_points
