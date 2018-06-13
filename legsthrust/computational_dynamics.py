@@ -79,14 +79,14 @@ class ComputationalDynamics():
         constr = Constraints()
         C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
-        if constraint_mode == 'only_friction':
+        if constraint_mode == 'ONLY_FRICTION':
             C = block_diag(
             dot(C_force, R1.T),
             dot(C_force, R2.T),
             dot(C_force, R3.T))
             d = zeros(C.shape[0])
             
-        elif constraint_mode == 'only_actuation':
+        elif constraint_mode == 'ONLY_ACTUATION':
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
@@ -102,32 +102,12 @@ class ComputationalDynamics():
             c3, e3 = constr.hexahedron(act_LF)
             C = block_diag(c1, c2, c3)
             d = np.vstack([e1, e2, e3]).reshape(18)
-        #print C, d
+            #print C, d
         
         ineq = (C, d)  # C * x <= d
         
         vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
-        
-        #pylab.ion()
-        #pylab.figure()
-        #print(vertices)
-        #pypoman.plot_polygon(vertices)
-        
-        # Project Tau_0 into CoM coordinates as in Eq. 53
-        # p_g = (n/mg) x tau_0 + z_g*n
-        #n = array([0., 0., 1./(g)])
-        #points = []
-        #for j in range(0, len(vertices)):
-        #    vx = vertices[j][0]
-        #    vy = vertices[j][1]
-        #    tau = array([vx, vy, 0.])
-        #    p = np.cross(n, tau)
-        #    points.append([p[0], p[1]])
-        #
-        #print points
-        
-        #plotter = Plotter()
-        #plotter.plot_polygon(contacts[0:3,:])
+
         print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IP))
         return vertices
 
@@ -181,7 +161,7 @@ class ComputationalDynamics():
         constr = Constraints()
         C_force = constr.linearized_cone_halfspaces(ng, mu)
         
-        if constraint_mode == 'only_friction':
+        if constraint_mode == 'ONLY_FRICTION':
             #cons = cons1
             #h_vec = h_vec1
             
@@ -191,7 +171,7 @@ class ComputationalDynamics():
             dot(C_force, R3.T))
             h_vec = zeros(cons.shape[0])
             
-        elif constraint_mode == 'only_actuation':
+        elif constraint_mode == 'ONLY_ACTUATION':
             cons = cons2
             h_vec = h_vec2
         elif constraint_mode == 'friction_and_actuation':
