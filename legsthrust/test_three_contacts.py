@@ -45,17 +45,24 @@ contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 ''' parameters to be tuned'''
 g = 9.81
 mass = 10.
-mu = 1.
+mu = 0.7
 
 n1 = array([0.0, 0.0, 1.0])
-n2 = array([0.0, 0.0, 1.0])
-n3 = array([0.0, 0.0, 1.0])
+n2 = array([0.5, 0.5, 0.5])
+n3 = array([-0.5, 0.5, 0.5])
 math = Math()
 n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
 normals = np.vstack([n1, n2, n3])
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
+ax.set_xlim(-0.6, 0.6)
+ax.set_ylim(-0.6, 0.6)
+ax.set_zlim(-0.2, 0.5)
+ax.set_xlabel('X axis')
+ax.set_ylabel('Y axis')
+ax.set_zlabel('Z axis')
+
 plt.plot(contacts[0:3,0],contacts[0:3,1],'ko',markersize=15)
 for j in range(0,nc):
     ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
