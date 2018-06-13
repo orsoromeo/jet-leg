@@ -5,12 +5,13 @@ Created on Tue Jun 12 10:54:31 2018
 @author: rorsolino
 """
 
+
 import time
 import pylab
 import pypoman
 import numpy as np
 
-from numpy import array, cross, dot, eye, hstack, vstack, zeros
+from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
 from scipy.linalg import block_diag
 from plotting_tools import Plotter
@@ -24,7 +25,7 @@ import matplotlib.pyplot as plt
 from arrow3D import Arrow3D
 
 plt.close('all')
-
+math = Math()
 # number of contacts
 nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
@@ -36,24 +37,36 @@ n = nc*6
 
 # contact positions
 """ contact points """
-LF_foot = np.array([0.3, 0.2, -.0])
-RF_foot = np.array([0.3, -0.3, -.0])
-LH_foot = np.array([-0.3, 0.2, -.0])
-RH_foot = np.array([-0.3, -0.2, -.0])
+LF_foot = np.array([0.3, 0.2, -.5])
+RF_foot = np.array([0.3, -0.2, -0.5])
+LH_foot = np.array([-0.3, 0.2, -0.5])
+RH_foot = np.array([-0.3, -0.2, -0.5])
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 ''' parameters to be tuned'''
 g = 9.81
 mass = 10.
-mu = 0.7
+mu = 0.1
 
-n1 = array([0.0, 0.0, 1.0])
-n2 = array([0.5, 0.5, 0.5])
-n3 = array([-0.5, 0.5, 0.5])
-math = Math()
-n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
+
+
+axisZ= array([[0.0], [0.0], [1.0]])
+#n1 = array([0.0, 0.0, 1.0])
+#n2 = array([0.0, 0.0, 1.0])
+#n3 = array([0.0, 0.0, 1.0])
+#math = Math()
+#n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
+
+n1 = np.transpose(np.transpose(math.rpyToRot(0.5,0.0,0.0)).dot(axisZ))
+n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+
+
+# %% Cell 2
+
 normals = np.vstack([n1, n2, n3])
 
+#
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.set_xlim(-0.6, 0.6)
@@ -70,20 +83,30 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
-IP_points = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
+
+#IP_points = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
 
 ''' plotting Iterative Projection points '''
 
 plotter = Plotter()
-plotter.plot_polygon(np.transpose(IP_points))
+#plotter.plot_polygon(np.transpose(IP_points))
 #
-feasible, unfeasible = comp_dyn.LP_projection(constraint_mode, contacts, normals, mass, mu, ng, nc, mu)
+feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, contacts, normals, mass, mu, ng, nc, mu)
+#print contact_forces
+#for i in range(0, np.size(contact_forces,0)):
+#    for j in range(0,nc):
+#        a = Arrow3D([contacts[j,0], contacts[j,0]+contact_forces[i,j*3]/200], [contacts[j,1], contacts[j,1]+contact_forces[i,j*3+1]/200],[contacts[j,2], contacts[j,2]+contact_forces[i,j*3+2]/200], mutation_scale=20, lw=3, arrowstyle="-|>", color="g")
+#        ax.add_artist(a)
 
+a1 = Arrow3D([0.0, 0.0],[ 0.0,0.0],[ 0.0, -mass*g/200.0], mutation_scale=20, lw=3, arrowstyle="-|>", color="b")
+ax.add_artist(a1)
 ''' plotting LP test points '''
 if np.size(feasible,0) != 0:
     ax.scatter(feasible[:,0], feasible[:,1], feasible[:,2],c='g',s=50)
 if np.size(unfeasible,0) != 0:
     ax.scatter(unfeasible[:,0], unfeasible[:,1], unfeasible[:,2],c='r',s=50)
+
+#ROMEOS's way
 
 an_proj = AnalyticProjection()
 vertices2d, simplices = an_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)
