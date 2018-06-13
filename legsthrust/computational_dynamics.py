@@ -209,10 +209,12 @@ class ComputationalDynamics():
         
         feasible_points = np.zeros((0,3))
         unfeasible_points = np.zeros((0,3))
-        
+        contact_forces = np.zeros((0,9))
         """ Defining the equality constraints """
-        for com_x in np.arange(-0.6,0.7,0.05):
-            for com_y in np.arange(-0.6,0.5,0.05):
+        for com_x in np.arange(-0.6,0.7,0.025):
+            for com_y in np.arange(-0.6,0.5,0.025):
+#        for com_x in np.arange(-0.05,-0.04,0.001):
+#            for com_y in np.arange(-0.02,-0.01,0.001):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))
@@ -228,9 +230,10 @@ class ComputationalDynamics():
                 sol=solvers.lp(p, G, h, A, b)
                 x = sol['x']
                 status = sol['status']
-                #print status
+                #print x
                 if status == 'optimal':
                     feasible_points = np.vstack([feasible_points,com])
+                    contact_forces = np.vstack([contact_forces, np.transpose(x)])
                 else:
                     unfeasible_points = np.vstack([unfeasible_points,com])
         
@@ -274,4 +277,4 @@ class ComputationalDynamics():
         #ax.set_zlabel('Z Label')
         #plt.draw()
         #plt.show()
-        return feasible_points, unfeasible_points
+        return feasible_points, unfeasible_points, contact_forces
