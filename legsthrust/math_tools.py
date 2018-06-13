@@ -27,6 +27,29 @@ class Math:
         
     def getGraspMatrix(self, r):
         math = Math()
-        G = np.block([[np.eye(3), np.zeros((3, 3))],
+        G = block([[np.eye(3), np.zeros((3, 3))],
                        [math.skew(r), np.eye(3)]])
         return G    
+
+
+    def rpyToRot(self, roll, pitch, yaw):
+    
+
+        
+        Rx =  np.array([ [   1   ,    0     	  ,  	  0], 
+                         [0   ,    np.cos(roll) ,  np.sin(roll)],
+                         [0   ,    -np.sin(roll),  np.cos(roll)]]);
+               
+        
+        Ry = np.array([[np.cos(pitch) 	,	 0  ,   -np.sin(pitch)],
+              [      0       ,    1  ,   0],
+              [np.sin(pitch) 	,	0   ,  np.cos(pitch)]]);
+          
+        
+        Rz = np.array([[ np.cos(yaw)  ,  np.sin(yaw) ,		0],
+                      [-np.sin(yaw) ,  np.cos(yaw) ,  		0],
+                      [0      ,     0     ,       1]]);
+        
+        
+        R =  Rx.dot(Ry.dot(Rz));
+        return R
