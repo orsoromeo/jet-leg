@@ -43,13 +43,13 @@ class AnalyticProjection():
         return np.transpose(hull_matrix)
     
     
-    def compute_section_points(self, a, mg):
+    def compute_section_pointsZ(self, a, mg):
         
-        #this has complexity n!/2!(n-2) = n^2/2 instead of n^2 (with the normal for)
+        #improved for loop: this has complexity n!/2!(n-2) = n^2/2 instead of n^2 (with the normal for)
         n_a = np.size(a,1)
         points = np.zeros((0,6))
         for j in range(0,n_a):
-            for i in range(j+1,n_a):
+            for i in range(j+1,n_a): 
                 lambda1 = a[:,j]
                 lambda2 = a[:,i]
                 if lambda1[5]!=lambda2[5]:
@@ -60,7 +60,46 @@ class AnalyticProjection():
                         points = np.vstack([points, new_point])
         #print 'number of edges', np.size(points,0)
         return np.transpose(points), np.size(points,0)
+ 
+ 
+    def compute_section_points(self, a, mg):
         
+        #improved for loop: this has complexity n!/2!(n-2) = n^2/2 instead of n^2 (with the normal for)
+        n_a = np.size(a,1)
+        pointsZ = np.zeros((0,6))
+        for j in range(0,n_a):
+            for i in range(j+1,n_a): 
+                lambda1 = a[:,j]
+                lambda2 = a[:,i]
+                if not np.array_equal(lambda1,lambda2):
+                    #cut with plane fz = mg with normal =[0 0 0 0 0 1] passing through point p3=[0 0 0 0 0 mg]
+                    n= np.array([0,0,0,0,0,1])
+                    p3 = np.array([0,0,0,0,0,mg])                             
+                    alpha = np.dot(n, (lambda1- p3)) / np.dot(n, (lambda1-lambda2))
+                    #print alpha
+                    if(alpha>=0.0)&(alpha<=1.0):
+                        new_point = lambda1 + (lambda2 - lambda1)*alpha
+                        pointsZ = np.vstack([pointsZ, new_point])
+        
+        pointsZ = pointsZ.T
+        
+        n_z = np.size(pointsZ,1)                
+        pointsX = np.zeros((0,6))
+        for j in range(0,n_z):
+            for i in range(j+1,n_a): 
+                lambda1 = a[:,j]
+                lambda2 = a[:,i]
+                if not np.array_equal(lambda1,lambda2):
+                    #cut with plane fz = mg with normal =[0 0 0 0 0 1] passing through point p3=[0 0 0 0 0 mg]
+                    n= np.array([0,0,0,1,0,0])
+                    p3 = np.array([0,0,0,0,0,0])                             
+                    alpha = np.dot(n, (lambda1- p3)) / np.dot(n, (lambda1-lambda2))
+                    #print alpha
+                    if(alpha>=0.0)&(alpha<=1.0):
+                        new_point = lambda1 + (lambda2 - lambda1)*alpha
+                        pointsX = np.vstack([pointsX, new_point])                        
+        #print 'number of edges', np.size(points,0)
+        return np.transpose(pointsX), np.size(pointsX,0)       
     
          
     def project_points(self, vertices, mg):
@@ -149,13 +188,13 @@ class AnalyticProjection():
         w1 = np.vstack([tau1, vertices_1])
         w2 = np.vstack([tau2, vertices_2])
         w3 = np.vstack([tau3, vertices_3]) #6XN
-        #print w1, w2, w3
+        print w1, w2, w3
         w12 = self.minksum(w1, w2)
         w123 = self.minksum(w12, w3) #CWC con punti interni 6XN
         
         
         #print 'number of vertex before convex hull', np.size(w123,1)
-        w123_hull = self.convex_hull(w123)
+        w123_hull = self.convex_hull(w123) #this speeds up significantly!
         #print 'number of vertex after convex hull', np.size(w123_hull,1)
         
         points, points_num = self.compute_section_points(w123_hull, mg) #compute edges and slice them with mg
