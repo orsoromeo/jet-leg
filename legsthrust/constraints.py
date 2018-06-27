@@ -115,5 +115,5 @@ class Constraints:
                                    vertices[1,:],
                                    actuation_polygon_xy[1,:]])
         # Only for debugging:                          
-        actuation_polygon = vertices
+        #actuation_polygon = vertices
         return actuation_polygon
