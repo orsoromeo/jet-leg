@@ -42,15 +42,15 @@ n = nc*6
 #LH_foot = np.array([-0.3, 0.2, -0.5])
 #RH_foot = np.array([-0.3, -0.2, -0.5])
 
-LF_foot = np.array([0.3, 0.2, -0.3])
-RF_foot = np.array([0.3, -0.2, -0.0])
-LH_foot = np.array([-0.3, 0.2, -0.0])
-RH_foot = np.array([-0.3, -0.2, -0.0])
+LF_foot = np.array([0.5, 0.5, -0.5])
+RF_foot = np.array([0.3, -0.2, -0.5])
+LH_foot = np.array([-0.3, 0.35, -0.5])
+RH_foot = np.array([-0.3, -0.2, -0.5])
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 ''' parameters to be tuned'''
 g = 9.81
-mass = 20.
+mass = 80.
 mu = 0.8
 
 
@@ -74,9 +74,9 @@ normals = np.vstack([n1, n2, n3])
 #
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.set_xlim(-0.6, 0.6)
-ax.set_ylim(-0.6, 0.6)
-ax.set_zlim(-0.2, 0.5)
+#ax.set_xlim(-0.6, 0.6)
+#ax.set_ylim(-0.6, 0.6)
+#ax.set_zlim(-0.2, 0.5)
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
@@ -88,12 +88,12 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
-#IP_points = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
+IP_points = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
 
 ''' plotting Iterative Projection points '''
 
 plotter = Plotter()
-#plotter.plot_polygon(np.transpose(IP_points))
+plotter.plot_polygon(np.transpose(IP_points))
 
 feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, contacts, normals, mass, mu, ng, nc, mu)
 #print contact_forces
@@ -104,13 +104,14 @@ feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, c
 
 a1 = Arrow3D([0.0, 0.0],[ 0.0,0.0],[ 0.0, -mass*g/200.0], mutation_scale=20, lw=3, arrowstyle="-|>", color="b")
 ax.add_artist(a1)
+
 ''' plotting LP test points '''
 if np.size(feasible,0) != 0:
     ax.scatter(feasible[:,0], feasible[:,1], feasible[:,2],c='g',s=50)
 if np.size(unfeasible,0) != 0:
     ax.scatter(unfeasible[:,0], unfeasible[:,1], unfeasible[:,2],c='r',s=50)
 
-''' ROMEOS's way '''
+''' Vertex-based projection '''
 
 an_proj = AnalyticProjection()
 vertices2d, simplices = an_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)

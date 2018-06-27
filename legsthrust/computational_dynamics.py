@@ -98,9 +98,11 @@ class ComputationalDynamics():
             act_LF = constr.computeActuationPolygon(J_LF)
             act_LH = constr.computeActuationPolygon(J_LF)
             act_RF = constr.computeActuationPolygon(J_LF)
-            c1, e1 = constr.hexahedron(act_LF)
-            c2, e2 = constr.hexahedron(act_LF)
-            c3, e3 = constr.hexahedron(act_LF)
+            ''' in the case of the IP alg. the contact force limits must be divided by the mass
+            because the gravito inertial wrench is normalized'''
+            c1, e1 = constr.hexahedron(act_LF/mass)
+            c2, e2 = constr.hexahedron(act_LF/mass)
+            c3, e3 = constr.hexahedron(act_LF/mass)
             C = block_diag(c1, c2, c3)
             d = np.vstack([e1, e2, e3]).reshape(18)
             #print C, d
