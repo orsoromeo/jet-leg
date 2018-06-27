@@ -10,6 +10,7 @@ import pypoman
 import numpy as np
 from numpy import array, cross, dot, eye, hstack, vstack, zeros
 from numpy.linalg import norm
+import scipy
 from scipy.linalg import block_diag
 from plotting_tools import Plotter
 from constraints import Constraints
@@ -23,8 +24,7 @@ from arrow3D import Arrow3D
 class ComputationalDynamics():
     def getGraspMatrix(self, r):
         math = Math()
-        G = np.block([[eye(3), zeros((3, 3))],
-                  [math.skew(r), eye(3)]])
+        G = np.vstack([np.hstack([eye(3), zeros((3, 3))]),np.hstack([math.skew(r), eye(3)])])
         return G
     
     def iterative_projection_bretl(self, constraint_mode, contacts, normals, mass, ng, mu):
@@ -145,13 +145,14 @@ class ComputationalDynamics():
         """ construct the equations needed for the inequality constraints of the LP """   
         for j in range(0,nc):
             c, h_term = constraint.linear_cone(normals[j,:],friction_coeff)
-            cons1 = np.block([[cons1, np.zeros((np.size(cons1,0),np.size(c,1)))],
-                          [np.zeros((np.size(c,0),np.size(cons1,1))), c]])
+            cons1 = np.vstack([np.hstack([cons1, np.zeros((np.size(cons1,0),np.size(c,1)))]),
+                                          np.hstack([np.zeros((np.size(c,0),np.size(cons1,1))), c])])
+
             h_vec1 = np.vstack([h_vec1, h_term])
             c, h_term = constraint.hexahedron(actuation_polygon_LF)
             #c, h_term = constraint.zonotope()    
-            cons2 = np.block([[cons2, np.zeros((np.size(cons2,0),np.size(c,1)))],
-                          [np.zeros((np.size(c,0),np.size(cons2,1))), c]])    
+            cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
+                          np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
             h_vec2 = np.vstack([h_vec2, h_term])
         
         n1 = normals[0,:]
