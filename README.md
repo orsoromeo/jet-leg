@@ -10,9 +10,10 @@ APT dependencies:
 - Cython
 
 Python dependencies:
-- scipy
 - numpy
+- scipy
 - pycddlib
+- matplotlib
 
 Install dependencies by:
 ```
