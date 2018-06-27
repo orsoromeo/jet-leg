@@ -77,14 +77,15 @@ class ComputationalDynamics():
         
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
-        C_force = constr.linearized_cone_halfspaces(ng, mu)
+        #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            C = block_diag(
-            dot(C_force, R1.T),
-            dot(C_force, R2.T),
-            dot(C_force, R3.T))
-            d = zeros(C.shape[0])
+            #C = block_diag(
+            #dot(C_force, R1.T),
+            #dot(C_force, R2.T),
+            #dot(C_force, R3.T))
+            #d = zeros(C.shape[0])
+            C, d = constr.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)
             
         elif constraint_mode == 'ONLY_ACTUATION':
             kin = Kinematics()
@@ -133,7 +134,7 @@ class ComputationalDynamics():
         actuation_polygon_RF = actuation_polygon_LF
         actuation_polygon_LH = constraint.computeActuationPolygon(J_LH)
         actuation_polygon_RH = constraint.computeActuationPolygon(J_RH)
-        actuation_polygon_RH = actuation_polygon_LH
+        actuation_polygon_RH = actuation_polygon_LF
         #print 'actuation polygon LF: ',actuation_polygon_LF
         #print 'actuation polygon RF: ',actuation_polygon_RF
         #print 'actuation polygon LH: ',actuation_polygon_LH
@@ -156,20 +157,20 @@ class ComputationalDynamics():
         n3 = normals[2,:]
         math_lp = Math()
         n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
-        R1, R2, R3 = (math_lp.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
+        #R1, R2, R3 = (math_lp.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
-        C_force = constr.linearized_cone_halfspaces(ng, mu)
+        #C_force = constr.linearized_cone_halfspaces(ng, mu)
         
         if constraint_mode == 'ONLY_FRICTION':
             #cons = cons1
             #h_vec = h_vec1
-            
-            cons = block_diag(
-            dot(C_force, R1.T),
-            dot(C_force, R2.T),
-            dot(C_force, R3.T))
-            h_vec = zeros(cons.shape[0])
+            cons, h_vec = constr.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)
+            #cons = block_diag(
+            #dot(C_force, R1.T),
+            #dot(C_force, R2.T),
+            #dot(C_force, R3.T))
+            #h_vec = zeros(cons.shape[0])
             
         elif constraint_mode == 'ONLY_ACTUATION':
             cons = cons2
