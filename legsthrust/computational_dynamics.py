@@ -114,63 +114,15 @@ class ComputationalDynamics():
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
         p = matrix(np.ones((3*nc,1)))    
-        cons1 = np.zeros((0,0))
-        h_vec1 = np.zeros((0,1))
-        cons2 = np.zeros((0,0))
-        h_vec2 = np.zeros((0,1))
         
         kin = Kinematics()
+        constraint = Constraints()                              
+                
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contacts[:,2]),
                                                     np.transpose(foot_vel[:,2]))
-        constraint = Constraints()                              
-        actuation_polygon_LF = constraint.computeActuationPolygon(J_LF)
-        actuation_polygon_RF = constraint.computeActuationPolygon(J_RF)
-        actuation_polygon_RF = actuation_polygon_LF
-        actuation_polygon_LH = constraint.computeActuationPolygon(J_LH)
-        actuation_polygon_RH = constraint.computeActuationPolygon(J_RH)
-        actuation_polygon_RH = actuation_polygon_LF
-        #print 'actuation polygon LF: ',actuation_polygon_LF
-        #print 'actuation polygon RF: ',actuation_polygon_RF
-        #print 'actuation polygon LH: ',actuation_polygon_LH
-        #print 'actuation polygon RH: ',actuation_polygon_RH
-        
-        """ construct the equations needed for the inequality constraints of the LP """   
-        for j in range(0,nc):
-            c, h_term = constraint.linear_cone(normals[j,:],friction_coeff)
-            cons1 = np.vstack([np.hstack([cons1, np.zeros((np.size(cons1,0),np.size(c,1)))]),
-                                          np.hstack([np.zeros((np.size(c,0),np.size(cons1,1))), c])])
-
-            h_vec1 = np.vstack([h_vec1, h_term])
-            c, h_term = constraint.hexahedron(actuation_polygon_LF)
-            
-            cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
-                          np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
-            h_vec2 = np.vstack([h_vec2, h_term])
-        
-        n1 = normals[0,:]
-        n2 = normals[1,:]
-        n3 = normals[2,:]
-        math_lp = Math()
-        n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
-        
-        if constraint_mode == 'ONLY_FRICTION':
-            cons, h_vec = constraint.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)            
-
-        elif constraint_mode == 'ONLY_ACTUATION':
-            cons = cons2
-            h_vec = h_vec2
-
-        elif constraint_mode == 'friction_and_actuation':
-            cons = np.vstack([cons1, cons2])
-            h_vec = np.vstack([h_vec1, h_vec2])
-        
-        """Definition of the inequality constraints"""
-        m_ineq = np.size(cons,0)
-        G = matrix(cons) 
-        h = matrix(h_vec.reshape(m_ineq))
         G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         #print G, h
         #print np.size(G,0), np.size(G,1)
@@ -180,8 +132,8 @@ class ComputationalDynamics():
         contact_forces = np.zeros((0,9))
         
         """ Defining the equality constraints """
-        for com_x in np.arange(-0.6,0.7,0.025):
-            for com_y in np.arange(-0.6,0.5,0.025):
+        for com_x in np.arange(-0.4,0.3,0.01):
+            for com_y in np.arange(-0.4,0.6,0.01):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))
@@ -192,6 +144,13 @@ class ComputationalDynamics():
                 A = matrix(A)
                 b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
                 
+                contacts_new_x = contacts[:,0] + com_x
+                q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts_new_x),
+                                                  np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contacts[:,2]),
+                                                    np.transpose(foot_vel[:,2]))
+                G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+        
                 sol=solvers.lp(p, G, h, A, b)
                 x = sol['x']
                 status = sol['status']
