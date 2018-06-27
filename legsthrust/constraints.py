@@ -7,9 +7,9 @@ Created on Mon May 28 13:00:59 2018
 import numpy as np
 from computational_geometry import ComputationalGeometry
 from math_tools import Math
+from cvxopt import matrix
 
-
-class Constraints:
+class Constraints:        
     def linearized_cone_halfspaces_world(self, ng, mu, n1, n2, n3):
         math = Math()
         R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
@@ -117,3 +117,56 @@ class Constraints:
         # Only for debugging:                          
         #actuation_polygon = vertices
         return actuation_polygon
+        
+    def inequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH):
+        cons1 = np.zeros((0,0))
+        h_vec1 = np.zeros((0,1))
+        cons2 = np.zeros((0,0))
+        h_vec2 = np.zeros((0,1))
+        actuation_polygon_LF = self.computeActuationPolygon(J_LF)
+        actuation_polygon_RF = self.computeActuationPolygon(J_RF)
+        actuation_polygon_RF = actuation_polygon_LF
+        actuation_polygon_LH = self.computeActuationPolygon(J_LH)
+        actuation_polygon_RH = self.computeActuationPolygon(J_RH)
+        actuation_polygon_RH = actuation_polygon_LF
+        #print 'actuation polygon LF: ',actuation_polygon_LF
+        #print 'actuation polygon RF: ',actuation_polygon_RF
+        #print 'actuation polygon LH: ',actuation_polygon_LH
+        #print 'actuation polygon RH: ',actuation_polygon_RH
+        
+        """ construct the equations needed for the inequality constraints of the LP """   
+        for j in range(0,nc):
+            c, h_term = self.linear_cone(normals[j,:],friction_coeff)
+            cons1 = np.vstack([np.hstack([cons1, np.zeros((np.size(cons1,0),np.size(c,1)))]),
+                                          np.hstack([np.zeros((np.size(c,0),np.size(cons1,1))), c])])
+
+            h_vec1 = np.vstack([h_vec1, h_term])
+            c, h_term = self.hexahedron(actuation_polygon_LF)
+            
+            cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
+                          np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
+            h_vec2 = np.vstack([h_vec2, h_term])
+        
+        n1 = normals[0,:]
+        n2 = normals[1,:]
+        n3 = normals[2,:]
+        math_lp = Math()
+        n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
+        
+        if constraint_mode == 'ONLY_FRICTION':
+            cons, h_vec = self.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)            
+
+        elif constraint_mode == 'ONLY_ACTUATION':
+            cons = cons2
+            h_vec = h_vec2
+
+        elif constraint_mode == 'friction_and_actuation':
+            cons = np.vstack([cons1, cons2])
+            h_vec = np.vstack([h_vec1, h_vec2])
+        
+        """Definition of the inequality constraints"""
+        m_ineq = np.size(cons,0)
+        G = matrix(cons) 
+        h = matrix(h_vec.reshape(m_ineq))
+        return G, h
+    

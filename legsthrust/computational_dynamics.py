@@ -171,6 +171,7 @@ class ComputationalDynamics():
         m_ineq = np.size(cons,0)
         G = matrix(cons) 
         h = matrix(h_vec.reshape(m_ineq))
+        G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         #print G, h
         #print np.size(G,0), np.size(G,1)
         
