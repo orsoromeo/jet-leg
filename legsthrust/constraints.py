@@ -2,18 +2,30 @@
 """
 Created on Mon May 28 13:00:59 2018
 
-@author: rorsolino
+@author: Romeo Orsolino
 """
 import numpy as np
 from computational_geometry import ComputationalGeometry
+from math_tools import Math
 
 
 class Constraints:
-    
+    def linearized_cone_halfspaces_world(self, ng, mu, n1, n2, n3):
+        math = Math()
+        R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
+        
+        constraints_local_frame = self.linearized_cone_halfspaceslinearized_cone_halfspace(ng, mu)
+        C = block_diag(
+            np.dot(constraints_local_frame, R1.T),
+            np.dot(constraints_local_frame, R2.T),
+            np.dot(constraints_local_frame, R3.T))
+        d = np, np.zeros(C.shape[0])        
+        return C, d
+        
     def linearized_cone_vertices(self, ng, mu, cone_height = 100.):
         if ng == 4:
             c_force = np.array([
-            [0., 0., 0.],
+            [0., 0., -cone_height],
             [+mu*cone_height, +mu*cone_height, cone_height],
             [-mu*cone_height, +mu*cone_height, cone_height],
             [-mu*cone_height, -mu*cone_height, cone_height],
