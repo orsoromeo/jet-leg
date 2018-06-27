@@ -80,11 +80,6 @@ class ComputationalDynamics():
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            #C = block_diag(
-            #dot(C_force, R1.T),
-            #dot(C_force, R2.T),
-            #dot(C_force, R3.T))
-            #d = zeros(C.shape[0])
             C, d = constr.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)
             
         elif constraint_mode == 'ONLY_ACTUATION':
@@ -150,7 +145,7 @@ class ComputationalDynamics():
 
             h_vec1 = np.vstack([h_vec1, h_term])
             c, h_term = constraint.hexahedron(actuation_polygon_LF)
-            #c, h_term = constraint.zonotope()    
+            
             cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
                           np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
             h_vec2 = np.vstack([h_vec2, h_term])
@@ -160,46 +155,32 @@ class ComputationalDynamics():
         n3 = normals[2,:]
         math_lp = Math()
         n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
-        #R1, R2, R3 = (math_lp.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
-        # Inequality matrix for a contact force in local contact frame:
-        constr = Constraints()
-        #C_force = constr.linearized_cone_halfspaces(ng, mu)
         
         if constraint_mode == 'ONLY_FRICTION':
-            #cons = cons1
-            #h_vec = h_vec1
-            cons, h_vec = constr.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)
-            #cons = block_diag(
-            #dot(C_force, R1.T),
-            #dot(C_force, R2.T),
-            #dot(C_force, R3.T))
-            #h_vec = zeros(cons.shape[0])
-            
+            cons, h_vec = constraint.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)            
+
         elif constraint_mode == 'ONLY_ACTUATION':
             cons = cons2
             h_vec = h_vec2
+
         elif constraint_mode == 'friction_and_actuation':
             cons = np.vstack([cons1, cons2])
             h_vec = np.vstack([h_vec1, h_vec2])
         
         """Definition of the inequality constraints"""
         m_ineq = np.size(cons,0)
-        #A=A.astype(double) 
-        #cons = cons.astype(np.double)
-        G = matrix(cons) #matrix([[-1.0,0.0],[0.0,-1.0]])
-        h = matrix(h_vec.reshape(m_ineq)) #matrix([0.0,0.0])
+        G = matrix(cons) 
+        h = matrix(h_vec.reshape(m_ineq))
         #print G, h
         #print np.size(G,0), np.size(G,1)
         
         feasible_points = np.zeros((0,3))
         unfeasible_points = np.zeros((0,3))
         contact_forces = np.zeros((0,9))
+        
         """ Defining the equality constraints """
-
         for com_x in np.arange(-0.6,0.7,0.025):
             for com_y in np.arange(-0.6,0.5,0.025):
-#        for com_x in np.arange(-0.05,-0.04,0.001):
-#            for com_y in np.arange(-0.02,-0.01,0.001):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))
@@ -209,9 +190,7 @@ class ComputationalDynamics():
                     A = np.hstack((A, GraspMat[:,0:3]))
                 A = matrix(A)
                 b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
-                #A = matrix([1.0, 1.0], (1,2))
-                #b = matrix(1.0)
-        
+                
                 sol=solvers.lp(p, G, h, A, b)
                 x = sol['x']
                 status = sol['status']
