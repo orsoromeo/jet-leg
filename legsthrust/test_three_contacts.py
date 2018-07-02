@@ -13,7 +13,6 @@ import numpy as np
 
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
-from scipy.linalg import block_diag
 from plotting_tools import Plotter
 from constraints import Constraints
 from kinematics import Kinematics
@@ -42,15 +41,29 @@ n = nc*6
 #LH_foot = np.array([-0.3, 0.2, -0.5])
 #RH_foot = np.array([-0.3, -0.2, -0.5])
 
-LF_foot = np.array([0.5, 0.5, -0.5])
+LF_foot = np.array([0.3, 0.2, -0.5])
 RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.3, 0.35, -0.5])
+LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
-contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+contacts = contactsToStack[0:nc, :]
+
+
+L_LF_foot = np.array([0.3, 0.2, -0.5])
+L_RF_foot = np.array([0.3, -0.2, -0.5])
+L_LH_foot = np.array([-0.3, 0.2, -0.5])
+L_RH_foot = np.array([-0.3, -0.2, -0.5])
+
+R_LF_foot = np.array([0.3, 0.2, -0.5])
+R_RF_foot = np.array([0.3, -0.2, -0.5])
+R_LH_foot = np.array([-0.3, 0.2, -0.5])
+R_RH_foot = np.array([-0.3, -0.2, -0.5])
+
+#contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 ''' parameters to be tuned'''
 g = 9.81
-mass = 80.
+mass = 90.
 mu = 0.8
 
 
@@ -65,11 +78,10 @@ axisZ= array([[0.0], [0.0], [1.0]])
 n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-
-
+n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 # %% Cell 2
 
-normals = np.vstack([n1, n2, n3])
+normals = np.vstack([n1, n2, n3, n4])
 
 #
 fig = plt.figure()
@@ -81,7 +93,7 @@ ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
 
-plt.plot(contacts[0:3,0],contacts[0:3,1],'ko',markersize=15)
+plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 for j in range(0,nc):
     ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
     a = Arrow3D([contacts[j,0], contacts[j,0]+normals[j,0]/10], [contacts[j,1], contacts[j,1]+normals[j,1]/10],[contacts[j,2], contacts[j,2]+normals[j,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
@@ -112,12 +124,11 @@ if np.size(unfeasible,0) != 0:
     ax.scatter(unfeasible[:,0], unfeasible[:,1], unfeasible[:,2],c='r',s=50)
 
 ''' Vertex-based projection '''
+#an_proj = AnalyticProjection()
+#vertices2d, simplices = an_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)
 
-an_proj = AnalyticProjection()
-vertices2d, simplices = an_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)
-
-for simplex in simplices:
-    plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
+#for simplex in simplices:
+#    plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
 
 
 plt.show()

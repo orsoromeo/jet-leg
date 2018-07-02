@@ -8,18 +8,27 @@ import numpy as np
 from computational_geometry import ComputationalGeometry
 from math_tools import Math
 from cvxopt import matrix
+from scipy.linalg import block_diag
 
 class Constraints:        
-    def linearized_cone_halfspaces_world(self, ng, mu, n1, n2, n3):
+    def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals):            
         math = Math()
-        R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
+        C = np.zeros((0,0))
+        d = np.zeros((0))
+        constraints_local_frame = self.linearized_cone_halfspaces(ng, mu)
+        for j in range(0,contactsNumber):    
+            n = math.normalize(normals[j,:])
+            rotationMatrix = math.rotation_matrix_from_normal(n)
+            C = block_diag(C, np.dot(constraints_local_frame, rotationMatrix.T))
+            
+       # R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
         
-        constraints_local_frame = self.linearized_cone_halfspaceslinearized_cone_halfspace(ng, mu)
-        C = block_diag(
-            np.dot(constraints_local_frame, R1.T),
-            np.dot(constraints_local_frame, R2.T),
-            np.dot(constraints_local_frame, R3.T))
-        d = np, np.zeros(C.shape[0])        
+        #constraints_local_frame = self.linearized_cone_halfspaces(ng, mu)
+        #C = block_diag(
+        #    np.dot(constraints_local_frame, R1.T),
+        #    np.dot(constraints_local_frame, R2.T),
+        #    np.dot(constraints_local_frame, R3.T))
+        d = np.zeros(C.shape[0])        
         return C, d
         
     def linearized_cone_vertices(self, ng, mu, cone_height = 100.):
@@ -154,7 +163,7 @@ class Constraints:
         n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
         
         if constraint_mode == 'ONLY_FRICTION':
-            cons, h_vec = self.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)            
+            cons, h_vec = self.linearized_cone_halfspaces_world(nc, ng, friction_coeff, normals)            
 
         elif constraint_mode == 'ONLY_ACTUATION':
             cons = cons2

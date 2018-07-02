@@ -31,29 +31,29 @@ class ComputationalDynamics():
         start_t_IP = time.time()
         g = 9.81
         grav = array([0., 0., -g])
+        contactsNumber = np.size(contacts,0)
+
         # Unprojected state is:
         #
         #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
         math = Math()
-        r1 = contacts[0,:]
-        r2 = contacts[1,:]
-        r3 = contacts[2,:]
-        G1 = self.getGraspMatrix(r1)[:, 0:3]
-        G2 = self.getGraspMatrix(r2)[:, 0:3]
-        G3 = self.getGraspMatrix(r3)[:, 0:3]
-        
-        # Projection matrix
-        Ex = -hstack((G1[4], G2[4], G3[4]))
-        Ey = +hstack((G1[3], G2[3], G3[3]))
+
+        Ex = np.zeros((0)) 
+        Ey = np.zeros((0))        
+        G = np.zeros((6,0))   
+        for j in range(0,contactsNumber):
+            r = contacts[j,:]
+            graspMatrix = self.getGraspMatrix(r)[:,0:3]
+            Ex = hstack([Ex, -graspMatrix[4]])
+            Ey = hstack([Ey, graspMatrix[3]])
+            G = hstack([G, graspMatrix])            
+            
         E = vstack((Ex, Ey)) / (g)
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
         
         # number of the equality constraints
         m_eq = 6
-        
-        # grasp matrix for the stacked vector of contact forces
-        G = hstack((G1, G2, G3))
         
         # see Equation (52) in "ZMP Support Areas for Multicontact..."
         A_f_and_tauz = array([
@@ -66,40 +66,42 @@ class ComputationalDynamics():
         #print A,t
         eq = (A, t)  # A * x == t
         
-        # Contact surface normals
-        
-        n1 = normals[0,:]
-        n2 = normals[1,:]
-        n3 = normals[2,:]
-        n1, n2, n3 = (math.normalize(n) for n in [n1, n2, n3])
-        #print n1, n2, n3
-        R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
-        
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            C, d = constr.linearized_cone_halfspaces_world(ng, mu, n1, n2, n3)
-            
+            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+ 
         elif constraint_mode == 'ONLY_ACTUATION':
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+            contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
+            q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
                                                   np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contacts[:,2]),
+                                                    np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
 
             act_LF = constr.computeActuationPolygon(J_LF)
             act_LH = constr.computeActuationPolygon(J_LF)
             act_RF = constr.computeActuationPolygon(J_LF)
+            act_LF = constr.computeActuationPolygon(J_LF)            
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
             because the gravito inertial wrench is normalized'''
             c1, e1 = constr.hexahedron(act_LF/mass)
             c2, e2 = constr.hexahedron(act_LF/mass)
             c3, e3 = constr.hexahedron(act_LF/mass)
-            C = block_diag(c1, c2, c3)
-            d = np.vstack([e1, e2, e3]).reshape(18)
+            c4, e4 = constr.hexahedron(act_LF/mass)
+            C = np.zeros((0,0))
+            d = np.zeros((1,0))
+            for j in range (0,contactsNumber):
+                hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(act_LF/mass)
+                C = block_diag(C, hexahedronHalfSpaceConstraints)
+                d = hstack([d, knownTerm.T])
+                
+            d = d.reshape(6*contactsNumber)    
+            #C = block_diag(c1, c2, c3, c4)
+            #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
             #print C, d
         
         ineq = (C, d)  # C * x <= d
@@ -119,21 +121,23 @@ class ComputationalDynamics():
         constraint = Constraints()                              
                 
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-        q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+        contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])
+        q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
                                                   np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contacts[:,2]),
+                                                    np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
+        
         G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         #print G, h
         #print np.size(G,0), np.size(G,1)
         
         feasible_points = np.zeros((0,3))
         unfeasible_points = np.zeros((0,3))
-        contact_forces = np.zeros((0,9))
+        contact_forces = np.zeros((0,nc*3))
         
         """ Defining the equality constraints """
-        for com_x in np.arange(-0.4,0.3,0.01):
-            for com_y in np.arange(-0.4,0.6,0.01):
+        for com_x in np.arange(-0.4,0.3,0.03):
+            for com_y in np.arange(-0.4,0.6,0.03):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))
@@ -144,10 +148,11 @@ class ComputationalDynamics():
                 A = matrix(A)
                 b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
                 
-                contacts_new_x = contacts[:,0] + com_x
+                #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])
+                contacts_new_x = contactsFourLegs[:,0] + com_x
                 q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts_new_x),
                                                   np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contacts[:,2]),
+                                                    np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
                 G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         
