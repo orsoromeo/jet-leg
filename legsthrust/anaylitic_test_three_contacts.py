@@ -32,7 +32,8 @@ class AnalyticProjection():
         
         hull_matrix = np.zeros((0,np.size(input_matrix,0)))  
         input_matrix_t = np.transpose(input_matrix)
-        hull = scipy.spatial.ConvexHull(input_matrix_t, qhull_options="Qx") #is pX6    
+        #print input_matrix_t
+        hull = scipy.spatial.ConvexHull(input_matrix_t, qhull_options="QbB") #is pX6    
         #get the matrix
         indices = hull.vertices
         n = len(indices)    
@@ -85,6 +86,7 @@ class AnalyticProjection():
     
     def analytic_projection(self, constraint_mode, contacts, normals, mass, ng, mu):
         start_t = time.time()
+        contactsNumber = np.size(contacts,0)
         r1 = contacts[0,:]
         r2 = contacts[1,:]
         r3 = contacts[2,:]        
@@ -109,9 +111,10 @@ class AnalyticProjection():
                                  [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts[:,0]),
+            contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
+            q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
                                                     np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contacts[:,2]),
+                                                    np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
             vertices_1 = np.transpose(constr.computeActuationPolygon(J_LF))
             vertices_2 = np.transpose(constr.computeActuationPolygon(J_LF))
@@ -127,7 +130,7 @@ class AnalyticProjection():
             # Inequality matrix for a contact force in local contact frame:
             #constr = Constraints()
             #C_force = constr.linearized_cone_local_frame(ng, mu)
-            vertices_cl = constr.linearized_cone_vertices(ng, mu, 100.0*mg)
+            vertices_cl = constr.linearized_cone_vertices(ng, mu, mg)
             #vertices_cl = np.array([[0., dx, dx, -dx, -dx],
             #                     [0., dy, -dy, -dy, dy],
             #                     [0., dz, dz, dz, dz]])

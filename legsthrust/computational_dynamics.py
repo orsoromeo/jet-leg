@@ -83,9 +83,9 @@ class ComputationalDynamics():
                                                     np.transpose(foot_vel[:,2]))
 
             act_LF = constr.computeActuationPolygon(J_LF)
-            act_LH = constr.computeActuationPolygon(J_LF)
             act_RF = constr.computeActuationPolygon(J_LF)
-            act_LF = constr.computeActuationPolygon(J_LF)            
+            act_LH = constr.computeActuationPolygon(J_LF)
+            act_RH = constr.computeActuationPolygon(J_LF)            
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
             because the gravito inertial wrench is normalized'''
             c1, e1 = constr.hexahedron(act_LF/mass)
@@ -109,7 +109,7 @@ class ComputationalDynamics():
         vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
 
         print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IP))
-        return vertices
+        return vertices, act_LF, act_RF, act_RH, act_LH
 
     def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu):
         start_t_LP = time.time()
@@ -136,8 +136,8 @@ class ComputationalDynamics():
         contact_forces = np.zeros((0,nc*3))
         
         """ Defining the equality constraints """
-        for com_x in np.arange(-0.4,0.3,0.03):
-            for com_y in np.arange(-0.4,0.6,0.03):
+        for com_x in np.arange(-0.5,0.5,0.1):
+            for com_y in np.arange(-0.4,0.4,0.1):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))

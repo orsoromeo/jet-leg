@@ -11,7 +11,7 @@ from computational_geometry import ComputationalGeometry
 
 class Plotter:
     
-  def plot_polygon(self, points, color = '--b'):
+  def plot_polygon(self, points, color = '--b', Label = ''):
       if np.size(points,1)==2:
           x = np.hstack([points[:,0], points[0,0]])
           y = np.hstack([points[:,1], points[0,1]])
@@ -19,7 +19,7 @@ class Plotter:
           x = np.hstack([points[0,:], points[0,0]])
           y = np.hstack([points[1,:], points[1,0]])
           
-      plt.plot(x, y, color, linewidth=10.)
+      plt.plot(x, y, color, linewidth=10., label = Label)
     
   def plot_line(self, ax, line_coefficients):
       a = line_coefficients[0]
@@ -43,7 +43,7 @@ class Plotter:
       facet_x = facet[0,:]
       facet_y = facet[1,:]
       facet_z = facet[2,:]
-      #surf = ax.plot_trisurf(facet_x, facet_y, facet_z,  linewidth=0., alpha = 0.3)
+      surf = ax.plot_trisurf(facet_x, facet_y, facet_z,  linewidth=0., alpha = 0.3)
       surf = ax.plot_wireframe(facet_x, facet_y, facet_z, linewidth=1.) 
   
   def plot_cube(self,ax,vertices):
@@ -56,8 +56,7 @@ class Plotter:
       self.plot_facet(ax,face5)
       #self.plot_facet(ax,face6)
       
-  def plot_actuation_polygon(self, ax, vertices, foot_pos):
-      scaling_factor = 2000
+  def plot_actuation_polygon(self, ax, vertices, foot_pos, scaling_factor = 2000):
       vertex = np.zeros((3,8))
       for j in range(0,8):
           vertex[0,j] = float(vertices[0,j])/float(scaling_factor)
