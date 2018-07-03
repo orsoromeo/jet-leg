@@ -798,7 +798,7 @@ class HyQKinematics:
         footPosHAA = np.subtract(footPosDes, BASE2HAA_offsets)
 
         haa2hfeLength = 0.045;
-        M_PI = 3.1415;
+        M_PI = np.pi;
     
         sz = np.size(x,0)
         # 1 -> LF
