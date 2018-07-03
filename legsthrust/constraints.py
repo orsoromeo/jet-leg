@@ -118,8 +118,9 @@ class Constraints:
                          [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
                          [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
                          
-        vertices_xz = np.vstack([vertices[0,:],vertices[2,:]])
-        actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(leg_jacobian_2D)),vertices_xz) 
+        torque_lims_xz = np.vstack([vertices[0,:],vertices[2,:]])
+        legs_gravity = np.ones((2,8))*10 # TODO: correct computation of the force acting on the legs due to gravity
+        actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(leg_jacobian_2D)),legs_gravity - torque_lims_xz) 
         actuation_polygon = np.vstack([actuation_polygon_xy[0,:],
                                    vertices[1,:],
                                    actuation_polygon_xy[1,:]])
