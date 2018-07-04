@@ -15,6 +15,10 @@ Python dependencies:
 - pycddlib
 - matplotlib
 
+Optionals:
+- ffmpeg for matplotlib animations
+- unittest
+
 Install dependencies by:
 ```
 sudo apt-get install cython libglpk-dev python python-dev python-pip python-scipy
@@ -23,6 +27,10 @@ pip install pycddlib --user
 ```
 You can remove all ``--user`` arguments to install these Python modules system-wide.
 
+Optional installations:
+```
+sudo apt-get install ffmpeg
+```
 Finally, clone this repository and run its setup script:
 ```
 git clone git@github.com:orsoromeo/legsthrust.git
