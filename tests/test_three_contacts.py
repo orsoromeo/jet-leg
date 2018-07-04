@@ -10,6 +10,8 @@ import pylab
 import pypoman
 import numpy as np
 
+from context import legsthrust 
+
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
 from legsthrust.plotting_tools import Plotter
