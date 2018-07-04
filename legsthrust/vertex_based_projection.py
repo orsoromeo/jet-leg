@@ -208,7 +208,8 @@ class VertexBasedProjection():
         print pointstZhull
 #        points, points_num = self.compute_section_points(w123_hull, mg) 
 #        
-        
+        # TODO: use pointsfZhull instead for "ONLY_FRICTION" option:
+        #points2d = self.project_points(pointsfZhull, mg) #cimpute com points
         points2d = self.project_points(pointstZhull, mg) #cimpute com points
         
         #print points
