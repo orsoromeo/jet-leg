@@ -4,8 +4,8 @@ Created on Mon Jul  2 06:10:18 2018
 
 @author: Romeo Orsolino
 """
-
-from hyq_kinematics import HyQKinematics
+from legsthrust.hyq_kinematics import HyQKinematics
+import numpy as np
 
 hyqKin = HyQKinematics()
 

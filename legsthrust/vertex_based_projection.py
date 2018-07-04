@@ -14,7 +14,7 @@ from math_tools import Math
 from constraints import Constraints
 from kinematics import Kinematics
 
-class AnalyticProjection():
+class VertexBasedProjection():
     def minksum(self, a,b):
         n_a = np.size(a,1)
         n_b = np.size(b,1)
@@ -84,7 +84,7 @@ class AnalyticProjection():
     
     
     
-    def analytic_projection(self, constraint_mode, contacts, normals, mass, ng, mu):
+    def project(self, constraint_mode, contacts, normals, mass, ng, mu):
         start_t = time.time()
         contactsNumber = np.size(contacts,0)
         r1 = contacts[0,:]

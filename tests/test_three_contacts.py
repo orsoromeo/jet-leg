@@ -12,20 +12,20 @@ import numpy as np
 
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
-from plotting_tools import Plotter
-from constraints import Constraints
-from kinematics import Kinematics
-from math_tools import Math
-from computational_dynamics import ComputationalDynamics
-from anaylitic_test_three_contacts import AnalyticProjection
+from legsthrust.plotting_tools import Plotter
+from legsthrust.constraints import Constraints
+from legsthrust.kinematics import Kinematics
+from legsthrust.math_tools import Math
+from legsthrust.computational_dynamics import ComputationalDynamics
+from legsthrust.vertex_based_projection import VertexBasedProjection
 
 import matplotlib.pyplot as plt
-from arrow3D import Arrow3D
+from legsthrust.arrow3D import Arrow3D
 
 plt.close('all')
 math = Math()
 # number of contacts
-nc = 4
+nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
@@ -120,11 +120,11 @@ if np.size(unfeasible,0) != 0:
     ax.scatter(unfeasible[:,0], unfeasible[:,1], unfeasible[:,2],c='r',s=50)
 
 ''' Vertex-based projection '''
-#an_proj = AnalyticProjection()
-#vertices2d, simplices = an_proj.analytic_projection(constraint_mode, contacts, normals, mass, ng, mu)
+vertexBasedProj = VertexBasedProjection()
+vertices2d, simplices = vertexBasedProj.project(constraint_mode, contacts, normals, mass, ng, mu)
 
-#for simplex in simplices:
-#    plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
+for simplex in simplices:
+    plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
 
 plt.show()
 
