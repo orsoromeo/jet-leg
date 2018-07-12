@@ -72,7 +72,7 @@ mu = 0.8
 
 axisZ= array([[0.0], [0.0], [1.0]])
 
-n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+n1 = np.transpose(np.transpose(math.rpyToRot(1.5,1.5,0.0)).dot(axisZ))
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -123,8 +123,8 @@ ax.add_artist(a1)
 ''' plotting LP test points '''
 if np.size(feasible,0) != 0:
     ax.scatter(feasible[:,0], feasible[:,1], feasible[:,2],c='g',s=50)
-if np.size(unfeasible,0) != 0:
-    ax.scatter(unfeasible[:,0], unfeasible[:,1], unfeasible[:,2],c='r',s=50)
+#if np.size(unfeasible,0) != 0:
+#    ax.scatter(unfeasible[:,0], unfeasible[:,1], unfeasible[:,2],c='r',s=50)
 
 ''' Vertex-based projection '''
 vertexBasedProj = VertexBasedProjection()

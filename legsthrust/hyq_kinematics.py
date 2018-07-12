@@ -791,6 +791,7 @@ class HyQKinematics:
         Besides the joint positions, this function also returns the 2D jacobians referred to the
         HFE and KFE joints of the HyQ robot.
         '''
+        isOutOfWorkSpace = False
         footPosDes = np.vstack([x,z])
         BASE2HAA_offsets = np.array([[0.3735,0.3735,-0.3735,-0.3735],
                                  [-.08, -.08, -.08, -.08]]);
@@ -825,6 +826,9 @@ class HyQKinematics:
         cos_arg = (np.square(self.upperLegLength) + np.square(hfe2foot) - np.square(self.lowerLegLength)) / (2 * self.upperLegLength * hfe2foot);
         sin_arg = footPosHAA[0] / hfe2foot; #it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)	
         q[1] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# LF HFE
+        if (np.isnan(q[1])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'
         q[4] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# RF HFE
     
         cos_arg = (self.upperLegLength * self.upperLegLength + self.lowerLegLength * self.lowerLegLength - hfe2foot * hfe2foot)/ (2 * self.upperLegLength * self.lowerLegLength);
@@ -857,7 +861,7 @@ class HyQKinematics:
         #q_dot[4:5] = np.linalg.inv(Jac_RF)*footVelDes;
         #q_dot[7:8] = np.linalg.inv(Jac_LH)*footVelDes;
         #q_dot[10:11] = np.linalg.inv(Jac_RH)*footVelDes;   
-        return q, q_dot, Jac_LF_2D, Jac_RF_2D, Jac_LH_2D, Jac_RH_2D
+        return q, q_dot, Jac_LF_2D, Jac_RF_2D, Jac_LH_2D, Jac_RH_2D, isOutOfWorkSpace
 
 
 

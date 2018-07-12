@@ -22,6 +22,7 @@ class Kinematics:
         Besides the joint positions, this function also returns the 2D jacobians referred to the
         HFE and KFE joints of the HyQ robot.
         '''
+        isOutOfWorkSpace = False
         footPosDes = np.vstack([x,z])
         BASE2HAA_offsets = np.array([[0.3735,0.3735,-0.3735,-0.3735],
                                  [-.08, -.08, -.08, -.08]]);
@@ -57,16 +58,26 @@ class Kinematics:
         cos_arg = (np.square(upperLegLength) + np.square(hfe2foot) - np.square(lowerLegLength)) / (2 * upperLegLength * hfe2foot);
         sin_arg = footPosHAA[0] / hfe2foot; #it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)	
         q[1] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# LF HFE
+        if (np.isnan(q[1])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'
         q[4] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# RF HFE
-    
+        if (np.isnan(q[4])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'
         cos_arg = (upperLegLength * upperLegLength + lowerLegLength * lowerLegLength - hfe2foot * hfe2foot)/ (2 * upperLegLength * lowerLegLength);
         q[8]= + M_PI- np.arccos(cos_arg[0]); # LH KFE
         q[11] = + M_PI - np.arccos(cos_arg[0]); # RH KFE
         cos_arg = (upperLegLength * upperLegLength + hfe2foot * hfe2foot- lowerLegLength * lowerLegLength) / (2 * upperLegLength * hfe2foot);
         sin_arg = footPosHAA[0,2] / hfe2foot; # it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)
         q[7] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# LH HFE
+        if (np.isnan(q[7])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'
         q[10] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# RH HFE
-    
+        if (np.isnan(q[10])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'    
         """ compute joint velocities updating the 2D jacobians with the computed position """
         l1 = upperLegLength;
         l2 = lowerLegLength;
@@ -88,7 +99,7 @@ class Kinematics:
         #q_dot[4:5] = np.linalg.inv(Jac_RF)*footVelDes;
         #q_dot[7:8] = np.linalg.inv(Jac_LH)*footVelDes;
         #q_dot[10:11] = np.linalg.inv(Jac_RH)*footVelDes;   
-        return q, q_dot, Jac_LF, Jac_RF, Jac_LH, Jac_RH
+        return q, q_dot, Jac_LF, Jac_RF, Jac_LH, Jac_RH, isOutOfWorkSpace
     
     def update_jacobians(self, q):
         '''

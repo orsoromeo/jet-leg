@@ -15,6 +15,7 @@ from scipy.linalg import block_diag
 from plotting_tools import Plotter
 from constraints import Constraints
 from kinematics import Kinematics
+from hyq_kinematics import HyQKinematics
 from math_tools import Math
 from cvxopt import matrix, solvers
 import time
@@ -81,7 +82,7 @@ class ComputationalDynamics():
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
+            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
@@ -119,18 +120,19 @@ class ComputationalDynamics():
                 
                 
 
-    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu, useVariableJacobian = False, stepX = 0.05, stepY = 0.05):
+    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu, useVariableJacobian = False, stepX = 0.05, stepY = 0.05, stepZ = 0.025):
         start_t_LP = time.time()
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
         p = matrix(np.ones((3*nc,1)))    
         
-        kin = Kinematics()
+        #kin = Kinematics()
+        kin = HyQKinematics()
         constraint = Constraints()                              
                 
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])
-        q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
+        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
@@ -146,34 +148,37 @@ class ComputationalDynamics():
         """ Defining the equality constraints """
         for com_x in np.arange(-0.5,0.5,stepX):
             for com_y in np.arange(-0.4,0.4,stepY):
-                com = np.array([com_x, com_y, 0.0])
-                torque = -np.cross(com, np.transpose(grav))
-                A = np.zeros((6,0))
-                for j in range(0,nc):
-                    r = contacts[j,:]
-                    GraspMat = self.getGraspMatrix(r)
-                    A = np.hstack((A, GraspMat[:,0:3]))
-                A = matrix(A)
-                b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
-                
-                #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])\
-                if (useVariableJacobian):
-                    contacts_new_x = contactsFourLegs[:,0] + com_x
-                    q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts_new_x),
+                for com_z in np.arange(-0.5,0.5,stepZ):
+                    com = np.array([com_x, com_y, com_z])
+                    torque = -np.cross(com, np.transpose(grav))
+                    A = np.zeros((6,0))
+                    for j in range(0,nc):
+                        r = contacts[j,:]
+                        GraspMat = self.getGraspMatrix(r)
+                        A = np.hstack((A, GraspMat[:,0:3]))
+                        A = matrix(A)
+                        b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
+                        
+                    #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])\
+                    if (useVariableJacobian):
+                        contacts_new_x = contactsFourLegs[:,0] + com_x
+                        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contacts_new_x),
                                                   np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,2]),
+                                                    np.transpose(contactsFourLegs[:,2] + com_z),
                                                     np.transpose(foot_vel[:,2]))
-                    G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
-        
-                sol=solvers.lp(p, G, h, A, b)
-                x = sol['x']
-                status = sol['status']
-                #print x
-                if status == 'optimal':
-                    feasible_points = np.vstack([feasible_points,com])
-                    contact_forces = np.vstack([contact_forces, np.transpose(x)])
-                else:
-                    unfeasible_points = np.vstack([unfeasible_points,com])
+                        G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+                    
+                    if (not isOutOfWorkspace):
+                        sol=solvers.lp(p, G, h, A, b)
+                        x = sol['x']
+                        status = sol['status']
+                        #print x
+                        if status == 'optimal':
+                            feasible_points = np.vstack([feasible_points,com])
+                            contact_forces = np.vstack([contact_forces, np.transpose(x)])
+                        else:
+                            unfeasible_points = np.vstack([unfeasible_points,com])
+                    
         
         
         print("LP test: --- %s seconds ---" % (time.time() - start_t_LP))
