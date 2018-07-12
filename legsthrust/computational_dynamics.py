@@ -120,7 +120,7 @@ class ComputationalDynamics():
                 
                 
 
-    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu, useVariableJacobian = False, stepX = 0.05, stepY = 0.05, stepZ = 0.025):
+    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu, useVariableJacobian = False, stepX = 0.05, stepY = 0.05, stepZ = 0.05):
         start_t_LP = time.time()
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
@@ -134,10 +134,12 @@ class ComputationalDynamics():
         contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])
         q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
                                                   np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsFourLegs[:,1]),
+                                                    np.transpose(foot_vel[:,1]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
         
-        G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+        G, h, isConstraintOk = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         #print G, h
         #print np.size(G,0), np.size(G,1)
         
@@ -148,7 +150,7 @@ class ComputationalDynamics():
         """ Defining the equality constraints """
         for com_x in np.arange(-0.5,0.5,stepX):
             for com_y in np.arange(-0.4,0.4,stepY):
-                for com_z in np.arange(-0.5,0.5,stepZ):
+                for com_z in np.arange(-0.,0.05,stepZ):
                     com = np.array([com_x, com_y, com_z])
                     torque = -np.cross(com, np.transpose(grav))
                     A = np.zeros((6,0))
@@ -164,20 +166,27 @@ class ComputationalDynamics():
                         contacts_new_x = contactsFourLegs[:,0] + com_x
                         q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contacts_new_x),
                                                   np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsFourLegs[:,1] + com_y),
+                                                    np.transpose(foot_vel[:,1]),
                                                     np.transpose(contactsFourLegs[:,2] + com_z),
                                                     np.transpose(foot_vel[:,2]))
-                        G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
-                    
                     if (not isOutOfWorkspace):
-                        sol=solvers.lp(p, G, h, A, b)
-                        x = sol['x']
-                        status = sol['status']
-                        #print x
-                        if status == 'optimal':
-                            feasible_points = np.vstack([feasible_points,com])
-                            contact_forces = np.vstack([contact_forces, np.transpose(x)])
+                        kin.update_jacobians(q)
+                        #print J_LF
+                        G, h, isConstraintOk = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+                        print G, h
+                        if not isConstraintOk:
+                            print 'something is wrong in the inequalities'
                         else:
-                            unfeasible_points = np.vstack([unfeasible_points,com])
+                            sol=solvers.lp(p, G, h, A, b)
+                            x = sol['x']
+                            status = sol['status']
+                            #print x
+                            if status == 'optimal':
+                                feasible_points = np.vstack([feasible_points,com])
+                                contact_forces = np.vstack([contact_forces, np.transpose(x)])
+                            else:
+                                unfeasible_points = np.vstack([unfeasible_points,com])
                     
         
         

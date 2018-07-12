@@ -97,6 +97,7 @@ class HyQKinematics:
         self.init_homogeneous()
 
     def init_jacobians(self):
+
         self.fr_trunk_J_LF_foot[0,0] = - 1.0;
         self.fr_trunk_J_RF_foot[0,0] = 1.0;
         self.fr_trunk_J_LH_foot[0,0] = - 1.0;
@@ -773,6 +774,9 @@ class HyQKinematics:
         self.fr_trunk_J_RH_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( 0.08 *  self.s__q_RH_HAA);
         self.fr_trunk_J_RH_foot[6-1,2-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE);
         self.fr_trunk_J_RH_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
+        #print self.fr_trunk_J_LF_foot
+        return self.fr_trunk_J_LF_foot, self.fr_trunk_J_RF_foot, self.fr_trunk_J_LH_foot, self.fr_trunk_J_RH_foot
+
 
     def forward_kin(self, q):
         LF_foot = self.fr_trunk_Xh_LF_foot[0:3,3]
@@ -784,7 +788,7 @@ class HyQKinematics:
         
         return contacts
         
-    def inverse_kin(self, x, x_dot, z, z_dot):
+    def inverse_kin(self, x, x_dot, y, y_dot, z, z_dot):
         ''' 
         This function computes the joint positions given the feet positions and velocities.
         Only the X Y feet coordinates are considered inthis version.
@@ -797,6 +801,7 @@ class HyQKinematics:
                                  [-.08, -.08, -.08, -.08]]);
 
         footPosHAA = np.subtract(footPosDes, BASE2HAA_offsets)
+        #print footPosHAA
 
         haa2hfeLength = 0.045;
         M_PI = np.pi;
@@ -814,10 +819,16 @@ class HyQKinematics:
         # add the x component
         # hfe2foot = sqrt(hfe2foot * hfe2foot);
         # HAA joints
-        q[0] = -np.arctan2(footPosHAA[0,0],-footPosHAA[1,0]); # LF HAA
-        q[6] = -np.arctan2(footPosHAA[0,1],-footPosHAA[1,1]); # LH HAA
-        q[3] = -np.arctan2(-footPosHAA[0,2],-footPosHAA[1,2]);# RF HAA
-        q[9] = -np.arctan2(-footPosHAA[0,3],-footPosHAA[1,3]);# RH HAA
+
+        q[0] = -np.arctan2(y[0],-footPosHAA[1,0]); # LF HAA
+        q[6] = -np.arctan2(y[1],-footPosHAA[1,1]); # LH HAA
+        q[3] = -np.arctan2(-y[2],-footPosHAA[1,2]);# RF HAA
+        q[9] = -np.arctan2(-y[3],-footPosHAA[1,3]);# RH HAA
+
+        #q[0] = -np.arctan2(footPosHAA[0,0],-footPosHAA[1,0]); # LF HAA
+        #q[6] = -np.arctan2(footPosHAA[0,1],-footPosHAA[1,1]); # LH HAA
+        #q[3] = -np.arctan2(-footPosHAA[0,2],-footPosHAA[1,2]);# RF HAA
+        #q[9] = -np.arctan2(-footPosHAA[0,3],-footPosHAA[1,3]);# RH HAA
     
         # HFE and KFE joints (use cosine law)
         cos_arg = (self.upperLegLength * self.upperLegLength + self.lowerLegLength * self.lowerLegLength - hfe2foot * hfe2foot) / (2 * self.upperLegLength * self.lowerLegLength);
@@ -830,15 +841,23 @@ class HyQKinematics:
             isOutOfWorkSpace = True
             print 'Warning! point is out of workspace!'
         q[4] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# RF HFE
-    
+        if (np.isnan(q[4])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'    
         cos_arg = (self.upperLegLength * self.upperLegLength + self.lowerLegLength * self.lowerLegLength - hfe2foot * hfe2foot)/ (2 * self.upperLegLength * self.lowerLegLength);
         q[8]= + M_PI- np.arccos(cos_arg[0]); # LH KFE
         q[11] = + M_PI - np.arccos(cos_arg[0]); # RH KFE
         cos_arg = (self.upperLegLength * self.upperLegLength + hfe2foot * hfe2foot- self.lowerLegLength * self.lowerLegLength) / (2 * self.upperLegLength * hfe2foot);
         sin_arg = footPosHAA[0,2] / hfe2foot; # it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)
         q[7] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# LH HFE
+        if (np.isnan(q[7])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'
         q[10] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# RH HFE
-    
+        if (np.isnan(q[10])):
+            isOutOfWorkSpace = True
+            print 'Warning! point is out of workspace!'    
+
         """ compute joint velocities updating the 2D jacobians with the computed position """
         l1 = self.upperLegLength;
         l2 = self.lowerLegLength;

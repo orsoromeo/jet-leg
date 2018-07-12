@@ -112,7 +112,7 @@ class VertexBasedProjection():
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
+            q, q_dot, J_LF, J_RF, J_LH, J_RH,isOutOfWorkspace = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
                                                     np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))

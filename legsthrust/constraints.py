@@ -84,7 +84,6 @@ class Constraints:
         
     def hexahedron(self, v_rep):
         geom = ComputationalGeometry()
-        
         h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6 = geom.get_halfspace_rep(v_rep)        
         
         h_rep = np.vstack([h_rep1, -h_rep2, -h_rep3, -h_rep4, -h_rep5, h_rep6])        
@@ -126,12 +125,15 @@ class Constraints:
         h_vec1 = np.zeros((0,1))
         cons2 = np.zeros((0,0))
         h_vec2 = np.zeros((0,1))
+        error = True
         actuation_polygon_LF = self.computeActuationPolygon(J_LF)
         actuation_polygon_RF = self.computeActuationPolygon(J_RF)
-        actuation_polygon_RF = actuation_polygon_LF
         actuation_polygon_LH = self.computeActuationPolygon(J_LH)
         actuation_polygon_RH = self.computeActuationPolygon(J_RH)
-        actuation_polygon_RH = actuation_polygon_LF
+        actuation_polygons = np.array([actuation_polygon_LF,
+                                       actuation_polygon_RF,
+                                       actuation_polygon_LH,
+                                       actuation_polygon_RH])
         #print 'actuation polygon LF: ',actuation_polygon_LF
         #print 'actuation polygon RF: ',actuation_polygon_RF
         #print 'actuation polygon LH: ',actuation_polygon_LH
@@ -142,10 +144,13 @@ class Constraints:
             c, h_term = self.linear_cone(normals[j,:],friction_coeff)
             cons1 = np.vstack([np.hstack([cons1, np.zeros((np.size(cons1,0),np.size(c,1)))]),
                                           np.hstack([np.zeros((np.size(c,0),np.size(cons1,1))), c])])
-
+            if np.isnan(h_term).any:
+                error = True    
             h_vec1 = np.vstack([h_vec1, h_term])
-            c, h_term = self.hexahedron(actuation_polygon_LF)
             
+            c, h_term = self.hexahedron(actuation_polygons[j])
+            if np.isnan(h_term).any:
+                error = True            
             cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
                           np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
             h_vec2 = np.vstack([h_vec2, h_term])
@@ -162,6 +167,8 @@ class Constraints:
         elif constraint_mode == 'ONLY_ACTUATION':
             cons = cons2
             h_vec = h_vec2
+            if np.isnan(h_term).any:
+                error = True    
 
         elif constraint_mode == 'friction_and_actuation':
             cons = np.vstack([cons1, cons2])
@@ -171,5 +178,5 @@ class Constraints:
         m_ineq = np.size(cons,0)
         G = matrix(cons) 
         h = matrix(h_vec.reshape(m_ineq))
-        return G, h
+        return G, h, error
     
