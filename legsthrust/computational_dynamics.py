@@ -66,13 +66,17 @@ class ComputationalDynamics():
         #print A,t
         eq = (A, t)  # A * x == t
         
+        act_LF = np.zeros((0,1))
+        act_RF = np.zeros((0,1))
+        act_LH = np.zeros((0,1))
+        act_RH = np.zeros((0,1))
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
             C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
- 
+            
         elif constraint_mode == 'ONLY_ACTUATION':
             kin = Kinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
@@ -94,6 +98,7 @@ class ComputationalDynamics():
             c4, e4 = constr.hexahedron(act_LF/mass)
             C = np.zeros((0,0))
             d = np.zeros((1,0))
+            
             for j in range (0,contactsNumber):
                 hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(act_LF/mass)
                 C = block_diag(C, hexahedronHalfSpaceConstraints)
@@ -109,9 +114,12 @@ class ComputationalDynamics():
         vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
 
         print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IP))
-        return vertices, act_LF, act_RF, act_RH, act_LH
 
-    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu):
+        return vertices, act_LF, act_RF, act_RH, act_LH
+                
+                
+
+    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, mu, useVariableJacobian = False, stepX = 0.05, stepY = 0.05):
         start_t_LP = time.time()
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
@@ -136,8 +144,8 @@ class ComputationalDynamics():
         contact_forces = np.zeros((0,nc*3))
         
         """ Defining the equality constraints """
-        for com_x in np.arange(-0.5,0.5,0.1):
-            for com_y in np.arange(-0.4,0.4,0.1):
+        for com_x in np.arange(-0.5,0.5,stepX):
+            for com_y in np.arange(-0.4,0.4,stepY):
                 com = np.array([com_x, com_y, 0.0])
                 torque = -np.cross(com, np.transpose(grav))
                 A = np.zeros((6,0))
@@ -148,13 +156,14 @@ class ComputationalDynamics():
                 A = matrix(A)
                 b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
                 
-                #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])
-                contacts_new_x = contactsFourLegs[:,0] + com_x
-                q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts_new_x),
+                #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])\
+                if (useVariableJacobian):
+                    contacts_new_x = contactsFourLegs[:,0] + com_x
+                    q, q_dot, J_LF, J_RF, J_LH, J_RH = kin.compute_xy_IK(np.transpose(contacts_new_x),
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
-                G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+                    G, h = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         
                 sol=solvers.lp(p, G, h, A, b)
                 x = sol['x']

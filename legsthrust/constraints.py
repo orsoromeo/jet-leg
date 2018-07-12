@@ -21,13 +21,6 @@ class Constraints:
             rotationMatrix = math.rotation_matrix_from_normal(n)
             C = block_diag(C, np.dot(constraints_local_frame, rotationMatrix.T))
             
-       # R1, R2, R3 = (math.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
-        
-        #constraints_local_frame = self.linearized_cone_halfspaces(ng, mu)
-        #C = block_diag(
-        #    np.dot(constraints_local_frame, R1.T),
-        #    np.dot(constraints_local_frame, R2.T),
-        #    np.dot(constraints_local_frame, R3.T))
         d = np.zeros(C.shape[0])        
         return C, d
         

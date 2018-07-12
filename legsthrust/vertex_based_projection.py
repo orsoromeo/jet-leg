@@ -210,7 +210,10 @@ class VertexBasedProjection():
 #        
         # TODO: use pointsfZhull instead for "ONLY_FRICTION" option:
         #points2d = self.project_points(pointsfZhull, mg) #cimpute com points
-        points2d = self.project_points(pointstZhull, mg) #cimpute com points
+        if constraint_mode == 'ONLY_ACTUATION':
+            points2d = self.project_points(pointstZhull, mg) #cimpute com points
+        elif constraint_mode == 'ONLY_FRICTION':
+            points2d = self.project_points(pointsfZhull, mg) #cimpute com points
         
         #print points
         vertices2d = np.transpose(points2d)

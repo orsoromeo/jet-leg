@@ -31,7 +31,9 @@ nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
+# ONLY_ACTUATION or ONLY_FRICTION
 constraint_mode = 'ONLY_ACTUATION'
+useVariableJacobian = True
 # number of decision variables of the problem
 n = nc*6
 
@@ -42,10 +44,11 @@ n = nc*6
 #LH_foot = np.array([-0.3, 0.2, -0.5])
 #RH_foot = np.array([-0.3, -0.2, -0.5])
 
-LF_foot = np.array([0.3, 0.2, -0.35])
-RF_foot = np.array([0.3, -0.2, -0.58])
-LH_foot = np.array([-0.2, 0.2, -0.58])
-RH_foot = np.array([-0.3, -0.2, -0.58])
+LF_foot = np.array([0.3, 0.2, -0.5])
+RF_foot = np.array([0.3, -0.2, -0.5])
+LH_foot = np.array([-0.2, 0.2, -0.5])
+RH_foot = np.array([-0.3, -0.2, -0.5])
+
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts = contactsToStack[0:nc, :]
 
@@ -64,7 +67,7 @@ R_RH_foot = np.array([0.1, 0.2, -0.5])
 
 ''' parameters to be tuned'''
 g = 9.81
-mass = 90.
+trunk_mass = 90.
 mu = 0.8
 
 axisZ= array([[0.0], [0.0], [1.0]])
@@ -94,25 +97,27 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
-IP_points, actuation_LF, actuation_RF, actuation_LH, actuation_RH = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, mass, ng, mu)
-
-''' plotting Iterative Projection points '''
+IP_points, actuation_LF, actuation_RF, actuation_LH, actuation_RH = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, ng, mu)
 
 plotter = Plotter()
 scaling_factor = 2000
-plotter.plot_polygon(np.transpose(IP_points))
-plotter.plot_actuation_polygon(ax, actuation_LF, LF_foot, scaling_factor)
-plotter.plot_actuation_polygon(ax, actuation_RF, RF_foot, scaling_factor)
-plotter.plot_actuation_polygon(ax, actuation_LH, LH_foot, scaling_factor)
-plotter.plot_actuation_polygon(ax, actuation_RH, RH_foot, scaling_factor)
-feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, contacts, normals, mass, mu, ng, nc, mu)
+if constraint_mode == 'ONLY_ACTUATION':
+    plotter.plot_polygon(np.transpose(IP_points))
+    plotter.plot_actuation_polygon(ax, actuation_LF, LF_foot, scaling_factor)
+    plotter.plot_actuation_polygon(ax, actuation_RF, RF_foot, scaling_factor)
+    plotter.plot_actuation_polygon(ax, actuation_LH, LH_foot, scaling_factor)
+    plotter.plot_actuation_polygon(ax, actuation_RH, RH_foot, scaling_factor)
+
+''' plotting Iterative Projection points '''
+
+feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, mu, useVariableJacobian)
 #print contact_forces
 #for i in range(0, np.size(contact_forces,0)):
 #    for j in range(0,nc):
 #        a = Arrow3D([contacts[j,0], contacts[j,0]+contact_forces[i,j*3]/200], [contacts[j,1], contacts[j,1]+contact_forces[i,j*3+1]/200],[contacts[j,2], contacts[j,2]+contact_forces[i,j*3+2]/200], mutation_scale=20, lw=3, arrowstyle="-|>", color="g")
 #        ax.add_artist(a)
 
-a1 = Arrow3D([0.0, 0.0],[ 0.0,0.0],[ 0.0, -mass*g/scaling_factor], mutation_scale=20, lw=3, arrowstyle="-|>", color="b")
+a1 = Arrow3D([0.0, 0.0],[ 0.0,0.0],[ 0.0, -trunk_mass*g/scaling_factor], mutation_scale=20, lw=3, arrowstyle="-|>", color="b")
 ax.add_artist(a1)
 
 ''' plotting LP test points '''
@@ -123,7 +128,7 @@ if np.size(unfeasible,0) != 0:
 
 ''' Vertex-based projection '''
 vertexBasedProj = VertexBasedProjection()
-vertices2d, simplices = vertexBasedProj.project(constraint_mode, contacts, normals, mass, ng, mu)
+vertices2d, simplices = vertexBasedProj.project(constraint_mode, contacts, normals, trunk_mass, ng, mu)
 
 for simplex in simplices:
     plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
@@ -139,13 +144,13 @@ if np.size(unfeasible,0) != 0:
     h3 = plt.scatter(unfeasible[:,0], unfeasible[:,1],c='r',s=50, label='LP unfeasible')
 h4 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
 
-#i = 0
-#for simplex in simplices:
-#    if (i==0):
-#        h5 = plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5., label = 'Vertex-based projection')
-#    else:
-#        plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
-#    i+=1
+i = 0
+for simplex in simplices:
+    if (i==0):
+        h5 = plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5., label = 'Vertex-based projection')
+    else:
+        plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
+    i+=1
     
 plt.grid()
 plt.xlabel("X [m]")
