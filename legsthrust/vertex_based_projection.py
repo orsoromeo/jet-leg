@@ -134,12 +134,12 @@ class VertexBasedProjection():
             #vertices_cl = np.array([[0., dx, dx, -dx, -dx],
             #                     [0., dy, -dy, -dy, dy],
             #                     [0., dz, dz, dz, dz]])
-            #vertices_1 = np.dot(vertices_cl, R1.T)
-            #vertices_2 = np.dot(vertices_cl, R2.T)
-            #vertices_3 = np.dot(vertices_cl, R3.T)
-            vertices_1 = vertices_cl
-            vertices_2 = vertices_cl
-            vertices_3 = vertices_cl
+            vertices_1 = np.dot(vertices_cl, R1.T)
+            vertices_2 = np.dot(vertices_cl, R2.T)
+            vertices_3 = np.dot(vertices_cl, R3.T)
+            #vertices_1 = vertices_cl
+            #vertices_2 = vertices_cl
+            #vertices_3 = vertices_cl
 
         
         vertices_1 = np.transpose(vertices_1)

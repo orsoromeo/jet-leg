@@ -27,7 +27,7 @@ class Constraints:
     def linearized_cone_vertices(self, ng, mu, cone_height = 100.):
         if ng == 4:
             c_force = np.array([
-            [0., 0., -cone_height],
+            [0., 0., 0],
             [+mu*cone_height, +mu*cone_height, cone_height],
             [-mu*cone_height, +mu*cone_height, cone_height],
             [-mu*cone_height, -mu*cone_height, cone_height],
