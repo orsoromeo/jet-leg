@@ -16,7 +16,7 @@ import unittest
 
 class TestStringMethods(unittest.TestCase):
     
-    epsilon = 10e-03
+    epsilon = 10e-02
     assertPrecision = 3
     
     def test_kinematic_loop_default_configuration(self):
@@ -108,13 +108,14 @@ class TestStringMethods(unittest.TestCase):
         new_contacts = hyqKin.forward_kin(q)
         #print new_contacts
         
-        error = np.subtract(contacts,new_contacts)
-        feet_pos_error =  np.sqrt(np.sum(error*error))
-        #print "feet error: ", np.sqrt(np.sum(error*error))
+        self.assertTrue((LF_foot - new_contacts[0,:] < self.epsilon).all())       
+        self.assertTrue((RF_foot - new_contacts[1,:] < self.epsilon).all())
+        self.assertTrue((LH_foot - new_contacts[2,:] < self.epsilon).all())
+        self.assertTrue((RH_foot - new_contacts[3,:] < self.epsilon).all())
         
         new_q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = hyqKin.inverse_kin(np.transpose(new_contacts[:,0]),
                                                                   np.transpose(foot_vel[:,0]),
-                                                                np.transpose(contacts[:,1]),
+                                                                np.transpose(new_contacts[:,1]),
                                                                   np.transpose(foot_vel[:,1]),
                                                         np.transpose(new_contacts[:,2]),
                                                         np.transpose(foot_vel[:,2]))
@@ -122,7 +123,8 @@ class TestStringMethods(unittest.TestCase):
         print new_q
     
 
-        self.assertTrue( (q - q_new < self.epsilon).all())
+        self.assertTrue( (q - new_q < self.epsilon).all())
+
         
         
     def test_forward_kinematics(self):
@@ -155,7 +157,12 @@ class TestStringMethods(unittest.TestCase):
         new_contacts = hyqKin.forward_kin(q)
         #print new_contacts
         
-        self.assertEqual(LF_foot.tolist(), new_contacts[0,:].tolist())       
-        self.assertEqual(RF_foot.tolist(), new_contacts[1,:].tolist())
-        self.assertEqual(LH_foot.tolist(), new_contacts[2,:].tolist())
-        self.assertEqual(RH_foot.tolist(), new_contacts[3,:].tolist())
+        self.assertTrue((LF_foot - new_contacts[0,:] < self.epsilon).all())       
+        self.assertTrue((RF_foot - new_contacts[1,:] < self.epsilon).all())
+        self.assertTrue((LH_foot - new_contacts[2,:] < self.epsilon).all())
+        self.assertTrue((RH_foot - new_contacts[3,:] < self.epsilon).all())
+        
+        #self.assertEqual(LF_foot.tolist(), new_contacts[0,:].tolist())       
+        #self.assertEqual(RF_foot.tolist(), new_contacts[1,:].tolist())
+        #self.assertEqual(LH_foot.tolist(), new_contacts[2,:].tolist())
+        #self.assertEqual(RH_foot.tolist(), new_contacts[3,:].tolist())

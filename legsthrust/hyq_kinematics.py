@@ -12,6 +12,10 @@ class HyQKinematics:
         self.upperLegLength = 0.35;
         self.lowerLegLength = 0.346;
 
+        self.BASE2HAA_offset_x = 0.3735;
+        self.BASE2HAA_offset_z = 0.08;
+        self.BASE2HAA_offset_y = 0.208;
+
         self.fr_LF_lowerleg_Xh_LF_foot = np.zeros((4,4));	
         self.fr_RF_lowerleg_Xh_RF_foot = np.zeros((4,4));
         self.fr_LH_lowerleg_Xh_LH_foot = np.zeros((4,4));
@@ -140,14 +144,14 @@ class HyQKinematics:
         self.fr_trunk_Xh_LF_foot[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_LF_HAA[0,2] = - 1.0;
-        self.fr_trunk_Xh_fr_LF_HAA[0,3] = 0.3735;
+        self.fr_trunk_Xh_fr_LF_HAA[0,3] = self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_LF_HAA[1,1] = - 1.0;
-        self.fr_trunk_Xh_fr_LF_HAA[1,3] = 0.207;
+        self.fr_trunk_Xh_fr_LF_HAA[1,3] = self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_LF_HAA[2,0] = - 1.0;
         self.fr_trunk_Xh_fr_LF_HAA[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_LF_HFE[0,1] = - 1.0;
-        self.fr_trunk_Xh_fr_LF_HFE[0,3] = 0.3735;
+        self.fr_trunk_Xh_fr_LF_HFE[0,3] = self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_LF_HFE[3,3] = 1.0;	
          
         self.fr_trunk_Xh_fr_LF_KFE[3,3] = 1.0;	  
@@ -155,14 +159,14 @@ class HyQKinematics:
         self.fr_trunk_Xh_RF_foot[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RF_HAA[0,2] = 1.0;
-        self.fr_trunk_Xh_fr_RF_HAA[0,3] = 0.3735;
+        self.fr_trunk_Xh_fr_RF_HAA[0,3] = self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_RF_HAA[1,1] = 1.0;
-        self.fr_trunk_Xh_fr_RF_HAA[1,3] = - 0.207;
+        self.fr_trunk_Xh_fr_RF_HAA[1,3] = - self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RF_HAA[2,0] = - 1.0;
         self.fr_trunk_Xh_fr_RF_HAA[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RF_HFE[0,1] = - 1.0;
-        self.fr_trunk_Xh_fr_RF_HFE[0,3] = 0.3735;
+        self.fr_trunk_Xh_fr_RF_HFE[0,3] = self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_RF_HFE[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RF_KFE[3,3] = 1.0;	
@@ -170,14 +174,14 @@ class HyQKinematics:
         self.fr_trunk_Xh_LH_foot[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_LH_HAA[0,2] = - 1.0;
-        self.fr_trunk_Xh_fr_LH_HAA[0,3] = - 0.3735;
+        self.fr_trunk_Xh_fr_LH_HAA[0,3] = - self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_LH_HAA[1,1] = - 1.0;
-        self.fr_trunk_Xh_fr_LH_HAA[1,3] = 0.207;
+        self.fr_trunk_Xh_fr_LH_HAA[1,3] = self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_LH_HAA[2,0] = - 1.0;
         self.fr_trunk_Xh_fr_LH_HAA[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_LH_HFE[0,0] = - 1.0;
-        self.fr_trunk_Xh_fr_LH_HFE[0,3] = - 0.3735;
+        self.fr_trunk_Xh_fr_LH_HFE[0,3] = - self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_LH_HFE[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_LH_KFE[3,3] = 1.0;	
@@ -185,31 +189,31 @@ class HyQKinematics:
         self.fr_trunk_Xh_RH_foot[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RH_HAA[0,2] = 1.0;
-        self.fr_trunk_Xh_fr_RH_HAA[0,3] = - 0.3735;
+        self.fr_trunk_Xh_fr_RH_HAA[0,3] = - self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_RH_HAA[1,1] = 1.0;
-        self.fr_trunk_Xh_fr_RH_HAA[1,3] = - 0.207;
+        self.fr_trunk_Xh_fr_RH_HAA[1,3] = - self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RH_HAA[2,0] = - 1.0;
         self.fr_trunk_Xh_fr_RH_HAA[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RH_HFE[0,1] = - 1.0;
-        self.fr_trunk_Xh_fr_RH_HFE[0,3] = - 0.3735;
+        self.fr_trunk_Xh_fr_RH_HFE[0,3] = - self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_RH_HFE[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RH_KFE[3,3] = 1.0;	
         
         self.fr_LF_hipassembly_Xh_fr_trunk[2,0] = - 1.0;
-        self.fr_LF_hipassembly_Xh_fr_trunk[2,3] = 0.3735;
+        self.fr_LF_hipassembly_Xh_fr_trunk[2,3] = self.BASE2HAA_offset_x;
         self.fr_LF_hipassembly_Xh_fr_trunk[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_LF_hipassembly[0,2] = - 1.0;
-        self.fr_trunk_Xh_fr_LF_hipassembly[0,3] = 0.3735;
-        self.fr_trunk_Xh_fr_LF_hipassembly[1,3] = 0.207;
+        self.fr_trunk_Xh_fr_LF_hipassembly[0,3] = self.BASE2HAA_offset_x;
+        self.fr_trunk_Xh_fr_LF_hipassembly[1,3] = self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_LF_hipassembly[3,3] = 1.0;	
             
         self.fr_LF_upperleg_Xh_fr_LF_hipassembly[2,1] = - 1;
         self.fr_LF_upperleg_Xh_fr_LF_hipassembly[3,3] = 1.0;	
      
-        self.fr_LF_hipassembly_Xh_fr_LF_upperleg[0,3] = 0.08;
+        self.fr_LF_hipassembly_Xh_fr_LF_upperleg[0,3] = self.BASE2HAA_offset_z;
         self.fr_LF_hipassembly_Xh_fr_LF_upperleg[1,2] = - 1;
         self.fr_LF_hipassembly_Xh_fr_LF_upperleg[3,3] = 1;	
         
@@ -221,18 +225,18 @@ class HyQKinematics:
         self.fr_LF_upperleg_Xh_fr_LF_lowerleg[3,3] = 1;	
         
         self.fr_RF_hipassembly_Xh_fr_trunk[2,0] = 1.0;
-        self.fr_RF_hipassembly_Xh_fr_trunk[2,3] = - 0.3735;
+        self.fr_RF_hipassembly_Xh_fr_trunk[2,3] = - self.BASE2HAA_offset_x;
         self.fr_RF_hipassembly_Xh_fr_trunk[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RF_hipassembly[0,2] = 1.0;
-        self.fr_trunk_Xh_fr_RF_hipassembly[0,3] = 0.3735;
-        self.fr_trunk_Xh_fr_RF_hipassembly[1,3] = - 0.207;
+        self.fr_trunk_Xh_fr_RF_hipassembly[0,3] = self.BASE2HAA_offset_x;
+        self.fr_trunk_Xh_fr_RF_hipassembly[1,3] = - self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RF_hipassembly[3,3] = 1.0;	
         
         self.fr_RF_upperleg_Xh_fr_RF_hipassembly[2,1] = 1;
         self.fr_RF_upperleg_Xh_fr_RF_hipassembly[3,3] = 1.0;	
         
-        self.fr_RF_hipassembly_Xh_fr_RF_upperleg[0,3] = 0.08;
+        self.fr_RF_hipassembly_Xh_fr_RF_upperleg[0,3] = self.BASE2HAA_offset_z;
         self.fr_RF_hipassembly_Xh_fr_RF_upperleg[1,2] = 1;
         self.fr_RF_hipassembly_Xh_fr_RF_upperleg[3,3] = 1;	
         
@@ -244,18 +248,18 @@ class HyQKinematics:
         self.fr_RF_upperleg_Xh_fr_RF_lowerleg[3,3] = 1;	
         
         self.fr_LH_hipassembly_Xh_fr_trunk[2,0] = - 1.0;
-        self.fr_LH_hipassembly_Xh_fr_trunk[2,3] = - 0.3735;
+        self.fr_LH_hipassembly_Xh_fr_trunk[2,3] = - self.BASE2HAA_offset_x;
         self.fr_LH_hipassembly_Xh_fr_trunk[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_LH_hipassembly[0,2] = - 1.0;
-        self.fr_trunk_Xh_fr_LH_hipassembly[0,3] = - 0.3735;
-        self.fr_trunk_Xh_fr_LH_hipassembly[1,3] = 0.207;
+        self.fr_trunk_Xh_fr_LH_hipassembly[0,3] = - self.BASE2HAA_offset_x;
+        self.fr_trunk_Xh_fr_LH_hipassembly[1,3] = self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_LH_hipassembly[3,3] = 1.0;	
         
         self.fr_LH_upperleg_Xh_fr_LH_hipassembly[2,1] = - 1;
         self.fr_LH_upperleg_Xh_fr_LH_hipassembly[3,3] = 1.0;	
         
-        self.fr_LH_hipassembly_Xh_fr_LH_upperleg[0,3] = 0.08;
+        self.fr_LH_hipassembly_Xh_fr_LH_upperleg[0,3] = self.BASE2HAA_offset_z;
         self.fr_LH_hipassembly_Xh_fr_LH_upperleg[1,2] = - 1;
         self.fr_LH_hipassembly_Xh_fr_LH_upperleg[3,3] = 1;	
         
@@ -268,18 +272,18 @@ class HyQKinematics:
         
 
         self.fr_RH_hipassembly_Xh_fr_trunk[2,0] = 1.0;
-        self.fr_RH_hipassembly_Xh_fr_trunk[2,3] = 0.3735;
+        self.fr_RH_hipassembly_Xh_fr_trunk[2,3] = self.BASE2HAA_offset_x;
         self.fr_RH_hipassembly_Xh_fr_trunk[3,3] = 1.0;	
         
         self.fr_trunk_Xh_fr_RH_hipassembly[0,2]= 1.0;
-        self.fr_trunk_Xh_fr_RH_hipassembly[0,3]= - 0.3735;
-        self.fr_trunk_Xh_fr_RH_hipassembly[1,3]= - 0.207;
+        self.fr_trunk_Xh_fr_RH_hipassembly[0,3]= - self.BASE2HAA_offset_x;
+        self.fr_trunk_Xh_fr_RH_hipassembly[1,3]= - self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RH_hipassembly[3,3]= 1.0;	
         
         self.fr_RH_upperleg_Xh_fr_RH_hipassembly[2,1]= 1;
         self.fr_RH_upperleg_Xh_fr_RH_hipassembly[3,3]= 1.0;	
         
-        self.fr_RH_hipassembly_Xh_fr_RH_upperleg[0,3] = 0.08;
+        self.fr_RH_hipassembly_Xh_fr_RH_upperleg[0,3] = self.BASE2HAA_offset_z;
         self.fr_RH_hipassembly_Xh_fr_RH_upperleg[1,2] = 1;
         self.fr_RH_hipassembly_Xh_fr_RH_upperleg[3,3] = 1;	
         
@@ -323,211 +327,211 @@ class HyQKinematics:
         self.LF_foot_Xh_fr_trunk[0,0] = ( self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.s__q_LF_HFE *  self.s__q_LF_KFE);
         self.LF_foot_Xh_fr_trunk[0,1] = (- self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) - ( self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE);
         self.LF_foot_Xh_fr_trunk[0,2] = (- self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) - ( self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE);
-        self.LF_foot_Xh_fr_trunk[0,3] = ((( 0.3735 *  self.s__q_LF_HFE) + ((( 0.207 *  self.s__q_LF_HAA) -  0.08) *  self.c__q_LF_HFE) -  self.upperLegLength) *  self.s__q_LF_KFE) + ((((( 0.207 *  self.s__q_LF_HAA) -  0.08) *  self.s__q_LF_HFE) - ( 0.3735 *  self.c__q_LF_HFE)) *  self.c__q_LF_KFE);
+        self.LF_foot_Xh_fr_trunk[0,3] = ((( self.BASE2HAA_offset_x *  self.s__q_LF_HFE) + ((( self.BASE2HAA_offset_y *  self.s__q_LF_HAA) -  self.BASE2HAA_offset_z) *  self.c__q_LF_HFE) -  self.upperLegLength) *  self.s__q_LF_KFE) + ((((( self.BASE2HAA_offset_y *  self.s__q_LF_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_LF_HFE) - ( self.BASE2HAA_offset_x *  self.c__q_LF_HFE)) *  self.c__q_LF_KFE);
         self.LF_foot_Xh_fr_trunk[1,1] =  self.c__q_LF_HAA;
         self.LF_foot_Xh_fr_trunk[1,2] = - self.s__q_LF_HAA;
-        self.LF_foot_Xh_fr_trunk[1,3] = - 0.207 *  self.c__q_LF_HAA;
+        self.LF_foot_Xh_fr_trunk[1,3] = - self.BASE2HAA_offset_y *  self.c__q_LF_HAA;
         self.LF_foot_Xh_fr_trunk[2,0] = ( self.c__q_LF_HFE *  self.s__q_LF_KFE) + ( self.s__q_LF_HFE *  self.c__q_LF_KFE);
         self.LF_foot_Xh_fr_trunk[2,1] = ( self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE);
         self.LF_foot_Xh_fr_trunk[2,2] = ( self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE);
-        self.LF_foot_Xh_fr_trunk[2,3] = ((((( 0.207 *  self.s__q_LF_HAA) -  0.08) *  self.s__q_LF_HFE) - ( 0.3735 *  self.c__q_LF_HFE)) *  self.s__q_LF_KFE) + (((- 0.3735 *  self.s__q_LF_HFE) + (( 0.08 - ( 0.207 *  self.s__q_LF_HAA)) *  self.c__q_LF_HFE) +  self.upperLegLength) *  self.c__q_LF_KFE) +  self.lowerLegLength;
+        self.LF_foot_Xh_fr_trunk[2,3] = ((((( self.BASE2HAA_offset_y *  self.s__q_LF_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_LF_HFE) - ( self.BASE2HAA_offset_x *  self.c__q_LF_HFE)) *  self.s__q_LF_KFE) + (((- self.BASE2HAA_offset_x *  self.s__q_LF_HFE) + (( self.BASE2HAA_offset_z - ( self.BASE2HAA_offset_y *  self.s__q_LF_HAA)) *  self.c__q_LF_HFE) +  self.upperLegLength) *  self.c__q_LF_KFE) +  self.lowerLegLength;
         
         
         
         self.RF_foot_Xh_fr_trunk[0,0] = ( self.c__q_RF_HFE *  self.c__q_RF_KFE) - ( self.s__q_RF_HFE *  self.s__q_RF_KFE);
         self.RF_foot_Xh_fr_trunk[0,1] = ( self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) + ( self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE);
         self.RF_foot_Xh_fr_trunk[0,2] = (- self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) - ( self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE);
-        self.RF_foot_Xh_fr_trunk[0,3] = ((( 0.3735 *  self.s__q_RF_HFE) + ((( 0.207 *  self.s__q_RF_HAA) -  0.08) *  self.c__q_RF_HFE) -  self.upperLegLength) *  self.s__q_RF_KFE) + ((((( 0.207 *  self.s__q_RF_HAA) -  0.08) *  self.s__q_RF_HFE) - ( 0.3735 *  self.c__q_RF_HFE)) *  self.c__q_RF_KFE);
+        self.RF_foot_Xh_fr_trunk[0,3] = ((( self.BASE2HAA_offset_x *  self.s__q_RF_HFE) + ((( self.BASE2HAA_offset_y *  self.s__q_RF_HAA) -  self.BASE2HAA_offset_z) *  self.c__q_RF_HFE) -  self.upperLegLength) *  self.s__q_RF_KFE) + ((((( self.BASE2HAA_offset_y *  self.s__q_RF_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_RF_HFE) - ( self.BASE2HAA_offset_x *  self.c__q_RF_HFE)) *  self.c__q_RF_KFE);
         self.RF_foot_Xh_fr_trunk[1,1] =  self.c__q_RF_HAA;
         self.RF_foot_Xh_fr_trunk[1,2] =  self.s__q_RF_HAA;
-        self.RF_foot_Xh_fr_trunk[1,3] =  0.207 *  self.c__q_RF_HAA;
+        self.RF_foot_Xh_fr_trunk[1,3] =  self.BASE2HAA_offset_y *  self.c__q_RF_HAA;
         self.RF_foot_Xh_fr_trunk[2,0] = ( self.c__q_RF_HFE *  self.s__q_RF_KFE) + ( self.s__q_RF_HFE *  self.c__q_RF_KFE);
         self.RF_foot_Xh_fr_trunk[2,1] = ( self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) - ( self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE);
         self.RF_foot_Xh_fr_trunk[2,2] = ( self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) - ( self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE);
-        self.RF_foot_Xh_fr_trunk[2,3] = ((((( 0.207 *  self.s__q_RF_HAA) -  0.08) *  self.s__q_RF_HFE) - ( 0.3735 *  self.c__q_RF_HFE)) *  self.s__q_RF_KFE) + (((- 0.3735 *  self.s__q_RF_HFE) + (( 0.08 - ( 0.207 *  self.s__q_RF_HAA)) *  self.c__q_RF_HFE) +  self.upperLegLength) *  self.c__q_RF_KFE) +  self.lowerLegLength;
+        self.RF_foot_Xh_fr_trunk[2,3] = ((((( self.BASE2HAA_offset_y *  self.s__q_RF_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_RF_HFE) - ( self.BASE2HAA_offset_x *  self.c__q_RF_HFE)) *  self.s__q_RF_KFE) + (((- self.BASE2HAA_offset_x *  self.s__q_RF_HFE) + (( self.BASE2HAA_offset_z - ( self.BASE2HAA_offset_y *  self.s__q_RF_HAA)) *  self.c__q_RF_HFE) +  self.upperLegLength) *  self.c__q_RF_KFE) +  self.lowerLegLength;
         
         
         
         self.LH_foot_Xh_fr_trunk[0,0] = ( self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.s__q_LH_HFE *  self.s__q_LH_KFE);
         self.LH_foot_Xh_fr_trunk[0,1] = (- self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) - ( self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE);
         self.LH_foot_Xh_fr_trunk[0,2] = (- self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) - ( self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE);
-        self.LH_foot_Xh_fr_trunk[0,3] = (((- 0.3735 *  self.s__q_LH_HFE) + ((( 0.207 *  self.s__q_LH_HAA) -  0.08) *  self.c__q_LH_HFE) -  self.upperLegLength) *  self.s__q_LH_KFE) + ((((( 0.207 *  self.s__q_LH_HAA) -  0.08) *  self.s__q_LH_HFE) + ( 0.3735 *  self.c__q_LH_HFE)) *  self.c__q_LH_KFE);
+        self.LH_foot_Xh_fr_trunk[0,3] = (((- self.BASE2HAA_offset_x *  self.s__q_LH_HFE) + ((( self.BASE2HAA_offset_y *  self.s__q_LH_HAA) -  self.BASE2HAA_offset_z) *  self.c__q_LH_HFE) -  self.upperLegLength) *  self.s__q_LH_KFE) + ((((( self.BASE2HAA_offset_y *  self.s__q_LH_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_LH_HFE) + ( self.BASE2HAA_offset_x *  self.c__q_LH_HFE)) *  self.c__q_LH_KFE);
         self.LH_foot_Xh_fr_trunk[1,1] =  self.c__q_LH_HAA;
         self.LH_foot_Xh_fr_trunk[1,2] = - self.s__q_LH_HAA;
-        self.LH_foot_Xh_fr_trunk[1,3] = - 0.207 *  self.c__q_LH_HAA;
+        self.LH_foot_Xh_fr_trunk[1,3] = - self.BASE2HAA_offset_y *  self.c__q_LH_HAA;
         self.LH_foot_Xh_fr_trunk[2,0] = ( self.c__q_LH_HFE *  self.s__q_LH_KFE) + ( self.s__q_LH_HFE *  self.c__q_LH_KFE);
         self.LH_foot_Xh_fr_trunk[2,1] = ( self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE);
         self.LH_foot_Xh_fr_trunk[2,2] = ( self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE);
-        self.LH_foot_Xh_fr_trunk[2,3] = ((((( 0.207 *  self.s__q_LH_HAA) -  0.08) *  self.s__q_LH_HFE) + ( 0.3735 *  self.c__q_LH_HFE)) *  self.s__q_LH_KFE) + ((( 0.3735 *  self.s__q_LH_HFE) + (( 0.08 - ( 0.207 *  self.s__q_LH_HAA)) *  self.c__q_LH_HFE) +  self.upperLegLength) *  self.c__q_LH_KFE) +  self.lowerLegLength;
+        self.LH_foot_Xh_fr_trunk[2,3] = ((((( self.BASE2HAA_offset_y *  self.s__q_LH_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_LH_HFE) + ( self.BASE2HAA_offset_x *  self.c__q_LH_HFE)) *  self.s__q_LH_KFE) + ((( self.BASE2HAA_offset_x *  self.s__q_LH_HFE) + (( self.BASE2HAA_offset_z - ( self.BASE2HAA_offset_y *  self.s__q_LH_HAA)) *  self.c__q_LH_HFE) +  self.upperLegLength) *  self.c__q_LH_KFE) +  self.lowerLegLength;
         
         
         
         self.RH_foot_Xh_fr_trunk[0,0] = ( self.c__q_RH_HFE *  self.c__q_RH_KFE) - ( self.s__q_RH_HFE *  self.s__q_RH_KFE);
         self.RH_foot_Xh_fr_trunk[0,1] = ( self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
         self.RH_foot_Xh_fr_trunk[0,2] = (- self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) - ( self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
-        self.RH_foot_Xh_fr_trunk[0,3] = (((- 0.3735 *  self.s__q_RH_HFE) + ((( 0.207 *  self.s__q_RH_HAA) -  0.08) *  self.c__q_RH_HFE) -  self.upperLegLength) *  self.s__q_RH_KFE) + ((((( 0.207 *  self.s__q_RH_HAA) -  0.08) *  self.s__q_RH_HFE) + ( 0.3735 *  self.c__q_RH_HFE)) *  self.c__q_RH_KFE);
+        self.RH_foot_Xh_fr_trunk[0,3] = (((- self.BASE2HAA_offset_x *  self.s__q_RH_HFE) + ((( self.BASE2HAA_offset_y *  self.s__q_RH_HAA) -  self.BASE2HAA_offset_z) *  self.c__q_RH_HFE) -  self.upperLegLength) *  self.s__q_RH_KFE) + ((((( self.BASE2HAA_offset_y *  self.s__q_RH_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_RH_HFE) + ( self.BASE2HAA_offset_x *  self.c__q_RH_HFE)) *  self.c__q_RH_KFE);
         self.RH_foot_Xh_fr_trunk[1,1] =  self.c__q_RH_HAA;
         self.RH_foot_Xh_fr_trunk[1,2] =  self.s__q_RH_HAA;
-        self.RH_foot_Xh_fr_trunk[1,3] =  0.207 *  self.c__q_RH_HAA;
+        self.RH_foot_Xh_fr_trunk[1,3] =  self.BASE2HAA_offset_y *  self.c__q_RH_HAA;
         self.RH_foot_Xh_fr_trunk[2,0] = ( self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.s__q_RH_HFE *  self.c__q_RH_KFE);
         self.RH_foot_Xh_fr_trunk[2,1] = ( self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) - ( self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE);
         self.RH_foot_Xh_fr_trunk[2,2] = ( self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) - ( self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE);
-        self.RH_foot_Xh_fr_trunk[2,3] = ((((( 0.207 *  self.s__q_RH_HAA) -  0.08) *  self.s__q_RH_HFE) + ( 0.3735 *  self.c__q_RH_HFE)) *  self.s__q_RH_KFE) + ((( 0.3735 *  self.s__q_RH_HFE) + (( 0.08 - ( 0.207 *  self.s__q_RH_HAA)) *  self.c__q_RH_HFE) +  self.upperLegLength) *  self.c__q_RH_KFE) +  self.lowerLegLength;
+        self.RH_foot_Xh_fr_trunk[2,3] = ((((( self.BASE2HAA_offset_y *  self.s__q_RH_HAA) -  self.BASE2HAA_offset_z) *  self.s__q_RH_HFE) + ( self.BASE2HAA_offset_x *  self.c__q_RH_HFE)) *  self.s__q_RH_KFE) + ((( self.BASE2HAA_offset_x *  self.s__q_RH_HFE) + (( self.BASE2HAA_offset_z - ( self.BASE2HAA_offset_y *  self.s__q_RH_HAA)) *  self.c__q_RH_HFE) +  self.upperLegLength) *  self.c__q_RH_KFE) +  self.lowerLegLength;
         
         
         
         self.fr_trunk_Xh_LF_foot[0,0] = ( self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.s__q_LF_HFE *  self.s__q_LF_KFE);
         self.fr_trunk_Xh_LF_foot[0,2] = ( self.c__q_LF_HFE *  self.s__q_LF_KFE) + ( self.s__q_LF_HFE *  self.c__q_LF_KFE);
-        self.fr_trunk_Xh_LF_foot[0,3] = (- self.lowerLegLength *  self.c__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.s__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.s__q_LF_HFE) +  0.3735;
+        self.fr_trunk_Xh_LF_foot[0,3] = (- self.lowerLegLength *  self.c__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.s__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.s__q_LF_HFE) +  self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_LF_foot[1,0] = (- self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) - ( self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE);
         self.fr_trunk_Xh_LF_foot[1,1] =  self.c__q_LF_HAA;
         self.fr_trunk_Xh_LF_foot[1,2] = ( self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE);
-        self.fr_trunk_Xh_LF_foot[1,3] = ( self.lowerLegLength *  self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE) - ( 0.08 *  self.s__q_LF_HAA) +  0.207;
+        self.fr_trunk_Xh_LF_foot[1,3] = ( self.lowerLegLength *  self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE) - ( self.BASE2HAA_offset_z *  self.s__q_LF_HAA) +  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_LF_foot[2,0] = (- self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) - ( self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE);
         self.fr_trunk_Xh_LF_foot[2,1] = - self.s__q_LF_HAA;
         self.fr_trunk_Xh_LF_foot[2,2] = ( self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE);
-        self.fr_trunk_Xh_LF_foot[2,3] = ( self.lowerLegLength *  self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE) - ( 0.08 *  self.c__q_LF_HAA);
+        self.fr_trunk_Xh_LF_foot[2,3] = ( self.lowerLegLength *  self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_LF_HAA);
         
         
         
         self.fr_trunk_Xh_fr_LF_HFE[1,0] = - self.s__q_LF_HAA;
         self.fr_trunk_Xh_fr_LF_HFE[1,2] =  self.c__q_LF_HAA;
-        self.fr_trunk_Xh_fr_LF_HFE[1,3] =  0.207 - ( 0.08 *  self.s__q_LF_HAA);
+        self.fr_trunk_Xh_fr_LF_HFE[1,3] =  self.BASE2HAA_offset_y - ( self.BASE2HAA_offset_z *  self.s__q_LF_HAA);
         self.fr_trunk_Xh_fr_LF_HFE[2,0] = - self.c__q_LF_HAA;
         self.fr_trunk_Xh_fr_LF_HFE[2,2] = - self.s__q_LF_HAA;
-        self.fr_trunk_Xh_fr_LF_HFE[2,3] = - 0.08 *  self.c__q_LF_HAA;
+        self.fr_trunk_Xh_fr_LF_HFE[2,3] = - self.BASE2HAA_offset_z *  self.c__q_LF_HAA;
         
         
         
         self.fr_trunk_Xh_fr_LF_KFE[0,0] = - self.s__q_LF_HFE;
         self.fr_trunk_Xh_fr_LF_KFE[0,1] = - self.c__q_LF_HFE;
-        self.fr_trunk_Xh_fr_LF_KFE[0,3] =  0.3735 - ( self.upperLegLength *  self.s__q_LF_HFE);
+        self.fr_trunk_Xh_fr_LF_KFE[0,3] =  self.BASE2HAA_offset_x - ( self.upperLegLength *  self.s__q_LF_HFE);
         self.fr_trunk_Xh_fr_LF_KFE[1,0] = - self.s__q_LF_HAA *  self.c__q_LF_HFE;
         self.fr_trunk_Xh_fr_LF_KFE[1,1] =  self.s__q_LF_HAA *  self.s__q_LF_HFE;
         self.fr_trunk_Xh_fr_LF_KFE[1,2] =  self.c__q_LF_HAA;
-        self.fr_trunk_Xh_fr_LF_KFE[1,3] = (- self.upperLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE) - ( 0.08 *  self.s__q_LF_HAA) +  0.207;
+        self.fr_trunk_Xh_fr_LF_KFE[1,3] = (- self.upperLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE) - ( self.BASE2HAA_offset_z *  self.s__q_LF_HAA) +  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_LF_KFE[2,0] = - self.c__q_LF_HAA *  self.c__q_LF_HFE;
         self.fr_trunk_Xh_fr_LF_KFE[2,1] =  self.c__q_LF_HAA *  self.s__q_LF_HFE;
         self.fr_trunk_Xh_fr_LF_KFE[2,2] = - self.s__q_LF_HAA;
-        self.fr_trunk_Xh_fr_LF_KFE[2,3] = (- self.upperLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE) - ( 0.08 *  self.c__q_LF_HAA);
+        self.fr_trunk_Xh_fr_LF_KFE[2,3] = (- self.upperLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_LF_HAA);
         
         
         
         self.fr_trunk_Xh_RF_foot[0,0] = ( self.c__q_RF_HFE *  self.c__q_RF_KFE) - ( self.s__q_RF_HFE *  self.s__q_RF_KFE);
         self.fr_trunk_Xh_RF_foot[0,2] = ( self.c__q_RF_HFE *  self.s__q_RF_KFE) + ( self.s__q_RF_HFE *  self.c__q_RF_KFE);
-        self.fr_trunk_Xh_RF_foot[0,3] = (- self.lowerLegLength *  self.c__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.s__q_RF_HFE *  self.c__q_RF_KFE) - ( self.upperLegLength *  self.s__q_RF_HFE) +  0.3735;
+        self.fr_trunk_Xh_RF_foot[0,3] = (- self.lowerLegLength *  self.c__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.s__q_RF_HFE *  self.c__q_RF_KFE) - ( self.upperLegLength *  self.s__q_RF_HFE) +  self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_RF_foot[1,0] = ( self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) + ( self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE);
         self.fr_trunk_Xh_RF_foot[1,1] =  self.c__q_RF_HAA;
         self.fr_trunk_Xh_RF_foot[1,2] = ( self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) - ( self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE);
-        self.fr_trunk_Xh_RF_foot[1,3] = (- self.lowerLegLength *  self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) + ( self.upperLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE) + ( 0.08 *  self.s__q_RF_HAA) -  0.207;
+        self.fr_trunk_Xh_RF_foot[1,3] = (- self.lowerLegLength *  self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) + ( self.upperLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RF_HAA) -  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_RF_foot[2,0] = (- self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) - ( self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE);
         self.fr_trunk_Xh_RF_foot[2,1] =  self.s__q_RF_HAA;
         self.fr_trunk_Xh_RF_foot[2,2] = ( self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) - ( self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE);
-        self.fr_trunk_Xh_RF_foot[2,3] = ( self.lowerLegLength *  self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) - ( self.upperLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE) - ( 0.08 *  self.c__q_RF_HAA);
+        self.fr_trunk_Xh_RF_foot[2,3] = ( self.lowerLegLength *  self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) - ( self.upperLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_RF_HAA);
         
         
         
         self.fr_trunk_Xh_fr_RF_HFE[1,0] =  self.s__q_RF_HAA;
         self.fr_trunk_Xh_fr_RF_HFE[1,2] =  self.c__q_RF_HAA;
-        self.fr_trunk_Xh_fr_RF_HFE[1,3] = ( 0.08 *  self.s__q_RF_HAA) -  0.207;
+        self.fr_trunk_Xh_fr_RF_HFE[1,3] = ( self.BASE2HAA_offset_z *  self.s__q_RF_HAA) -  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RF_HFE[2,0] = - self.c__q_RF_HAA;
         self.fr_trunk_Xh_fr_RF_HFE[2,2] =  self.s__q_RF_HAA;
-        self.fr_trunk_Xh_fr_RF_HFE[2,3] = - 0.08 *  self.c__q_RF_HAA;
+        self.fr_trunk_Xh_fr_RF_HFE[2,3] = - self.BASE2HAA_offset_z *  self.c__q_RF_HAA;
         
         
         
         self.fr_trunk_Xh_fr_RF_KFE[0,0] = - self.s__q_RF_HFE;
         self.fr_trunk_Xh_fr_RF_KFE[0,1] = - self.c__q_RF_HFE;
-        self.fr_trunk_Xh_fr_RF_KFE[0,3] =  0.3735 - ( self.upperLegLength *  self.s__q_RF_HFE);
+        self.fr_trunk_Xh_fr_RF_KFE[0,3] =  self.BASE2HAA_offset_x - ( self.upperLegLength *  self.s__q_RF_HFE);
         self.fr_trunk_Xh_fr_RF_KFE[1,0] =  self.s__q_RF_HAA *  self.c__q_RF_HFE;
         self.fr_trunk_Xh_fr_RF_KFE[1,1] = - self.s__q_RF_HAA *  self.s__q_RF_HFE;
         self.fr_trunk_Xh_fr_RF_KFE[1,2] =  self.c__q_RF_HAA;
-        self.fr_trunk_Xh_fr_RF_KFE[1,3] = ( self.upperLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE) + ( 0.08 *  self.s__q_RF_HAA) -  0.207;
+        self.fr_trunk_Xh_fr_RF_KFE[1,3] = ( self.upperLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RF_HAA) -  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RF_KFE[2,0] = - self.c__q_RF_HAA *  self.c__q_RF_HFE;
         self.fr_trunk_Xh_fr_RF_KFE[2,1] =  self.c__q_RF_HAA *  self.s__q_RF_HFE;
         self.fr_trunk_Xh_fr_RF_KFE[2,2] =  self.s__q_RF_HAA;
-        self.fr_trunk_Xh_fr_RF_KFE[2,3] = (- self.upperLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE) - ( 0.08 *  self.c__q_RF_HAA);
+        self.fr_trunk_Xh_fr_RF_KFE[2,3] = (- self.upperLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_RF_HAA);
         
         
         
         self.fr_trunk_Xh_LH_foot[0,0] = ( self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.s__q_LH_HFE *  self.s__q_LH_KFE);
         self.fr_trunk_Xh_LH_foot[0,2] = ( self.c__q_LH_HFE *  self.s__q_LH_KFE) + ( self.s__q_LH_HFE *  self.c__q_LH_KFE);
-        self.fr_trunk_Xh_LH_foot[0,3] = (- self.lowerLegLength *  self.c__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.s__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.s__q_LH_HFE) -  0.3735;
+        self.fr_trunk_Xh_LH_foot[0,3] = (- self.lowerLegLength *  self.c__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.s__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.s__q_LH_HFE) -  self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_LH_foot[1,0] = (- self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) - ( self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE);
         self.fr_trunk_Xh_LH_foot[1,1] =  self.c__q_LH_HAA;
         self.fr_trunk_Xh_LH_foot[1,2] = ( self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE);
-        self.fr_trunk_Xh_LH_foot[1,3] = ( self.lowerLegLength *  self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE) - ( 0.08 *  self.s__q_LH_HAA) +  0.207;
+        self.fr_trunk_Xh_LH_foot[1,3] = ( self.lowerLegLength *  self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE) - ( self.BASE2HAA_offset_z *  self.s__q_LH_HAA) +  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_LH_foot[2,0] = (- self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) - ( self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE);
         self.fr_trunk_Xh_LH_foot[2,1] = - self.s__q_LH_HAA;
         self.fr_trunk_Xh_LH_foot[2,2] = ( self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE);
-        self.fr_trunk_Xh_LH_foot[2,3] = ( self.lowerLegLength *  self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE) - ( 0.08 *  self.c__q_LH_HAA);
+        self.fr_trunk_Xh_LH_foot[2,3] = ( self.lowerLegLength *  self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_LH_HAA);
         
         
         
         self.fr_trunk_Xh_fr_LH_HFE[1,0] = - self.s__q_LH_HAA;
         self.fr_trunk_Xh_fr_LH_HFE[1,2] =  self.c__q_LH_HAA;
-        self.fr_trunk_Xh_fr_LH_HFE[1,3] =  0.207 - ( 0.08 *  self.s__q_LH_HAA);
+        self.fr_trunk_Xh_fr_LH_HFE[1,3] =  self.BASE2HAA_offset_y - ( self.BASE2HAA_offset_z *  self.s__q_LH_HAA);
         self.fr_trunk_Xh_fr_LH_HFE[2,0] = - self.c__q_LH_HAA;
         self.fr_trunk_Xh_fr_LH_HFE[2,2] = - self.s__q_LH_HAA;
-        self.fr_trunk_Xh_fr_LH_HFE[2,3] = - 0.08 *  self.c__q_LH_HAA;
+        self.fr_trunk_Xh_fr_LH_HFE[2,3] = - self.BASE2HAA_offset_z *  self.c__q_LH_HAA;
         
         
         
         self.fr_trunk_Xh_fr_LH_KFE[0,0] = - self.s__q_LH_HFE;
         self.fr_trunk_Xh_fr_LH_KFE[0,1] = - self.c__q_LH_HFE;
-        self.fr_trunk_Xh_fr_LH_KFE[0,3] = (- self.upperLegLength *  self.s__q_LH_HFE) -  0.3735;
+        self.fr_trunk_Xh_fr_LH_KFE[0,3] = (- self.upperLegLength *  self.s__q_LH_HFE) -  self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_LH_KFE[1,0] = - self.s__q_LH_HAA *  self.c__q_LH_HFE;
         self.fr_trunk_Xh_fr_LH_KFE[1,1] =  self.s__q_LH_HAA *  self.s__q_LH_HFE;
         self.fr_trunk_Xh_fr_LH_KFE[1,2] =  self.c__q_LH_HAA;
-        self.fr_trunk_Xh_fr_LH_KFE[1,3] = (- self.upperLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE) - ( 0.08 *  self.s__q_LH_HAA) +  0.207;
+        self.fr_trunk_Xh_fr_LH_KFE[1,3] = (- self.upperLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE) - ( self.BASE2HAA_offset_z *  self.s__q_LH_HAA) +  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_LH_KFE[2,0] = - self.c__q_LH_HAA *  self.c__q_LH_HFE;
         self.fr_trunk_Xh_fr_LH_KFE[2,1] =  self.c__q_LH_HAA *  self.s__q_LH_HFE;
         self.fr_trunk_Xh_fr_LH_KFE[2,2] = - self.s__q_LH_HAA;
-        self.fr_trunk_Xh_fr_LH_KFE[2,3] = (- self.upperLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE) - ( 0.08 *  self.c__q_LH_HAA);
+        self.fr_trunk_Xh_fr_LH_KFE[2,3] = (- self.upperLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_LH_HAA);
         
         
         
         self.fr_trunk_Xh_RH_foot[0,0] = ( self.c__q_RH_HFE *  self.c__q_RH_KFE) - ( self.s__q_RH_HFE *  self.s__q_RH_KFE);
         self.fr_trunk_Xh_RH_foot[0,2] = ( self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.s__q_RH_HFE *  self.c__q_RH_KFE);
-        self.fr_trunk_Xh_RH_foot[0,3] = (- self.lowerLegLength *  self.c__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.s__q_RH_HFE *  self.c__q_RH_KFE) - ( self.upperLegLength *  self.s__q_RH_HFE) -  0.3735;
+        self.fr_trunk_Xh_RH_foot[0,3] = (- self.lowerLegLength *  self.c__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.s__q_RH_HFE *  self.c__q_RH_KFE) - ( self.upperLegLength *  self.s__q_RH_HFE) -  self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_RH_foot[1,0] = ( self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
         self.fr_trunk_Xh_RH_foot[1,1] =  self.c__q_RH_HAA;
         self.fr_trunk_Xh_RH_foot[1,2] = ( self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) - ( self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE);
-        self.fr_trunk_Xh_RH_foot[1,3] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( 0.08 *  self.s__q_RH_HAA) -  0.207;
+        self.fr_trunk_Xh_RH_foot[1,3] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RH_HAA) -  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_RH_foot[2,0] = (- self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) - ( self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
         self.fr_trunk_Xh_RH_foot[2,1] =  self.s__q_RH_HAA;
         self.fr_trunk_Xh_RH_foot[2,2] = ( self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) - ( self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE);
-        self.fr_trunk_Xh_RH_foot[2,3] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) - ( self.upperLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE) - ( 0.08 *  self.c__q_RH_HAA);
+        self.fr_trunk_Xh_RH_foot[2,3] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) - ( self.upperLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_RH_HAA);
         
         
         
         self.fr_trunk_Xh_fr_RH_HFE[1,0] =  self.s__q_RH_HAA;
         self.fr_trunk_Xh_fr_RH_HFE[1,2] =  self.c__q_RH_HAA;
-        self.fr_trunk_Xh_fr_RH_HFE[1,3] = ( 0.08 *  self.s__q_RH_HAA) -  0.207;
+        self.fr_trunk_Xh_fr_RH_HFE[1,3] = ( self.BASE2HAA_offset_z *  self.s__q_RH_HAA) -  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RH_HFE[2,0] = - self.c__q_RH_HAA;
         self.fr_trunk_Xh_fr_RH_HFE[2,2] =  self.s__q_RH_HAA;
-        self.fr_trunk_Xh_fr_RH_HFE[2,3] = - 0.08 *  self.c__q_RH_HAA;
+        self.fr_trunk_Xh_fr_RH_HFE[2,3] = - self.BASE2HAA_offset_z *  self.c__q_RH_HAA;
         
         
         
         self.fr_trunk_Xh_fr_RH_KFE[0,0] = - self.s__q_RH_HFE;
         self.fr_trunk_Xh_fr_RH_KFE[0,1] = - self.c__q_RH_HFE;
-        self.fr_trunk_Xh_fr_RH_KFE[0,3] = (- self.upperLegLength *  self.s__q_RH_HFE) -  0.3735;
+        self.fr_trunk_Xh_fr_RH_KFE[0,3] = (- self.upperLegLength *  self.s__q_RH_HFE) -  self.BASE2HAA_offset_x;
         self.fr_trunk_Xh_fr_RH_KFE[1,0] =  self.s__q_RH_HAA *  self.c__q_RH_HFE;
         self.fr_trunk_Xh_fr_RH_KFE[1,1] = - self.s__q_RH_HAA *  self.s__q_RH_HFE;
         self.fr_trunk_Xh_fr_RH_KFE[1,2] =  self.c__q_RH_HAA;
-        self.fr_trunk_Xh_fr_RH_KFE[1,3] = ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( 0.08 *  self.s__q_RH_HAA) -  0.207;
+        self.fr_trunk_Xh_fr_RH_KFE[1,3] = ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RH_HAA) -  self.BASE2HAA_offset_y;
         self.fr_trunk_Xh_fr_RH_KFE[2,0] = - self.c__q_RH_HAA *  self.c__q_RH_HFE;
         self.fr_trunk_Xh_fr_RH_KFE[2,1] =  self.c__q_RH_HAA *  self.s__q_RH_HFE;
         self.fr_trunk_Xh_fr_RH_KFE[2,2] =  self.s__q_RH_HAA;
-        self.fr_trunk_Xh_fr_RH_KFE[2,3] = (- self.upperLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE) - ( 0.08 *  self.c__q_RH_HAA);
+        self.fr_trunk_Xh_fr_RH_KFE[2,3] = (- self.upperLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_RH_HAA);
         
         self.fr_LF_hipassembly_Xh_fr_trunk[0,1] = - self.s__q_LF_HAA;
         self.fr_LF_hipassembly_Xh_fr_trunk[0,2] = - self.c__q_LF_HAA;
-        self.fr_LF_hipassembly_Xh_fr_trunk[0,3] =  0.207 *  self.s__q_LF_HAA;
+        self.fr_LF_hipassembly_Xh_fr_trunk[0,3] =  self.BASE2HAA_offset_y *  self.s__q_LF_HAA;
         self.fr_LF_hipassembly_Xh_fr_trunk[1,1] = - self.c__q_LF_HAA;
         self.fr_LF_hipassembly_Xh_fr_trunk[1,2] =  self.s__q_LF_HAA;
-        self.fr_LF_hipassembly_Xh_fr_trunk[1,3] =  0.207 *  self.c__q_LF_HAA;
+        self.fr_LF_hipassembly_Xh_fr_trunk[1,3] =  self.BASE2HAA_offset_y *  self.c__q_LF_HAA;
         
         self.fr_trunk_Xh_fr_LF_hipassembly[1,0] = - self.s__q_LF_HAA;
         self.fr_trunk_Xh_fr_LF_hipassembly[1,1] = - self.c__q_LF_HAA;
@@ -536,10 +540,10 @@ class HyQKinematics:
         
         self.fr_LF_upperleg_Xh_fr_LF_hipassembly[0,0] =  self.c__q_LF_HFE;
         self.fr_LF_upperleg_Xh_fr_LF_hipassembly[0,2] =  self.s__q_LF_HFE;
-        self.fr_LF_upperleg_Xh_fr_LF_hipassembly[0,3] = - 0.08 *  self.c__q_LF_HFE;
+        self.fr_LF_upperleg_Xh_fr_LF_hipassembly[0,3] = - self.BASE2HAA_offset_z *  self.c__q_LF_HFE;
         self.fr_LF_upperleg_Xh_fr_LF_hipassembly[1,0] = - self.s__q_LF_HFE;
         self.fr_LF_upperleg_Xh_fr_LF_hipassembly[1,2] =  self.c__q_LF_HFE;
-        self.fr_LF_upperleg_Xh_fr_LF_hipassembly[1,3] =  0.08 *  self.s__q_LF_HFE;
+        self.fr_LF_upperleg_Xh_fr_LF_hipassembly[1,3] =  self.BASE2HAA_offset_z *  self.s__q_LF_HFE;
         
         self.fr_LF_hipassembly_Xh_fr_LF_upperleg[0,0] =  self.c__q_LF_HFE;
         self.fr_LF_hipassembly_Xh_fr_LF_upperleg[0,1] = - self.s__q_LF_HFE;
@@ -560,10 +564,10 @@ class HyQKinematics:
         
         self.fr_RF_hipassembly_Xh_fr_trunk[0,1] =  self.s__q_RF_HAA;
         self.fr_RF_hipassembly_Xh_fr_trunk[0,2] = - self.c__q_RF_HAA;
-        self.fr_RF_hipassembly_Xh_fr_trunk[0,3] =  0.207 *  self.s__q_RF_HAA;
+        self.fr_RF_hipassembly_Xh_fr_trunk[0,3] =  self.BASE2HAA_offset_y *  self.s__q_RF_HAA;
         self.fr_RF_hipassembly_Xh_fr_trunk[1,1] =  self.c__q_RF_HAA;
         self.fr_RF_hipassembly_Xh_fr_trunk[1,2] =  self.s__q_RF_HAA;
-        self.fr_RF_hipassembly_Xh_fr_trunk[1,3] =  0.207 *  self.c__q_RF_HAA;
+        self.fr_RF_hipassembly_Xh_fr_trunk[1,3] =  self.BASE2HAA_offset_y *  self.c__q_RF_HAA;
         
         self.fr_trunk_Xh_fr_RF_hipassembly[1,0] =  self.s__q_RF_HAA;
         self.fr_trunk_Xh_fr_RF_hipassembly[1,1] =  self.c__q_RF_HAA;
@@ -572,10 +576,10 @@ class HyQKinematics:
         
         self.fr_RF_upperleg_Xh_fr_RF_hipassembly[0,0] =  self.c__q_RF_HFE;
         self.fr_RF_upperleg_Xh_fr_RF_hipassembly[0,2] = - self.s__q_RF_HFE;
-        self.fr_RF_upperleg_Xh_fr_RF_hipassembly[0,3] = - 0.08 *  self.c__q_RF_HFE;
+        self.fr_RF_upperleg_Xh_fr_RF_hipassembly[0,3] = - self.BASE2HAA_offset_z *  self.c__q_RF_HFE;
         self.fr_RF_upperleg_Xh_fr_RF_hipassembly[1,0] = - self.s__q_RF_HFE;
         self.fr_RF_upperleg_Xh_fr_RF_hipassembly[1,2] = - self.c__q_RF_HFE;
-        self.fr_RF_upperleg_Xh_fr_RF_hipassembly[1,3] =  0.08 *  self.s__q_RF_HFE;
+        self.fr_RF_upperleg_Xh_fr_RF_hipassembly[1,3] =  self.BASE2HAA_offset_z *  self.s__q_RF_HFE;
         
         
         
@@ -604,10 +608,10 @@ class HyQKinematics:
         
         self.fr_LH_hipassembly_Xh_fr_trunk[0,1] = - self.s__q_LH_HAA;
         self.fr_LH_hipassembly_Xh_fr_trunk[0,2] = - self.c__q_LH_HAA;
-        self.fr_LH_hipassembly_Xh_fr_trunk[0,3] =  0.207 *  self.s__q_LH_HAA;
+        self.fr_LH_hipassembly_Xh_fr_trunk[0,3] =  self.BASE2HAA_offset_y *  self.s__q_LH_HAA;
         self.fr_LH_hipassembly_Xh_fr_trunk[1,1] = - self.c__q_LH_HAA;
         self.fr_LH_hipassembly_Xh_fr_trunk[1,2] =  self.s__q_LH_HAA;
-        self.fr_LH_hipassembly_Xh_fr_trunk[1,3] =  0.207 *  self.c__q_LH_HAA;
+        self.fr_LH_hipassembly_Xh_fr_trunk[1,3] =  self.BASE2HAA_offset_y *  self.c__q_LH_HAA;
         
         
         
@@ -620,10 +624,10 @@ class HyQKinematics:
         
         self.fr_LH_upperleg_Xh_fr_LH_hipassembly[0,0] =  self.c__q_LH_HFE;
         self.fr_LH_upperleg_Xh_fr_LH_hipassembly[0,2] =  self.s__q_LH_HFE;
-        self.fr_LH_upperleg_Xh_fr_LH_hipassembly[0,3] = - 0.08 *  self.c__q_LH_HFE;
+        self.fr_LH_upperleg_Xh_fr_LH_hipassembly[0,3] = - self.BASE2HAA_offset_z *  self.c__q_LH_HFE;
         self.fr_LH_upperleg_Xh_fr_LH_hipassembly[1,0] = - self.s__q_LH_HFE;
         self.fr_LH_upperleg_Xh_fr_LH_hipassembly[1,2] =  self.c__q_LH_HFE;
-        self.fr_LH_upperleg_Xh_fr_LH_hipassembly[1,3] =  0.08 *  self.s__q_LH_HFE;
+        self.fr_LH_upperleg_Xh_fr_LH_hipassembly[1,3] =  self.BASE2HAA_offset_z *  self.s__q_LH_HFE;
         
         
         
@@ -652,10 +656,10 @@ class HyQKinematics:
         
         self.fr_RH_hipassembly_Xh_fr_trunk[0,1] =  self.s__q_RH_HAA;
         self.fr_RH_hipassembly_Xh_fr_trunk[0,2] = - self.c__q_RH_HAA;
-        self.fr_RH_hipassembly_Xh_fr_trunk[0,3] =  0.207 *  self.s__q_RH_HAA;
+        self.fr_RH_hipassembly_Xh_fr_trunk[0,3] =  self.BASE2HAA_offset_y *  self.s__q_RH_HAA;
         self.fr_RH_hipassembly_Xh_fr_trunk[1,1] =  self.c__q_RH_HAA;
         self.fr_RH_hipassembly_Xh_fr_trunk[1,2] =  self.s__q_RH_HAA;
-        self.fr_RH_hipassembly_Xh_fr_trunk[1,3] =  0.207 *  self.c__q_RH_HAA;
+        self.fr_RH_hipassembly_Xh_fr_trunk[1,3] =  self.BASE2HAA_offset_y *  self.c__q_RH_HAA;
         
         
         
@@ -668,10 +672,10 @@ class HyQKinematics:
         
         self.fr_RH_upperleg_Xh_fr_RH_hipassembly[0,0] =  self.c__q_RH_HFE;
         self.fr_RH_upperleg_Xh_fr_RH_hipassembly[0,2] = - self.s__q_RH_HFE;
-        self.fr_RH_upperleg_Xh_fr_RH_hipassembly[0,3] = - 0.08 *  self.c__q_RH_HFE;
+        self.fr_RH_upperleg_Xh_fr_RH_hipassembly[0,3] = - self.BASE2HAA_offset_z *  self.c__q_RH_HFE;
         self.fr_RH_upperleg_Xh_fr_RH_hipassembly[1,0] = - self.s__q_RH_HFE;
         self.fr_RH_upperleg_Xh_fr_RH_hipassembly[1,2] = - self.c__q_RH_HFE;
-        self.fr_RH_upperleg_Xh_fr_RH_hipassembly[1,3] =  0.08 *  self.s__q_RH_HFE;
+        self.fr_RH_upperleg_Xh_fr_RH_hipassembly[1,3] =  self.BASE2HAA_offset_z *  self.s__q_RH_HFE;
         
         
         
@@ -708,10 +712,10 @@ class HyQKinematics:
         self.fr_trunk_J_LF_foot[3-1,3-1] = - self.s__q_LF_HAA;
         self.fr_trunk_J_LF_foot[4-1,2-1] = ( self.lowerLegLength *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.c__q_LF_HFE);
         self.fr_trunk_J_LF_foot[4-1,3-1] = ( self.lowerLegLength *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.c__q_LF_HFE *  self.c__q_LF_KFE);
-        self.fr_trunk_J_LF_foot[5-1,1-1] = ( self.lowerLegLength *  self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE) - ( 0.08 *  self.c__q_LF_HAA);
+        self.fr_trunk_J_LF_foot[5-1,1-1] = ( self.lowerLegLength *  self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) - ( self.lowerLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) - ( self.upperLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_LF_HAA);
         self.fr_trunk_J_LF_foot[5-1,2-1] = ( self.lowerLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) + ( self.lowerLegLength *  self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE) + ( self.upperLegLength *  self.s__q_LF_HAA *  self.s__q_LF_HFE);
         self.fr_trunk_J_LF_foot[5-1,3-1] = ( self.lowerLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) + ( self.lowerLegLength *  self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE);
-        self.fr_trunk_J_LF_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) + ( self.lowerLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) + ( self.upperLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE) + ( 0.08 *  self.s__q_LF_HAA);
+        self.fr_trunk_J_LF_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_LF_HAA *  self.s__q_LF_HFE *  self.s__q_LF_KFE) + ( self.lowerLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE *  self.c__q_LF_KFE) + ( self.upperLegLength *  self.s__q_LF_HAA *  self.c__q_LF_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_LF_HAA);
         self.fr_trunk_J_LF_foot[6-1,2-1] = ( self.lowerLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) + ( self.lowerLegLength *  self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE) + ( self.upperLegLength *  self.c__q_LF_HAA *  self.s__q_LF_HFE);
         self.fr_trunk_J_LF_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_LF_HAA *  self.c__q_LF_HFE *  self.s__q_LF_KFE) + ( self.lowerLegLength *  self.c__q_LF_HAA *  self.s__q_LF_HFE *  self.c__q_LF_KFE);
 
@@ -728,10 +732,10 @@ class HyQKinematics:
         self.fr_trunk_J_RF_foot[3-1,3-1] =  self.s__q_RF_HAA;
         self.fr_trunk_J_RF_foot[4-1,2-1] = ( self.lowerLegLength *  self.s__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.c__q_RF_HFE *  self.c__q_RF_KFE) - ( self.upperLegLength *  self.c__q_RF_HFE);
         self.fr_trunk_J_RF_foot[4-1,3-1] = ( self.lowerLegLength *  self.s__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.c__q_RF_HFE *  self.c__q_RF_KFE);
-        self.fr_trunk_J_RF_foot[5-1,1-1] = (- self.lowerLegLength *  self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) + ( self.upperLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE) + ( 0.08 *  self.c__q_RF_HAA);
+        self.fr_trunk_J_RF_foot[5-1,1-1] = (- self.lowerLegLength *  self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) + ( self.upperLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE) + ( self.BASE2HAA_offset_z *  self.c__q_RF_HAA);
         self.fr_trunk_J_RF_foot[5-1,2-1] = (- self.lowerLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE) - ( self.upperLegLength *  self.s__q_RF_HAA *  self.s__q_RF_HFE);
         self.fr_trunk_J_RF_foot[5-1,3-1] = (- self.lowerLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) - ( self.lowerLegLength *  self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE);
-        self.fr_trunk_J_RF_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) + ( self.upperLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE) + ( 0.08 *  self.s__q_RF_HAA);
+        self.fr_trunk_J_RF_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_RF_HAA *  self.s__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE *  self.c__q_RF_KFE) + ( self.upperLegLength *  self.s__q_RF_HAA *  self.c__q_RF_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RF_HAA);
         self.fr_trunk_J_RF_foot[6-1,2-1] = ( self.lowerLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE) + ( self.upperLegLength *  self.c__q_RF_HAA *  self.s__q_RF_HFE);
         self.fr_trunk_J_RF_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_RF_HAA *  self.c__q_RF_HFE *  self.s__q_RF_KFE) + ( self.lowerLegLength *  self.c__q_RF_HAA *  self.s__q_RF_HFE *  self.c__q_RF_KFE);
 
@@ -748,10 +752,10 @@ class HyQKinematics:
         self.fr_trunk_J_LH_foot[3-1,3-1] = - self.s__q_LH_HAA;
         self.fr_trunk_J_LH_foot[4-1,2-1] = ( self.lowerLegLength *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.c__q_LH_HFE);
         self.fr_trunk_J_LH_foot[4-1,3-1] = ( self.lowerLegLength *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.c__q_LH_HFE *  self.c__q_LH_KFE);
-        self.fr_trunk_J_LH_foot[5-1,1-1] = ( self.lowerLegLength *  self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE) - ( 0.08 *  self.c__q_LH_HAA);
+        self.fr_trunk_J_LH_foot[5-1,1-1] = ( self.lowerLegLength *  self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) - ( self.lowerLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) - ( self.upperLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE) - ( self.BASE2HAA_offset_z *  self.c__q_LH_HAA);
         self.fr_trunk_J_LH_foot[5-1,2-1] = ( self.lowerLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) + ( self.lowerLegLength *  self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE) + ( self.upperLegLength *  self.s__q_LH_HAA *  self.s__q_LH_HFE);
         self.fr_trunk_J_LH_foot[5-1,3-1] = ( self.lowerLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) + ( self.lowerLegLength *  self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE);
-        self.fr_trunk_J_LH_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) + ( self.lowerLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) + ( self.upperLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE) + ( 0.08 *  self.s__q_LH_HAA);
+        self.fr_trunk_J_LH_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_LH_HAA *  self.s__q_LH_HFE *  self.s__q_LH_KFE) + ( self.lowerLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE *  self.c__q_LH_KFE) + ( self.upperLegLength *  self.s__q_LH_HAA *  self.c__q_LH_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_LH_HAA);
         self.fr_trunk_J_LH_foot[6-1,2-1] = ( self.lowerLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) + ( self.lowerLegLength *  self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE) + ( self.upperLegLength *  self.c__q_LH_HAA *  self.s__q_LH_HFE);
         self.fr_trunk_J_LH_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_LH_HAA *  self.c__q_LH_HFE *  self.s__q_LH_KFE) + ( self.lowerLegLength *  self.c__q_LH_HAA *  self.s__q_LH_HFE *  self.c__q_LH_KFE);
 
@@ -768,10 +772,10 @@ class HyQKinematics:
         self.fr_trunk_J_RH_foot[3-1,3-1] =  self.s__q_RH_HAA;
         self.fr_trunk_J_RH_foot[4-1,2-1] = ( self.lowerLegLength *  self.s__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.c__q_RH_HFE *  self.c__q_RH_KFE) - ( self.upperLegLength *  self.c__q_RH_HFE);
         self.fr_trunk_J_RH_foot[4-1,3-1] = ( self.lowerLegLength *  self.s__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.c__q_RH_HFE *  self.c__q_RH_KFE);
-        self.fr_trunk_J_RH_foot[5-1,1-1] = (- self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE) + ( 0.08 *  self.c__q_RH_HAA);
+        self.fr_trunk_J_RH_foot[5-1,1-1] = (- self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE) + ( self.BASE2HAA_offset_z *  self.c__q_RH_HAA);
         self.fr_trunk_J_RH_foot[5-1,2-1] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE) - ( self.upperLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE);
         self.fr_trunk_J_RH_foot[5-1,3-1] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) - ( self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
-        self.fr_trunk_J_RH_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( 0.08 *  self.s__q_RH_HAA);
+        self.fr_trunk_J_RH_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RH_HAA);
         self.fr_trunk_J_RH_foot[6-1,2-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE);
         self.fr_trunk_J_RH_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
         #print self.fr_trunk_J_LF_foot
@@ -797,16 +801,16 @@ class HyQKinematics:
         '''
         isOutOfWorkSpace = False
         footPosDes_xz = np.vstack([x,z])
-        BASE2HAA_offsets_xz = np.array([[0.3735,0.3735,-0.3735,-0.3735],
-                                 [-.08, -.08, -.08, -.08]]);
+        BASE2HAA_offsets_xz = np.array([[self.BASE2HAA_offset_x,self.BASE2HAA_offset_x,-self.BASE2HAA_offset_x,-self.BASE2HAA_offset_x],
+                                 [-self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z]]);
 
         footPosHAA = np.subtract(footPosDes_xz, BASE2HAA_offsets_xz)
         #print footPosHAA
 
-        y[0] = y[0]-0.207
-        y[1] = y[1]+0.207
-        y[2] = y[2]-0.207
-        y[3] = y[3]+0.207
+        y[0] = y[0]-self.BASE2HAA_offset_y
+        y[1] = y[1]+self.BASE2HAA_offset_y
+        y[2] = y[2]-self.BASE2HAA_offset_y
+        y[3] = y[3]+self.BASE2HAA_offset_y
         
 #        haa2hfeLength = 0.045;
         haa2hfeLength = 0.0;
