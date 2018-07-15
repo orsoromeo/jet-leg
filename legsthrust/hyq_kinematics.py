@@ -796,14 +796,20 @@ class HyQKinematics:
         HFE and KFE joints of the HyQ robot.
         '''
         isOutOfWorkSpace = False
-        footPosDes = np.vstack([x,z])
-        BASE2HAA_offsets = np.array([[0.3735,0.3735,-0.3735,-0.3735],
+        footPosDes_xz = np.vstack([x,z])
+        BASE2HAA_offsets_xz = np.array([[0.3735,0.3735,-0.3735,-0.3735],
                                  [-.08, -.08, -.08, -.08]]);
 
-        footPosHAA = np.subtract(footPosDes, BASE2HAA_offsets)
+        footPosHAA = np.subtract(footPosDes_xz, BASE2HAA_offsets_xz)
         #print footPosHAA
 
-        haa2hfeLength = 0.045;
+        y[0] = y[0]-0.207
+        y[1] = y[1]+0.207
+        y[2] = y[2]-0.207
+        y[3] = y[3]+0.207
+        
+#        haa2hfeLength = 0.045;
+        haa2hfeLength = 0.0;
         M_PI = np.pi;
     
         sz = np.size(x,0)
