@@ -85,19 +85,41 @@ class Constraints:
     def hexahedron(self, v_rep):
         geom = ComputationalGeometry()
         h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6 = geom.get_halfspace_rep(v_rep)        
+        h_rep = np.vstack([h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6])
         
-        h_rep = np.vstack([h_rep1, -h_rep2, -h_rep3, -h_rep4, -h_rep5, h_rep6])        
-        constraint = h_rep[:,0:3]
-        known_term = np.vstack([[-h_rep1[3]],
+        if(h_rep[1,3]>0):
+            h_rep = np.vstack([h_rep1, -h_rep2, -h_rep3, -h_rep4, -h_rep5, h_rep6])        
+            constraint = h_rep[:,0:3]
+            known_term = np.vstack([[-h_rep1[3]],
                                 [h_rep2[3]],
                                 [h_rep3[3]],
                                 [h_rep4[3]],
                                 [h_rep5[3]],
-                                [-h_rep6[3]]])
+                                [-h_rep6[3]]])                
+        else:
+            h_rep = np.vstack([-h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, -h_rep6])        
+            constraint = h_rep[:,0:3]
+            known_term = np.vstack([[h_rep1[3]],
+                                [-h_rep2[3]],
+                                [-h_rep3[3]],
+                                [-h_rep4[3]],
+                                [-h_rep5[3]],
+                                [h_rep6[3]]])  
+        
+        #h_rep = np.vstack([h_rep1, -h_rep2, -h_rep3, -h_rep4, -h_rep5, h_rep6])        
+        #constraint = h_rep[:,0:3]
+        #known_term = np.vstack([[-h_rep1[3]],
+        #                        [h_rep2[3]],
+        #                        [h_rep3[3]],
+        #                        [h_rep4[3]],
+        #                        [h_rep5[3]],
+        #                        [-h_rep6[3]]])
+                                
+        
         #print constraint, known_term
         return constraint, known_term
         
-    def computeActuationPolygon(self, leg_jacobian_2D, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):
+    def computeActuationPolygon(self, leg_jacobian, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):
         """ This function computes the actuation polygon of a given mechanical chain
         This function assumes the same mechanical structure of the HyQ robot, meaning that 
         it is restricted to 3 DoFs and point contacts. If the latter assumption is not
@@ -109,13 +131,18 @@ class Constraints:
         vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
                          [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
                          [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-                         
-        torque_lims_xz = np.vstack([vertices[0,:],vertices[2,:]])
-        legs_gravity = np.ones((2,8))*10 # TODO: correct computation of the force acting on the legs due to gravity
-        actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(leg_jacobian_2D)),legs_gravity - torque_lims_xz) 
-        actuation_polygon = np.vstack([actuation_polygon_xy[0,:],
+        if (np.size(leg_jacobian,0)==2):          
+            torque_lims_xz = np.vstack([vertices[0,:],vertices[2,:]])
+            legs_gravity = np.ones((2,8))*0 # TODO: correct computation of the force acting on the legs due to gravity
+            actuation_polygon_xy = np.matmul(np.linalg.inv(np.transpose(leg_jacobian)),legs_gravity - torque_lims_xz) 
+            actuation_polygon = np.vstack([actuation_polygon_xy[0,:],
                                    vertices[1,:],
                                    actuation_polygon_xy[1,:]])
+        elif (np.size(leg_jacobian,0)==3):
+            torque_lims = vertices
+            legs_gravity = np.ones((3,8))*0 # TODO: correct computation of the force acting on the legs due to gravity
+            actuation_polygon = np.matmul(np.linalg.inv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)        
+            
         # Only for debugging:                          
         #actuation_polygon = vertices
         return actuation_polygon
@@ -149,8 +176,10 @@ class Constraints:
             h_vec1 = np.vstack([h_vec1, h_term])
             
             c, h_term = self.hexahedron(actuation_polygons[j])
+            
             if np.isnan(h_term).any:
                 error = True            
+                
             cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
                           np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
             h_vec2 = np.vstack([h_vec2, h_term])

@@ -102,7 +102,7 @@ class TestStringMethods(unittest.TestCase):
                                                         np.transpose(contacts[:,2]),
                                                         np.transpose(foot_vel[:,2]))
                                                         
-        print q
+        #print q
         hyqKin.update_homogeneous(q)
         hyqKin.update_jacobians(q)
         new_contacts = hyqKin.forward_kin(q)
@@ -120,7 +120,7 @@ class TestStringMethods(unittest.TestCase):
                                                         np.transpose(new_contacts[:,2]),
                                                         np.transpose(foot_vel[:,2]))
                                                         
-        print new_q
+        #print new_q
     
 
         self.assertTrue( (q - new_q < self.epsilon).all())

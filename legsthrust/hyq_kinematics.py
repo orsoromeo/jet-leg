@@ -778,8 +778,8 @@ class HyQKinematics:
         self.fr_trunk_J_RH_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RH_HAA);
         self.fr_trunk_J_RH_foot[6-1,2-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE);
         self.fr_trunk_J_RH_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
-        #print self.fr_trunk_J_LF_foot
-        return self.fr_trunk_J_LF_foot, self.fr_trunk_J_RF_foot, self.fr_trunk_J_LH_foot, self.fr_trunk_J_RH_foot
+        #print self.fr_trunk_J_LF_foot[3:6,:]
+        return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:]
 
 
     def forward_kin(self, q):
