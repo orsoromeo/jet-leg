@@ -24,8 +24,52 @@ class Polygon:
     
     def __init__(self, vertices = np.zeros((0,2)), halfspaces = np.zeros((0,2))):
         self.vx = vertices
-        self.hs = halfspaces        
+        self.hs = halfspaces  
+        
+    def get_vertices(self):
+        return self.vx
+        
+    def set_vertices(self, vertices):
+        self.vx = vertices
+        
+    def get_halfspaces(self):
+        return self.hs
+        
+    def set_halfspace(self, halfspaces):
+        self.hs = halfspaces
 
+    def clockwise_sort(self, polygon):
+        polygon.vx
+        vertices_number = np.size(polygon.vx,0)-1
+        angle = [0,0,0,0]
+        for j in range(0,vertices_number):
+            angle[j] = np.arctan2(polygon.vx[j,0], polygon.vx[j,1])
+        
+        index = np.argsort(angle)
+        
+        sorted_vertices = np.zeros((vertices_number,2))
+        for j in range(0,vertices_number):
+            sorted_vertices[j,:] = polygon.vx[index[j],:]       
+        
+        sorted_vertices = np.vstack([sorted_vertices, sorted_vertices[0,:]])
+        self.set_vertices(sorted_vertices)
+        
+        
+class InnerPolygon(Polygon):
+    
+    def __init__(self, neighbour_outer_vertices = np.zeros((0,2))):       
+        self.neighbours = neighbour_outer_vertices
+        
+class PolygonTriple(Polygon):
+  
+    def __init__(self):       
+        self.v1 = Polygon()
+        self.v2 = Polygon()
+        self.v3 = Polygon()
+        
+
+class IterativeProjection:
+    
     def line(self, p1, p2):
         A = (p1[1] - p2[1])
         B = (p2[0] - p1[0])
@@ -42,6 +86,7 @@ class Polygon:
             return x,y
         else:
             return False
+            
     def initiliaze_outer_appriximation(self, inner_approximation, directions):
         
         v1 = inner_approximation[0,:]
@@ -54,29 +99,17 @@ class Polygon:
         hs3 = directions[2,:]
         
         R1 = self.intersection(hs1, hs2)
-        if R1:
-            print "Intersection detected:", R1
-        else:
-            print "No single intersection point detected"
-        
         R2 = self.intersection(hs2, hs3)
-        if R2:
-            print "Intersection detected:", R2
-        else:
-            print "No single intersection point detected"
-        
         R3 = self.intersection(hs3, hs1)
-        if R3:
-            print "Intersection detected:", R3
-        else:
-            print "No single intersection point detected"
+
+
         
         outer_vertices = np.vstack([R1, R2, R3])
         return outer_vertices
         
     def initiliaze_inner_appriximation(self, constraint_mode, mass, contactsNumber, contacts, com, normals):
         random.seed()
-        #random.seed(4003)        
+        random.seed(9001)        
         direction1 = np.vstack([random.uniform(-1,1),random.uniform(-1,1)])
         inner_vertex1, force1 = self.expand_direction(constraint_mode, mass, contactsNumber, contacts, com, normals, direction1)
         print inner_vertex1
@@ -184,35 +217,7 @@ class Polygon:
             #print new_hs
             hs = np.vstack([hs, new_hs])
         return hs
-        
-    def clockwise_sort(self, polygon):
-        polygon.vx
-        vertices_number = np.size(polygon.vx,0)-1
-        angle = [0,0,0,0]
-        for j in range(0,vertices_number):
-            angle[j] = np.arctan2(polygon.vx[j,0], polygon.vx[j,1])
-        
-        index = np.argsort(angle)
-        
-        sorted_vertices = np.zeros((vertices_number,2))
-        for j in range(0,vertices_number):
-            sorted_vertices[j,:] = polygon.vx[index[j],:]       
-        
-        sorted_vertices = np.vstack([sorted_vertices, sorted_vertices[0,:]])
-        self.set_vertices(sorted_vertices)
-        
-    def get_vertices(self):
-        return polygon.vx
-        
-    def set_vertices(self, vertices):
-        polygon.vx = vertices
-        
-    def get_halfspaces(self):
-        return polygon.hs
-        
-    def set_halfspace(self, halfspaces):
-        polygon.hs = halfspaces
-    
+            
 
 constraint_mode = 'ONLY_ACTUATION'
 com = np.array([0.0, 0.0, 0.0])
@@ -227,8 +232,15 @@ Y_inner = np.vstack((LF_foot[0:2],RF_foot[0:2],LH_foot[0:2],RH_foot[0:2],LF_foot
 
 hull = ConvexHull(Y_inner)
 polygon = Polygon(Y_inner)
+iterativeProjection = IterativeProjection()
+
+innerPolygon = InnerPolygon(Y_inner)
+
+set1 = PolygonTriple()
+
+
 polygon.clockwise_sort(polygon)
-hs = polygon.compute_halfspaces(polygon)
+hs = iterativeProjection.compute_halfspaces(polygon)
 #print hs
 
 nc = 3
@@ -247,8 +259,8 @@ normals = np.vstack([n1, n2, n3, n4])
 
 
 ''' initialize Y_inner and Y_outer '''
-inner_vx, directions = polygon.initiliaze_inner_appriximation(constraint_mode, mass, nc, contacts, com, normals)
-outer_vx = polygon.initiliaze_outer_appriximation(inner_vx, directions)
+inner_vx, directions = iterativeProjection.initiliaze_inner_appriximation(constraint_mode, mass, nc, contacts, com, normals)
+outer_vx = iterativeProjection.initiliaze_outer_appriximation(inner_vx, directions)
 '''1) Compute the edges of Y inner'''
 
 '''2) Pick the edge cutting off the greatest fraction  of Y outer '''
