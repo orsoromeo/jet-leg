@@ -79,13 +79,18 @@ class ComputationalDynamics():
             C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
             
         elif constraint_mode == 'ONLY_ACTUATION':
-            kin = Kinematics()
+            #kin = Kinematics()
+            kin = HyQKinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
+            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
                                                   np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsFourLegs[:,1]),
+                                                    np.transpose(foot_vel[:,1]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
+
+            J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
 
             act_LF = constr.computeActuationPolygon(J_LF)
             act_RF = constr.computeActuationPolygon(J_LF)
@@ -138,7 +143,7 @@ class ComputationalDynamics():
                                                     np.transpose(foot_vel[:,1]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
-        
+        J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
         G, h, isConstraintOk = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         #print G, h
         #print np.size(G,0), np.size(G,1)
@@ -150,7 +155,7 @@ class ComputationalDynamics():
         """ Defining the equality constraints """
         for com_x in np.arange(-0.5,0.5,stepX):
             for com_y in np.arange(-0.4,0.4,stepY):
-                for com_z in np.arange(-0.,0.05,stepZ):
+                for com_z in np.arange(-0.2,0.25,stepZ):
                     com = np.array([com_x, com_y, com_z])
                     torque = -np.cross(com, np.transpose(grav))
                     A = np.zeros((6,0))
@@ -171,10 +176,11 @@ class ComputationalDynamics():
                                                     np.transpose(contactsFourLegs[:,2] + com_z),
                                                     np.transpose(foot_vel[:,2]))
                     if (not isOutOfWorkspace):
-                        kin.update_jacobians(q)
+                        #kin.update_jacobians(q)
+                        J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
                         #print J_LF
                         G, h, isConstraintOk = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
-                        print G, h
+                        #print G, h
                         if not isConstraintOk:
                             print 'something is wrong in the inequalities'
                         else:

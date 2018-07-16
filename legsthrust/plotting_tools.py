@@ -52,9 +52,9 @@ class Plotter:
       self.plot_facet(ax,face1)
       self.plot_facet(ax,face2) 
       self.plot_facet(ax,face3)
-      #self.plot_facet(ax,face4)
+      self.plot_facet(ax,face4)
       self.plot_facet(ax,face5)
-      #self.plot_facet(ax,face6)
+      self.plot_facet(ax,face6)
       
   def plot_actuation_polygon(self, ax, vertices, foot_pos, scaling_factor = 2000):
       vertex = np.zeros((3,8))

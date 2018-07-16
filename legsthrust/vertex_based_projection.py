@@ -13,6 +13,7 @@ import scipy.spatial
 from math_tools import Math
 from constraints import Constraints
 from kinematics import Kinematics
+from hyq_kinematics import HyQKinematics
 
 class VertexBasedProjection():
     def minksum(self, a,b):
@@ -109,16 +110,19 @@ class VertexBasedProjection():
             vertices_cl = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
                                  [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
                                  [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-            kin = Kinematics()
+            kin = HyQKinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH,isOutOfWorkspace = kin.compute_xy_IK(np.transpose(contactsFourLegs[:,0]),
+            q, q_dot, J_LF, J_RF, J_LH, J_RH,isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
                                                     np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsFourLegs[:,1]),
+                                                    np.transpose(foot_vel[:,1]),
                                                     np.transpose(contactsFourLegs[:,2]),
                                                     np.transpose(foot_vel[:,2]))
+            J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
             vertices_1 = np.transpose(constr.computeActuationPolygon(J_LF))
-            vertices_2 = np.transpose(constr.computeActuationPolygon(J_LF))
-            vertices_3 = np.transpose(constr.computeActuationPolygon(J_LF))
+            vertices_2 = np.transpose(constr.computeActuationPolygon(J_RF))
+            vertices_3 = np.transpose(constr.computeActuationPolygon(J_LH))
             #print vertices_1
             #print vertices_2
             #print vertices_3
