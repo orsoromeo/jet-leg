@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from arrow3D import Arrow3D
 
 class ComputationalDynamics():
+    
     def getGraspMatrix(self, r):
         math = Math()
         G = np.vstack([np.hstack([eye(3), zeros((3, 3))]),np.hstack([math.skew(r), eye(3)])])
@@ -129,7 +130,7 @@ class ComputationalDynamics():
         start_t_LP = time.time()
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
-        p = matrix(np.ones((3*nc,1)))    
+        p = matrix(np.zeros((3*nc,1)))    
         
         #kin = Kinematics()
         kin = HyQKinematics()
