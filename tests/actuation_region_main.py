@@ -23,7 +23,7 @@ from legsthrust.vertex_based_projection import VertexBasedProjection
 
 import matplotlib.pyplot as plt
 from legsthrust.arrow3D import Arrow3D
-
+        
 plt.close('all')
 math = Math()
 # number of contacts
@@ -33,6 +33,7 @@ ng = 4
 
 # ONLY_ACTUATION or ONLY_FRICTION
 constraint_mode = 'ONLY_ACTUATION'
+constraint_mode_IP = 'ONLY_ACTUATION'
 useVariableJacobian = True
 # number of decision variables of the problem
 n = nc*6
@@ -44,24 +45,24 @@ n = nc*6
 #LH_foot = np.array([-0.3, 0.2, -0.5])
 #RH_foot = np.array([-0.3, -0.2, -0.5])
 
-LF_foot = np.array([0.3, 0.2, -0.5])
-RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.2, 0.2, -0.5])
-RH_foot = np.array([-0.3, -0.2, -0.5])
+LF_foot = np.array([0.3, 0.2, -0.65])
+RF_foot = np.array([0.3, -0.2, -0.65])
+LH_foot = np.array([-0.2, 0.2, -0.4])
+RH_foot = np.array([-0.3, -0.2, -0.65])
 
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts = contactsToStack[0:nc, :]
 
 
-L_LF_foot = np.array([-0.2, 0.2, -0.5])
-L_RF_foot = np.array([-0.2, 0.1, -0.5])
-L_LH_foot = np.array([-0.1, 0.1, -0.5])
-L_RH_foot = np.array([-0.1, 0.2, -0.5])
+#L_LF_foot = np.array([-0.2, 0.2, -0.5])
+#L_RF_foot = np.array([-0.2, 0.1, -0.5])
+#L_LH_foot = np.array([-0.1, 0.1, -0.5])
+#L_RH_foot = np.array([-0.1, 0.2, -0.5])
 
-R_LF_foot = np.array([0.2, 0.2, -0.5])
-R_RF_foot = np.array([0.3, 0.1, -0.5])
-R_LH_foot = np.array([0.1, 0.1, -0.5])
-R_RH_foot = np.array([0.1, 0.2, -0.5])
+#R_LF_foot = np.array([0.2, 0.2, -0.5])
+#R_RF_foot = np.array([0.3, 0.1, -0.5])
+#R_LH_foot = np.array([0.1, 0.1, -0.5])
+#R_RH_foot = np.array([0.1, 0.2, -0.5])
 
 #contacts = np.vstack((L_LF_foot,L_RF_foot,L_LH_foot,L_RH_foot))
 
@@ -72,7 +73,7 @@ mu = 0.8
 
 axisZ= array([[0.0], [0.0], [1.0]])
 
-n1 = np.transpose(np.transpose(math.rpyToRot(1.5,1.5,0.0)).dot(axisZ))
+n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -97,16 +98,14 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
-IP_points, actuation_LF, actuation_RF, actuation_LH, actuation_RH = comp_dyn.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, ng, mu)
+IP_points, actuation_polygons = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu)
 
 plotter = Plotter()
 scaling_factor = 2000
 if constraint_mode == 'ONLY_ACTUATION':
     plotter.plot_polygon(np.transpose(IP_points))
-    plotter.plot_actuation_polygon(ax, actuation_LF, LF_foot, scaling_factor)
-    plotter.plot_actuation_polygon(ax, actuation_RF, RF_foot, scaling_factor)
-    plotter.plot_actuation_polygon(ax, actuation_LH, LH_foot, scaling_factor)
-    plotter.plot_actuation_polygon(ax, actuation_RH, RH_foot, scaling_factor)
+    for j in range(0,nc):
+        plotter.plot_actuation_polygon(ax, actuation_polygons[j], contacts[j,:], scaling_factor)
 
 ''' plotting Iterative Projection points '''
 
@@ -138,10 +137,26 @@ plt.show()
 ''' Add 2D figure '''
 plt.figure()
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
-if np.size(feasible,0) != 0:
-    h2 = plt.scatter(feasible[:,0], feasible[:,1],c='g',s=50, label='LP feasible')
-if np.size(unfeasible,0) != 0:
-    h3 = plt.scatter(unfeasible[:,0], unfeasible[:,1],c='r',s=50, label='LP unfeasible')
+#if np.size(feasible,0) != 0:
+#        h2 = plt.scatter(feasible[:,0], feasible[:,1],c='g',s=50, label='LP feasible')
+#if np.size(unfeasible,0) != 0:
+#        h3 = plt.scatter(unfeasible[:,0], unfeasible[:,1],c='r',s=50, label='LP unfeasible')
+
+feasiblePointsSize = np.size(feasible,0)
+for j in range(0, feasiblePointsSize):
+    if (feasible[j,2]<0.01)&(feasible[j,2]>-0.01):
+        plt.scatter(feasible[j,0], feasible[j,1],c='g',s=50)
+        lastFeasibleIndex = j
+unfeasiblePointsSize = np.size(unfeasible,0)
+
+for j in range(0, unfeasiblePointsSize):
+    if (unfeasible[j,2]<0.01)&(unfeasible[j,2]>-0.01):
+        plt.scatter(unfeasible[j,0], unfeasible[j,1],c='r',s=50)
+        lastUnfeasibleIndex = j
+h2 = plt.scatter(feasible[lastFeasibleIndex,0], feasible[lastFeasibleIndex,1],c='g',s=50, label='LP feasible')
+h3 = plt.scatter(unfeasible[lastUnfeasibleIndex,0], unfeasible[lastUnfeasibleIndex,1],c='r',s=50, label='LP unfeasible')
+
+        
 h4 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
 
 i = 0
