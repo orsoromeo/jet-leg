@@ -72,6 +72,7 @@ class ComputationalDynamics():
         act_RF = np.zeros((0,1))
         act_LH = np.zeros((0,1))
         act_RH = np.zeros((0,1))
+        actuation_polygons = np.zeros((0,1))
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
@@ -94,20 +95,20 @@ class ComputationalDynamics():
             J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
 
             act_LF = constr.computeActuationPolygon(J_LF)
-            act_RF = constr.computeActuationPolygon(J_LF)
-            act_LH = constr.computeActuationPolygon(J_LF)
-            act_RH = constr.computeActuationPolygon(J_LF)            
+            act_RF = constr.computeActuationPolygon(J_RF)
+            act_LH = constr.computeActuationPolygon(J_LH)
+            act_RH = constr.computeActuationPolygon(J_RH)            
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
             because the gravito inertial wrench is normalized'''
-            c1, e1 = constr.hexahedron(act_LF/mass)
-            c2, e2 = constr.hexahedron(act_LF/mass)
-            c3, e3 = constr.hexahedron(act_LF/mass)
-            c4, e4 = constr.hexahedron(act_LF/mass)
+            #c1, e1 = constr.hexahedron(act_LF/mass)
+            #c2, e2 = constr.hexahedron(act_RF/mass)
+            #c3, e3 = constr.hexahedron(act_LH/mass)
+            #c4, e4 = constr.hexahedron(act_RH/mass)
             C = np.zeros((0,0))
             d = np.zeros((1,0))
-            
+            actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
             for j in range (0,contactsNumber):
-                hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(act_LF/mass)
+                hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/mass)
                 C = block_diag(C, hexahedronHalfSpaceConstraints)
                 d = hstack([d, knownTerm.T])
                 
@@ -122,7 +123,7 @@ class ComputationalDynamics():
 
         print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IP))
 
-        return vertices, act_LF, act_RF, act_RH, act_LH
+        return vertices, actuation_polygons
                 
                 
 
@@ -169,12 +170,12 @@ class ComputationalDynamics():
                         
                     #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])\
                     if (useVariableJacobian):
-                        contacts_new_x = contactsFourLegs[:,0] + com_x
-                        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contacts_new_x),
+                        #contacts_new_x = contactsFourLegs[:,0] + com_x
+                        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - com_x),
                                                   np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,1] + com_y),
+                                                    np.transpose(contactsFourLegs[:,1] - com_y),
                                                     np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsFourLegs[:,2] + com_z),
+                                                    np.transpose(contactsFourLegs[:,2] - com_z),
                                                     np.transpose(foot_vel[:,2]))
                     if (not isOutOfWorkspace):
                         #kin.update_jacobians(q)
