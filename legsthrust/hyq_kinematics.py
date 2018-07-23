@@ -792,7 +792,7 @@ class HyQKinematics:
         
         return contacts
         
-    def inverse_kin(self, x, x_dot, y, y_dot, z, z_dot):
+    def inverse_kin(self, x, x_dot, y, y_dot, z, z_dot, verbose = False):
         ''' 
         This function computes the joint positions given the feet positions and velocities.
         Only the X Y feet coordinates are considered inthis version.
@@ -849,11 +849,13 @@ class HyQKinematics:
         q[1] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# LF HFE
         if (np.isnan(q[1])):
             isOutOfWorkSpace = True
-            print 'Warning! point is out of workspace!'
+            if verbose:
+                print 'Warning! point is out of workspace!'
         q[4] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# RF HFE
         if (np.isnan(q[4])):
             isOutOfWorkSpace = True
-            print 'Warning! point is out of workspace!'    
+            if verbose:
+                print 'Warning! point is out of workspace!'    
         cos_arg = (self.upperLegLength * self.upperLegLength + self.lowerLegLength * self.lowerLegLength - hfe2foot * hfe2foot)/ (2 * self.upperLegLength * self.lowerLegLength);
         q[8]= + M_PI- np.arccos(cos_arg[0]); # LH KFE
         q[11] = + M_PI - np.arccos(cos_arg[0]); # RH KFE
@@ -862,11 +864,13 @@ class HyQKinematics:
         q[7] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# LH HFE
         if (np.isnan(q[7])):
             isOutOfWorkSpace = True
-            print 'Warning! point is out of workspace!'
+            if verbose:
+                print 'Warning! point is out of workspace!'
         q[10] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# RH HFE
         if (np.isnan(q[10])):
             isOutOfWorkSpace = True
-            print 'Warning! point is out of workspace!'    
+            if verbose:
+                print 'Warning! point is out of workspace!'    
 
         """ compute joint velocities updating the 2D jacobians with the computed position """
         l1 = self.upperLegLength;
