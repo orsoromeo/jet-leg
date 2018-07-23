@@ -62,14 +62,12 @@ class TestStringMethods(unittest.TestCase):
         
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             
-            foot_z = random.uniform(-1,-0.7)
+            foot_z = random.uniform(-1,-0.8)
             LF_foot = np.array([0.3, 0.2, foot_z])
             RF_foot = np.array([0.3, -0.2, foot_z])
             LH_foot = np.array([-0.3, 0.2, foot_z])
             RH_foot = np.array([-0.3, -0.2, foot_z])
             contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-            
-            #print contacts
             
             q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = hyqKin.inverse_kin(np.transpose(contacts[:,0]),
                                                               np.transpose(foot_vel[:,0]),
@@ -77,7 +75,7 @@ class TestStringMethods(unittest.TestCase):
                                                                   np.transpose(foot_vel[:,1]),
                                                         np.transpose(contacts[:,2]),
                                                         np.transpose(foot_vel[:,2]))
-        self.assertTrue(isOutOfWorkspace)
+            self.assertTrue(isOutOfWorkspace)
                                                         
     def test_inverse_kinematics(self):
         
