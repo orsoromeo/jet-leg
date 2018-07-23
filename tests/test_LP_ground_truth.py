@@ -31,16 +31,8 @@ class TestLPGroundTruth(unittest.TestCase):
         constraint_mode = 'ONLY_ACTUATION'
 
         useVariableJacobian = True
-        # number of decision variables of the problem
-        n = nc*6
         
-        # contact positions
-        """ contact points """
-        #LF_foot = np.array([0.3, 0.2, -.9])
-        #RF_foot = np.array([0.3, -0.2, -0.5])
-        #LH_foot = np.array([-0.3, 0.2, -0.5])
-        #RH_foot = np.array([-0.3, -0.2, -0.5])
-        
+        """ contact points """    
         LF_foot = np.array([0.3, 0.2, -0.65])
         RF_foot = np.array([0.3, -0.2, -0.65])
         LH_foot = np.array([-0.2, 0.2, -0.4])
@@ -308,12 +300,11 @@ class TestLPGroundTruth(unittest.TestCase):
         # number of generators, i.e. rays used to linearize the friction cone
         ng = 4
         
-        # ONLY_ACTUATION or ONLY_FRICTION
+        # ONLY_FRICTION
         constraint_mode = 'ONLY_FRICTION'
 
         useVariableJacobian = True
-        # number of decision variables of the problem
-        n = nc*6
+
         
         LF_foot = np.array([0.3, 0.2, -0.65])
         RF_foot = np.array([0.3, -0.2, -0.65])
