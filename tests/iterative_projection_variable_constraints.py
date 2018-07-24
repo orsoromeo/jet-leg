@@ -11,9 +11,9 @@ from context import legsthrust
 
 import time
 import pylab
-import pypoman
-from pypoman.bretl import Vertex
-from pypoman.bretl import Polygon
+from pypoman.lp import solve_lp, GLPK_IF_AVAILABLE
+#from pypoman.bretl import Vertex
+#from pypoman.bretl import Polygon
 
 import cvxopt
 from cvxopt import matrix, solvers
@@ -35,7 +35,6 @@ from legsthrust.math_tools import Math
 from legsthrust.computational_dynamics import ComputationalDynamics
 from legsthrust.vertex_based_projection import VertexBasedProjection
 
-from pypoman.lp import solve_lp, GLPK_IF_AVAILABLE
 
 
 def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
@@ -62,9 +61,9 @@ def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
         solver failure.
     """
     """ contact points """
-    LF_foot = np.array([0.3, 0.2, -0.5])
+    LF_foot = np.array([0.3, 0.3, -0.5])
     RF_foot = np.array([0.3, -0.2, -0.5])
-    LH_foot = np.array([-0.2, 0.2, -0.5])
+    LH_foot = np.array([-0.2, 0.0, -0.5])
     RH_foot = np.array([-0.3, -0.2, -0.5])
     nc = 3
     contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
@@ -90,7 +89,11 @@ def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
     #tempSolution2 = x[-2:]
     #print 'new vertex ',tempSolution2 
     
-    for i in range(0,10):
+    #for i in range(0,10):
+    tol = 0.1
+    err = 100;
+    while err>tol:
+        #for i in range(0,1):
         print '===========>new com world frame: ', comWorldFrame
         new_lp = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
         lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
@@ -101,7 +104,15 @@ def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
             lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
         tempSolution = x[-2:]
         #print 'new vertex ',tempSolution1 
-        comWorldFrame = np.array([tempSolution[0]*1.0/3.0, tempSolution[1]*1.0/3.0, 0.0])
+        err_x = tempSolution[0]-comWorldFrame[0];
+        err_y = tempSolution[1]-comWorldFrame[1];
+        err = np.sqrt(np.power(err_x,2)+np.power(err_y,2))
+        #err = np.amax(np.array([np.abs(err_x),  np.abs(err_y)]))        
+        print "error: ",err
+        
+        com_x = comWorldFrame[0] + (err_x)*1.0/20.0;
+        com_y = comWorldFrame[1] + (err_y)*1.0/20.0;        
+        comWorldFrame = np.array([com_x, com_y, 0.0])
         print '===========>new temp solution: ', tempSolution
     #print "new vertex found: ",comWorldFrame[0:2]
     print "new vertex found: ",tempSolution
@@ -138,7 +149,7 @@ def optimize_angle_variable_constraint(theta, lp, solver=GLPK_IF_AVAILABLE):
     return z
 
 
-def compute_polygon_variable_constraint(lp, max_iter=100, solver=GLPK_IF_AVAILABLE):
+def compute_polygon_variable_constraint(lp, max_iter=10, solver=GLPK_IF_AVAILABLE):
     """
     Expand a polygon iteratively.
 
@@ -188,7 +199,16 @@ def compute_polygon_variable_constraint(lp, max_iter=100, solver=GLPK_IF_AVAILAB
     polygonVariableConstraints.iter_expand(lp, max_iter)  
     return polygonVariableConstraints
 
-class VertexVariableConstraints(Vertex):
+class VertexVariableConstraints():
+    def __init__(self, p):
+        self.x = p[0]
+        self.y = p[1]
+        self.next = None
+        self.expanded = False
+
+    def length(self):
+        return norm([self.x-self.next.x, self.y-self.next.y])
+        
     def expand(self, lp):
         print "EXPAND VERTICES VARIABLE CONSTRAINTS"
         v1 = self
@@ -205,13 +225,25 @@ class VertexVariableConstraints(Vertex):
             self.expanded = True
             return False, None
         else:
-            vnew = Vertex([xopt, yopt])
+            vnew = VertexVariableConstraints([xopt, yopt])
             vnew.next = self.next
             self.next = vnew
             self.expanded = False
             return True, vnew
             
-class PolygonVariableConstraint(Polygon):
+class PolygonVariableConstraint():
+    
+    def from_vertices(self, v1, v2, v3):
+        v1.next = v2
+        v2.next = v3
+        v3.next = v1
+        self.vertices = [v1, v2, v3]
+
+    def all_expanded(self):
+        for v in self.vertices:
+            if not v.expanded:
+                return False
+        return True
         
     def iter_expand(self, qpconstraints, max_iter):
         """
@@ -231,7 +263,41 @@ class PolygonVariableConstraint(Polygon):
             self.vertices.append(vnew)
             nb_iter += 1
             #print vertices
-    
+    def sort_vertices(self):
+        """
+        Export vertices starting from the left-most and going clockwise.
+        Assumes all vertices are on the positive halfplane.
+        """
+        minsd = 1e10
+        ibottom = 0
+        for i in range(len(self.vertices)):
+            v = self.vertices[i]
+            if (v.y + v.next.y) < minsd:
+                ibottom = i
+                minsd = v.y + v.next.y
+        for v in self.vertices:
+            v.checked = False
+        vcur = self.vertices[ibottom]
+        newvertices = []
+        while not vcur.checked:
+            vcur.checked = True
+            newvertices.append(vcur)
+            vcur = vcur.next
+        newvertices.reverse()
+        vfirst = newvertices.pop(-1)
+        newvertices.insert(0, vfirst)
+        self.vertices = newvertices
+
+    def export_vertices(self, threshold=1e-2):
+        export_list = [self.vertices[0]]
+        for i in range(1, len(self.vertices)-1):
+            vcur = self.vertices[i]
+            vlast = export_list[-1]
+            if norm([vcur.x-vlast.x, vcur.y-vlast.y]) > threshold:
+                export_list.append(vcur)
+        export_list.append(self.vertices[-1])  # always add last vertex
+        return export_list
+        
 class IterativeProjection:
     
     def setup_iterative_projection(self, contacts, comWF):
@@ -383,9 +449,9 @@ useVariableJacobian = True
 n = nc*6
 
 """ contact points """
-LF_foot = np.array([0.3, 0.2, -0.5])
+LF_foot = np.array([0.3, 0.3, -0.5])
 RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.2, 0.2, -0.5])
+LH_foot = np.array([-0.2, 0.0, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
@@ -401,6 +467,22 @@ vertices_list = polygon.export_vertices()
 vertices = [array([v.x, v.y]) for v in vertices_list]
 print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IPVC))
 
+
+''' plotting Iterative Projection points '''
+trunk_mass = 90
+mu = 0.8
+axisZ= array([[0.0], [0.0], [1.0]])
+n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        # %% Cell 2
+        
+normals = np.vstack([n1, n2, n3, n4])
+feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, mu, useVariableJacobian, 0.05, 0.05)
+
+
+'''Plotting'''
 plt.close('all')
 plotter = Plotter()
 plt.figure()
@@ -410,6 +492,23 @@ plt.ylabel("Y [m]")
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 vx = np.asanyarray(vertices)
 plotter.plot_polygon(vx)
+
+
+feasiblePointsSize = np.size(feasible,0)
+for j in range(0, feasiblePointsSize):
+    if (feasible[j,2]<0.01)&(feasible[j,2]>-0.01):
+        plt.scatter(feasible[j,0], feasible[j,1],c='g',s=50)
+        lastFeasibleIndex = j
+unfeasiblePointsSize = np.size(unfeasible,0)
+
+for j in range(0, unfeasiblePointsSize):
+    if (unfeasible[j,2]<0.01)&(unfeasible[j,2]>-0.01):
+        plt.scatter(unfeasible[j,0], unfeasible[j,1],c='r',s=50)
+        lastUnfeasibleIndex = j
+h2 = plt.scatter(feasible[lastFeasibleIndex,0], feasible[lastFeasibleIndex,1],c='g',s=50, label='LP feasible')
+h3 = plt.scatter(unfeasible[lastUnfeasibleIndex,0], unfeasible[lastUnfeasibleIndex,1],c='r',s=50, label='LP unfeasible')
+
+
 print "final vertices: ", vx
 print "number of vertices: ", np.size(vx, 0)
 plt.legend()

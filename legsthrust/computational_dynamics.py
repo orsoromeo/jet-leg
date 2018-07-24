@@ -132,7 +132,7 @@ class ComputationalDynamics():
         feasible_points = np.zeros((0,3))
         unfeasible_points = np.zeros((0,3))
         contact_forces = np.zeros((0,nc*3))  
-        verbose = True
+        verbose = False
         """ Defining the equality constraints """
         for com_x in np.arange(-0.5,0.5,stepX):
             for com_y in np.arange(-0.4,0.4,stepY):
