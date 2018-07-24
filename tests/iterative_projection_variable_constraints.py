@@ -38,7 +38,7 @@ from legsthrust.vertex_based_projection import VertexBasedProjection
 from pypoman.lp import solve_lp, GLPK_IF_AVAILABLE
 
 
-def optimize_direction(vdir, lp, solver=GLPK_IF_AVAILABLE):
+def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
     print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     """
     Optimize in one direction.
@@ -61,15 +61,54 @@ def optimize_direction(vdir, lp, solver=GLPK_IF_AVAILABLE):
         Maximum vertex of the polygon in the direction `vdir`, or 0 in case of
         solver failure.
     """
-    lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = lp
-    lp_q[-2] = -vdir[0]
-    lp_q[-1] = -vdir[1]
-    x = solve_lp(
-        lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
-    return x[-2:]
+    """ contact points """
+    LF_foot = np.array([0.3, 0.2, -0.5])
+    RF_foot = np.array([0.3, -0.2, -0.5])
+    LH_foot = np.array([-0.2, 0.2, -0.5])
+    RH_foot = np.array([-0.3, -0.2, -0.5])
+    nc = 3
+    contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+    contactsWorldFrame = contactsToStack[0:nc, :]
+    iterProj = IterativeProjection()
+    comWorldFrame = np.array([0.0, 0.0, 0.0])
+    #lp = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
+    #lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = lp
+    #lp_q[-2] = -vdir[0]
+    #lp_q[-1] = -vdir[1]
+    #x = solve_lp(
+    #    lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
+    #tempSolution1 = x[-2:]
+    #print 'new vertex ',tempSolution1 
+    #comWorldFrame = np.array([tempSolution1[0]/20, tempSolution1[1]/20, 0.0])
+    #print '===========>new com world frame: ', comWorldFrame
+    #new_lp = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
+    #lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
+    #lp_q[-2] = -vdir[0]
+    #lp_q[-1] = -vdir[1]
+    #x = solve_lp(
+    #    lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
+    #tempSolution2 = x[-2:]
+    #print 'new vertex ',tempSolution2 
+    
+    for i in range(0,10):
+        print '===========>new com world frame: ', comWorldFrame
+        new_lp = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
+        lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
+        lp_q[-2] = -vdir[0]
+        lp_q[-1] = -vdir[1]
+        #print "direction is: ", lp_q[9:11]
+        x = solve_lp(
+            lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
+        tempSolution = x[-2:]
+        #print 'new vertex ',tempSolution1 
+        comWorldFrame = np.array([tempSolution[0]*1.0/3.0, tempSolution[1]*1.0/3.0, 0.0])
+        print '===========>new temp solution: ', tempSolution
+    #print "new vertex found: ",comWorldFrame[0:2]
+    print "new vertex found: ",tempSolution
+    return tempSolution
 
 
-def optimize_angle(theta, lp, solver=GLPK_IF_AVAILABLE):
+def optimize_angle_variable_constraint(theta, lp, solver=GLPK_IF_AVAILABLE):
 
     """
     Optimize in one direction.
@@ -92,13 +131,14 @@ def optimize_angle(theta, lp, solver=GLPK_IF_AVAILABLE):
         Maximum vertex of the polygon in the direction `vdir`, or 0 in case of
         solver failure.
     """
+    print "Optimize angle!!!!!!!!!!!!!!!!!!!!!!"
     d = array([cos(theta), sin(theta)])
-    z = optimize_direction(d, lp, solver=solver)
+    z = optimize_direction_variable_constraint(d, solver=solver)
     print z
     return z
 
 
-def compute_polygon(lp, max_iter=1000, solver=GLPK_IF_AVAILABLE):
+def compute_polygon_variable_constraint(lp, max_iter=100, solver=GLPK_IF_AVAILABLE):
     """
     Expand a polygon iteratively.
 
@@ -119,160 +159,216 @@ def compute_polygon(lp, max_iter=1000, solver=GLPK_IF_AVAILABLE):
     """
     two_pi = 2 * pi
     theta = pi * random()
-    init_vertices = [optimize_angle(theta, lp, solver)]
+    init_vertices = [optimize_angle_variable_constraint(theta, lp, solver)]
     step = two_pi / 3
+    print "enter while loop"
     while len(init_vertices) < 3 and max_iter >= 0:
         theta += step
         if theta >= two_pi:
             step *= 0.25 + 0.5 * random()
             theta += step - two_pi
-        z = optimize_angle(theta, lp, solver)
+        z = optimize_angle_variable_constraint(theta, lp, solver)
         if all([norm(z - z0) > 1e-5 for z0 in init_vertices]):
             init_vertices.append(z)
         max_iter -= 1
+        #print "init vertices length: ",len(init_vertices), init_vertices
+        
     if len(init_vertices) < 3:
         raise Exception("problem is not linearly feasible")
-    v0 = Vertex(init_vertices[0])
-    v1 = Vertex(init_vertices[1])
-    v2 = Vertex(init_vertices[2])
-    polygon = Polygon()
-    polygon.from_vertices(v0, v1, v2)
-    polygon.iter_expand(lp, max_iter)
-    return polygon
+    v0 = VertexVariableConstraints(init_vertices[0])
+    v1 = VertexVariableConstraints(init_vertices[1])
+    v2 = VertexVariableConstraints(init_vertices[2])
+    #polygon = Polygon()
+    #polygon.from_vertices(v0, v1, v2)
+    #polygon.iter_expand(lp, max_iter)
+    
+    polygonVariableConstraints = PolygonVariableConstraint()
+    polygonVariableConstraints.from_vertices(v0, v1, v2)
+    print "START iterative expansion!"
+    polygonVariableConstraints.iter_expand(lp, max_iter)  
+    return polygonVariableConstraints
 
-def setup_iterative_projection():
-    ''' parameters to be tuned'''
-    g = 9.81
-    trunk_mass = 90.
-    mu = 0.8
-    
-    axisZ= array([[0.0], [0.0], [1.0]])
-    
-    n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-    n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-    n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-    n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-    # %% Cell 2
-    
-    normals = np.vstack([n1, n2, n3, n4])
-    
-    start_t_IP = time.time()
-    g = 9.81
-    grav = array([0., 0., -g])
-    contactsNumber = np.size(contacts,0)
-    # Unprojected state is:
-    #
-    #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
-    Ex = np.zeros((0)) 
-    Ey = np.zeros((0))        
-    G = np.zeros((6,0))   
-    for j in range(0,contactsNumber):
-        r = contacts[j,:]
-        graspMatrix = compDyn.getGraspMatrix(r)[:,0:3]
-        Ex = hstack([Ex, -graspMatrix[4]])
-        Ey = hstack([Ey, graspMatrix[3]])
-        G = hstack([G, graspMatrix])            
-        
-    E = vstack((Ex, Ey)) / (g)
-    f = zeros(2)
-    proj = (E, f)  # y = E * x + f
-    
-    # number of the equality constraints
-    m_eq = 6
-    
-    # see Equation (52) in "ZMP Support Areas for Multicontact..."
-    A_f_and_tauz = array([
-        [1, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1]])
-    A = dot(A_f_and_tauz, G)
-    t = hstack([0, 0, g, 0])
-    #print A,t
-    eq = (A, t)  # A * x == t
-    
-    act_LF = np.zeros((0,1))
-    act_RF = np.zeros((0,1))
-    act_LH = np.zeros((0,1))
-    act_RH = np.zeros((0,1))
-    actuation_polygons = np.zeros((0,1))
-    # Inequality matrix for a contact force in local contact frame:
-    constr = Constraints()
-    #C_force = constr.linearized_cone_halfspaces(ng, mu)
-    # Inequality matrix for stacked contact forces in world frame:
-    if constraint_mode == 'ONLY_FRICTION':
-        C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
-        
-    elif constraint_mode == 'ONLY_ACTUATION':
-        #kin = Kinematics()
-        kin = HyQKinematics()
-        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-        contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
-                                              np.transpose(foot_vel[:,0]),
-                                                np.transpose(contactsFourLegs[:,1]),
-                                                np.transpose(foot_vel[:,1]),
-                                                np.transpose(contactsFourLegs[:,2]),
-                                                np.transpose(foot_vel[:,2]))
-        J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
-    
-        act_LF = constr.computeActuationPolygon(J_LF)
-        act_RF = constr.computeActuationPolygon(J_RF)
-        act_LH = constr.computeActuationPolygon(J_LH)
-        act_RH = constr.computeActuationPolygon(J_RH)            
-        ''' in the case of the IP alg. the contact force limits must be divided by the mass
-        because the gravito inertial wrench is normalized'''
-    
-        C = np.zeros((0,0))
-        d = np.zeros((1,0))
-        actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-        for j in range (0,contactsNumber):
-            hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
-            C = block_diag(C, hexahedronHalfSpaceConstraints)
-            d = hstack([d, knownTerm.T])
+class VertexVariableConstraints(Vertex):
+    def expand(self, lp):
+        print "EXPAND VERTICES VARIABLE CONSTRAINTS"
+        v1 = self
+        v2 = self.next
+        v = array([v2.y - v1.y, v1.x - v2.x])  # orthogonal direction to edge
+        v = 1 / norm(v) * v
+        try:
+            z = optimize_direction_variable_constraint(v)
+        except ValueError:
+            self.expanded = True
+            return False, None
+        xopt, yopt = z
+        if abs(cross([xopt-v1.x, yopt-v1.y], [v1.x-v2.x, v1.y-v2.y])) < 1e-2:
+            self.expanded = True
+            return False, None
+        else:
+            vnew = Vertex([xopt, yopt])
+            vnew.next = self.next
+            self.next = vnew
+            self.expanded = False
+            return True, vnew
             
-        d = d.reshape(6*contactsNumber)    
-        #C = block_diag(c1, c2, c3, c4)
-        #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
-        #print C, d
+class PolygonVariableConstraint(Polygon):
+        
+    def iter_expand(self, qpconstraints, max_iter):
+        """
+        Returns true if there's a edge that can be expanded, and expands that
+        edge, otherwise returns False.
+        """
+        nb_iter = 0
+        v = self.vertices[0]
+        while not self.all_expanded() and nb_iter < max_iter:
+            print "iter expand"
+            if v.expanded:
+                v = v.next
+                continue
+            res, vnew = v.expand(qpconstraints)
+            if not res:
+                continue
+            self.vertices.append(vnew)
+            nb_iter += 1
+            #print vertices
     
-    ineq = (C, d)  # C * x <= d
+class IterativeProjection:
     
-    max_radius=1e5
-    (E, f), (A, b), (C, d) = proj, ineq, eq
-    assert E.shape[0] == f.shape[0] == 2
-    # Inequality constraints: A_ext * [ x  u  v ] <= b_ext iff
-    # (1) A * x <= b and (2) |u|, |v| <= max_radius
-    A_ext = zeros((A.shape[0] + 4, A.shape[1] + 2))
-    A_ext[:-4, :-2] = A
-    A_ext[-4, -2] = 1
-    A_ext[-3, -2] = -1
-    A_ext[-2, -1] = 1
-    A_ext[-1, -1] = -1
-    A_ext = cvxopt.matrix(A_ext)
+    def setup_iterative_projection(self, contacts, comWF):
+        ''' parameters to be tuned'''
+        g = 9.81
+        trunk_mass = 90.
+        mu = 0.8
+        
+        axisZ= array([[0.0], [0.0], [1.0]])
+        
+        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        # %% Cell 2
+        
+        normals = np.vstack([n1, n2, n3, n4])
+        
+        start_t_IP = time.time()
+        g = 9.81
+        grav = array([0., 0., -g])
+        contactsNumber = np.size(contacts,0)
+        # Unprojected state is:
+        #
+        #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
+        Ex = np.zeros((0)) 
+        Ey = np.zeros((0))        
+        G = np.zeros((6,0))   
+        for j in range(0,contactsNumber):
+            r = contacts[j,:]
+            graspMatrix = compDyn.getGraspMatrix(r)[:,0:3]
+            Ex = hstack([Ex, -graspMatrix[4]])
+            Ey = hstack([Ey, graspMatrix[3]])
+            G = hstack([G, graspMatrix])            
+            
+        E = vstack((Ex, Ey)) / (g)
+        f = zeros(2)
+        proj = (E, f)  # y = E * x + f
+        
+        # number of the equality constraints
+        m_eq = 6
+        
+        # see Equation (52) in "ZMP Support Areas for Multicontact..."
+        A_f_and_tauz = array([
+            [1, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1]])
+        A = dot(A_f_and_tauz, G)
+        t = hstack([0, 0, g, 0])
+        #print A,t
+        eq = (A, t)  # A * x == t
+        
+        act_LF = np.zeros((0,1))
+        act_RF = np.zeros((0,1))
+        act_LH = np.zeros((0,1))
+        act_RH = np.zeros((0,1))
+        actuation_polygons = np.zeros((0,1))
+        # Inequality matrix for a contact force in local contact frame:
+        constr = Constraints()
+        #C_force = constr.linearized_cone_halfspaces(ng, mu)
+        # Inequality matrix for stacked contact forces in world frame:
+        if constraint_mode == 'ONLY_FRICTION':
+            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+            
+        elif constraint_mode == 'ONLY_ACTUATION':
+            #kin = Kinematics()
+            kin = HyQKinematics()
+            foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+            contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
+            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - comWF[0]),
+                                                  np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsFourLegs[:,1] - comWF[1]),
+                                                    np.transpose(foot_vel[:,1]),
+                                                    np.transpose(contactsFourLegs[:,2] - comWF[2]),
+                                                    np.transpose(foot_vel[:,2]))
+            J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
+        
+            act_LF = constr.computeActuationPolygon(J_LF)
+            act_RF = constr.computeActuationPolygon(J_RF)
+            act_LH = constr.computeActuationPolygon(J_LH)
+            act_RH = constr.computeActuationPolygon(J_RH)            
+            ''' in the case of the IP alg. the contact force limits must be divided by the mass
+            because the gravito inertial wrench is normalized'''
+        
+            C = np.zeros((0,0))
+            d = np.zeros((1,0))
+            actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
+            for j in range (0,contactsNumber):
+                hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
+                C = block_diag(C, hexahedronHalfSpaceConstraints)
+                d = hstack([d, knownTerm.T])
+                
+            d = d.reshape(6*contactsNumber)    
+            #C = block_diag(c1, c2, c3, c4)
+            #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
+            #print C, d
+        
+        ineq = (C, d)  # C * x <= d
+        
+        max_radius=1e5
+        (E, f), (A, b), (C, d) = proj, ineq, eq
+        assert E.shape[0] == f.shape[0] == 2
+        # Inequality constraints: A_ext * [ x  u  v ] <= b_ext iff
+        # (1) A * x <= b and (2) |u|, |v| <= max_radius
+        A_ext = zeros((A.shape[0] + 4, A.shape[1] + 2))
+        A_ext[:-4, :-2] = A
+        A_ext[-4, -2] = 1
+        A_ext[-3, -2] = -1
+        A_ext[-2, -1] = 1
+        A_ext[-1, -1] = -1
+        A_ext = cvxopt.matrix(A_ext)
+        
+        b_ext = zeros(b.shape[0] + 4)
+        b_ext[:-4] = b
+        b_ext[-4:] = array([max_radius] * 4)
+        b_ext = cvxopt.matrix(b_ext)
+        
+        # Equality constraints: C_ext * [ x  u  v ] == d_ext iff
+        # (1) C * x == d and (2) [ u  v ] == E * x + f
+        C_ext = zeros((C.shape[0] + 2, C.shape[1] + 2))
+        C_ext[:-2, :-2] = C
+        C_ext[-2:, :-2] = E[:2]
+        C_ext[-2:, -2:] = array([[-1, 0], [0, -1]])
+        C_ext = cvxopt.matrix(C_ext)
+        
+        d_ext = zeros(d.shape[0] + 2)
+        d_ext[:-2] = d
+        d_ext[-2:] = -f[:2]
+        d_ext = cvxopt.matrix(d_ext)
+        
+        lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
+        lp = lp_obj, A_ext, b_ext, C_ext, d_ext
+        return lp
     
-    b_ext = zeros(b.shape[0] + 4)
-    b_ext[:-4] = b
-    b_ext[-4:] = array([max_radius] * 4)
-    b_ext = cvxopt.matrix(b_ext)
-    
-    # Equality constraints: C_ext * [ x  u  v ] == d_ext iff
-    # (1) C * x == d and (2) [ u  v ] == E * x + f
-    C_ext = zeros((C.shape[0] + 2, C.shape[1] + 2))
-    C_ext[:-2, :-2] = C
-    C_ext[-2:, :-2] = E[:2]
-    C_ext[-2:, -2:] = array([[-1, 0], [0, -1]])
-    C_ext = cvxopt.matrix(C_ext)
-    
-    d_ext = zeros(d.shape[0] + 2)
-    d_ext[:-2] = d
-    d_ext[-2:] = -f[:2]
-    d_ext = cvxopt.matrix(d_ext)
-    
-    lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
-    lp = lp_obj, A_ext, b_ext, C_ext, d_ext
-
 ''' MAIN '''
+start_t_IPVC = time.time()
 math = Math()
 compDyn = ComputationalDynamics()
 # number of contacts
@@ -282,7 +378,6 @@ ng = 4
 
 # ONLY_ACTUATION or ONLY_FRICTION
 constraint_mode = 'ONLY_ACTUATION'
-constraint_mode_IP = 'ONLY_ACTUATION'
 useVariableJacobian = True
 # number of decision variables of the problem
 n = nc*6
@@ -296,143 +391,15 @@ RH_foot = np.array([-0.3, -0.2, -0.5])
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts = contactsToStack[0:nc, :]
 
+iterProj = IterativeProjection()
+comWF = np.array([0.0, 0.0, 0.0])
+lp = iterProj.setup_iterative_projection(contacts, comWF)
 
-''' parameters to be tuned'''
-g = 9.81
-trunk_mass = 90.
-mu = 0.8
-
-axisZ= array([[0.0], [0.0], [1.0]])
-
-n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-# %% Cell 2
-
-normals = np.vstack([n1, n2, n3, n4])
-
-start_t_IP = time.time()
-g = 9.81
-grav = array([0., 0., -g])
-contactsNumber = np.size(contacts,0)
-# Unprojected state is:
-#
-#     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
-Ex = np.zeros((0)) 
-Ey = np.zeros((0))        
-G = np.zeros((6,0))   
-for j in range(0,contactsNumber):
-    r = contacts[j,:]
-    graspMatrix = compDyn.getGraspMatrix(r)[:,0:3]
-    Ex = hstack([Ex, -graspMatrix[4]])
-    Ey = hstack([Ey, graspMatrix[3]])
-    G = hstack([G, graspMatrix])            
-    
-E = vstack((Ex, Ey)) / (g)
-f = zeros(2)
-proj = (E, f)  # y = E * x + f
-
-# number of the equality constraints
-m_eq = 6
-
-# see Equation (52) in "ZMP Support Areas for Multicontact..."
-A_f_and_tauz = array([
-    [1, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1]])
-A = dot(A_f_and_tauz, G)
-t = hstack([0, 0, g, 0])
-#print A,t
-eq = (A, t)  # A * x == t
-
-act_LF = np.zeros((0,1))
-act_RF = np.zeros((0,1))
-act_LH = np.zeros((0,1))
-act_RH = np.zeros((0,1))
-actuation_polygons = np.zeros((0,1))
-# Inequality matrix for a contact force in local contact frame:
-constr = Constraints()
-#C_force = constr.linearized_cone_halfspaces(ng, mu)
-# Inequality matrix for stacked contact forces in world frame:
-if constraint_mode == 'ONLY_FRICTION':
-    C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
-    
-elif constraint_mode == 'ONLY_ACTUATION':
-    #kin = Kinematics()
-    kin = HyQKinematics()
-    foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-    contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-    q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
-                                          np.transpose(foot_vel[:,0]),
-                                            np.transpose(contactsFourLegs[:,1]),
-                                            np.transpose(foot_vel[:,1]),
-                                            np.transpose(contactsFourLegs[:,2]),
-                                            np.transpose(foot_vel[:,2]))
-    J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
-
-    act_LF = constr.computeActuationPolygon(J_LF)
-    act_RF = constr.computeActuationPolygon(J_RF)
-    act_LH = constr.computeActuationPolygon(J_LH)
-    act_RH = constr.computeActuationPolygon(J_RH)            
-    ''' in the case of the IP alg. the contact force limits must be divided by the mass
-    because the gravito inertial wrench is normalized'''
-
-    C = np.zeros((0,0))
-    d = np.zeros((1,0))
-    actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-    for j in range (0,contactsNumber):
-        hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
-        C = block_diag(C, hexahedronHalfSpaceConstraints)
-        d = hstack([d, knownTerm.T])
-        
-    d = d.reshape(6*contactsNumber)    
-    #C = block_diag(c1, c2, c3, c4)
-    #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
-    #print C, d
-
-ineq = (C, d)  # C * x <= d
-
-max_radius=1e5
-(E, f), (A, b), (C, d) = proj, ineq, eq
-assert E.shape[0] == f.shape[0] == 2
-# Inequality constraints: A_ext * [ x  u  v ] <= b_ext iff
-# (1) A * x <= b and (2) |u|, |v| <= max_radius
-A_ext = zeros((A.shape[0] + 4, A.shape[1] + 2))
-A_ext[:-4, :-2] = A
-A_ext[-4, -2] = 1
-A_ext[-3, -2] = -1
-A_ext[-2, -1] = 1
-A_ext[-1, -1] = -1
-A_ext = cvxopt.matrix(A_ext)
-
-b_ext = zeros(b.shape[0] + 4)
-b_ext[:-4] = b
-b_ext[-4:] = array([max_radius] * 4)
-b_ext = cvxopt.matrix(b_ext)
-
-# Equality constraints: C_ext * [ x  u  v ] == d_ext iff
-# (1) C * x == d and (2) [ u  v ] == E * x + f
-C_ext = zeros((C.shape[0] + 2, C.shape[1] + 2))
-C_ext[:-2, :-2] = C
-C_ext[-2:, :-2] = E[:2]
-C_ext[-2:, -2:] = array([[-1, 0], [0, -1]])
-C_ext = cvxopt.matrix(C_ext)
-
-d_ext = zeros(d.shape[0] + 2)
-d_ext[:-2] = d
-d_ext[-2:] = -f[:2]
-d_ext = cvxopt.matrix(d_ext)
-
-lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
-lp = lp_obj, A_ext, b_ext, C_ext, d_ext
-
-polygon = compute_polygon(lp)
+polygon = compute_polygon_variable_constraint(lp)
 polygon.sort_vertices()
 vertices_list = polygon.export_vertices()
 vertices = [array([v.x, v.y]) for v in vertices_list]
-
+print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IPVC))
 
 plt.close('all')
 plotter = Plotter()
@@ -441,7 +408,10 @@ plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
-plotter.plot_polygon(np.asanyarray(vertices))
+vx = np.asanyarray(vertices)
+plotter.plot_polygon(vx)
+print "final vertices: ", vx
+print "number of vertices: ", np.size(vx, 0)
 plt.legend()
 plt.show()
 
