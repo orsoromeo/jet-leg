@@ -33,7 +33,7 @@ ng = 4
 
 # ONLY_ACTUATION or ONLY_FRICTION
 constraint_mode = 'ONLY_ACTUATION'
-constraint_mode_IP = 'ONLY_ACTUATION'
+constraint_mode_IP = 'ONLY_FRICTION'
 useVariableJacobian = True
 # number of decision variables of the problem
 n = nc*6
@@ -45,10 +45,10 @@ n = nc*6
 #LH_foot = np.array([-0.3, 0.2, -0.5])
 #RH_foot = np.array([-0.3, -0.2, -0.5])
 
-LF_foot = np.array([0.3, 0.2, -0.65])
-RF_foot = np.array([0.3, -0.2, -0.65])
-LH_foot = np.array([-0.2, 0.2, -0.4])
-RH_foot = np.array([-0.3, -0.2, -0.65])
+LF_foot = np.array([0.3, 0.3, -0.5])
+RF_foot = np.array([0.3, -0.2, -0.5])
+LH_foot = np.array([-0.2, 0.0, -0.5])
+RH_foot = np.array([-0.3, -0.2, -0.5])
 
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts = contactsToStack[0:nc, :]
@@ -102,7 +102,7 @@ IP_points, actuation_polygons = comp_dyn.iterative_projection_bretl(constraint_m
 
 plotter = Plotter()
 scaling_factor = 2000
-if constraint_mode == 'ONLY_ACTUATION':
+if constraint_mode_IP == 'ONLY_ACTUATION':
     plotter.plot_polygon(np.transpose(IP_points))
     for j in range(0,nc):
         plotter.plot_actuation_polygon(ax, actuation_polygons[j], contacts[j,:], scaling_factor)
@@ -127,10 +127,10 @@ if np.size(feasible,0) != 0:
 
 ''' Vertex-based projection '''
 vertexBasedProj = VertexBasedProjection()
-vertices2d, simplices = vertexBasedProj.project(constraint_mode, contacts, normals, trunk_mass, ng, mu)
+#vertices2d, simplices = vertexBasedProj.project(constraint_mode, contacts, normals, trunk_mass, ng, mu)
 
-for simplex in simplices:
-    plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
+#for simplex in simplices:
+#    plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
 
 plt.show()
 
@@ -160,12 +160,12 @@ h3 = plt.scatter(unfeasible[lastUnfeasibleIndex,0], unfeasible[lastUnfeasibleInd
 h4 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
 
 i = 0
-for simplex in simplices:
-    if (i==0):
-        h5 = plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5., label = 'Vertex-based projection')
-    else:
-        plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
-    i+=1
+#for simplex in simplices:
+#    if (i==0):
+#        h5 = plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5., label = 'Vertex-based projection')
+#    else:
+#        plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5.)
+#    i+=1
     
 plt.grid()
 plt.xlabel("X [m]")

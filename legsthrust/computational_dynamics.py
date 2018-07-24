@@ -78,7 +78,8 @@ class ComputationalDynamics():
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+            max_normal_force = 400.0/mass
+            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals, max_normal_force)
             
         elif constraint_mode == 'ONLY_ACTUATION':
             #kin = Kinematics()
@@ -117,6 +118,7 @@ class ComputationalDynamics():
             #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
             #print C, d
         
+        print C, d
         ineq = (C, d)  # C * x <= d
         
         vertices = pypoman.project_polytope(proj, ineq, eq, method='bretl')
@@ -203,7 +205,7 @@ class ComputationalDynamics():
             J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
             #print J_LF
             G, h, isLpOK = constraint.inequalities(constraint_mode, nc, numberOfGenerators, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
-            #print G, h
+        
         else:
             isLpOK = False
             G= [None]

@@ -11,17 +11,18 @@ from cvxopt import matrix
 from scipy.linalg import block_diag
 
 class Constraints:        
-    def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals):            
+    def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = True):            
         math = Math()
         C = np.zeros((0,0))
         d = np.zeros((0))
-        constraints_local_frame = self.linearized_cone_halfspaces(ng, mu)
+        constraints_local_frame, d_cone = self.linearized_cone_halfspaces(ng, mu, max_normal_force, saturate_max_normal_force)
         for j in range(0,contactsNumber):    
             n = math.normalize(normals[j,:])
             rotationMatrix = math.rotation_matrix_from_normal(n)
             C = block_diag(C, np.dot(constraints_local_frame, rotationMatrix.T))
-            
-        d = np.zeros(C.shape[0])        
+            d = np.hstack([d, d_cone])
+         
+        
         return C, d
         
     def linearized_cone_vertices(self, ng, mu, cone_height = 100.):
@@ -48,7 +49,7 @@ class Constraints:
             #print c_force
         return c_force
         
-    def linearized_cone_halfspaces(self, ng, mu):
+    def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force):
         #print ng
         ''' Inequality matrix for a contact force in local contact frame: '''
         if ng == 4:
@@ -57,6 +58,7 @@ class Constraints:
             [+1, 0, -mu],
             [0, -1, -mu],
             [0, +1, -mu]])
+            d = np.zeros(c_force.shape[0])
         elif ng == 8:
             c_force = np.array([
             [-1, 0, -mu],
@@ -67,7 +69,13 @@ class Constraints:
             [0, +1, -mu],
             [-0.7, -0.7, -mu],
             [-0.7, 0.7, -mu]])
-        return c_force
+            d = np.zeros(c_force.shape[0])
+            
+        if saturate_max_normal_force:
+            c_force = np.vstack([c_force, [0, 0, 1]])
+            d = np.hstack([d, max_normal_force])
+            
+        return c_force, d
 
     def linear_cone(self, n, mu):
         m = np.eye(3) - np.dot(n,np.transpose(n))
@@ -131,6 +139,7 @@ class Constraints:
         vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
                          [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
                          [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+                         
         if (np.size(leg_jacobian,0)==2):          
             torque_lims_xz = np.vstack([vertices[0,:],vertices[2,:]])
             legs_gravity = np.ones((2,8))*0 # TODO: correct computation of the force acting on the legs due to gravity
@@ -191,7 +200,9 @@ class Constraints:
         n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
         
         if constraint_mode == 'ONLY_FRICTION':
-            cons, h_vec = self.linearized_cone_halfspaces_world(nc, ng, friction_coeff, normals)            
+            max_normal_force = 400;
+            cons, h_vec = self.linearized_cone_halfspaces_world(nc, ng, friction_coeff, normals, max_normal_force)  
+            #print cons, h_vec
 
         elif constraint_mode == 'ONLY_ACTUATION':
             cons = cons2
