@@ -16,7 +16,7 @@ from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
 from legsthrust.plotting_tools import Plotter
 from legsthrust.constraints import Constraints
-from legsthrust.kinematics import Kinematics
+
 from legsthrust.math_tools import Math
 from legsthrust.computational_dynamics import ComputationalDynamics
 from legsthrust.vertex_based_projection import VertexBasedProjection

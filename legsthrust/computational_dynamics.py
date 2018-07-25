@@ -8,13 +8,13 @@ Created on Tue Jun  5 15:57:17 2018
 import pylab
 import pypoman
 import numpy as np
-from numpy import array, cross, dot, eye, hstack, vstack, zeros
+from numpy import array, dot, eye, hstack, vstack, zeros
 from numpy.linalg import norm
 import scipy
 from scipy.linalg import block_diag
-from plotting_tools import Plotter
+
 from constraints import Constraints
-from kinematics import Kinematics
+
 from hyq_kinematics import HyQKinematics
 from math_tools import Math
 from cvxopt import matrix, solvers
@@ -78,8 +78,8 @@ class ComputationalDynamics():
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            max_normal_force = 400.0/mass
-            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals, max_normal_force)
+            max_normal_force = 500.0/mass
+            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals, max_normal_force, True)
             
         elif constraint_mode == 'ONLY_ACTUATION':
             #kin = Kinematics()
@@ -139,13 +139,14 @@ class ComputationalDynamics():
         for com_x in np.arange(-0.5,0.5,stepX):
             for com_y in np.arange(-0.4,0.4,stepY):
                 for com_z in np.arange(-0.2,0.25,stepZ):
-                    com = np.array([com_x, com_y, com_z])
+                    com_WF = np.array([com_x, com_y, com_z])
                         
-                    p, G, h, A, b, isConstraintOk = self.setup_lp(mass, contacts, nc, ng, normals, com, constraint_mode, friction_coeff, useVariableJacobian)                 
+                    p, G, h, A, b, isConstraintOk = self.setup_lp(mass, contacts, nc, ng, normals, com_WF, constraint_mode, friction_coeff, useVariableJacobian)                 
 
                     if not isConstraintOk:
+                        unfeasible_points = np.vstack([unfeasible_points, com_WF])
                         if verbose:
-                            print 'something is wrong in the inequalities'
+                            print 'something is wrong in the inequalities or the point is out of workspace'
                     else:
                         
                         sol=solvers.lp(p, G, h, A, b)
@@ -153,10 +154,10 @@ class ComputationalDynamics():
                         status = sol['status']
                         #print x
                         if status == 'optimal':
-                            feasible_points = np.vstack([feasible_points,com])
+                            feasible_points = np.vstack([feasible_points, com_WF])
                             contact_forces = np.vstack([contact_forces, np.transpose(x)])
                         else:
-                            unfeasible_points = np.vstack([unfeasible_points,com])
+                            unfeasible_points = np.vstack([unfeasible_points, com_WF])
                     
         print("LP test: --- %s seconds ---" % (time.time() - start_t_LP))
         
@@ -165,22 +166,20 @@ class ComputationalDynamics():
     def setup_lp(self, mass, contacts, nc, numberOfGenerators, normals, comWorldFrame, constraint_mode, friction_coeff, useVariableJacobian):
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
-        com_x = comWorldFrame[0]
-        com_y = comWorldFrame[1]
-        com_z = comWorldFrame[2]
+
         p = matrix(np.zeros((3*nc,1)))                        
         #kin = Kinematics()
         kin = HyQKinematics()
         constraint = Constraints()                              
         
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-        contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])
-        kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
+        contactsFourLegsWF = np.vstack([contacts, np.zeros((4-nc,3))])
+        kin.inverse_kin(np.transpose(contactsFourLegsWF[:,0]),
                         np.transpose(foot_vel[:,0]),
-                        np.transpose(contactsFourLegs[:,1]),
-                        np.transpose(foot_vel[:,1]),
-                        np.transpose(contactsFourLegs[:,2]),
-                        np.transpose(foot_vel[:,2]))
+                        np.transpose(contactsFourLegsWF[:,1]),
+                       np.transpose(foot_vel[:,1]),
+                       np.transpose(contactsFourLegsWF[:,2]),
+                       np.transpose(foot_vel[:,2]))
         
         torque = -np.cross(comWorldFrame, np.transpose(grav)) 
         A = np.zeros((6,0))
@@ -194,11 +193,11 @@ class ComputationalDynamics():
         #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])\
         if (useVariableJacobian):
             #contacts_new_x = contactsFourLegs[:,0] + com_x
-            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - com_x),
+            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegsWF[:,0] - comWorldFrame[0]),
                                               np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,1] - com_y),
+                                                    np.transpose(contactsFourLegsWF[:,1] - comWorldFrame[1]),
                                                     np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsFourLegs[:,2] - com_z),
+                                                    np.transpose(contactsFourLegsWF[:,2] - comWorldFrame[2]),
                                                     np.transpose(foot_vel[:,2]))
         if (not isOutOfWorkspace):
             #kin.update_jacobians(q)
