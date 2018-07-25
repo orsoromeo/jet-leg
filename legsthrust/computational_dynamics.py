@@ -29,7 +29,7 @@ class ComputationalDynamics():
         G = np.vstack([np.hstack([eye(3), zeros((3, 3))]),np.hstack([math.skew(r), eye(3)])])
         return G
     
-    def iterative_projection_bretl(self, constraint_mode, contacts, normals, mass, ng, mu):
+    def iterative_projection_bretl(self, constraint_mode, contacts, normals, mass, ng, mu, saturate_normal_force = False):
         start_t_IP = time.time()
         g = 9.81
         grav = array([0., 0., -g])
@@ -78,8 +78,8 @@ class ComputationalDynamics():
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            max_normal_force = 500.0/mass
-            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals, max_normal_force, True)
+            max_normal_force = mass/(contactsNumber+0.5)
+            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals, max_normal_force, saturate_normal_force)
             
         elif constraint_mode == 'ONLY_ACTUATION':
             #kin = Kinematics()
@@ -135,13 +135,17 @@ class ComputationalDynamics():
         unfeasible_points = np.zeros((0,3))
         contact_forces = np.zeros((0,nc*3))  
         verbose = False
+        com_WF = np.array([0.0, 0.0, 0.0])
+        p, G, h, A, b, isConstraintOk, LP_actuation_polygons = self.setup_lp(mass, contacts, nc, ng, normals, com_WF, constraint_mode, friction_coeff)
+        
         """ Defining the equality constraints """
         for com_x in np.arange(-0.5,0.5,stepX):
             for com_y in np.arange(-0.4,0.4,stepY):
                 for com_z in np.arange(-0.2,0.25,stepZ):
                     com_WF = np.array([com_x, com_y, com_z])
-                        
-                    p, G, h, A, b, isConstraintOk = self.setup_lp(mass, contacts, nc, ng, normals, com_WF, constraint_mode, friction_coeff, useVariableJacobian)                 
+
+                    if useVariableJacobian:
+                         p, G, h, A, b, isConstraintOk, LP_actuation_polygons = self.setup_lp(mass, contacts, nc, ng, normals, com_WF, constraint_mode, friction_coeff)                 
 
                     if not isConstraintOk:
                         unfeasible_points = np.vstack([unfeasible_points, com_WF])
@@ -163,7 +167,7 @@ class ComputationalDynamics():
         
         return feasible_points, unfeasible_points, contact_forces
 
-    def setup_lp(self, mass, contacts, nc, numberOfGenerators, normals, comWorldFrame, constraint_mode, friction_coeff, useVariableJacobian):
+    def setup_lp(self, mass, contacts, nc, numberOfGenerators, normals, comWorldFrame, constraint_mode, friction_coeff):
         g = 9.81    
         grav = np.array([[0.], [0.], [-g*mass]])
 
@@ -191,9 +195,9 @@ class ComputationalDynamics():
             b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
             
         #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])\
-        if (useVariableJacobian):
+        #if (useVariableJacobian):
             #contacts_new_x = contactsFourLegs[:,0] + com_x
-            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegsWF[:,0] - comWorldFrame[0]),
+        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegsWF[:,0] - comWorldFrame[0]),
                                               np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsFourLegsWF[:,1] - comWorldFrame[1]),
                                                     np.transpose(foot_vel[:,1]),
@@ -203,12 +207,13 @@ class ComputationalDynamics():
             #kin.update_jacobians(q)
             J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
             #print J_LF
-            G, h, isLpOK = constraint.inequalities(constraint_mode, nc, numberOfGenerators, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+            G, h, isLpOK, LP_actuation_polygons = constraint.inequalities(constraint_mode, nc, numberOfGenerators, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         
         else:
+            LP_actuation_polygons = [None]
             isLpOK = False
             G= [None]
             h = [None]
         
         lp = p, G, h, A, b
-        return p, G, h, A, b, isLpOK 
+        return p, G, h, A, b, isLpOK, LP_actuation_polygons

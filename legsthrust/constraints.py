@@ -11,7 +11,7 @@ from cvxopt import matrix
 from scipy.linalg import block_diag
 
 class Constraints:        
-    def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = True):            
+    def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
         math = Math()
         C = np.zeros((0,0))
         d = np.zeros((0))
@@ -153,10 +153,10 @@ class Constraints:
             actuation_polygon = np.matmul(np.linalg.inv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)        
             
         # Only for debugging:                          
-        #actuation_polygon = vertices
+        # actuation_polygon = vertices
         return actuation_polygon
         
-    def inequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH):
+    def inequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, saturate_normal_force = False):
         cons1 = np.zeros((0,0))
         h_vec1 = np.zeros((0,1))
         cons2 = np.zeros((0,0))
@@ -201,7 +201,7 @@ class Constraints:
         
         if constraint_mode == 'ONLY_FRICTION':
             max_normal_force = 400;
-            cons, h_vec = self.linearized_cone_halfspaces_world(nc, ng, friction_coeff, normals, max_normal_force)  
+            cons, h_vec = self.linearized_cone_halfspaces_world(nc, ng, friction_coeff, normals, max_normal_force, saturate_normal_force)  
             #print cons, h_vec
 
         elif constraint_mode == 'ONLY_ACTUATION':
@@ -218,5 +218,5 @@ class Constraints:
         m_ineq = np.size(cons,0)
         G = matrix(cons) 
         h = matrix(h_vec.reshape(m_ineq))
-        return G, h, error
+        return G, h, error, actuation_polygons
     

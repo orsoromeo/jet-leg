@@ -35,127 +35,6 @@ from legsthrust.math_tools import Math
 from legsthrust.computational_dynamics import ComputationalDynamics
 from legsthrust.vertex_based_projection import VertexBasedProjection
 
-
-
-def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
-    print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-    """
-    Optimize in one direction.
-
-    Parameters
-    ----------
-    vdir : (3,) array
-        Direction in which the optimization is performed.
-    lp : array tuple
-        Tuple `(q, G, h, A, b)` defining the LP. See
-        :func:`pypoman.lp..solve_lp` for details.
-    solver : string, optional
-        Backend LP solver to call.
-
-    Returns
-    -------
-    succ : bool
-        Success boolean.
-    z : (3,) array, or 0
-        Maximum vertex of the polygon in the direction `vdir`, or 0 in case of
-        solver failure.
-    """
-    """ contact points """
-    LF_foot = np.array([0.3, 0.3, -0.5])
-    RF_foot = np.array([0.3, -0.2, -0.5])
-    LH_foot = np.array([-0.2, 0.0, -0.5])
-    RH_foot = np.array([-0.3, -0.2, -0.5])
-    nc = 3
-    contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-    contactsWorldFrame = contactsToStack[0:nc, :]
-    iterProj = IterativeProjection()
-    comWorldFrame = np.array([0.0, 0.0, 0.0])
-    new_lp, actuation_polygons = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
-    
-    lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
-    lp_q[-2] = -vdir[0]
-    lp_q[-1] = -vdir[1]
-    x = solve_lp(
-        lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
-    tempSolution = x[-2:]
-    forces = x[0:10]
-    print tempSolution
-    print forces
-    print actuation_polygons[0:3]
-    return x[-2:]
-
-
-def optimize_angle_variable_constraint(theta, lp, solver=GLPK_IF_AVAILABLE):
-
-    """
-    Optimize in one direction.
-
-    Parameters
-    ----------
-    theta : scalar
-        Angle of the direction in which the optimization is performed.
-    lp : array tuple
-        Tuple `(q, G, h, A, b)` defining the LP. See
-        :func:`pypoman.lp..solve_lp` for details.
-    solver : string, optional
-        Backend LP solver to call.
-
-    Returns
-    -------
-    succ : bool
-        Success boolean.
-    z : (3,) array, or 0
-        Maximum vertex of the polygon in the direction `vdir`, or 0 in case of
-        solver failure.
-    """
-    print "Optimize angle!!!!!!!!!!!!!!!!!!!!!!"
-    d = array([cos(theta), sin(theta)])
-    z = optimize_direction_variable_constraint(d, solver=solver)
-    return z
-
-
-def compute_polygon_variable_constraint(lp, max_iter=1000, solver=GLPK_IF_AVAILABLE):
-    """
-    Expand a polygon iteratively.
-
-    Parameters
-    ----------
-    lp : array tuple
-        Tuple `(q, G, h, A, b)` defining the linear program. See
-        :func:`pypoman.lp.solve_lp` for details.
-    max_iter : integer, optional
-        Maximum number of calls to the LP solver.
-    solver : string, optional
-        Name of backend LP solver.
-
-    Returns
-    -------
-    poly : Polygon
-        Output polygon.
-    """
-    two_pi = 2 * pi
-    theta = pi * random()
-    init_vertices = [optimize_angle_variable_constraint(theta, lp, solver)]
-    step = two_pi / 3
-    while len(init_vertices) < 3 and max_iter >= 0:
-        theta += step
-        if theta >= two_pi:
-            step *= 0.25 + 0.5 * random()
-            theta += step - two_pi
-        z = optimize_angle_variable_constraint(theta, lp, solver)
-        if all([norm(z - z0) > 1e-5 for z0 in init_vertices]):
-            init_vertices.append(z)
-        max_iter -= 1
-    if len(init_vertices) < 3:
-        raise Exception("problem is not linearly feasible")
-    v0 = VertexVariableConstraints(init_vertices[0])
-    v1 = VertexVariableConstraints(init_vertices[1])
-    v2 = VertexVariableConstraints(init_vertices[2])
-    polygon = PolygonVariableConstraint()
-    polygon.from_vertices(v0, v1, v2)
-    polygon.iter_expand(lp, max_iter)
-    return polygon
-
 class VertexVariableConstraints():
     def __init__(self, p):
         self.x = p[0]
@@ -166,20 +45,27 @@ class VertexVariableConstraints():
     def length(self):
         return norm([self.x-self.next.x, self.y-self.next.y])
         
-    def expand(self, lp):
+    def expand(self):
         print "EXPAND VERTICES VARIABLE CONSTRAINTS"
         v1 = self
         v2 = self.next
-        v = array([v2.y - v1.y, v1.x - v2.x])  # orthogonal direction to edge
-        v = 1 / norm(v) * v
+        direction = array([v2.y - v1.y, v1.x - v2.x])  # orthogonal direction to edge
+        direction = 1 / norm(direction) * direction
+        #print "Current vertices V1: ", v1.x, v1.y        
+        #print "Current vertices V2: ", v2.x, v2.y        
+        #print "New direction ", direction
         try:
-            z = optimize_direction_variable_constraint(v)
+            z = optimize_direction_variable_constraint(direction)
         except ValueError:
             self.expanded = True
             return False, None
         xopt, yopt = z
-        if abs(cross([xopt-v1.x, yopt-v1.y], [v1.x-v2.x, v1.y-v2.y])) < 1e-2:
+        delta_area = cross([xopt-v1.x, yopt-v1.y], [v1.x-v2.x, v1.y-v2.y])
+        delta_area_abs = abs(cross([xopt-v1.x, yopt-v1.y], [v1.x-v2.x, v1.y-v2.y]))
+        print "Area: ",delta_area
+        if delta_area_abs < 1e-3:
             self.expanded = True
+            print "the area is small enough so the vertex expansion is over"
             return False, None
         else:
             vnew = VertexVariableConstraints([xopt, yopt])
@@ -202,11 +88,12 @@ class PolygonVariableConstraint():
                 return False
         return True
         
-    def iter_expand(self, qpconstraints, max_iter):
+    def iter_expand(self, max_iter):
         """
         Returns true if there's a edge that can be expanded, and expands that
         edge, otherwise returns False.
         """
+        print "START expansion"
         nb_iter = 0
         v = self.vertices[0]
         while not self.all_expanded() and nb_iter < max_iter:
@@ -214,12 +101,13 @@ class PolygonVariableConstraint():
             if v.expanded:
                 v = v.next
                 continue
-            res, vnew = v.expand(qpconstraints)
+            res, vnew = v.expand()
             if not res:
                 continue
             self.vertices.append(vnew)
             nb_iter += 1
-            #print vertices
+        print "STOP expansion"
+        
     def sort_vertices(self):
         """
         Export vertices starting from the left-most and going clockwise.
@@ -256,25 +144,12 @@ class PolygonVariableConstraint():
         return export_list
         
 class IterativeProjection:
-    
-    def setup_iterative_projection(self, contacts, comWF):
+        
+    def setup_iterative_projection(self, contacts, comWF, trunk_mass, mu, normals):
         ''' parameters to be tuned'''
         g = 9.81
-        trunk_mass = 20.
-        mu = 0.8
-        
-        axisZ= array([[0.0], [0.0], [1.0]])
-        
-        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        # %% Cell 2
-        
-        normals = np.vstack([n1, n2, n3, n4])
-        
-        start_t_IP = time.time()
-        g = 9.81
+        isOutOfWorkspace = False;
+
         grav = array([0., 0., -g])
         contactsNumber = np.size(contacts,0)
         # Unprojected state is:
@@ -284,7 +159,7 @@ class IterativeProjection:
         Ey = np.zeros((0))        
         G = np.zeros((6,0))   
         for j in range(0,contactsNumber):
-            r = contacts[j,:]
+            r = contacts[j,:] - comWF
             graspMatrix = compDyn.getGraspMatrix(r)[:,0:3]
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
@@ -332,63 +207,253 @@ class IterativeProjection:
                                                     np.transpose(contactsFourLegs[:,2] - comWF[2]),
                                                     np.transpose(foot_vel[:,2]))
             J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
-        
-            act_LF = constr.computeActuationPolygon(J_LF)
-            act_RF = constr.computeActuationPolygon(J_RF)
-            act_LH = constr.computeActuationPolygon(J_LH)
-            act_RH = constr.computeActuationPolygon(J_RH)            
-            ''' in the case of the IP alg. the contact force limits must be divided by the mass
-            because the gravito inertial wrench is normalized'''
-        
-            C = np.zeros((0,0))
-            d = np.zeros((1,0))
-            actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-            for j in range (0,contactsNumber):
-                hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
-                C = block_diag(C, hexahedronHalfSpaceConstraints)
-                d = hstack([d, knownTerm.T])
+
+            if isOutOfWorkspace:
+                C = np.zeros((0,0))
+                d = np.zeros((1,0))
+            else:
+                act_LF = constr.computeActuationPolygon(J_LF)
+                act_RF = constr.computeActuationPolygon(J_RF)
+                act_LH = constr.computeActuationPolygon(J_LH)
+                act_RH = constr.computeActuationPolygon(J_RH)            
+                ''' in the case of the IP alg. the contact force limits must be divided by the mass
+                because the gravito inertial wrench is normalized'''
                 
-            d = d.reshape(6*contactsNumber)    
-            #C = block_diag(c1, c2, c3, c4)
-            #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
-            #print C, d
+                C = np.zeros((0,0))
+                d = np.zeros((1,0))
+                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
+                for j in range (0,contactsNumber):
+                    hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
+                    C = block_diag(C, hexahedronHalfSpaceConstraints)
+                    d = hstack([d, knownTerm.T])
+                    
+                d = d.reshape(6*contactsNumber)    
+                #C = block_diag(c1, c2, c3, c4)
+                #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
+                #print C, d
         
         ineq = (C, d)  # C * x <= d
         
-        max_radius=1e5
-        (E, f), (A, b), (C, d) = proj, ineq, eq
-        assert E.shape[0] == f.shape[0] == 2
-        # Inequality constraints: A_ext * [ x  u  v ] <= b_ext iff
-        # (1) A * x <= b and (2) |u|, |v| <= max_radius
-        A_ext = zeros((A.shape[0] + 4, A.shape[1] + 2))
-        A_ext[:-4, :-2] = A
-        A_ext[-4, -2] = 1
-        A_ext[-3, -2] = -1
-        A_ext[-2, -1] = 1
-        A_ext[-1, -1] = -1
-        A_ext = cvxopt.matrix(A_ext)
+        if isOutOfWorkspace:
+            lp = 0
+        else:
+            max_radius=1e5
+            (E, f), (A, b), (C, d) = proj, ineq, eq
+            assert E.shape[0] == f.shape[0] == 2
+            # Inequality constraints: A_ext * [ x  u  v ] <= b_ext iff
+            # (1) A * x <= b and (2) |u|, |v| <= max_radius
+            A_ext = zeros((A.shape[0] + 4, A.shape[1] + 2))
+            A_ext[:-4, :-2] = A
+            A_ext[-4, -2] = 1
+            A_ext[-3, -2] = -1
+            A_ext[-2, -1] = 1
+            A_ext[-1, -1] = -1
+            A_ext = cvxopt.matrix(A_ext)
+            
+            b_ext = zeros(b.shape[0] + 4)
+            b_ext[:-4] = b
+            b_ext[-4:] = array([max_radius] * 4)
+            b_ext = cvxopt.matrix(b_ext)
+            
+            # Equality constraints: C_ext * [ x  u  v ] == d_ext iff
+            # (1) C * x == d and (2) [ u  v ] == E * x + f
+            C_ext = zeros((C.shape[0] + 2, C.shape[1] + 2))
+            C_ext[:-2, :-2] = C
+            C_ext[-2:, :-2] = E[:2]
+            C_ext[-2:, -2:] = array([[-1, 0], [0, -1]])
+            C_ext = cvxopt.matrix(C_ext)
+            
+            d_ext = zeros(d.shape[0] + 2)
+            d_ext[:-2] = d
+            d_ext[-2:] = -f[:2]
+            d_ext = cvxopt.matrix(d_ext)
+            
+            lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
+            lp = lp_obj, A_ext, b_ext, C_ext, d_ext
         
-        b_ext = zeros(b.shape[0] + 4)
-        b_ext[:-4] = b
-        b_ext[-4:] = array([max_radius] * 4)
-        b_ext = cvxopt.matrix(b_ext)
+        return lp, actuation_polygons/trunk_mass, isOutOfWorkspace
+
+
+def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
+    print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+    """
+    Optimize in one direction.
+
+    Parameters
+    ----------
+    vdir : (3,) array
+        Direction in which the optimization is performed.
+    lp : array tuple
+        Tuple `(q, G, h, A, b)` defining the LP. See
+        :func:`pypoman.lp..solve_lp` for details.
+    solver : string, optional
+        Backend LP solver to call.
+
+    Returns
+    -------
+    succ : bool
+        Success boolean.
+    z : (3,) array, or 0
+        Maximum vertex of the polygon in the direction `vdir`, or 0 in case of
+        solver failure.
+    """
+    """ contact points """
+    LF_foot = np.array([0.3, 0.3, -0.5])
+    RF_foot = np.array([0.3, -0.3, -0.5])
+    LH_foot = np.array([-0.3, 0.3, -0.5])
+    RH_foot = np.array([-0.3, -0.2, -0.5])
+    nc = 3
+    numberOfGenerators = 4
+    trunk_mass = 90
+    mu = 0.8
+    verbose = True
+    
+
+    contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+    contactsWorldFrame = contactsToStack[0:nc, :]
+    axisZ= array([[0.0], [0.0], [1.0]])
+    
+    n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+    n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+    n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+    n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+    # %% Cell 2
+    normals = np.vstack([n1, n2, n3, n4])
         
-        # Equality constraints: C_ext * [ x  u  v ] == d_ext iff
-        # (1) C * x == d and (2) [ u  v ] == E * x + f
-        C_ext = zeros((C.shape[0] + 2, C.shape[1] + 2))
-        C_ext[:-2, :-2] = C
-        C_ext[-2:, :-2] = E[:2]
-        C_ext[-2:, -2:] = array([[-1, 0], [0, -1]])
-        C_ext = cvxopt.matrix(C_ext)
+    iterProj = IterativeProjection()
+    comWorldFrame = np.array([0.0, 0.0, 0.0])
+    comZero = np.array([0.0, 0.0, 0.0])
+    #comWorldFrame = np.array([0.28975694, 0.04463657, 0.0]) 
+
+    optimalSolutionFound = True
+    comp_dyn = ComputationalDynamics()
+    iter = 0
+    tol = 0.05
+    
+    while (optimalSolutionFound)&(iter<50):
+        print "New tested CoM: ", comWorldFrame
+        iter += 1
+        p, G, h, A, b, isConstraintOk, LP_actuation_polygons = comp_dyn.setup_lp(trunk_mass, contactsWorldFrame, nc, numberOfGenerators, normals, comWorldFrame, constraint_mode, mu)
+
+        if not isConstraintOk:
+            #unfeasible_points = np.vstack([unfeasible_points, com_WF])
+            if verbose:
+                print 'something is wrong in the inequalities or the point is out of workspace'
+        else:
+            sol=solvers.lp(p, G, h, A, b)
+            x = sol['x']
+            status = sol['status']
+            #print x
+            if status == 'optimal':
+                print "state is Feasible!"
+                #feasible_points = np.vstack([feasible_points, com_WF])
+                #contact_forces = np.vstack([contact_forces, np.transpose(x)])
+            else:
+                print "state is UNfeasible!"
+                #unfeasible_points = np.vstack([unfeasible_points, com_WF])
+                
+        new_lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_iterative_projection(contactsWorldFrame, comWorldFrame, trunk_mass, mu, normals)
+        if isOutOfWorkspace:
+            optimalSolutionFound = False
+        else:
+            lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
+            lp_q[-2] = -vdir[0]
+            lp_q[-1] = -vdir[1]
+            x = solve_lp(
+                lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
+            tempSolution = x[-2:]
+            forces = x[0:10]
+            print "New solution point: ",tempSolution
+            #print forces
+            #print actuation_polygons[0:3]
+            #print "LP actuation polygons: ", LP_actuation_polygons[0:3]/trunk_mass
+            delta_x = tempSolution[0] - comWorldFrame[0]
+            delta_y = tempSolution[1] - comWorldFrame[1]
+            tempSolutionNorm = norm(tempSolution)
+            comWorldFrameNorm = norm(comWorldFrame[0:2])
+            #if (np.abs(tempSolution[0])<np.abs(comWorldFrame[0]))|(np.abs(tempSolution[1])<np.abs(comWorldFrame[1])):
+            if (tempSolutionNorm - comWorldFrameNorm < tol):            
+                optimalSolutionFound = False
+            else:
+                stepIncrement = 0.15
+                comWorldFrame[0] += delta_x*stepIncrement;
+                comWorldFrame[1] += delta_y*stepIncrement;
+                
         
-        d_ext = zeros(d.shape[0] + 2)
-        d_ext[:-2] = d
-        d_ext[-2:] = -f[:2]
-        d_ext = cvxopt.matrix(d_ext)
-        
-        lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
-        lp = lp_obj, A_ext, b_ext, C_ext, d_ext
-        return lp, actuation_polygons/trunk_mass
+    #return x[-2:]
+    return comWorldFrame[0:2]
+
+
+def optimize_angle_variable_constraint(theta, solver=GLPK_IF_AVAILABLE):
+
+    """
+    Optimize in one direction.
+
+    Parameters
+    ----------
+    theta : scalar
+        Angle of the direction in which the optimization is performed.
+    lp : array tuple
+        Tuple `(q, G, h, A, b)` defining the LP. See
+        :func:`pypoman.lp..solve_lp` for details.
+    solver : string, optional
+        Backend LP solver to call.
+
+    Returns
+    -------
+    succ : bool
+        Success boolean.
+    z : (3,) array, or 0
+        Maximum vertex of the polygon in the direction `vdir`, or 0 in case of
+        solver failure.
+    """
+    print "Optimize angle!!!!!!!!!!!!!!!!!!!!!!"
+    d = array([cos(theta), sin(theta)])
+    z = optimize_direction_variable_constraint(d, solver=solver)
+    return z
+
+
+def compute_polygon_variable_constraint(max_iter=1000, solver=GLPK_IF_AVAILABLE):
+    """
+    Expand a polygon iteratively.
+
+    Parameters
+    ----------
+    lp : array tuple
+        Tuple `(q, G, h, A, b)` defining the linear program. See
+        :func:`pypoman.lp.solve_lp` for details.
+    max_iter : integer, optional
+        Maximum number of calls to the LP solver.
+    solver : string, optional
+        Name of backend LP solver.
+
+    Returns
+    -------
+    poly : Polygon
+        Output polygon.
+    """
+    two_pi = 2 * pi
+    theta = pi * random()
+    init_vertices = [optimize_angle_variable_constraint(theta, solver)]
+    step = two_pi / 3
+    while len(init_vertices) < 3 and max_iter >= 0:
+        theta += step
+        if theta >= two_pi:
+            #step *= 0.25 + 0.5 * random()
+            theta += step - two_pi
+        z = optimize_angle_variable_constraint(theta, solver)
+        if all([norm(z - z0) > 1e-5 for z0 in init_vertices]):
+            init_vertices.append(z)
+        max_iter -= 1
+    if len(init_vertices) < 3:
+        raise Exception("problem is not linearly feasible")
+    v0 = VertexVariableConstraints(init_vertices[0])
+    v1 = VertexVariableConstraints(init_vertices[1])
+    v2 = VertexVariableConstraints(init_vertices[2])
+    polygon = PolygonVariableConstraint()
+    polygon.from_vertices(v0, v1, v2)
+    polygon.iter_expand(max_iter)
+    return polygon
     
 ''' MAIN '''
 start_t_IPVC = time.time()
@@ -402,13 +467,15 @@ ng = 4
 # ONLY_ACTUATION or ONLY_FRICTION
 constraint_mode = 'ONLY_ACTUATION'
 useVariableJacobian = True
+trunk_mass = 90
+mu = 0.8
 # number of decision variables of the problem
 n = nc*6
 
 """ contact points """
 LF_foot = np.array([0.3, 0.3, -0.5])
-RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.2, 0.0, -0.5])
+RF_foot = np.array([0.3, -0.3, -0.5])
+LH_foot = np.array([-0.3, 0.3, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
@@ -416,18 +483,19 @@ contacts = contactsToStack[0:nc, :]
 
 iterProj = IterativeProjection()
 comWF = np.array([0.0, 0.0, 0.0])
-lp, actuation_polygons = iterProj.setup_iterative_projection(contacts, comWF)
+#lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_iterative_projection(contacts, comWF, trunk_mass, mu)
+#print "is out of workspace? ", isOutOfWorkspace
 
-polygon = compute_polygon_variable_constraint(lp)
+polygon = compute_polygon_variable_constraint()
 polygon.sort_vertices()
 vertices_list = polygon.export_vertices()
 vertices = [array([v.x, v.y]) for v in vertices_list]
+print "Final vertices: ",vertices
 print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_t_IPVC))
 
 
 ''' plotting Iterative Projection points '''
-trunk_mass = 20
-mu = 0.8
+
 axisZ= array([[0.0], [0.0], [1.0]])
 n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -440,7 +508,7 @@ feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, co
 
 IP_points, actuation_polygons = compDyn.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, ng, mu)
 
-#IP_points_friction, actuation_polygons = compDyn.iterative_projection_bretl('ONLY_FRICTION', contacts, normals, trunk_mass, ng, mu)
+#IP_points_saturated_friction, actuation_polygons = compDyn.iterative_projection_bretl('ONLY_FRICTION', contacts, normals, trunk_mass, ng, mu, saturate_normal_force = True)
 
 '''Plotting'''
 #plt.close('all')
@@ -456,7 +524,7 @@ plotter.plot_polygon(vx, color = 'y')
 
 plotter.plot_polygon(np.transpose(IP_points))
 
-#plotter.plot_polygon(np.transpose(IP_points_friction), color = '--r')
+#plotter.plot_polygon(np.transpose(IP_points_saturated_friction), color = '--r')
 
 feasiblePointsSize = np.size(feasible,0)
 for j in range(0, feasiblePointsSize):
