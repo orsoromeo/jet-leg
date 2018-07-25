@@ -70,53 +70,19 @@ def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
     contactsWorldFrame = contactsToStack[0:nc, :]
     iterProj = IterativeProjection()
     comWorldFrame = np.array([0.0, 0.0, 0.0])
-    #lp = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
-    #lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = lp
-    #lp_q[-2] = -vdir[0]
-    #lp_q[-1] = -vdir[1]
-    #x = solve_lp(
-    #    lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
-    #tempSolution1 = x[-2:]
-    #print 'new vertex ',tempSolution1 
-    #comWorldFrame = np.array([tempSolution1[0]/20, tempSolution1[1]/20, 0.0])
-    #print '===========>new com world frame: ', comWorldFrame
-    #new_lp = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
-    #lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
-    #lp_q[-2] = -vdir[0]
-    #lp_q[-1] = -vdir[1]
-    #x = solve_lp(
-    #    lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
-    #tempSolution2 = x[-2:]
-    #print 'new vertex ',tempSolution2 
+    new_lp, actuation_polygons = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
     
-    #for i in range(0,10):
-    tol = 0.1
-    err = 100;
-    while err>tol:
-        #for i in range(0,1):
-        print '===========>new com world frame: ', comWorldFrame
-        new_lp = iterProj.setup_iterative_projection(contactsWorldFrame,  comWorldFrame)
-        lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
-        lp_q[-2] = -vdir[0]
-        lp_q[-1] = -vdir[1]
-        #print "direction is: ", lp_q[9:11]
-        x = solve_lp(
-            lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
-        tempSolution = x[-2:]
-        #print 'new vertex ',tempSolution1 
-        err_x = tempSolution[0]-comWorldFrame[0];
-        err_y = tempSolution[1]-comWorldFrame[1];
-        err = np.sqrt(np.power(err_x,2)+np.power(err_y,2))
-        #err = np.amax(np.array([np.abs(err_x),  np.abs(err_y)]))        
-        print "error: ",err
-        
-        com_x = comWorldFrame[0] + (err_x)*1.0/20.0;
-        com_y = comWorldFrame[1] + (err_y)*1.0/20.0;        
-        comWorldFrame = np.array([com_x, com_y, 0.0])
-        print '===========>new temp solution: ', tempSolution
-    #print "new vertex found: ",comWorldFrame[0:2]
-    print "new vertex found: ",tempSolution
-    return tempSolution
+    lp_q, lp_Gextended, lp_hextended, lp_A, lp_b = new_lp
+    lp_q[-2] = -vdir[0]
+    lp_q[-1] = -vdir[1]
+    x = solve_lp(
+        lp_q, lp_Gextended, lp_hextended, lp_A, lp_b, solver=solver)
+    tempSolution = x[-2:]
+    forces = x[0:10]
+    print tempSolution
+    print forces
+    print actuation_polygons[0:3]
+    return x[-2:]
 
 
 def optimize_angle_variable_constraint(theta, lp, solver=GLPK_IF_AVAILABLE):
@@ -145,11 +111,10 @@ def optimize_angle_variable_constraint(theta, lp, solver=GLPK_IF_AVAILABLE):
     print "Optimize angle!!!!!!!!!!!!!!!!!!!!!!"
     d = array([cos(theta), sin(theta)])
     z = optimize_direction_variable_constraint(d, solver=solver)
-    print z
     return z
 
 
-def compute_polygon_variable_constraint(lp, max_iter=10, solver=GLPK_IF_AVAILABLE):
+def compute_polygon_variable_constraint(lp, max_iter=1000, solver=GLPK_IF_AVAILABLE):
     """
     Expand a polygon iteratively.
 
@@ -172,7 +137,6 @@ def compute_polygon_variable_constraint(lp, max_iter=10, solver=GLPK_IF_AVAILABL
     theta = pi * random()
     init_vertices = [optimize_angle_variable_constraint(theta, lp, solver)]
     step = two_pi / 3
-    print "enter while loop"
     while len(init_vertices) < 3 and max_iter >= 0:
         theta += step
         if theta >= two_pi:
@@ -182,22 +146,15 @@ def compute_polygon_variable_constraint(lp, max_iter=10, solver=GLPK_IF_AVAILABL
         if all([norm(z - z0) > 1e-5 for z0 in init_vertices]):
             init_vertices.append(z)
         max_iter -= 1
-        #print "init vertices length: ",len(init_vertices), init_vertices
-        
     if len(init_vertices) < 3:
         raise Exception("problem is not linearly feasible")
     v0 = VertexVariableConstraints(init_vertices[0])
     v1 = VertexVariableConstraints(init_vertices[1])
     v2 = VertexVariableConstraints(init_vertices[2])
-    #polygon = Polygon()
-    #polygon.from_vertices(v0, v1, v2)
-    #polygon.iter_expand(lp, max_iter)
-    
-    polygonVariableConstraints = PolygonVariableConstraint()
-    polygonVariableConstraints.from_vertices(v0, v1, v2)
-    print "START iterative expansion!"
-    polygonVariableConstraints.iter_expand(lp, max_iter)  
-    return polygonVariableConstraints
+    polygon = PolygonVariableConstraint()
+    polygon.from_vertices(v0, v1, v2)
+    polygon.iter_expand(lp, max_iter)
+    return polygon
 
 class VertexVariableConstraints():
     def __init__(self, p):
@@ -303,7 +260,7 @@ class IterativeProjection:
     def setup_iterative_projection(self, contacts, comWF):
         ''' parameters to be tuned'''
         g = 9.81
-        trunk_mass = 90.
+        trunk_mass = 20.
         mu = 0.8
         
         axisZ= array([[0.0], [0.0], [1.0]])
@@ -495,7 +452,7 @@ plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 vx = np.asanyarray(vertices)
-plotter.plot_polygon(vx, color = '--y')
+plotter.plot_polygon(vx, color = 'y')
 
 plotter.plot_polygon(np.transpose(IP_points))
 
