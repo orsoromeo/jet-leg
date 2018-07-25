@@ -431,7 +431,7 @@ class IterativeProjection:
         
         lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
         lp = lp_obj, A_ext, b_ext, C_ext, d_ext
-        return lp
+        return lp, actuation_polygons/trunk_mass
     
 ''' MAIN '''
 start_t_IPVC = time.time()
@@ -459,7 +459,7 @@ contacts = contactsToStack[0:nc, :]
 
 iterProj = IterativeProjection()
 comWF = np.array([0.0, 0.0, 0.0])
-lp = iterProj.setup_iterative_projection(contacts, comWF)
+lp, actuation_polygons = iterProj.setup_iterative_projection(contacts, comWF)
 
 polygon = compute_polygon_variable_constraint(lp)
 polygon.sort_vertices()
@@ -469,7 +469,7 @@ print("Iterative Projection (Bretl): --- %s seconds ---" % (time.time() - start_
 
 
 ''' plotting Iterative Projection points '''
-trunk_mass = 90
+trunk_mass = 20
 mu = 0.8
 axisZ= array([[0.0], [0.0], [1.0]])
 n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -481,18 +481,25 @@ n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 normals = np.vstack([n1, n2, n3, n4])
 feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, mu, useVariableJacobian, 0.05, 0.05)
 
+IP_points, actuation_polygons = compDyn.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, ng, mu)
+
+#IP_points_friction, actuation_polygons = compDyn.iterative_projection_bretl('ONLY_FRICTION', contacts, normals, trunk_mass, ng, mu)
 
 '''Plotting'''
-plt.close('all')
+#plt.close('all')
 plotter = Plotter()
+
 plt.figure()
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 vx = np.asanyarray(vertices)
-plotter.plot_polygon(vx)
+plotter.plot_polygon(vx, color = '--y')
 
+plotter.plot_polygon(np.transpose(IP_points))
+
+#plotter.plot_polygon(np.transpose(IP_points_friction), color = '--r')
 
 feasiblePointsSize = np.size(feasible,0)
 for j in range(0, feasiblePointsSize):
