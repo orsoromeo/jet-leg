@@ -55,7 +55,10 @@ class VertexVariableConstraints():
         #print "Current vertices V2: ", v2.x, v2.y        
         #print "New direction ", direction
         try:
-            z = optimize_direction_variable_constraint(direction)
+            comWorldFrame = np.array([v1.x, v1.y, 0.0])
+            #print comWorldFrame
+            #comWorldFrame = np.array([0.0, 0.0, 0.0])
+            z = optimize_direction_variable_constraint(comWorldFrame, direction)
         except ValueError:
             self.expanded = True
             return False, None
@@ -274,7 +277,7 @@ class IterativeProjection:
         return lp, actuation_polygons/trunk_mass, isOutOfWorkspace
 
 
-def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
+def optimize_direction_variable_constraint(comWorldFrame, vdir, solver=GLPK_IF_AVAILABLE):
     print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     """
     Optimize in one direction.
@@ -321,8 +324,8 @@ def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
     normals = np.vstack([n1, n2, n3, n4])
         
     iterProj = IterativeProjection()
-    comWorldFrame = np.array([0.0, 0.0, 0.0])
-    comZero = np.array([0.0, 0.0, 0.0])
+    #comWorldFrame = np.array([0.0, 0.0, 0.0])
+    #comZero = np.array([0.0, 0.0, 0.0])
     #comWorldFrame = np.array([0.28975694, 0.04463657, 0.0]) 
 
     optimalSolutionFound = True
@@ -384,7 +387,7 @@ def optimize_direction_variable_constraint(vdir, solver=GLPK_IF_AVAILABLE):
     return comWorldFrame[0:2]
 
 
-def optimize_angle_variable_constraint(theta, solver=GLPK_IF_AVAILABLE):
+def optimize_angle_variable_constraint(comWorldFrame, theta, solver=GLPK_IF_AVAILABLE):
 
     """
     Optimize in one direction.
@@ -409,7 +412,7 @@ def optimize_angle_variable_constraint(theta, solver=GLPK_IF_AVAILABLE):
     """
     print "Optimize angle!!!!!!!!!!!!!!!!!!!!!!"
     d = array([cos(theta), sin(theta)])
-    z = optimize_direction_variable_constraint(d, solver=solver)
+    z = optimize_direction_variable_constraint(comWorldFrame, d, solver=solver)
     return z
 
 
@@ -434,14 +437,16 @@ def compute_polygon_variable_constraint(max_iter=1000, solver=GLPK_IF_AVAILABLE)
     """
     two_pi = 2 * pi
     theta = pi * random()
-    init_vertices = [optimize_angle_variable_constraint(theta, solver)]
+    comWorldFrame = np.array([0.0, 0.0, 0.0])
+    init_vertices = [optimize_angle_variable_constraint(comWorldFrame, theta, solver)]
     step = two_pi / 3
     while len(init_vertices) < 3 and max_iter >= 0:
         theta += step
         if theta >= two_pi:
             #step *= 0.25 + 0.5 * random()
             theta += step - two_pi
-        z = optimize_angle_variable_constraint(theta, solver)
+        comWorldFrame = np.array([0.0, 0.0, 0.0])
+        z = optimize_angle_variable_constraint(comWorldFrame, theta, solver)
         if all([norm(z - z0) > 1e-5 for z0 in init_vertices]):
             init_vertices.append(z)
         max_iter -= 1
