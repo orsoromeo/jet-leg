@@ -24,9 +24,9 @@ setup(
     name='legsthrust',
     version='0.1.0',
     description="Python Polyhedron Manipulation",
-    url="https://github.com/stephane-caron/legsthrust",
-    author="Stéphane Caron",
-    author_email="stephane.caron@lirmm.fr",
+    url="https://github.com/orsoromeo/legsthrust",
+    author="Romeo Orsolino",
+    author_email="romeo.orsolino@iit.it",
     license="LGPL",
     classifiers=[
         'Development Status :: 4 - Beta',
