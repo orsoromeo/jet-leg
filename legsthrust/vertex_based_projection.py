@@ -55,7 +55,7 @@ class VertexBasedProjection():
                 lambda1 = input_points[:,j]
                 lambda2 = input_points[:,i]
                 if (not np.array_equal(lambda1,lambda2)):
-                    #check non complarity of edge and of plane otherwise the intersection goes to infinite
+                    #check non complanarity of edge and of plane otherwise the intersection goes to infinite
                     if (np.abs(np.dot(normal_plane, (lambda1-lambda2))) >1e-04):                     
                         #cut with plane fz = mg with plane whose normal is normal_plane passing through point_plane
                         alpha = np.dot(normal_plane, (lambda1 - point_plane)) / np.dot(normal_plane, (lambda1-lambda2))
