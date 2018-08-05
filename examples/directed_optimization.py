@@ -12,9 +12,8 @@ import time
 import pylab
 import pypoman
 from pypoman.lp import solve_lp, GLPK_IF_AVAILABLE
-#from pypoman.bretl import Vertex
-#from pypoman.bretl import Polygon
 
+import random
 import cvxopt
 from cvxopt import matrix, solvers
 
@@ -476,8 +475,10 @@ def two_lines_intersection(L1, L2):
 
 def find_intersection(vertices_input, desired_direction, comWF):
     desired_direction = desired_direction/np.linalg.norm(desired_direction)
+    #print "desired dir: ", desired_direction
     
-    desired_com_line = line(comWF, desired_direction)
+    desired_com_line = line(comWF, comWF+desired_direction)
+    #print "des line : ", desired_com_line
     tmp_vertices = np.vstack([vertices_input, vertices_input[0]])
     intersection_points = np.zeros((0,2))
     points = np.zeros((0,2))
@@ -485,31 +486,56 @@ def find_intersection(vertices_input, desired_direction, comWF):
         v1 = tmp_vertices[i]
         v2 = tmp_vertices[i+1]        
         actuation_region_edge = line(v1, v2)
-        #print desired_com_line, actuation_region_edge
+        print desired_com_line, actuation_region_edge
         new_point = two_lines_intersection(desired_com_line, actuation_region_edge)
-
-        intersection_points = np.vstack([intersection_points, new_point])
-        
-        alpha_com_x_line = (new_point[0] - comWF[0])/(desired_direction[0]- comWF[0])
-        alpha_com_y_line = (new_point[1] - comWF[1])/(desired_direction[1]- comWF[1])
+        print "new point ", new_point
+        if new_point:
+            intersection_points = np.vstack([intersection_points, new_point])
+        else:
+            rnd = random();
+            desired_com_line = line(comWF, comWF+desired_direction+np.array([random()*0.001,random()*0.001,0.0]))
+            new_point = two_lines_intersection(desired_com_line, actuation_region_edge)
+            intersection_points = np.vstack([intersection_points, new_point])
+            
         
         epsilon = 0.0001;
+        if np.abs(desired_direction[0]- comWF[0]) > epsilon:
+            alpha_com_x_line = (new_point[0] - comWF[0])/(desired_direction[0]- comWF[0])
+        else:
+            alpha_com_x_line = 1000000000.0;
+            
+        if np.abs(desired_direction[1]- comWF[1]) > epsilon:
+            alpha_com_y_line = (new_point[1] - comWF[1])/(desired_direction[1]- comWF[1])
+        else:
+            alpha_com_y_line = 1000000000.0
+            
+        #print alpha_com_x_line, alpha_com_y_line
         
         if alpha_com_x_line > 0.0 and alpha_com_y_line >= 0.0:
             if np.abs(v2[0] - v1[0]) > epsilon:
                 alpha_vertices_x = (new_point[0] - v1[0])/(v2[0] - v1[0])
-                if alpha_vertices_x >= 0.0 and alpha_vertices_x <= 1.0:
-                    if np.abs(v2[1] - v1[1]):
-                        alpha_vertices_y = (new_point[1] - v1[1])/(v2[1] - v1[1])            
-                        if alpha_vertices_y >= 0.0 and alpha_vertices_y <= 1.0:                   
-                            points = np.vstack([points, new_point])
+            else:
+                alpha_vertices_x = 0.5
+            
+            #print "alpha_vertices_x ", alpha_vertices_x
+            if alpha_vertices_x >= 0.0 and alpha_vertices_x <= 1.0:
+                if np.abs(v2[1] - v1[1]) > epsilon:
+                    alpha_vertices_y = (new_point[1] - v1[1])/(v2[1] - v1[1]) 
+                else:
+                    alpha_vertices_y = 0.5
+                
+                #print "alpha vertx y ", alpha_vertices_y
+                if alpha_vertices_y >= 0.0 and alpha_vertices_y <= 1.0:                   
+                    points = np.vstack([points, new_point])
+                            
             elif np.abs(v2[1] - v1[1]):
                 alpha_vertices_y = (new_point[1] - v1[1])/(v2[1] - v1[1])            
                 if alpha_vertices_y >= 0.0 and alpha_vertices_y <= 1.0:                   
                     points = np.vstack([points, new_point])
         
-    #print "final points ", points
-    return points
+    print "new intersection point ", points
+    print "all intersection points ", intersection_points
+    return points, intersection_points
     
     
 ''' MAIN '''
@@ -539,61 +565,29 @@ contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts = contactsToStack[0:nc, :]
 
 iterProj = IterativeProjection()
-comWF = np.array([0, 0.1, 0.0])
+comWF = np.array([0.1, 0.1, 0.0])
 #lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_iterative_projection(contacts, comWF, trunk_mass, mu)
 #print "is out of workspace? ", isOutOfWorkspace
 
-polygon = compute_polygon_variable_constraint(comWF)
-polygon.sort_vertices()
-vertices_list = polygon.export_vertices()
-vertices1 = [array([v.x, v.y]) for v in vertices_list]
-
-desired_direction = np.array([1.0, 1.0, 0.0])
-
+desired_direction = np.array([-1.0, 1.0, 0.0])
 final_points = np.zeros((0,2))
 newCoM = comWF
-new_p = find_intersection(vertices1, desired_direction, comWF)
-print "new point: ", new_p
-final_points = np.vstack([final_points, new_p])
-print newCoM
-newCoM = np.vstack([newCoM, 0.5*(np.hstack([new_p[0], 0.0]) - newCoM) + newCoM])
-
-polygon = compute_polygon_variable_constraint(newCoM[-1])
-polygon.sort_vertices()
-vertices_list = polygon.export_vertices()
-vertices2 = [array([v.x, v.y]) for v in vertices_list]
-
-new_p = find_intersection(vertices2, desired_direction, comWF)
-print "new point: ", new_p
-final_points = np.vstack([final_points, new_p])
-newCoM = np.vstack([newCoM, 0.5*(np.hstack([new_p[0], 0.0]) - newCoM[-1]) + newCoM[-1]])
-
-polygon = compute_polygon_variable_constraint(newCoM[-1])
-polygon.sort_vertices()
-vertices_list = polygon.export_vertices()
-vertices3 = [array([v.x, v.y]) for v in vertices_list]
-new_p = find_intersection(vertices3, desired_direction, comWF)
-print "new point: ", new_p
-final_points = np.vstack([final_points, new_p])
-newCoM = np.vstack([newCoM, 0.5*(np.hstack([new_p[0], 0.0]) - newCoM[-1]) + newCoM[-1]])
-
-polygon = compute_polygon_variable_constraint(newCoM[-1])
-polygon.sort_vertices()
-vertices_list = polygon.export_vertices()
-vertices4 = [array([v.x, v.y]) for v in vertices_list]
-new_p = find_intersection(vertices4, desired_direction, comWF)
-print "new point: ", new_p
-final_points = np.vstack([final_points, new_p])
-
-newCoM = np.vstack([newCoM, 0.5*(np.hstack([new_p[0], 0.0]) - newCoM[-1]) + newCoM[-1]])
-
-polygon = compute_polygon_variable_constraint(newCoM[-1])
-polygon.sort_vertices()
-vertices_list = polygon.export_vertices()
-vertices5 = [array([v.x, v.y]) for v in vertices_list]
-new_p = find_intersection(vertices5, desired_direction, comWF)
-print "new point: ", new_p
-final_points = np.vstack([final_points, new_p])
+comToStack = comWF
+increment = np.array([100.0, 100.0, 0.0])
+iter = 0
+while (np.amax(np.abs(increment))>0.02) and (iter<10):
+    polygon = compute_polygon_variable_constraint(newCoM)
+    polygon.sort_vertices()
+    vertices_list = polygon.export_vertices()
+    vertices1 = [array([v.x, v.y]) for v in vertices_list]
+    new_p, all_points = find_intersection(vertices1, desired_direction, comWF)
+    final_points = np.vstack([final_points, new_p])
+    increment = np.hstack([new_p[0], 0.0]) - newCoM
+    print increment
+    newCoM = 0.5*(increment) + newCoM
+    comToStack = np.vstack([comToStack, newCoM])
+    iter += 1
+    print iter
 
 print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_t_IPVC))
 
@@ -615,7 +609,7 @@ feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, co
 #IP_points_saturated_friction, actuation_polygons = compDyn.iterative_projection_bretl('ONLY_FRICTION', contacts, normals, trunk_mass, ng, mu, saturate_normal_force = True)
 
 '''Plotting'''
-#plt.close('all')
+plt.close('all')
 plotter = Plotter()
 
 plt.figure()
@@ -624,7 +618,9 @@ plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 #plt.plot(intersection[:,0], intersection[:,1], 'ro', markersize=15)
 plt.plot(final_points[:,0], final_points[:,1], 'r^', markersize=20)
-plt.plot(newCoM[:,0], newCoM[:,1], 'g^', markersize=20)
+plt.plot(comToStack[:,0], comToStack[:,1], 'g^', markersize=20)
+plt.plot(comToStack[-1,0], comToStack[-1,1], 'bo', markersize=20)
+#plt.plot(all_points[:,0], all_points[:,1], 'go', markersize=20)
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 
 #plotter.plot_polygon(np.asanyarray(vertices1), color = 'y')
@@ -637,7 +633,7 @@ h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet'
 
 #plotter.plot_polygon(np.asanyarray(vertices5), color = 'k')
 
-plotter.plot_polygon(np.transpose(IP_points))
+#plotter.plot_polygon(np.transpose(IP_points))
 
 #plotter.plot_polygon(np.transpose(IP_points_saturated_friction), color = '--r')
 
@@ -656,8 +652,8 @@ h2 = plt.scatter(feasible[lastFeasibleIndex,0], feasible[lastFeasibleIndex,1],c=
 h3 = plt.scatter(unfeasible[lastUnfeasibleIndex,0], unfeasible[lastUnfeasibleIndex,1],c='r',s=50, label='LP unfeasible')
 
 
-print "final vertices: ", vx
-print "number of vertices: ", np.size(vx, 0)
+#print "final vertices: ", vx
+#print "number of vertices: ", np.size(vx, 0)
 plt.legend()
 plt.show()
 
