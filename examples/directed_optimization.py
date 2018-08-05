@@ -508,45 +508,48 @@ n = nc*6
 i = 0
 comTrajectoriesToStack = np.zeros((0,3))
 terrain = Map()
-desired_direction = np.array([-1.0, 0.2, 0.0])
+
 comWF = np.array([0.1, 0.1, 0.0])
 iterProj = IterativeProjection()        
 for_iter = 0
-for LH_x in np.arange(-0.6,-0.3, 0.1):
+for LH_x in np.arange(-0.5,-0.3, 0.1):
     for LH_y in np.arange(0.2,0.4, 0.1):
-        """ contact points """
-        LF_foot = np.array([0.3, 0.2, -0.5])
-        RF_foot = np.array([0.3, -0.2, -0.5])
-        terrainHeight = terrain.get_height(LH_x, LH_y)
-        LH_foot = np.array([LH_x, LH_y, terrainHeight-0.5])
-        print "Terrain height: ", LH_foot        
-        RH_foot = np.array([-0.3, -0.2, -0.5])
-
-        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-        contacts = contactsToStack[0:nc, :]
-        print "i am here"
-        final_points = np.zeros((0,2))
-        newCoM = comWF
-        comToStack = np.zeros((0,3))
-        increment = np.array([100.0, 100.0, 0.0])
-        while_iter = 0
-        print "enter while loop"
-        while (np.amax(np.abs(increment))>0.02) and (while_iter<10):
-            comToStack = np.vstack([comToStack, newCoM])
-            polygon = compute_polygon_variable_constraint(newCoM, contacts)
-            polygon.sort_vertices()
-            vertices_list = polygon.export_vertices()
-            vertices1 = [array([v.x, v.y]) for v in vertices_list]
-            new_p, all_points = find_intersection(vertices1, desired_direction, comWF)
-            final_points = np.vstack([final_points, new_p])
-            increment = np.hstack([new_p[0], 0.0]) - newCoM
-            
-            newCoM = 0.5*increment + newCoM
-            while_iter += 1
-            print "while: ",while_iter
-        for_iter += 1
-        print "for ",for_iter
-        comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, comToStack[-1]])
+        for dir_y in np.arange(-0.2,0.4,0.2):
+            desired_direction = np.array([-1.0, dir_y, 0.0])
+            print "direction: ", desired_direction
+            """ contact points """
+            LF_foot = np.array([0.3, 0.2, -0.5])
+            RF_foot = np.array([0.3, -0.2, -0.5])
+            terrainHeight = terrain.get_height(LH_x, LH_y)
+            LH_foot = np.array([LH_x, LH_y, terrainHeight-0.5])
+            print "Terrain height: ", LH_foot        
+            RH_foot = np.array([-0.3, -0.2, -0.5])
+    
+            contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+            contacts = contactsToStack[0:nc, :]
+            print "i am here"
+            final_points = np.zeros((0,2))
+            newCoM = comWF
+            comToStack = np.zeros((0,3))
+            increment = np.array([100.0, 100.0, 0.0])
+            while_iter = 0
+            print "enter while loop"
+            while (np.amax(np.abs(increment))>0.02) and (while_iter<10):
+                comToStack = np.vstack([comToStack, newCoM])
+                polygon = compute_polygon_variable_constraint(newCoM, contacts)
+                polygon.sort_vertices()
+                vertices_list = polygon.export_vertices()
+                vertices1 = [array([v.x, v.y]) for v in vertices_list]
+                new_p, all_points = find_intersection(vertices1, desired_direction, comWF)
+                final_points = np.vstack([final_points, new_p])
+                increment = np.hstack([new_p[0], 0.0]) - newCoM
+                
+                newCoM = 0.5*increment + newCoM
+                while_iter += 1
+                print "while: ",while_iter
+            for_iter += 1
+            print "for ",for_iter
+            comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, comToStack[-1]])
 
 print "Final CoM points ", comTrajectoriesToStack
 
@@ -578,8 +581,8 @@ plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 #plt.plot(intersection[:,0], intersection[:,1], 'ro', markersize=15)
-plt.plot(final_points[:,0], final_points[:,1], 'r^', markersize=20)
-plt.plot(comToStack[:,0], comToStack[:,1], 'g^', markersize=20)
+#plt.plot(final_points[:,0], final_points[:,1], 'r^', markersize=20)
+#plt.plot(comToStack[:,0], comToStack[:,1], 'g^', markersize=20)
 plt.plot(comToStack[-1,0], comToStack[-1,1], 'bo', markersize=20)
 
 plt.plot(comTrajectoriesToStack[:,0], comTrajectoriesToStack[:,1], 'go', markersize=20)
