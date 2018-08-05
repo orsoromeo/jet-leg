@@ -12,6 +12,8 @@ import time
 import pylab
 import pypoman
 from pypoman.lp import solve_lp, GLPK_IF_AVAILABLE
+from pypoman.bretl import Vertex
+from pypoman.bretl import Polygon
 
 import random
 import cvxopt
@@ -33,6 +35,7 @@ from legsthrust.hyq_kinematics import HyQKinematics
 from legsthrust.math_tools import Math
 from legsthrust.computational_dynamics import ComputationalDynamics
 from legsthrust.vertex_based_projection import VertexBasedProjection
+from legsthrust.height_map import HeightMap
 
 class VertexVariableConstraints():
     def __init__(self, p):
@@ -275,16 +278,6 @@ class IterativeProjection:
         
         return lp, actuation_polygons/trunk_mass, isOutOfWorkspace
 
-class Map:
-    def get_height(self, footPosWF_x, footPosWF_y):
-            
-        if footPosWF_x < -0.25 and footPosWF_y > 0.25:
-            height = 0.2
-        else:
-            height = 0.0
-            
-        return height
-
 def optimize_direction_variable_constraint(lp, vdir, solver=GLPK_IF_AVAILABLE):
     #print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     """
@@ -384,30 +377,33 @@ def compute_polygon_variable_constraint(comWorldFrame, contactsWorldFrame, max_i
     iterProj = IterativeProjection()
     
     lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_iterative_projection(contactsWorldFrame, comWorldFrame, trunk_mass, mu, normals)
-
-    two_pi = 2 * pi
-    theta = pi * random()
-    init_vertices = [optimize_angle_variable_constraint(lp, theta, solver)]
-    step = two_pi / 3
-    while len(init_vertices) < 3 and max_iter >= 0:
-        theta += step
-        if theta >= two_pi:
-            step *= 0.25 + 0.5 * random()
-            theta += step - two_pi
-        #comWorldFrame = np.array([0.0, 0.0, 0.0])
-        z = optimize_angle_variable_constraint(lp, theta, solver)
-        if all([norm(z - z0) > 1e-5 for z0 in init_vertices]):
-            init_vertices.append(z)
-        max_iter -= 1
-    if len(init_vertices) < 3:
-        raise Exception("problem is not linearly feasible")
-    v0 = VertexVariableConstraints(init_vertices[0])
-    v1 = VertexVariableConstraints(init_vertices[1])
-    v2 = VertexVariableConstraints(init_vertices[2])
-    polygon = PolygonVariableConstraint()
-    polygon.from_vertices(v0, v1, v2)
-    polygon.iter_expand(lp, max_iter)
-    return polygon
+    
+    if isOutOfWorkspace:
+        return False
+    else:
+        two_pi = 2 * pi
+        theta = pi * random()
+        init_vertices = [optimize_angle_variable_constraint(lp, theta, solver)]
+        step = two_pi / 3
+        while len(init_vertices) < 3 and max_iter >= 0:
+            theta += step
+            if theta >= two_pi:
+                step *= 0.25 + 0.5 * random()
+                theta += step - two_pi
+            #comWorldFrame = np.array([0.0, 0.0, 0.0])
+            z = optimize_angle_variable_constraint(lp, theta, solver)
+            if all([norm(z - z0) > 1e-5 for z0 in init_vertices]):
+                init_vertices.append(z)
+            max_iter -= 1
+        if len(init_vertices) < 3:
+            raise Exception("problem is not linearly feasible")
+        v0 = Vertex(init_vertices[0])
+        v1 = Vertex(init_vertices[1])
+        v2 = Vertex(init_vertices[2])
+        polygon = Polygon()
+        polygon.from_vertices(v0, v1, v2)
+        polygon.iter_expand(lp, max_iter)
+        return polygon
 
 def line(p1, p2):
     A = (p1[1] - p2[1])
@@ -446,11 +442,14 @@ def find_intersection(vertices_input, desired_direction, comWF):
         if new_point:
             intersection_points = np.vstack([intersection_points, new_point])
         else:
-            desired_com_line = line(comWF, comWF+desired_direction+np.array([random()*0.001,random()*0.001,0.0]))
-            new_point = two_lines_intersection(desired_com_line, actuation_region_edge)
-            intersection_points = np.vstack([intersection_points, new_point])
-            
-        
+            print "lines are parallel!"
+            while new_point is False:
+                desired_com_line = line(comWF, comWF+desired_direction+np.array([random()*0.01,random()*0.01,0.0]))
+                new_point = two_lines_intersection(desired_com_line, actuation_region_edge)
+                intersection_points = np.vstack([intersection_points, new_point])
+                print new_point
+                
+        #print intersection_points
         epsilon = 0.0001;
         if np.abs(desired_direction[0]- comWF[0]) > epsilon:
             alpha_com_x_line = (new_point[0] - comWF[0])/(desired_direction[0]- comWF[0])
@@ -485,7 +484,8 @@ def find_intersection(vertices_input, desired_direction, comWF):
                 alpha_vertices_y = (new_point[1] - v1[1])/(v2[1] - v1[1])            
                 if alpha_vertices_y >= 0.0 and alpha_vertices_y <= 1.0:                   
                     points = np.vstack([points, new_point])
-        
+                    
+    print points
     return points, intersection_points
     
     
@@ -507,52 +507,61 @@ mu = 0.8
 n = nc*6
 i = 0
 comTrajectoriesToStack = np.zeros((0,3))
-terrain = Map()
+terrain = HeightMap()
 
 comWF = np.array([0.1, 0.1, 0.0])
+optimizedVariablesToStack = np.zeros((0,3))
 iterProj = IterativeProjection()        
 for_iter = 0
-for LH_x in np.arange(-0.5,-0.3, 0.1):
-    for LH_y in np.arange(0.2,0.4, 0.1):
-        for dir_y in np.arange(-0.2,0.4,0.2):
+for LH_x in np.arange(-0.8,-0.3, 0.1):
+    for LH_y in np.arange(0.1,0.4, 0.1):
+        for dir_y in np.arange(0.1,0.3,0.2):
             desired_direction = np.array([-1.0, dir_y, 0.0])
-            print "direction: ", desired_direction
+            #print "direction: ", desired_direction
             """ contact points """
-            LF_foot = np.array([0.3, 0.2, -0.5])
-            RF_foot = np.array([0.3, -0.2, -0.5])
+            LF_foot = np.array([0.4, 0.3, -0.5])
+            RF_foot = np.array([0.4, -0.3, -0.5])
             terrainHeight = terrain.get_height(LH_x, LH_y)
             LH_foot = np.array([LH_x, LH_y, terrainHeight-0.5])
-            print "Terrain height: ", LH_foot        
+            #print "Terrain height: ", LH_foot        
             RH_foot = np.array([-0.3, -0.2, -0.5])
     
             contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
             contacts = contactsToStack[0:nc, :]
-            print "i am here"
+            #print "i am here"
             final_points = np.zeros((0,2))
             newCoM = comWF
             comToStack = np.zeros((0,3))
             increment = np.array([100.0, 100.0, 0.0])
             while_iter = 0
-            print "enter while loop"
-            while (np.amax(np.abs(increment))>0.02) and (while_iter<10):
+            #print "enter while loop"
+            while (np.amax(np.abs(increment))>0.05) and (while_iter<10):
                 comToStack = np.vstack([comToStack, newCoM])
                 polygon = compute_polygon_variable_constraint(newCoM, contacts)
-                polygon.sort_vertices()
-                vertices_list = polygon.export_vertices()
-                vertices1 = [array([v.x, v.y]) for v in vertices_list]
-                new_p, all_points = find_intersection(vertices1, desired_direction, comWF)
-                final_points = np.vstack([final_points, new_p])
-                increment = np.hstack([new_p[0], 0.0]) - newCoM
-                
-                newCoM = 0.5*increment + newCoM
-                while_iter += 1
-                print "while: ",while_iter
+                if polygon:
+                    polygon.sort_vertices()
+                    vertices_list = polygon.export_vertices()
+                    vertices1 = [array([v.x, v.y]) for v in vertices_list]
+                    new_p, all_points = find_intersection(vertices1, desired_direction, comWF)
+                    final_points = np.vstack([final_points, new_p])
+                    increment = np.hstack([new_p[0], 0.0]) - newCoM
+                    
+                    newCoM = 0.5*increment + newCoM
+                    while_iter += 1
+                else:
+                    print "foot position is out of workspace!"
+                    while_iter += 10
+                    #print "while: ",while_iter
             for_iter += 1
-            print "for ",for_iter
+            #print "for ",for_iter
             comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, comToStack[-1]])
+            optimizedVariablesToStack = np.vstack([optimizedVariablesToStack, np.array([LH_x, LH_y, dir_y])])
 
 print "Final CoM points ", comTrajectoriesToStack
+print "Tested combinations: ", optimizedVariablesToStack
 
+max_motion_indices = np.unravel_index(np.argsort(comTrajectoriesToStack[:,0], axis=None), comTrajectoriesToStack[:,0].shape)
+max_motin_index = max_motion_indices[0][0]
 print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_t_IPVC))
 
 
@@ -583,9 +592,10 @@ plt.ylabel("Y [m]")
 #plt.plot(intersection[:,0], intersection[:,1], 'ro', markersize=15)
 #plt.plot(final_points[:,0], final_points[:,1], 'r^', markersize=20)
 #plt.plot(comToStack[:,0], comToStack[:,1], 'g^', markersize=20)
-plt.plot(comToStack[-1,0], comToStack[-1,1], 'bo', markersize=20)
+#plt.plot(comToStack[-1,0], comToStack[-1,1], 'bo', markersize=20)
 
-plt.plot(comTrajectoriesToStack[:,0], comTrajectoriesToStack[:,1], 'go', markersize=20)
+plt.plot(comTrajectoriesToStack[:,0], comTrajectoriesToStack[:,1], 'g^', markersize=20)
+plt.plot(comTrajectoriesToStack[max_motin_index,0], comTrajectoriesToStack[max_motin_index,1], 'y^', markersize=25)
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 
 #plotter.plot_polygon(np.asanyarray(vertices1), color = 'y')
@@ -615,8 +625,11 @@ for j in range(0, unfeasiblePointsSize):
         lastUnfeasibleIndex = j
 h2 = plt.scatter(feasible[lastFeasibleIndex,0], feasible[lastFeasibleIndex,1],c='g',s=50, label='LP feasible')
 h3 = plt.scatter(unfeasible[lastUnfeasibleIndex,0], unfeasible[lastUnfeasibleIndex,1],c='r',s=50, label='LP unfeasible')
-plt.xlim(-0.5, 0.5)
-plt.ylim(-0.5, 0.5)
+
+plt.plot(optimizedVariablesToStack[:,0], optimizedVariablesToStack[:,1], 'ko', markersize = 15)
+plt.plot(optimizedVariablesToStack[max_motin_index,0], optimizedVariablesToStack[max_motin_index,1], 'yo', markersize=25)
+plt.xlim(-0.9, 0.5)
+plt.ylim(-0.7, 0.7)
 plt.legend()
 plt.show()
 
