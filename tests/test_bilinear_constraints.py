@@ -22,7 +22,7 @@ from legsthrust.bilinear_constraints import BilinearConstraints
 '''MAIN '''
 bilinearConstraint = BilinearConstraints()
 x_val = 1.5#rnd.random()
-bilinearConstraint.make_convex(x_val)
+X, F, p_hat, p_hat_relaxation = bilinearConstraint.make_convex(x_val)
 
 
 ''' Plot the results '''
@@ -49,8 +49,8 @@ ax.set_ylim(-10.01, 10.01)
 #plt.show()
 
 plt.figure(2)
-plt.plot(x,np.diagonal(p_hat))
-plt.plot(x,np.diagonal(p_hat_relaxation),'bo',x,np.diagonal(p_hat_relaxation),'k')
+plt.plot(X[len(X)/2.0,:],np.diagonal(p_hat))
+plt.plot(X[len(X)/2.0,:],np.diagonal(p_hat_relaxation),'bo',X[len(X)/2.0,:],np.diagonal(p_hat_relaxation),'k')
 plt.plot(x_val,0.0,'ro')
 plt.xlim(-20, 20)
 plt.ylim(-5, 35)

@@ -34,4 +34,4 @@ class BilinearConstraints:
         sigma = 0.0
         p_hat_relaxation = value*value +2.0*value*(p - value) + sigma
         
-        return X, F, p_hat_relaxation
+        return X, F, p_hat, p_hat_relaxation
