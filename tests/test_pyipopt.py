@@ -155,6 +155,7 @@ def main():
     #nlp.addOption('derivative_test', 'second-order')
     nlp.addOption('mu_strategy', 'adaptive')
     nlp.addOption('jacobian_approximation', 'finite-difference-values')
+    nlp.addOption('hessian_approximation', 'limited-memory') 
     nlp.addOption('tol', 1e-7)
 
     #
