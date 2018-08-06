@@ -9,39 +9,28 @@ The surface is made opaque by using antialiased=False.
 Also demonstrates using the LinearLocator and custom formatting for the
 z axis tick labels.
 '''
-
+import context
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import numpy as np
 import random as rnd
+from legsthrust.bilinear_constraints import BilinearConstraints
+
+
+'''MAIN '''
+bilinearConstraint = BilinearConstraints()
+x_val = 1.5#rnd.random()
+bilinearConstraint.make_convex(x_val)
+
+
+''' Plot the results '''
 
 plt.close("all")
 fig = plt.figure(1)
 ax = fig.gca(projection='3d')
 
-resolution = 0.1
-# Make data.
-x = np.arange(-5.0, 5.0, resolution)
-f = np.arange(-5.0, 5.0, resolution)
-X, F = np.meshgrid(x, f)
-Tau = X*F
-
-p = X+F
-q = X-F
-p_hat = p*p
-q_hat = q*q
-Conv_plus = 0.25*np.power(p,2.0)
-Conv_minus = -0.25*np.power(q,2.0)
-
-Tau_approx = Conv_plus + Conv_minus
-
-x_val = 1.5#rnd.random()
-
-sigma = 0.0
-p_hat_relaxation = x_val*x_val +2.0*x_val*(p - x_val) + sigma
-# Plot the surface.
 #surf = ax.plot_surface(X, Y, Tau, color="r", alpha=0.4)
 surf = ax.plot_surface(X, F, p_hat, color="r", alpha=0.4)
 surf = ax.plot_surface(X, F, p_hat_relaxation, color="b", alpha=0.3)
