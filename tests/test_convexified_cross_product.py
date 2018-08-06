@@ -20,11 +20,13 @@ License: EPL 1.0
 # Based on matlab code by Peter Carbonetto.
 #
 
+import context
 import time
 from termcolor import colored
 import numpy as np
 import scipy.sparse as sps
 import ipopt
+from legsthrust.math_tools import Math
         
 class buildConvexFormulationHardConstraint(object):
     def __init__(self, x0_init):
@@ -42,36 +44,63 @@ class buildConvexFormulationHardConstraint(object):
         #
         # The callback for calculating the gradient
         #
-        return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         #return np.array([2.0*x[0]-5.0 , 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     
+    def buildConvexConstraints(self, pos, force, p_hat, q_hat, p_value, q_value, sigma):
+        
+        p = np.add(pos, force)
+        quadratic_inequality1 = p_hat - np.dot(p, p)
+        
+        q = np.subtract(pos, force)
+        quadratic_inequality2 = q_hat - np.dot(q, q)
+        
+        kx = 0.25*(p_hat - q_hat)
+        #print quadratic_inequality1, quadratic_inequality2, kx
+
+        #p_value = np.add(self.initial_guess[0], self.initial_guess[3])
+        diff = np.subtract(p, p_value)
+        linear_ineq1 = np.dot(p_value, p_value) + 2.0*np.dot(p_value, diff) + sigma - p_hat
+
+        #q_value = np.subtract(self.initial_guess[0], self.initial_guess[3])
+        diff = np.subtract(q, q_value)
+        linear_ineq2 = np.dot(q_value, q_value) + 2.0*np.dot(q_value, diff) + sigma - q_hat
+        #print linear_ineq1, linear_ineq2
+        return kx, quadratic_inequality1, quadratic_inequality2, linear_ineq1, linear_ineq2
+        
     def constraints(self, x):
         #
         # The callback for calculating the constraints
         #
-        pos = x[0:3]
-        force = x[3:6]
-        p_x = pos[0] + force[0]
-        p_hat_x = x[6]
-        quadratic_inequality1 = p_hat_x - np.dot(p_x, p_x)
         
-        q_x = pos[0] - force[0]
-        q_hat_x = x[7]
-        quadratic_inequality2 = q_hat_x - np.dot(q_x, q_x)
+        pos_1 = np.array([-x[2], x[1]])
+        force_1 = np.array([x[4], x[5]])
+        p_hat_1 = x[6]
+        q_hat_1 = x[9]
+        p_value_1 = np.array([self.initial_guess[4] - self.initial_guess[2], self.initial_guess[1] + self.initial_guess[5]])
+        q_value_1 = np.array([self.initial_guess[4] + self.initial_guess[2], self.initial_guess[1] - self.initial_guess[5]])  
+        sigma_1 = 20      
+        tau_x_contraints = self.buildConvexConstraints(pos_1, force_1, p_hat_1, q_hat_1, p_value_1, q_value_1, sigma_1)
         
-        kx = 0.25*(p_hat_x - q_hat_x)
-
-        sigma = 1.0
-
-        p_value_x = np.add(self.initial_guess[0], self.initial_guess[3])
-        diff_x = np.subtract(p_x, p_value_x)
-        linear_ineq1 = np.dot(p_value_x, p_value_x) + 2.0*np.dot(p_value_x, diff_x) + sigma - p_hat_x
-
-        q_value_x = np.subtract(self.initial_guess[0], self.initial_guess[3])
-        diff_x = np.subtract(q_x, q_value_x)
-        linear_ineq2 = np.dot(q_value_x, q_value_x) + 2.0*np.dot(q_value_x, diff_x) + sigma - q_hat_x
+        pos_2 = np.array([x[2], -x[0]])
+        force_2 = np.array([x[3], x[5]])
+        p_hat_2 = x[7]
+        q_hat_2 = x[10]
+        p_value_2 = np.array([self.initial_guess[2] + self.initial_guess[3], - self.initial_guess[0] + self.initial_guess[5]])
+        q_value_2 = np.array([self.initial_guess[2] - self.initial_guess[3], - self.initial_guess[0] - self.initial_guess[5]])  
+        sigma_2 = 0.1   
+        tau_y_contraints = self.buildConvexConstraints(pos_2, force_2, p_hat_2, q_hat_2, p_value_2, q_value_2, sigma_2)
        
-        return np.array((kx, quadratic_inequality1, quadratic_inequality2, linear_ineq1, linear_ineq2))
+        pos_3 = np.array([-x[1], x[0]])
+        force_3 = np.array([x[3], x[4]])
+        p_hat_3 = x[8]
+        q_hat_3 = x[11]
+        p_value_3 = np.array([ - self.initial_guess[1] + self.initial_guess[3], self.initial_guess[0] + self.initial_guess[4]])
+        q_value_3 = np.array([ - self.initial_guess[1] - self.initial_guess[3], self.initial_guess[0] - self.initial_guess[4]])  
+        sigma_3 = 0.1
+        tau_z_contraints = self.buildConvexConstraints(pos_3, force_3, p_hat_3, q_hat_3, p_value_3, q_value_3, sigma_3)
+       
+        return np.array((tau_x_contraints, tau_y_contraints, tau_z_contraints))
     
     def jacobian(self, x):
         #
@@ -140,13 +169,41 @@ class buildConvexFormulationHardConstraint(object):
     
 def convex_formulation_hard_constraints():
     ''' Definition the bilinear problem '''
-    x0 = [2, 0, 0, 4, 0, 0, 40.0, 10.0]
     
-    lb = [1.0, 1.0, 1.0, 0.0, 0.0, 0.0,-1000.0, -1000.0]
-    ub = [3.0, 3.0, 3.0, 20.0, 20.0, 20.0, 1000.0, 1000.0]
+    math = Math()
     
-    cl = [6.0, 0.0, 0.0, 0.0, 0.0]
-    cu = [6.0, +2e19, +2e19, +2e19, +2e19]
+    pos0 = np.array([2.0, 2.0, 2.0])
+    force0 = np.array([0.0, 0.0, 10.0])
+
+    posDesired = np.array([2.0, 2.0, 2.0])
+    forceDesired = np.array([0.0, 0.0, 10.0])    
+    tauDesired = np.dot(math.skew(posDesired), forceDesired)  
+    print "initial contact position: " ,pos0
+    print "initial force: " ,force0
+    print "Desired torque: " ,tauDesired
+    p0 = np.add(pos0 ,force0)
+    q0 = np.subtract(pos0, force0)
+    
+    p_hat0 = np.array([p0[0]*p0[0], p0[1]*p0[1], p0[2]*p0[2]])
+    q_hat0 = np.array([q0[0]*q0[0], q0[1]*q0[1], q0[2]*q0[2]])
+    
+    x0 = np.hstack([pos0, force0, p_hat0, q_hat0])
+    #x0 = [2, 0, 0, 4, 0, 0, 40.0, 40.0, 40.0, 10.0, 10.0, 10.0]
+    
+    lb = [1.0, 1.0, 1.0, 0.0, 0.0, 0.0,-1000.0, -1000.0, -1000.0, -1000.0, -1000.0, -1000.0]
+    ub = [3.0, 3.0, 3.0, 20.0, 20.0, 20.0, +1000.0, +1000.0, +1000.0, +1000.0, +1000.0, +1000.0]
+   
+    tau_x_constraints_lb = np.array([20.0, 0.0, 0.0, 0.0, 0.0])
+    tau_x_constraints_ub = np.array([20.0, +2e19, +2e19, +2e19, +2e19]) 
+    
+    tau_y_constraints_lb = np.array([-20.0, 0.0, 0.0, 0.0, 0.0])
+    tau_y_constraints_ub = np.array([-20.0, +2e19, +2e19, +2e19, +2e19])
+
+    tau_z_constraints_lb = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+    tau_z_constraints_ub = np.array([0.0, +2e19, +2e19, +2e19, +2e19])
+    
+    cl = np.hstack([tau_x_constraints_lb, tau_y_constraints_lb, tau_z_constraints_lb])
+    cu = np.hstack([tau_x_constraints_ub, tau_y_constraints_ub, tau_z_constraints_ub])
     
     nlpConvex = ipopt.problem(
                 n=len(x0),
@@ -175,30 +232,40 @@ def convex_formulation_hard_constraints():
     #
     nlpConvex.setProblemScaling(
         obj_scaling=1,
-        x_scaling=[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
+        x_scaling=[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
         )
     nlpConvex.addOption('nlp_scaling_method', 'user-scaling')
     
     #
     # Solve the problem
     #
-    x, info = nlpConvex.solve(x0)
+    sol, info = nlpConvex.solve(x0)
     
-    print "Solution of the primal variables: x=%s\n" % repr(x)
+    print "Solution of the primal variables: x=%s\n" % repr(sol)
     
     print "Solution of the dual variables: lambda=%s\n" % repr(info['mult_g'])
     
     print "Objective=%s\n" % repr(info['obj_val'])
-    
-    print colored('torque check: ', 'red'),  - x[2]*x[4] + x[1]*x[5], + x[2]*x[3] - x[0]*x[5], - x[1]*x[3] + x[0]*x[4] 
-    
-    
+    lx = sol[0]
+    ly = sol[1]
+    lz = sol[2]
+    fx = sol[3]
+    fy = sol[4]
+    fz = sol[5]
+    tau_x_check = -lz*fy + ly*fx
+    tau_y_check = lz*fx - lx*fz
+    tau_z_check = -ly*fx + lx*fy
+    print colored('torque check: ', 'red')
+    print colored('desired torque: ', 'blue'),  tauDesired[0], tauDesired[1], tauDesired[2]     
+    print colored('actual torque: ', 'red'),  tau_x_check, tau_y_check, tau_z_check 
+    print colored('foot pos: ', 'red'), sol[0:3]
+    print colored('force: ', 'red'), sol[3:6]
 def main():
     
     start_cv_hard_time = time.time()
     print colored('Convex Formulation HARD constraints', 'blue')
     convex_formulation_hard_constraints()
-    print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_cv_hard_time))
+    print("Total time: --- %s seconds ---" % (time.time() - start_cv_hard_time))
     
 
 
