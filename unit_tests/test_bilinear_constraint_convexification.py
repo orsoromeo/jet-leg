@@ -511,20 +511,23 @@ def bilinear_formulation():
     print "Objective=%s\n" % repr(info['obj_val'])
     
 def main():
-    start_bilinear_time = time.time()
-    print colored('Bilinear Formulation', 'blue')
-    bilinear_formulation()
-    print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_bilinear_time))
+    #start_bilinear_time = time.time()
+    #print colored('Bilinear Formulation', 'blue')
+    #for i in range(0,100):
+    #    bilinear_formulation()
+    #print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_bilinear_time))
     
     start_cv_hard_time = time.time()
     print colored('Convex Formulation HARD constraints', 'blue')
-    convex_formulation_hard_constraints()
+    for i in range(0,100):
+        convex_formulation_hard_constraints()
     print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_cv_hard_time))
     
-    start_cv_soft_time = time.time()
-    print colored('Convex Formulation SOFT constraints', 'blue')
-    convex_formulation_soft_constraints()
-    print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_cv_soft_time))
+    #start_cv_soft_time = time.time()
+    #print colored('Convex Formulation SOFT constraints', 'blue')
+    #for i in range(0,100):
+    #    convex_formulation_soft_constraints()
+    #print("Directed Iterative Projection: --- %s seconds ---" % (time.time() - start_cv_soft_time))
     
 
 

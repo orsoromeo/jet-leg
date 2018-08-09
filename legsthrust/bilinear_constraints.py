@@ -20,7 +20,7 @@ class BilinearConstraints:
         x = np.arange(-5.0, 5.0, resolution)
         f = np.arange(-5.0, 5.0, resolution)
         X, F = np.meshgrid(x, f)
-        Tau = X*F
+        self.Tau = X*F
         
         p = X+F
         q = X-F
@@ -34,4 +34,7 @@ class BilinearConstraints:
         sigma = 0.0
         p_hat_relaxation = value*value +2.0*value*(p - value) + sigma
         
-        return X, F, p_hat, p_hat_relaxation
+        return X, F, p_hat, p_hat_relaxation, q_hat
+        
+    def get_torque(self):
+        return self.Tau
