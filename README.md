@@ -16,16 +16,18 @@ APT dependencies:
 - Cython
 
 Python dependencies:
-- numpy
-- scipy
-- pycddlib
-- matplotlib
+- Numpy
+- Scipy
+- Pycddlib
+- Matplotlib
+- [Pypoman](https://github.com/stephane-caron/pypoman) for the formulation of Iterative Projection algorithms
 
 Install dependencies by:
 ```
 sudo apt-get install cython libglpk-dev python python-dev python-pip python-scipy
 CVXOPT_BUILD_GLPK=1 pip install cvxopt --user
 pip install pycddlib --user
+pip install pypoman
 ```
 You can remove all ``--user`` arguments to install these Python modules system-wide.
 
