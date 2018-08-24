@@ -20,7 +20,7 @@ Python dependencies:
 - Scipy
 - Pycddlib
 - Matplotlib
-- [Pypoman](https://github.com/stephane-caron/pypoman) for the formulation of Iterative Projection algorithms
+- [Pypoman](https://github.com/stephane-caron/pypoman) for the manipulation of polyhedrical object
 
 Install dependencies by:
 ```
