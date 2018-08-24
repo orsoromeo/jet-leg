@@ -3,7 +3,13 @@
 This library uses common operations over [convex
 polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions in order to assess the problem of stability and motion feasibility of legged robots.
 
-## Installation
+## What you can do with this package
+- find various example formulations of linear, convex or nonlinear optimization problems;
+- find examples of convex and nonlinear trajectory optimization problems for legged robots;
+- find implamentation of Iterative Projection algorithms for the solution of geometrical problems related to legged locomotion stability and feasibility analysis
+- generate animated plots
+
+## Dependencies
 APT dependencies:
 - CVXOPT
 - GLPK
@@ -27,22 +33,25 @@ You can remove all ``--user`` arguments to install these Python modules system-w
 
 - [Ipopt](https://projects.coin-or.org/Ipopt) and its Python interface [Pypi](https://pypi.org/project/ipopt/) for the solution of large-scale nonlinear optimization problems
 - [ffmpeg](https://www.ffmpeg.org/) for the generation of Matplotlib animations
-- [unittest](https://docs.python.org/3/library/unittest.html) for testing of dependencies installation and for development
-
-For installing the optional dependencies run the following command:
-
 ```
 sudo apt-get install ffmpeg
 ```
+- [unittest](https://docs.python.org/3/library/unittest.html) for testing of dependencies installation and for development
+
+
+## Installation
+
 Finally, clone this repository and run its setup script:
 ```
-git clone git@github.com:orsoromeo/legsthrust.git
-cd legsthrust
+git clone git@gitlab.advr.iit.it:rorsolino/jet-leg.git
+cd jet-leg
 python setup.py build
 python setup.py install --user
 ```
 ## Testing the library
 Jet-Leg comes with a number of unit tests intended to check the proper installation of the packages and make sure that all the mandatory depedencies are properly found. For this purpose, after completing the installation navigate to the [unit_test_main.py](https://gitlab.advr.iit.it/rorsolino/jet-leg/blob/master/unit_tests/unit_test_main.py) and run it.
+
+After that, navigate to the [examples folder](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/examples) to find more explanation on the usage of the package.
 
 ## Troubleshooting
 
