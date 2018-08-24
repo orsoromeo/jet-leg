@@ -20,7 +20,7 @@ can be either 'ONLY_ACTUATION' or only 'ONLY_FRICTION')
 
 3- N: number of times that the execution of the variable constraints search is called
 
-4- yaw_angle: desired yaw angle in which we wish the robot to move
+4- yaw_angle: desired yaw angle in which we wish the robot to move (in radiants)
 """
 
 import numpy as np
@@ -37,11 +37,12 @@ yaw_angle = 0.04
 
 
 '''Implementation '''
-print "angle is: ", angle
+print "angle is: ", yaw_angle
 dir_x = np.cos(yaw_angle)
 dir_y = np.sin(yaw_angle)
 desired_direction = np.array([dir_x, dir_y, 0.0])
 
+numberOfContactPoints = 3;
 """ contact points """
 LF_foot = np.array([0.4, 0.3, -0.5])
 RF_foot = np.array([0.4, -0.3, -0.5])
@@ -49,7 +50,7 @@ LH_foot = np.array([-0.4, 0.3, -0.5])
 RH_foot = np.array([-0.4, -0.3, -0.5])
 
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
+contacts = contactsToStack[0:numberOfContactPoints, :]
 
 sequentialIP = SequentialIterativeProjection()
 for iter in range(0,N):
