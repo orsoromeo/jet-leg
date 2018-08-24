@@ -23,7 +23,7 @@ pip install pycddlib --user
 ```
 You can remove all ``--user`` arguments to install these Python modules system-wide.
 
-Optional dependencies:
+## Optional dependencies:
 
 - ipopt
 - ffmpeg for matplotlib animations
@@ -41,6 +41,12 @@ cd legsthrust
 python setup.py build
 python setup.py install --user
 ```
+## Testing the library
+Jet-Leg comes with a number of unit tests intended to check the proper installation of the packages and make sure that all the mandatory depedencies are properly found. For this purpose, after completing the installation navigate to the [unit_test_main.py](https://gitlab.advr.iit.it/rorsolino/jet-leg/blob/master/unit_tests/unit_test_main.py) and run it.
+
+## Troubleshooting
+
+- if CVXOPT is not found even after trying the pip-installation, we then suggest to try install the version 1.1.4 of CVXOPT using Synaptic
 
 ## See also
 
