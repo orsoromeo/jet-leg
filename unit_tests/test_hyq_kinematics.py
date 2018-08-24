@@ -5,9 +5,9 @@ Created on Mon Jul  2 06:10:18 2018
 @author: Romeo Orsolino
 """
 
-from context import legsthrust
+from context import jet_leg
 
-from legsthrust.hyq_kinematics import HyQKinematics
+from jet_leg.hyq_kinematics import HyQKinematics
 
 import numpy as np
 import random

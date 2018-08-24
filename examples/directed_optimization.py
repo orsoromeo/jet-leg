@@ -9,8 +9,7 @@ import numpy as np
 from context import legsthrust 
 
 import time
-import pylab
-import pypoman
+
 from pypoman.lp import solve_lp, GLPK_IF_AVAILABLE
 from pypoman.bretl import Vertex
 from pypoman.bretl import Polygon
@@ -26,7 +25,7 @@ from scipy.linalg import block_diag
 
 from context import legsthrust 
 
-from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
+from numpy import array, cross, dot, eye, hstack, vstack, zeros
 
 import matplotlib.pyplot as plt
 from legsthrust.plotting_tools import Plotter
@@ -34,7 +33,6 @@ from legsthrust.constraints import Constraints
 from legsthrust.hyq_kinematics import HyQKinematics
 from legsthrust.math_tools import Math
 from legsthrust.computational_dynamics import ComputationalDynamics
-from legsthrust.vertex_based_projection import VertexBasedProjection
 from legsthrust.height_map import HeightMap
 
 class VertexVariableConstraints():
@@ -515,7 +513,7 @@ iterProj = IterativeProjection()
 for_iter = 0
 for LH_x in np.arange(-0.8,-0.3, 0.1):
     for LH_y in np.arange(0.1,0.4, 0.1):
-        for dir_y in np.arange(0.1,0.3,0.2):
+        for dir_y in np.arange(-0.2,0.0,0.2):
             desired_direction = np.array([-1.0, dir_y, 0.0])
             #print "direction: ", desired_direction
             """ contact points """

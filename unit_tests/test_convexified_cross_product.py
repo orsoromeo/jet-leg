@@ -26,7 +26,7 @@ from termcolor import colored
 import numpy as np
 import scipy.sparse as sps
 import ipopt
-from legsthrust.math_tools import Math
+from jet_leg.math_tools import Math
 
 class buildBilinearFormulation(object):
     def __init__(self, x0_init):

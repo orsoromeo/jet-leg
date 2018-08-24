@@ -6,7 +6,7 @@ Created on Wed Aug 15 19:22:30 2018
 """
 
 import context
-from legsthrust.math_tools import Math
+from jet_leg.math_tools import Math
 import numpy as np
 import matplotlib.pyplot as plt
 import unittest

@@ -7,8 +7,8 @@ Created on Thu Aug 16 14:27:10 2018
 
 import numpy as np
 
-from context import legsthrust 
-from legsthrust.sequential_iterative_projection import SequentialIterativeProjection
+from context import jet_leg 
+from jet_leg.sequential_iterative_projection import SequentialIterativeProjection
 
 nc = 3
 comWF = np.array([0.2, 0.05, 0.0])

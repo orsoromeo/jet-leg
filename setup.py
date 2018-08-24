@@ -21,10 +21,10 @@
 from distutils.core import setup
 
 setup(
-    name='legsthrust',
+    name='jet_leg',
     version='0.1.0',
     description="Python Polyhedron Manipulation",
-    url="https://github.com/orsoromeo/legsthrust",
+    url="https://github.com/orsoromeo/jet-leg",
     author="Romeo Orsolino",
     author_email="romeo.orsolino@iit.it",
     license="LGPL",
@@ -37,5 +37,5 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Mathematics'],
-    packages=['legsthrust']
+    packages=['jet_leg']
 )

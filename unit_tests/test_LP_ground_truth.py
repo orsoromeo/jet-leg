@@ -5,12 +5,11 @@ Created on Sun Jul 22 21:26:46 2018
 @author: romeoorsolino
 """
 import numpy as np
-from context import legsthrust
+from context import jet_leg
 
-from legsthrust.hyq_kinematics import HyQKinematics
-from legsthrust.math_tools import Math
-from legsthrust.constraints import Constraints
-from legsthrust.computational_dynamics import ComputationalDynamics
+from jet_leg.hyq_kinematics import HyQKinematics
+from jet_leg.math_tools import Math
+from jet_leg.computational_dynamics import ComputationalDynamics
 
 import random
 

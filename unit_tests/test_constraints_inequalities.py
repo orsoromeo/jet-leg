@@ -4,11 +4,11 @@ Created on Sun Jul 15 17:22:17 2018
 
 @author: romeoorsolino
 """
-from context import legsthrust
+from context import jet_leg
 
-from legsthrust.hyq_kinematics import HyQKinematics
-from legsthrust.math_tools import Math
-from legsthrust.constraints import Constraints
+from jet_leg.hyq_kinematics import HyQKinematics
+from jet_leg.math_tools import Math
+from jet_leg.constraints import Constraints
 
 import numpy as np
 import random

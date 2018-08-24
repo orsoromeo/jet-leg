@@ -10,19 +10,18 @@ import pylab
 import pypoman
 import numpy as np
 
-from context import legsthrust 
+from context import jet_leg 
 
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
-from legsthrust.plotting_tools import Plotter
-from legsthrust.constraints import Constraints
+from jet_leg.plotting_tools import Plotter
 
-from legsthrust.math_tools import Math
-from legsthrust.computational_dynamics import ComputationalDynamics
-from legsthrust.vertex_based_projection import VertexBasedProjection
+from jet_leg.math_tools import Math
+from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.vertex_based_projection import VertexBasedProjection
 
 import matplotlib.pyplot as plt
-from legsthrust.arrow3D import Arrow3D
+from jet_leg.arrow3D import Arrow3D
         
 plt.close('all')
 math = Math()
