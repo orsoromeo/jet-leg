@@ -15,10 +15,6 @@ Python dependencies:
 - pycddlib
 - matplotlib
 
-Optionals:
-- ffmpeg for matplotlib animations
-- unittest
-
 Install dependencies by:
 ```
 sudo apt-get install cython libglpk-dev python python-dev python-pip python-scipy
@@ -27,7 +23,14 @@ pip install pycddlib --user
 ```
 You can remove all ``--user`` arguments to install these Python modules system-wide.
 
-Optional installations:
+Optional dependencies:
+
+- ipopt
+- ffmpeg for matplotlib animations
+- unittest
+
+For installing the optional dependencies run the following command:
+
 ```
 sudo apt-get install ffmpeg
 ```
