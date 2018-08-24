@@ -25,9 +25,9 @@ You can remove all ``--user`` arguments to install these Python modules system-w
 
 ## Optional dependencies:
 
-- ipopt
-- ffmpeg for matplotlib animations
-- unittest
+- [Ipopt](https://projects.coin-or.org/Ipopt) and its Python interface [Pypi](https://pypi.org/project/ipopt/) for the solution of large-scale nonlinear optimization problems
+- [ffmpeg](https://www.ffmpeg.org/) for the generation of Matplotlib animations
+- [unittest](https://docs.python.org/3/library/unittest.html) for testing of dependencies installation and for development
 
 For installing the optional dependencies run the following command:
 
