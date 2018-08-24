@@ -3,20 +3,20 @@
 #
 # Copyright (C) 2018 Romeo Orsolino <romeo.orsolino@iit.it>
 #
-# This file is part of legsthrust.
+# This file is part of jet_leg.
 #
-# legsthrust is free software: you can redistribute it and/or modify it under the
+# jet_leg is free software: you can redistribute it and/or modify it under the
 # terms of the GNU Lesser General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option) any
 # later version.
 #
-# legsthrust is distributed in the hope that it will be useful, but WITHOUT ANY
+# jet_leg is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 # details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with legsthrust. If not, see <http://www.gnu.org/licenses/>.
+# along with jet_leg. If not, see <http://www.gnu.org/licenses/>.
 
 from distutils.core import setup
 

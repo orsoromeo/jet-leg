@@ -5,7 +5,7 @@ Created on Wed Aug 15 19:22:30 2018
 @author: romeoorsolino
 """
 
-import context
+from context import jet_leg 
 from jet_leg.math_tools import Math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -145,7 +145,6 @@ class TestStringMethods(unittest.TestCase):
             self.assertTrue((new_p[0] > 0).all())
         
 '''main'''
-
 #point, all_points = test_square_line_intersection()
 #print 'all points : ',all_points, point
 #plt.grid()

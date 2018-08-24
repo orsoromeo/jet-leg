@@ -23,8 +23,6 @@ from numpy.random import random
 from scipy.linalg import norm
 from scipy.linalg import block_diag
 
-from context import legsthrust 
-
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 
 import matplotlib.pyplot as plt

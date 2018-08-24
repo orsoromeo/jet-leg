@@ -6,7 +6,7 @@ Created on Sat Aug  4 21:57:55 2018
 """
 import numpy as np
 
-from context import legsthrust 
+from context import jet_leg 
 
 import time
 
@@ -23,17 +23,15 @@ from numpy.random import random
 from scipy.linalg import norm
 from scipy.linalg import block_diag
 
-from context import legsthrust 
-
 from numpy import array, cross, dot, eye, hstack, vstack, zeros
 
 import matplotlib.pyplot as plt
-from legsthrust.plotting_tools import Plotter
-from legsthrust.constraints import Constraints
-from legsthrust.hyq_kinematics import HyQKinematics
-from legsthrust.math_tools import Math
-from legsthrust.computational_dynamics import ComputationalDynamics
-from legsthrust.height_map import HeightMap
+from jet_leg.plotting_tools import Plotter
+from jet_leg.constraints import Constraints
+from jet_leg.hyq_kinematics import HyQKinematics
+from jet_leg.math_tools import Math
+from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.height_map import HeightMap
 
 class VertexVariableConstraints():
     def __init__(self, p):

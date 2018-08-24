@@ -6,14 +6,8 @@ Created on Sat Aug  4 16:18:52 2018
 """
 
 import numpy as np
-
-from context import legsthrust 
-
+from context import jet_leg 
 import time
-import pylab
-from pypoman.lp import solve_lp, GLPK_IF_AVAILABLE
-#from pypoman.bretl import Vertex
-#from pypoman.bretl import Polygon
 
 import cvxopt
 from cvxopt import matrix, solvers
@@ -23,17 +17,15 @@ from numpy.random import random
 from scipy.linalg import norm
 from scipy.linalg import block_diag
 
-from context import legsthrust 
-
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 
 import matplotlib.pyplot as plt
-from legsthrust.plotting_tools import Plotter
-from legsthrust.constraints import Constraints
-from legsthrust.hyq_kinematics import HyQKinematics
-from legsthrust.math_tools import Math
-from legsthrust.computational_dynamics import ComputationalDynamics
-from legsthrust.vertex_based_projection import VertexBasedProjection
+from jet_leg.plotting_tools import Plotter
+from jet_leg.constraints import Constraints
+from jet_leg.hyq_kinematics import HyQKinematics
+from jet_leg.math_tools import Math
+from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.vertex_based_projection import VertexBasedProjection
 
 ''' MAIN '''
 start_t_IPVC = time.time()
