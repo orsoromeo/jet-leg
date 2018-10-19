@@ -10,7 +10,7 @@ import numpy as np
 
 from context import jet_leg 
 
-from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
+from numpy import array
 from numpy.linalg import norm
 from jet_leg.plotting_tools import Plotter
 
@@ -18,19 +18,17 @@ from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
 
 import matplotlib as mpl
-
 import matplotlib.pyplot as plt
-from jet_leg.arrow3D import Arrow3D
         
 plt.close('all')
 math = Math()
+
 # number of contacts
 nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
 # ONLY_ACTUATION or ONLY_FRICTION
-constraint_mode = 'ONLY_ACTUATION'
 constraint_mode_IP = 'ONLY_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
