@@ -126,13 +126,14 @@ class Constraints:
         
         #print constraint, known_term
         return constraint, known_term
-        
+
+    """ 
+    This function computes the actuation polygon of a given mechanical chain
+    This function assumes the same mechanical structure of the HyQ robot, meaning that 
+    it is restricted to 3 DoFs and point contacts. If the latter assumption is not
+    respected the Jacobian matrix might become not invertible.
+    """        
     def computeActuationPolygon(self, leg_jacobian, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):
-        """ This function computes the actuation polygon of a given mechanical chain
-        This function assumes the same mechanical structure of the HyQ robot, meaning that 
-        it is restricted to 3 DoFs and point contacts. If the latter assumption is not
-        respected the Jacobian matrix might become not invertible.
-        """
         dx = tau_HAA
         dy = tau_HFE
         dz = tau_KFE
@@ -147,6 +148,7 @@ class Constraints:
             actuation_polygon = np.vstack([actuation_polygon_xy[0,:],
                                    vertices[1,:],
                                    actuation_polygon_xy[1,:]])
+                                   
         elif (np.size(leg_jacobian,0)==3):
             torque_lims = vertices
             legs_gravity = np.ones((3,8))*0 # TODO: correct computation of the force acting on the legs due to gravity
@@ -156,7 +158,7 @@ class Constraints:
         # actuation_polygon = vertices
         return actuation_polygon
         
-    def inequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, saturate_normal_force = False):
+    def getInequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, saturate_normal_force = False):
         cons1 = np.zeros((0,0))
         h_vec1 = np.zeros((0,1))
         cons2 = np.zeros((0,0))

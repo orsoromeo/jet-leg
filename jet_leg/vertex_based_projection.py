@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import scipy.spatial
 from math_tools import Math
 from constraints import Constraints
-from kinematics import Kinematics
+#from kinematics import Kinematics
 from hyq_kinematics import HyQKinematics
 
 class VertexBasedProjection():

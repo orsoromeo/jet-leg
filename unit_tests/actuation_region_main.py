@@ -32,8 +32,8 @@ ng = 4
 
 # ONLY_ACTUATION or ONLY_FRICTION
 constraint_mode = 'ONLY_ACTUATION'
-constraint_mode_IP = 'ONLY_FRICTION'
-useVariableJacobian = True
+constraint_mode_IP = 'ONLY_ACTUATION'
+useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
 
@@ -67,7 +67,7 @@ contacts = contactsToStack[0:nc, :]
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 90.
+trunk_mass = 85.
 mu = 0.8
 
 axisZ= array([[0.0], [0.0], [1.0]])
@@ -108,7 +108,7 @@ if constraint_mode_IP == 'ONLY_ACTUATION':
 
 ''' plotting Iterative Projection points '''
 
-feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, mu, useVariableJacobian)
+feasible, unfeasible, contact_forces = comp_dyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, useVariableJacobian)
 #print contact_forces
 #for i in range(0, np.size(contact_forces,0)):
 #    for j in range(0,nc):
@@ -158,7 +158,7 @@ h3 = plt.scatter(unfeasible[lastUnfeasibleIndex,0], unfeasible[lastUnfeasibleInd
         
 h4 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
 
-i = 0
+#i = 0
 #for simplex in simplices:
 #    if (i==0):
 #        h5 = plt.plot(vertices2d[simplex, 0], vertices2d[simplex, 1], 'y-', linewidth=5., label = 'Vertex-based projection')
