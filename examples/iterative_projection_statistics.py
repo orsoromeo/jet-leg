@@ -38,42 +38,40 @@ n = nc*6
 g = 9.81
 trunk_mass = 85.
 mu = 0.8
-
-LF_foot = np.array([0.3, 0.2, -0.5])
-RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.2, 0.0, -0.5])
-RH_foot = np.array([-0.3, -0.2, -0.5])
-    
-contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
     
 axisZ= array([[0.0], [0.0], [1.0]])
 
-n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-# %% Cell 2
-
-
-normals = np.vstack([n1, n2, n3, n4])
-
 comp_dyn = ComputationalDynamics()
-number_of_tests = 1000
+number_of_tests = 50
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
 
 for iter in range(0,number_of_tests):
+    
+    ''' random normals '''    
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    normals = np.vstack([n1, n2, n3])
+    
     """ contact points """
     sigma = 0.05 # mean and standard deviation
     randX = np.floor(np.random.normal(30, sigma))
     randY = np.floor(np.random.normal(20, sigma))
     LF_foot = np.array([randX/100, randY/100, -0.5])
     RF_foot = np.array([randX/100, -randY/100, -0.5])
-    LH_foot = np.array([-0.2, 0.0, -0.5])
-    RH_foot = np.array([-0.3, -0.2, -0.5])
+    LH_foot = np.array([-randX/100, randY/100, -0.5])
     
-    contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+    contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot))
     contacts = contactsToStack[0:nc, :]
 
     ''' compute iterative projection '''
@@ -90,6 +88,26 @@ RH_foot = np.array([-0.3, -0.2, -0.5])
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts = contactsToStack[0:nc, :]
 for iter in range(0,number_of_tests):
+    
+    ''' random normals '''    
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n4 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    normals = np.vstack([n1, n2, n3, n4])
+    
     """ contact points """
     sigma = 0.05 # mean and standard deviation
     randX = np.floor(np.random.normal(30, sigma))
@@ -117,7 +135,7 @@ plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 plt.legend()
 
-plt.figure()
+fig = plt.figure()
 plt.plot([1,2,3])
 plt.subplot(121)
 #print tests
