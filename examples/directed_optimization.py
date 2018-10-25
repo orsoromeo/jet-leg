@@ -571,7 +571,7 @@ n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         # %% Cell 2
         
 normals = np.vstack([n1, n2, n3, n4])
-IP_points, actuation_polygons = compDyn.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, ng, mu)
+IP_points, actuation_polygons, comp_time = compDyn.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, ng, mu)
 
 feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, mu, useVariableJacobian, 0.05, 0.05)
 
