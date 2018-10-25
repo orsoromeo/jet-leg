@@ -22,12 +22,16 @@ import traceback
 from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
 from rosgraph_msgs.msg import Clock
-from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray
+from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D
 from dwl_msgs.msg import WholeBodyState, WholeBodyTrajectory, JointState, ContactState, BaseState
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32, Header
 from std_srvs.srv import Empty
 from termcolor import colored
+
+from context import jet_leg 
+from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.math_tools import Math
 
 
 stderr = sys.stderr
@@ -48,11 +52,9 @@ class HyQSim(threading.Thread):
 #        self.hyq_rcf_aux_sub_name = "/hyq/crt_rcf_aux"
 #        self.hyq_rcf_debug_sub_name = "/hyq/crt_rcf_debug"
         self.hyq_wbs = dict()
-#        self.hyq_rcf_params = dict()
-#        self.hyq_rcf_aux = dict()
-        self.hyq_rcf_debug = dict()        
+        self.hyq_rcf_debug = StringDoubleArray()  
+        self.polygon_topic_name = Polygon3D()
         self.debug_topic_name = "/hyq/planner_back"
-#        self.nn_rcf_params = dict()
         self.sim_time  = 0.0
                 
         
@@ -64,6 +66,7 @@ class HyQSim(threading.Thread):
 #        self.sub_rcf_debug = ros.Subscriber(self.hyq_rcf_debug_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
 #        self.sub_rcf_params = ros.Subscriber(self.hyq_rcf_params_sub_name, RCFParams, callback=self._reg_sim_rcf_params, queue_size=1)
         self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
+        self.pub_polygon = ros.Publisher(self.polygon_topic_name, SimpleDoubleArray, queue_size=1)
 #        self.fbs = ros.ServiceProxy('/hyq/freeze_base', Empty)
 #        self.startRCF = ros.ServiceProxy('/hyq/start_RCF', Empty)
 #        self.stopRCF = ros.ServiceProxy('/hyq/stop_RCF', Empty)
@@ -133,8 +136,15 @@ class HyQSim(threading.Thread):
 #    def get_sim_rcf_debug(self):
 #        return self.hyq_rcf_debug
 #   
-    
+
     def send_polygons(self, name, data):
+#        self.output = dict()
+        output = SimpleDoubleArray()
+        output.name = name
+        output.data = data
+        self.pub_rcf_params.publish(output)    
+    
+    def send_simple_array(self, name, data):
 #        self.output = dict()
         output = SimpleDoubleArray()
         output.name = name
@@ -178,13 +188,11 @@ class ActuationParameters:
                 self.footPosRH[1] = received_data.data[j]
             if str(received_data.name[j]) == str("footPosRHz"):
                 self.footPosRH[2] = received_data.data[j]
-                
-        self.CoMposition[1] = received_data.data[3]
-        self.CoMposition[2] = received_data.data[4]
-        
 
 if __name__ == '__main__':
-
+    
+    compDyn = ComputationalDynamics()
+    math = Math()
     p=HyQSim()
     p.start()
     p.register_node()
@@ -203,6 +211,34 @@ if __name__ == '__main__':
 #        print '-------------------------------->value of the received parameters are: ', p.hyq_rcf_debug.data[2]
         actuationParams.getParams(p.hyq_rcf_debug)
         print '-------------------------------->CoM position is: ', actuationParams.CoMposition
+        trunk_mass = 85.
+        axisZ= np.array([[0.0], [0.0], [1.0]])
+        ''' random normals '''    
+        randRoll = np.random.normal(0.0, 0.2)
+        randPitch = np.random.normal(0.0, 0.2)
+        randYaw = np.random.normal(0.0, 0.2)
+        n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+        randRoll = np.random.normal(0.0, 0.2)
+        randPitch = np.random.normal(0.0, 0.2)
+        randYaw = np.random.normal(0.0, 0.2)
+        n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+        randRoll = np.random.normal(0.0, 0.2)
+        randPitch = np.random.normal(0.0, 0.2)
+        randYaw = np.random.normal(0.0, 0.2)
+        n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+        normals = np.vstack([n1, n2, n3])
+        nc = 3
+        """ contact points """
+        sigma = 0.05 # mean and standard deviation
+        randX = np.floor(np.random.normal(30, sigma))
+        randY = np.floor(np.random.normal(20, sigma))
+        LF_foot = np.array([randX/100, randY/100, -0.5])
+        RF_foot = np.array([randX/100, -randY/100, -0.5])
+        LH_foot = np.array([-randX/100, randY/100, -0.5])
+        
+        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot))
+        contacts = contactsToStack[0:nc, :]
+        IAP, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(contacts, normals, trunk_mass)
 #        out_rcf_params = crt_rcf
 #        out_rcf_params.KP_lin = list(out_rcf_params.KP_lin)
 #        out_rcf_params.KP_lin[0] = out_rcf_params.KP_lin[0] + 10
@@ -212,7 +248,10 @@ if __name__ == '__main__':
 #            p.call_freezeBaseService()
 
 #        output = ['miki',1]
+        p.send_simple_array(name, data)
+        
         p.send_polygons(name, data)
+        
         time.sleep(1/250)
         
     p.deregister_node()
