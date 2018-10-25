@@ -372,14 +372,14 @@ class PathIterativeProjection:
         print points
         return points, intersection_points
     
-    def find_vertex_along_path(self, constraint_mode, contacts, comWF, desired_direction):
+    def find_vertex_along_path(self, constraint_mode, contacts, comWF, desired_direction, tolerance = 0.05, max_iteration_number = 10):
         final_points = np.zeros((0,2))
         newCoM = comWF
         comToStack = np.zeros((0,3))
+        stackedIncrements = np.zeros((0,3))
         increment = np.array([100.0, 100.0, 0.0])
         while_iter = 0
-        #print "enter while loop"
-        while (np.amax(np.abs(increment))>0.05) and (while_iter<10):
+        while (np.amax(np.abs(increment))>tolerance) and (while_iter<max_iteration_number):
             comToStack = np.vstack([comToStack, newCoM])
             polygon = self.compute_polygon_variable_constraint(constraint_mode, newCoM, contacts)
             if polygon:
@@ -389,11 +389,11 @@ class PathIterativeProjection:
                 new_p, all_points = self.find_intersection(vertices1, desired_direction, comWF)
                 final_points = np.vstack([final_points, new_p])
                 increment = np.hstack([new_p[0], 0.0]) - newCoM
-                
+                stackedIncrements = np.vstack([stackedIncrements, increment])
                 newCoM = 0.5*increment + newCoM
                 while_iter += 1
             else:
                 print "foot position is out of workspace!"
-                while_iter += 10
+                while_iter += max_iteration_number
             
-        return comToStack[-1]
+        return comToStack[-1], stackedIncrements
