@@ -387,11 +387,14 @@ class PathIterativeProjection:
                 vertices_list = polygon.export_vertices()
                 vertices1 = [array([v.x, v.y]) for v in vertices_list]
                 new_p, all_points = self.find_intersection(vertices1, desired_direction, comWF)
-                final_points = np.vstack([final_points, new_p])
-                increment = np.hstack([new_p[0], 0.0]) - newCoM
-                stackedIncrements = np.vstack([stackedIncrements, increment])
-                newCoM = 0.5*increment + newCoM
-                while_iter += 1
+                if np.size(new_p, 0)==0:
+                    while_iter+= max_iteration_number
+                else:
+                    final_points = np.vstack([final_points, new_p])
+                    increment = np.hstack([new_p[0], 0.0]) - newCoM
+                    stackedIncrements = np.vstack([stackedIncrements, increment])
+                    newCoM = 0.5*increment + newCoM
+                    while_iter += 1
             else:
                 print "foot position is out of workspace!"
                 while_iter += max_iteration_number
