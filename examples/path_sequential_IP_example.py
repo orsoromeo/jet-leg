@@ -32,9 +32,7 @@ math = Math()
 compDyn = ComputationalDynamics()
 pathIP = PathIterativeProjection()
 # number of contacts
-nc = 3
-# number of generators, i.e. rays used to linearize the friction cone
-ng = 4
+number_of_contacts = 3
 
 # ONLY_ACTUATION or ONLY_FRICTION
 constraint_mode = 'ONLY_ACTUATION'
@@ -52,14 +50,14 @@ iterProj = PathIterativeProjection()
 """ contact points """
 LF_foot = np.array([0.4, 0.3, -0.5])
 RF_foot = np.array([0.4, -0.3, -0.5])
-terrainHeight = terrain.get_height(LH_x, LH_y)
-LH_foot = np.array([LH_x, LH_y, terrainHeight-0.5])
-#print "Terrain height: ", LH_foot        
+terrainHeight = terrain.get_height(-.4, 0.3)
+LH_foot = np.array([-.4, 0.3, terrainHeight-0.5])     
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
-desired_direction = np.array([-1.0, dir_y, 0.0])
+angle = np.random.normal(3.1415, 0.2)
+desired_direction = np.array([np.cos(angle), np.sin(angle), 0.0])
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
+contacts = contactsToStack[0:number_of_contacts, :]
 
 tolerance = 0.005
 newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(constraint_mode, contacts, comWF, desired_direction, tolerance)
@@ -91,7 +89,7 @@ plt.plot(newLimitPoint[0], newLimitPoint[1], 'g^', markersize=20, label= 'Actuat
 plt.plot(comWF[0], comWF[1], 'ro', markersize=20, label= 'Initial CoM position used in the SIP alg.')
 segment = np.vstack([comWF,newLimitPoint])
 plt.plot(segment[:,0], segment[:,1], 'b-', linewidth=2, label= 'Search direction')
-plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='Stance feet')
+plt.plot(contacts[0:number_of_contacts,0],contacts[0:number_of_contacts,1],'ko',markersize=15, label='Stance feet')
 
 plt.xlim(-0.9, 0.5)
 plt.ylim(-0.7, 0.7)
