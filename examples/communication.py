@@ -22,6 +22,7 @@ import traceback
 from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
 from rosgraph_msgs.msg import Clock
+from geometry_msgs.msg import Point
 from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D
 from dwl_msgs.msg import WholeBodyState, WholeBodyTrajectory, JointState, ContactState, BaseState
 from sensor_msgs.msg import JointState
@@ -53,7 +54,7 @@ class HyQSim(threading.Thread):
 #        self.hyq_rcf_debug_sub_name = "/hyq/crt_rcf_debug"
         self.hyq_wbs = dict()
         self.hyq_rcf_debug = StringDoubleArray()  
-        self.polygon_topic_name = Polygon3D()
+        self.polygon_topic_name = "/hyq/actuation_polygon"
         self.debug_topic_name = "/hyq/planner_back"
         self.sim_time  = 0.0
                 
@@ -66,7 +67,7 @@ class HyQSim(threading.Thread):
 #        self.sub_rcf_debug = ros.Subscriber(self.hyq_rcf_debug_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
 #        self.sub_rcf_params = ros.Subscriber(self.hyq_rcf_params_sub_name, RCFParams, callback=self._reg_sim_rcf_params, queue_size=1)
         self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
-        self.pub_polygon = ros.Publisher(self.polygon_topic_name, SimpleDoubleArray, queue_size=1)
+        self.pub_polygon = ros.Publisher(self.polygon_topic_name, Polygon3D, queue_size=1)
 #        self.fbs = ros.ServiceProxy('/hyq/freeze_base', Empty)
 #        self.startRCF = ros.ServiceProxy('/hyq/start_RCF', Empty)
 #        self.stopRCF = ros.ServiceProxy('/hyq/stop_RCF', Empty)
@@ -137,12 +138,12 @@ class HyQSim(threading.Thread):
 #        return self.hyq_rcf_debug
 #   
 
-    def send_polygons(self, name, data):
+    def send_polygons(self, name, vertices):
 #        self.output = dict()
-        output = SimpleDoubleArray()
-        output.name = name
-        output.data = data
-        self.pub_rcf_params.publish(output)    
+        output = Polygon3D()
+        output.names = name
+        output.vertices = vertices
+        self.pub_polygon.publish(output)    
     
     def send_simple_array(self, name, data):
 #        self.output = dict()
@@ -198,9 +199,15 @@ if __name__ == '__main__':
     p.register_node()
     name = "Miki"
     data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    point = Point()
+#    point.x = 1.0
+#    point.y = 1.5
+#    point.z = 2.0
+#    vertex = [point, point]
     
     actuationParams = ActuationParameters()
     for i in range(100000):
+        vertices = [point]
         print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         crt_wbs = p.get_sim_wbs()
 #        crt_rcf = p.get_sim_rcf_params()
@@ -213,32 +220,33 @@ if __name__ == '__main__':
         print '-------------------------------->CoM position is: ', actuationParams.CoMposition
         trunk_mass = 85.
         axisZ= np.array([[0.0], [0.0], [1.0]])
-        ''' random normals '''    
-        randRoll = np.random.normal(0.0, 0.2)
-        randPitch = np.random.normal(0.0, 0.2)
-        randYaw = np.random.normal(0.0, 0.2)
-        n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-        randRoll = np.random.normal(0.0, 0.2)
-        randPitch = np.random.normal(0.0, 0.2)
-        randYaw = np.random.normal(0.0, 0.2)
-        n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-        randRoll = np.random.normal(0.0, 0.2)
-        randPitch = np.random.normal(0.0, 0.2)
-        randYaw = np.random.normal(0.0, 0.2)
-        n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+        ''' normals '''    
+        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         normals = np.vstack([n1, n2, n3])
         nc = 3
         """ contact points """
-        sigma = 0.05 # mean and standard deviation
-        randX = np.floor(np.random.normal(30, sigma))
-        randY = np.floor(np.random.normal(20, sigma))
-        LF_foot = np.array([randX/100, randY/100, -0.5])
-        RF_foot = np.array([randX/100, -randY/100, -0.5])
-        LH_foot = np.array([-randX/100, randY/100, -0.5])
-        
-        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot))
+        LF_foot = np.array([0.3, 0.3, -0.5])
+        RF_foot = np.array([0.3, -0.2, -0.5])
+        LH_foot = np.array([-0.2, 0.0, -0.5])
+        RH_foot = np.array([-0.3, -0.2, -0.5])
+
+        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
         contacts = contactsToStack[0:nc, :]
-        IAP, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(contacts, normals, trunk_mass)
+        
+        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(contacts, normals, trunk_mass)
+        number_of_vertices = np.size(IAR, 0)
+        print IAR
+        for i in range(0, number_of_vertices):
+            point = Point()
+            point.x = IAR[i][0]
+            point.y = IAR[i][1]
+            point.z = 0.0
+            vertices = np.hstack([vertices, point])
+        print'vertices', vertices
+            
 #        out_rcf_params = crt_rcf
 #        out_rcf_params.KP_lin = list(out_rcf_params.KP_lin)
 #        out_rcf_params.KP_lin[0] = out_rcf_params.KP_lin[0] + 10
@@ -248,9 +256,10 @@ if __name__ == '__main__':
 #            p.call_freezeBaseService()
 
 #        output = ['miki',1]
+
         p.send_simple_array(name, data)
         
-        p.send_polygons(name, data)
+        p.send_polygons(name, vertices)
         
         time.sleep(1/250)
         
