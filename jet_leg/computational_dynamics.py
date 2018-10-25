@@ -148,6 +148,15 @@ class ComputationalDynamics():
         print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
 
         return vertices_WF, actuation_polygons, computation_time
+        
+        
+    def instantaneous_actuation_region_bretl(self, contacts, normals, trunk_mass, comWF = np.array([0.0,0.0,0.0])):
+        constraint_mode = 'ONLY_ACTUATION'
+        number_of_generators = 4
+        mu = 1.0
+        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
+
+        return IP_points, actuation_polygons, computation_time
                 
                 
     ''' 
