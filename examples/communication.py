@@ -55,17 +55,17 @@ class HyQSim(threading.Thread):
         self.hyq_wbs = dict()
         self.hyq_rcf_debug = StringDoubleArray()  
         self.polygon_topic_name = "/hyq/actuation_polygon"
-        self.debug_topic_name = "/hyq/planner_back"
+#        self.debug_topic_name = "/hyq/planner_back"
         self.sim_time  = 0.0
         
     def run(self):
         self.sub_clock = ros.Subscriber(self.clock_sub_name, Clock, callback=self._reg_sim_time, queue_size=1)
-        self.sub_wbs = ros.Subscriber(self.hyq_wbs_sub_name, WholeBodyState, callback=self._reg_sim_wbs, queue_size=1)
+#        self.sub_wbs = ros.Subscriber(self.hyq_wbs_sub_name, WholeBodyState, callback=self._reg_sim_wbs, queue_size=1)
         self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
 #        self.sub_rcf_aux = ros.Subscriber(self.hyq_rcf_aux_sub_name, RCFaux, callback=self._reg_sim_rcf_aux, queue_size=1)
 #        self.sub_rcf_debug = ros.Subscriber(self.hyq_rcf_debug_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
 #        self.sub_rcf_params = ros.Subscriber(self.hyq_rcf_params_sub_name, RCFParams, callback=self._reg_sim_rcf_params, queue_size=1)
-        self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
+#        self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
         self.pub_polygon = ros.Publisher(self.polygon_topic_name, Polygon3D, queue_size=1)
 #        self.fbs = ros.ServiceProxy('/hyq/freeze_base', Empty)
 #        self.startRCF = ros.ServiceProxy('/hyq/start_RCF', Empty)
@@ -110,10 +110,10 @@ class HyQSim(threading.Thread):
 class ActuationParameters:
     def __init__(self):
         self.CoMposition = [0., 0., 0.]
-        self.footPosLF = [0., 0., 0.]
-        self.footPosRF = [0., 0., 0.]
-        self.footPosLH = [0., 0., 0.]
-        self.footPosRH = [0., 0., 0.]
+        self.footPosLF = [0.3, 0.25, -.5]
+        self.footPosRF = [-0.3, 0.25, -.5]
+        self.footPosLH = [0.4, -0.25, -.5]
+        self.footPosRH = [-0.3, -0.25, -.5]
     
     def getParams(self, received_data):
         num_of_elements = np.size(received_data.data)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     p.start()
     p.register_node()
     name = "Miki"
-    data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#    data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     point = Point()
 #    point.x = 1.0
 #    point.y = 1.5
@@ -202,12 +202,10 @@ if __name__ == '__main__':
             point.z = 0.0
             vertices = np.hstack([vertices, point])
 #        print'vertices', vertices
-
-        p.send_simple_array(name, data)
         
         p.send_polygons(name, vertices)
         
-        time.sleep(1/2)
+        time.sleep(1.0/50.0)
         i+=1
         
     print 'de registering...'
