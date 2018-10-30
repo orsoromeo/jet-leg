@@ -12,11 +12,12 @@ from numpy import array, dot, eye, hstack, vstack, zeros
 from numpy.linalg import norm
 import scipy
 from scipy.linalg import block_diag
+from scipy.spatial import ConvexHull
 
 from constraints import Constraints
-
 from hyq_kinematics import HyQKinematics
 from math_tools import Math
+from geometry import Geometry
 from cvxopt import matrix, solvers
 import time
 import matplotlib.pyplot as plt
@@ -155,7 +156,9 @@ class ComputationalDynamics():
         number_of_generators = 4
         mu = 1.0
         IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
-
+        geom = Geometry()
+        IP_points = geom.clockwise_sort(np.array(IP_points))
+        
         return IP_points, actuation_polygons, computation_time
                 
                 

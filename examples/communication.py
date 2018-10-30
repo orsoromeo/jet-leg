@@ -9,15 +9,12 @@ Created on Wed Oct  3 13:38:45 2018
 import copy
 import numpy as np
 import os
-#import pexpect
-#import psutil
-import random
+
 import rospy as ros
-import rosgraph
 import sys
 import time
 import threading
-import traceback
+
 
 from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
@@ -114,6 +111,14 @@ class ActuationParameters:
         self.footPosRF = [-0.3, 0.25, -.5]
         self.footPosLH = [0.4, -0.25, -.5]
         self.footPosRH = [-0.3, -0.25, -.5]
+        self.state_machineLF = True
+        self.state_machineRF = True
+        self.state_machineLH = True
+        self.state_machineRH = True
+        self.stanceFeet = [0, 0, 0, 0]
+        self.numberOfContacts = 0
+        self.feetPos = np.zeros((4,3))
+        self.contacts = np.zeros((4,3))
     
     def getParams(self, received_data):
         num_of_elements = np.size(received_data.data)
@@ -144,6 +149,51 @@ class ActuationParameters:
                 self.footPosRH[1] = received_data.data[j]
             if str(received_data.name[j]) == str("footPosRHz"):
                 self.footPosRH[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("state_machineLF"):
+                self.state_machineLF = received_data.data[j]
+            if str(received_data.name[j]) == str("state_machineRF"):
+                self.state_machineRF = received_data.data[j]
+            if str(received_data.name[j]) == str("state_machineLH"):
+                self.state_machineLH = received_data.data[j]
+            if str(received_data.name[j]) == str("state_machineRH"):
+                self.state_machineRH = received_data.data[j]  
+                
+            self.feetPos = np.array([[self.footPosLF],
+                                     [self.footPosRF],
+                                        [self.footPosLH],
+                                            [self.footPosRH]])
+            
+            if self.state_machineLF == 0.0:
+                self.stanceFeet[0] = 1
+            else:
+                self.stanceFeet[0] = 0
+                
+            if self.state_machineRF == 0.0:
+                self.stanceFeet[1] = 1
+            else:
+                self.stanceFeet[1] = 0
+                
+            if self.state_machineLH == 0.0:
+                self.stanceFeet[2] = 1
+            else:
+                self.stanceFeet[2] = 0
+                
+            if self.state_machineRH == 0.0:
+                self.stanceFeet[3] = 1                
+            else:
+                self.stanceFeet[3] = 0
+                    
+            self.contacts = np.zeros((4,3))        
+#            self.numberOfContacts = np.sum(self.stanceFeet)
+            counter = 0
+#            print self.state_machineLF, self.stanceFeet
+            for i in range(0,4):
+#                print i, self.stanceFeet[i]
+                if self.stanceFeet[i] == 1:
+                    self.contacts[counter] = self.feetPos[i]
+                    counter += 1
+            
+            self.numberOfContacts = counter
 
 if __name__ == '__main__':
     
@@ -165,15 +215,10 @@ if __name__ == '__main__':
     while not ros.is_shutdown():
         vertices = [point]
         print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
+#        crt_wbs = p.get_sim_wbs()
         crt_wbs = p.get_sim_wbs()
-#        crt_rcf = p.get_sim_rcf_params()
-        crt_wbs = p.get_sim_wbs()
-#        crt_aux = p.get_sim_rcf_aux()
-#        crt_debug = p.get_sim_rcf_debug()
-#        print '-------------------------------->names of the received parameters are: ', p.hyq_rcf_debug.name[2]
-#        print '-------------------------------->value of the received parameters are: ', p.hyq_rcf_debug.data[2]
         actuationParams.getParams(p.hyq_rcf_debug)
-#        print '-------------------------------->CoM position is: ', actuationParams.CoMposition
+        print 'contacts ', actuationParams.contacts, actuationParams.numberOfContacts
         trunk_mass = 85.
         axisZ= np.array([[0.0], [0.0], [1.0]])
         ''' normals '''    
@@ -188,9 +233,9 @@ if __name__ == '__main__':
         RF_foot = np.array([actuationParams.footPosRF[0], actuationParams.footPosRF[1], -0.5])
         LH_foot = np.array([actuationParams.footPosLH[0], actuationParams.footPosLH[1], -0.5])
         RH_foot = np.array([actuationParams.footPosRH[0], actuationParams.footPosRH[1], -0.5])
-
+        
         contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-        contacts = contactsToStack[0:nc, :]
+        contacts = actuationParams.contacts[0:nc, :]
 #        print contacts
         IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
@@ -205,7 +250,7 @@ if __name__ == '__main__':
         
         p.send_polygons(name, vertices)
         
-        time.sleep(1.0/50.0)
+        time.sleep(1.0/2.0)
         i+=1
         
     print 'de registering...'
