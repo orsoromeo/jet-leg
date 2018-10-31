@@ -76,6 +76,7 @@ class HyQSim(threading.Thread):
         self.hyq_wbs = copy.deepcopy(msg)
 
     def _reg_sim_rcf_debug(self, msg):
+#        print 'new data received'
         self.hyq_rcf_debug = copy.deepcopy(msg)  
         
     def register_node(self):
@@ -227,17 +228,13 @@ if __name__ == '__main__':
         n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         normals = np.vstack([n1, n2, n3])
-        nc = 3
+
         """ contact points """
-        LF_foot = np.array([actuationParams.footPosLF[0], actuationParams.footPosLF[1], -0.5])
-        RF_foot = np.array([actuationParams.footPosRF[0], actuationParams.footPosRF[1], -0.5])
-        LH_foot = np.array([actuationParams.footPosLH[0], actuationParams.footPosLH[1], -0.5])
-        RH_foot = np.array([actuationParams.footPosRH[0], actuationParams.footPosRH[1], -0.5])
-        
-        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+        nc = actuationParams.numberOfContacts
         contacts = actuationParams.contacts[0:nc, :]
-#        print contacts
-        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(contacts, normals, trunk_mass)
+        print 'contacts: ',contacts
+#        print contacts, actuationParams.stanceFeet
+        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
 #        print IAR
         for i in range(0, number_of_vertices):

@@ -213,10 +213,10 @@ class IterativeProjection:
                 C = np.zeros((0,0))
                 d = np.zeros((1,0))
             else:
-                act_LF = constr.computeActuationPolygon(J_LF)
-                act_RF = constr.computeActuationPolygon(J_RF)
-                act_LH = constr.computeActuationPolygon(J_LH)
-                act_RH = constr.computeActuationPolygon(J_RH)            
+                act_LF = constr.computeLegActuationPolygon(J_LF)
+                act_RF = constr.computeLegActuationPolygon(J_RF)
+                act_LH = constr.computeLegActuationPolygon(J_LH)
+                act_RH = constr.computeLegActuationPolygon(J_RH)            
                 ''' in the case of the IP alg. the contact force limits must be divided by the mass
                 because the gravito inertial wrench is normalized'''
                 

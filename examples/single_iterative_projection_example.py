@@ -47,13 +47,14 @@ n = nc*6
 # contact positions
 """ contact points """
 
-LF_foot = np.array([0.3, 0.3, -0.5])
+LF_foot = np.array([0.3, 0.2, -0.5])
 RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.2, 0.0, -0.5])
+LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
+contacts = contactsToStack[0:nc+1, :]
+print contacts
 
 ''' parameters to be tuned'''
 g = 9.81
@@ -84,15 +85,17 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
+stanceFeet = [1,1,1,1]
 ''' compute iterative projection '''
-IP_points, actuation_polygons = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu)
+IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu)
 
 ''' plotting Iterative Projection points '''
 plotter = Plotter()
 scaling_factor = 2000
 if constraint_mode_IP == 'ONLY_ACTUATION':
     plotter.plot_polygon(np.transpose(IP_points))
-    for j in range(0,nc):
+    for j in range(0,4):
+        print 'a',actuation_polygons[j], contacts[j,:]
         plotter.plot_actuation_polygon(ax, actuation_polygons[j], contacts[j,:], scaling_factor)
 
 ''' 2D figure '''

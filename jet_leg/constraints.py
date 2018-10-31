@@ -127,13 +127,35 @@ class Constraints:
         #print constraint, known_term
         return constraint, known_term
 
+    def computeActuationPolygons(self, stanceFeet, legsJacobians):
+#        act_LF = constr.computeLegActuationPolygon(J_LF)
+#        act_RF = constr.computeLegActuationPolygon(J_RF)
+#        act_LH = constr.computeLegActuationPolygon(J_LH)
+#        act_RH = constr.computeLegActuationPolygon(J_RH) 
+#        print 'Jacobians: ', legsJacobians
+        stanceIndex = []
+        for iter in range(0, 4):
+            if stanceFeet[iter] == 1:
+#                print 'new poly', stanceIndex, iter
+                stanceIndex = np.hstack([stanceIndex, iter])
+         
+#        print 'stance ind ', stanceIndex 
+        actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])]),
+                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])]),
+                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])]), 
+                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[3])])])
+                                       
+#        print 'actuation polygons ', actuation_polygons
+        return actuation_polygons
+        
+    
     """ 
-    This function computes the actuation polygon of a given mechanical chain
+    This function computes the actuation polygon of a given mechanical chain (i.e. one leg).
     This function assumes the same mechanical structure of the HyQ robot, meaning that 
     it is restricted to 3 DoFs and point contacts. If the latter assumption is not
     respected the Jacobian matrix might become not invertible.
     """        
-    def computeActuationPolygon(self, leg_jacobian, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):
+    def computeLegActuationPolygon(self, leg_jacobian, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):
         dx = tau_HAA
         dy = tau_HFE
         dz = tau_KFE
@@ -155,19 +177,19 @@ class Constraints:
             actuation_polygon = np.matmul(np.linalg.inv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)        
             
         # Only for debugging:                          
-        # actuation_polygon = vertices
+#        actuation_polygon = vertices
         return actuation_polygon
-        
+    
     def getInequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, saturate_normal_force = False):
         cons1 = np.zeros((0,0))
         h_vec1 = np.zeros((0,1))
         cons2 = np.zeros((0,0))
         h_vec2 = np.zeros((0,1))
         error = True
-        actuation_polygon_LF = self.computeActuationPolygon(J_LF)
-        actuation_polygon_RF = self.computeActuationPolygon(J_RF)
-        actuation_polygon_LH = self.computeActuationPolygon(J_LH)
-        actuation_polygon_RH = self.computeActuationPolygon(J_RH)
+        actuation_polygon_LF = self.computeLegActuationPolygon(J_LF)
+        actuation_polygon_RF = self.computeLegActuationPolygon(J_RF)
+        actuation_polygon_LH = self.computeLegActuationPolygon(J_LH)
+        actuation_polygon_RH = self.computeLegActuationPolygon(J_RH)
         actuation_polygons = np.array([actuation_polygon_LF,
                                        actuation_polygon_RF,
                                        actuation_polygon_LH,

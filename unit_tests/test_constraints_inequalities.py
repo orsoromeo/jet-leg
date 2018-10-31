@@ -42,7 +42,7 @@ class TestStringMethods(unittest.TestCase):
         J_RH = np.eye((2))
         constraint = Constraints()
         
-        G, h, isConstraintOk, actuationPolygons = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+        G, h, isConstraintOk, actuationPolygons = constraint.getInequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         #print G, h
      
         for j in range(0,len(h)):
@@ -74,7 +74,7 @@ class TestStringMethods(unittest.TestCase):
         J_RH = np.eye((3))
         constraint = Constraints()
         
-        G, h, isConstraintOk, actuationPolygons = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+        G, h, isConstraintOk, actuationPolygons = constraint.getInequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
         #print G, h
      
         for j in range(0,len(h)):
@@ -120,7 +120,7 @@ class TestStringMethods(unittest.TestCase):
         if (not isOutOfWorkspace):
             kin.update_jacobians(q)
             #print J_LF
-            G, h, isConstraintOk, actuationPolygons = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+            G, h, isConstraintOk, actuationPolygons = constraint.getInequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
  
         for j in range(0,len(h)):
             self.assertTrue(h[j] > self.epsilon)
@@ -164,7 +164,7 @@ class TestStringMethods(unittest.TestCase):
         if (not isOutOfWorkspace):
             kin.update_jacobians(q)
             #print J_LF
-            G, h, isConstraintOk, actuationPolygons = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+            G, h, isConstraintOk, actuationPolygons = constraint.getInequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
  
         for j in range(0,len(h)):
             self.assertTrue(h[j] > self.epsilon)
@@ -205,14 +205,14 @@ class TestStringMethods(unittest.TestCase):
         if (not isOutOfWorkspace):
             kin.update_jacobians(q)
             #print J_LF
-            G, h, isConstraintOk, actuationPolygons = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+            G, h, isConstraintOk, actuationPolygons = constraint.getInequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
  
         J_LF_3D, J_RF_3D, J_LH_3D, J_RH_3D = kin.update_jacobians(q)
         
         if (not isOutOfWorkspace):
             kin.update_jacobians(q)
             #print J_LF
-            G_new, h_new, isConstraintOk, actuationPolygons = constraint.inequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF_3D, J_RF_3D, J_LH_3D, J_RH_3D)
+            G_new, h_new, isConstraintOk, actuationPolygons = constraint.getInequalities(constraint_mode, nc, ng, normals, friction_coeff, J_LF_3D, J_RF_3D, J_LH_3D, J_RH_3D)
  
         for j in range(0,len(h)):
             self.assertTrue(h[j] - h_new[j] < self.epsilon)

@@ -45,7 +45,7 @@ class ComputationalDynamics():
     mu = friction coefficient (we assume here the same coeff for all the contact points)
     saturate_normal_force = if True this sets a max constant value on the normal force of the friction cones
     '''
-    def setup_iterative_projection(self, constraint_mode, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force):
+    def setup_iterative_projection(self, constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force):
         ''' parameters to be tuned'''
         g = 9.81
         isOutOfWorkspace = False;
@@ -114,16 +114,17 @@ class ComputationalDynamics():
                 C = np.zeros((0,0))
                 d = np.zeros((1,0))
             else:
-                act_LF = constr.computeActuationPolygon(J_LF)
-                act_RF = constr.computeActuationPolygon(J_RF)
-                act_LH = constr.computeActuationPolygon(J_LH)
-                act_RH = constr.computeActuationPolygon(J_RH)            
+ 
+                jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
+
+                actuation_polygons = constr.computeActuationPolygons(stanceLegs, jacobianMatrices)
+#                print 'actuation polygon ',actuation_polygons 
                 ''' in the case of the IP alg. the contact force limits must be divided by the mass
                 because the gravito inertial wrench is normalized'''
                 
                 C = np.zeros((0,0))
                 d = np.zeros((1,0))
-                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
+#                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
                 for j in range (0,contactsNumber):
                     hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
                     C = block_diag(C, hexahedronHalfSpaceConstraints)
@@ -138,11 +139,11 @@ class ComputationalDynamics():
                 
         return proj, eq, ineq, actuation_polygons
         
-    def iterative_projection_bretl(self, constraint_mode, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), saturate_normal_force = False):
+    def iterative_projection_bretl(self, constraint_mode, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), saturate_normal_force = False):
 
         start_t_IP = time.time()
         
-        proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force)
+        proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force)
         vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl')
         #vertices_WF = vertices_BF + np.transpose(comWF[0:2])
         computation_time = (time.time() - start_t_IP)
@@ -151,11 +152,11 @@ class ComputationalDynamics():
         return vertices_WF, actuation_polygons, computation_time
         
         
-    def instantaneous_actuation_region_bretl(self, contacts, normals, trunk_mass, comWF = np.array([0.0,0.0,0.0])):
+    def instantaneous_actuation_region_bretl(self, stanceLegs, contacts, normals, trunk_mass, comWF = np.array([0.0,0.0,0.0])):
         constraint_mode = 'ONLY_ACTUATION'
         number_of_generators = 4
         mu = 1.0
-        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
+        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, stanceLegs, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
         geom = Geometry()
         IP_points = geom.clockwise_sort(np.array(IP_points))
         

@@ -284,7 +284,7 @@ class TestLPGroundTruth(unittest.TestCase):
                                       [  2.00000000e-01,   2.50000000e-01,  -5.00000000e-02],
                                       [  2.00000000e-01,   2.50000000e-01,  -5.55111512e-17],
                                       [  2.00000000e-01,   3.00000000e-01,  -5.55111512e-17]]);
-        #print expected_feasible
+#        print expected_feasible
         rows = np.size(expected_feasible, 0)
         cols = np.size(expected_feasible, 1) 
         for i in range(0, rows):
@@ -552,7 +552,7 @@ class TestLPGroundTruth(unittest.TestCase):
        [  3.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
        [  3.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
        [  3.00000000e-01,   1.50000000e-01,  -5.55111512e-17]]);
-        #print expected_feasible
+#        print expected_feasible
         rows = np.size(expected_feasible, 0)
         cols = np.size(expected_feasible, 1) 
         for i in range(0, rows):
