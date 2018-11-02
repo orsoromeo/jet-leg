@@ -33,16 +33,15 @@ from jet_leg.arrow3D import Arrow3D
 plt.close('all')
 math = Math()
 # number of contacts
-nc = 3
+#nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
-# ONLY_ACTUATION or ONLY_FRICTION
-constraint_mode = 'ONLY_ACTUATION'
-constraint_mode_IP = 'ONLY_ACTUATION'
+# ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+constraint_mode_IP = 'FRICTION_AND_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
-n = nc*6
+#n = nc*6
 
 # contact positions
 """ contact points """
@@ -52,15 +51,15 @@ RF_foot = np.array([0.3, -0.2, -0.5])
 LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
-contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc+1, :]
+contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+#contacts = contactsToStack[0:nc+1, :]
 #print contacts
 
 ''' parameters to be tuned'''
 g = 9.81
 trunk_mass = 85.
-mu = 0.8
-
+mu = 1.0
+stanceFeet = [1,1,1,1]
 axisZ= array([[0.0], [0.0], [1.0]])
 
 n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -78,6 +77,7 @@ ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
 
+nc = np.sum(stanceFeet)
 plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 for j in range(0,nc):
     ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
@@ -85,10 +85,11 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
-stanceFeet = [0,1,1,1]
+
 ''' compute iterative projection '''
 IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu)
 
+print IP_points
 ''' plotting Iterative Projection points '''
 plotter = Plotter()
 scaling_factor = 2000

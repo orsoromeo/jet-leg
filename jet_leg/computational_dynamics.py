@@ -52,7 +52,7 @@ class ComputationalDynamics():
 
         grav = array([0., 0., -g])
         contactsNumber = np.sum(stanceLegs)
-#        print 'num',contactsNumber
+        print 'num',contactsNumber
         
         compDyn = ComputationalDynamics()
         # Unprojected state is:
@@ -63,7 +63,7 @@ class ComputationalDynamics():
         G = np.zeros((6,0))   
         
         stanceIndex = []
-#        print 'stance', stanceLegs
+        print 'stance', stanceLegs
         for iter in range(0, 4):
             if stanceLegs[iter] == 1:
 #                print 'new poly', stanceIndex, iter
@@ -97,17 +97,57 @@ class ComputationalDynamics():
         #print A,t
         eq = (A, t)  # A * x == t
         
-        act_LF = np.zeros((0,1))
-        act_RF = np.zeros((0,1))
-        act_LH = np.zeros((0,1))
-        act_RH = np.zeros((0,1))
         actuation_polygons = np.zeros((0,1))
         # Inequality matrix for a contact force in local contact frame:
         constr = Constraints()
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
-        if constraint_mode == 'ONLY_FRICTION':
+        if constraint_mode == 'FRICTION_AND_ACTUATION':
+            kin = HyQKinematics()
+            foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+            contactsFourLegs = contacts
+#            print '4 legs', contactsFourLegs
+            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - comWF[0]),
+                                                  np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsFourLegs[:,1] - comWF[1]),
+                                                    np.transpose(foot_vel[:,1]),
+                                                    np.transpose(contactsFourLegs[:,2] - comWF[2]),
+                                                    np.transpose(foot_vel[:,2]))
+            J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
+
+            if isOutOfWorkspace:
+                C = np.zeros((0,0))
+                d = np.zeros((1,0))
+            else:
+ 
+                jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
+
+                actuation_polygons = constr.computeActuationPolygons(stanceLegs, jacobianMatrices)
+#                print 'actuation polygon ',actuation_polygons 
+                ''' in the case of the IP alg. the contact force limits must be divided by the mass
+                because the gravito inertial wrench is normalized'''
+                
+                C1 = np.zeros((0,0))
+                d1 = np.zeros((1,0))
+#                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
+                for j in range (0,contactsNumber):
+#                    print 'second iter', j
+                    hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
+                    C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
+                    d1 = hstack([d1, knownTerm.T])
+                    
+            
+                C2, d2 = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+                C = np.vstack([C1, C2])
+#                print np.size(C,0), np.size(C,1), C
+                d = np.hstack([d1[0], d2])
+                print d
+                d = d.reshape(10*contactsNumber)
+                
+        elif constraint_mode == 'ONLY_FRICTION':
             C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+#            print np.size(C,0), np.size(C,1), C
+#            print C,d
             
         elif constraint_mode == 'ONLY_ACTUATION':
             #kin = Kinematics()
@@ -144,7 +184,8 @@ class ComputationalDynamics():
                     C = block_diag(C, hexahedronHalfSpaceConstraints)
                     d = hstack([d, knownTerm.T])
                     
-                d = d.reshape(6*contactsNumber)    
+                d = d.reshape(6*contactsNumber)   
+#                print np.size(C,0), np.size(C,1), C
                 #C = block_diag(c1, c2, c3, c4)
                 #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
                 #print C, d
@@ -156,7 +197,7 @@ class ComputationalDynamics():
     def iterative_projection_bretl(self, constraint_mode, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), saturate_normal_force = False):
 
         start_t_IP = time.time()
-        
+        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
         proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force)       
 #        print 'hereee'        
         vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl')
@@ -178,10 +219,8 @@ class ComputationalDynamics():
         
         return IP_points, actuation_polygons, computation_time
 
-    def support_region_bretl(self, stanceLegs, contacts, normals, trunk_mass, comWF = np.array([0.0,0.0,0.0])):
+    def support_region_bretl(self, stanceLegs, contacts, normals, trunk_mass, number_of_generators = 4, mu = 1.0, comWF = np.array([0.0,0.0,0.0])):
         constraint_mode = 'ONLY_FRICTION'
-        number_of_generators = 4
-        mu = 1.0
         IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, stanceLegs, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
         geom = Geometry()
         IP_points = geom.clockwise_sort(np.array(IP_points))

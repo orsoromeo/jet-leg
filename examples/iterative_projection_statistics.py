@@ -28,8 +28,8 @@ nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
-# ONLY_ACTUATION or ONLY_FRICTION
-constraint_mode_IP = 'ONLY_ACTUATION'
+# ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+constraint_mode_IP = 'FRICTION_AND_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
@@ -77,6 +77,7 @@ for iter in range(0,number_of_tests):
 
     ''' compute iterative projection '''
     stanceLegs = [1 ,1, 1, 0]
+#    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu)
     comp_time = comp_time * 1000.0
     tests3contacts[iter] = comp_time

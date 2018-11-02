@@ -3,7 +3,7 @@
 """
 Created on Wed Oct  3 13:38:45 2018
 
-@author: aradulescu
+@author: Romeo Orsolino
 """
 
 import copy
@@ -127,29 +127,29 @@ class ActuationParameters:
         for j in range(0,num_of_elements):
 #            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
             if str(received_data.name[j]) == str("footPosLFx"):
-                self.footPosLF[0] = received_data.data[j]
+                self.footPosLF[0] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosLFy"):
-                self.footPosLF[1] = received_data.data[j]
+                self.footPosLF[1] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosLFz"):
-                self.footPosLF[2] = received_data.data[j]
+                self.footPosLF[2] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRFx"):
-                self.footPosRF[0] = received_data.data[j]
+                self.footPosRF[0] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRFy"):
-                self.footPosRF[1] = received_data.data[j]
+                self.footPosRF[1] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRFz"):
-                self.footPosRF[2] = received_data.data[j]
+                self.footPosRF[2] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosLHx"):
-                self.footPosLH[0] = received_data.data[j]
+                self.footPosLH[0] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosLHy"):
-                self.footPosLH[1] = received_data.data[j]
+                self.footPosLH[1] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosLHz"):
-                self.footPosLH[2] = received_data.data[j]
+                self.footPosLH[2] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRHx"):
-                self.footPosRH[0] = received_data.data[j]
+                self.footPosRH[0] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRHy"):
-                self.footPosRH[1] = received_data.data[j]
+                self.footPosRH[1] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRHz"):
-                self.footPosRH[2] = received_data.data[j]
+                self.footPosRH[2] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("state_machineLF"):
                 self.state_machineLF = received_data.data[j]
             if str(received_data.name[j]) == str("state_machineRF"):
@@ -187,7 +187,7 @@ class ActuationParameters:
             self.contacts = np.zeros((4,3))     
             
             counter = 0
-            print self.state_machineLF, self.stanceFeet
+#            print self.state_machineLF, self.stanceFeet
             for i in range(0,4):
                 self.contacts[i] = self.feetPos[i]
 #                print i, self.stanceFeet[i]
@@ -221,16 +221,19 @@ def talker():
         n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        normals = np.vstack([n1, n2, n3])
+        normals = np.vstack([n1, n2, n3, n4])
 
         """ contact points """
         nc = actuationParams.numberOfContacts
         contacts = actuationParams.contacts[0:nc+1, :]
 #        print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
-        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
+        # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+        constraint_mode = 'FRICTION_AND_ACTUATION'
+        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0)
+#        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
-#        print IAR
+        print np.size(IAR,0)
         for i in range(0, number_of_vertices):
             point = Point()
             point.x = IAR[i][0]
@@ -241,7 +244,7 @@ def talker():
         
         p.send_polygons(name, vertices)
         
-        time.sleep(1.0/5.0)
+        time.sleep(1.0/2.0)
         i+=1
         
     print 'de registering...'
