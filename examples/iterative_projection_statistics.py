@@ -70,12 +70,14 @@ for iter in range(0,number_of_tests):
     LF_foot = np.array([randX/100, randY/100, -0.5])
     RF_foot = np.array([randX/100, -randY/100, -0.5])
     LH_foot = np.array([-randX/100, randY/100, -0.5])
+    RH_foot = np.array([-randX/100, -randY/100, -0.5])
     
-    contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot))
-    contacts = contactsToStack[0:nc, :]
+    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+#    contacts = contactsToStack[0:nc, :]
 
     ''' compute iterative projection '''
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu)
+    stanceLegs = [1 ,1, 1, 0]
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu)
     comp_time = comp_time * 1000.0
     tests3contacts[iter] = comp_time
 
@@ -120,8 +122,9 @@ for iter in range(0,number_of_tests):
     contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
     contacts = contactsToStack[0:nc, :]
 
+    stanceLegs = [1 ,1, 1, 1]
     ''' compute iterative projection '''
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu)
     comp_time = comp_time * 1000.0
     tests4contacts[iter] = comp_time
     

@@ -54,7 +54,7 @@ RH_foot = np.array([-0.3, -0.2, -0.5])
 
 contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts = contactsToStack[0:nc+1, :]
-print contacts
+#print contacts
 
 ''' parameters to be tuned'''
 g = 9.81
@@ -85,7 +85,7 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
-stanceFeet = [1,1,1,1]
+stanceFeet = [0,1,1,1]
 ''' compute iterative projection '''
 IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu)
 

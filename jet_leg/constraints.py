@@ -128,23 +128,29 @@ class Constraints:
         return constraint, known_term
 
     def computeActuationPolygons(self, stanceFeet, legsJacobians):
-#        act_LF = constr.computeLegActuationPolygon(J_LF)
-#        act_RF = constr.computeLegActuationPolygon(J_RF)
-#        act_LH = constr.computeLegActuationPolygon(J_LH)
-#        act_RH = constr.computeLegActuationPolygon(J_RH) 
-#        print 'Jacobians: ', legsJacobians
+
         stanceIndex = []
+#        print 'stance', stanceFeet
         for iter in range(0, 4):
             if stanceFeet[iter] == 1:
 #                print 'new poly', stanceIndex, iter
                 stanceIndex = np.hstack([stanceIndex, iter])
+            else:
+                swingIndex = iter
          
 #        print 'stance ind ', stanceIndex 
-        actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])]),
+        if np.sum(stanceFeet) == 4:
+            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[0]),
+                                       self.computeLegActuationPolygon(legsJacobians[1]),
+                                       self.computeLegActuationPolygon(legsJacobians[2]), 
+                                        self.computeLegActuationPolygon(legsJacobians[3])])
+        if np.sum(stanceFeet) == 3:       
+            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])]),
                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])]),
                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])]), 
-                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[3])])])
-                                       
+                                        self.computeLegActuationPolygon(legsJacobians[int(swingIndex)])])            
+                                            
+                                        
 #        print 'actuation polygons ', actuation_polygons
         return actuation_polygons
         
@@ -155,7 +161,7 @@ class Constraints:
     it is restricted to 3 DoFs and point contacts. If the latter assumption is not
     respected the Jacobian matrix might become not invertible.
     """        
-    def computeLegActuationPolygon(self, leg_jacobian, tau_HAA = 80, tau_HFE = 120, tau_KFE = 120):
+    def computeLegActuationPolygon(self, leg_jacobian, tau_HAA = 80, tau_HFE = 100, tau_KFE = 100):
         dx = tau_HAA
         dy = tau_HFE
         dz = tau_KFE

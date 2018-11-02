@@ -806,7 +806,7 @@ class HyQKinematics:
         footPosDes_xz = np.vstack([x,z])
         BASE2HAA_offsets_xz = np.array([[self.BASE2HAA_offset_x,self.BASE2HAA_offset_x,-self.BASE2HAA_offset_x,-self.BASE2HAA_offset_x],
                                  [-self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z]]);
-
+#        print footPosDes_xz, BASE2HAA_offsets_xz
         footPosHAA = np.subtract(footPosDes_xz, BASE2HAA_offsets_xz)
         #print footPosHAA
 

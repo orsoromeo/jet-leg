@@ -51,7 +51,8 @@ class ComputationalDynamics():
         isOutOfWorkspace = False;
 
         grav = array([0., 0., -g])
-        contactsNumber = np.size(contacts,0)
+        contactsNumber = np.sum(stanceLegs)
+#        print 'num',contactsNumber
         
         compDyn = ComputationalDynamics()
         # Unprojected state is:
@@ -60,8 +61,19 @@ class ComputationalDynamics():
         Ex = np.zeros((0)) 
         Ey = np.zeros((0))        
         G = np.zeros((6,0))   
+        
+        stanceIndex = []
+#        print 'stance', stanceLegs
+        for iter in range(0, 4):
+            if stanceLegs[iter] == 1:
+#                print 'new poly', stanceIndex, iter
+                stanceIndex = np.hstack([stanceIndex, iter])
+            else:
+                swingIndex = iter
+                
         for j in range(0,contactsNumber):
-            r = contacts[j,:]
+#            print 'iter',j, int(stanceIndex[j])
+            r = contacts[int(stanceIndex[j]),:]
             graspMatrix = compDyn.getGraspMatrix(r)[:,0:3]
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
@@ -101,7 +113,8 @@ class ComputationalDynamics():
             #kin = Kinematics()
             kin = HyQKinematics()
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-            contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
+            contactsFourLegs = contacts
+#            print '4 legs', contactsFourLegs
             q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - comWF[0]),
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsFourLegs[:,1] - comWF[1]),
@@ -126,6 +139,7 @@ class ComputationalDynamics():
                 d = np.zeros((1,0))
 #                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
                 for j in range (0,contactsNumber):
+#                    print 'second iter', j
                     hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
                     C = block_diag(C, hexahedronHalfSpaceConstraints)
                     d = hstack([d, knownTerm.T])
@@ -143,11 +157,13 @@ class ComputationalDynamics():
 
         start_t_IP = time.time()
         
-        proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force)
+        proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force)       
+#        print 'hereee'        
         vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl')
+#        print 'hereee 2'
         #vertices_WF = vertices_BF + np.transpose(comWF[0:2])
         computation_time = (time.time() - start_t_IP)
-        print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
+#        print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
 
         return vertices_WF, actuation_polygons, computation_time
         
@@ -161,7 +177,16 @@ class ComputationalDynamics():
         IP_points = geom.clockwise_sort(np.array(IP_points))
         
         return IP_points, actuation_polygons, computation_time
-                
+
+    def support_region_bretl(self, stanceLegs, contacts, normals, trunk_mass, comWF = np.array([0.0,0.0,0.0])):
+        constraint_mode = 'ONLY_FRICTION'
+        number_of_generators = 4
+        mu = 1.0
+        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, stanceLegs, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
+        geom = Geometry()
+        IP_points = geom.clockwise_sort(np.array(IP_points))
+        
+        return IP_points, actuation_polygons, computation_time                
                 
     ''' 
     This function is used to check every single CoM position and see if there is a feasible set of contact forces for that configuration.

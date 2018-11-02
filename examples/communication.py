@@ -164,62 +164,56 @@ class ActuationParameters:
                                         [self.footPosLH],
                                             [self.footPosRH]])
             
-            if self.state_machineLF == 0.0:
+            if self.state_machineLF == 0.0 or self.state_machineLF == 1.0:
                 self.stanceFeet[0] = 1
             else:
                 self.stanceFeet[0] = 0
                 
-            if self.state_machineRF == 0.0:
+            if self.state_machineRF == 0.0 or self.state_machineRF == 1.0:
                 self.stanceFeet[1] = 1
             else:
                 self.stanceFeet[1] = 0
                 
-            if self.state_machineLH == 0.0:
+            if self.state_machineLH == 0.0 or self.state_machineLH == 1.0:
                 self.stanceFeet[2] = 1
             else:
                 self.stanceFeet[2] = 0
                 
-            if self.state_machineRH == 0.0:
+            if self.state_machineRH == 0.0 or self.state_machineRH == 1.0:
                 self.stanceFeet[3] = 1                
             else:
                 self.stanceFeet[3] = 0
                     
-            self.contacts = np.zeros((4,3))        
-#            self.numberOfContacts = np.sum(self.stanceFeet)
+            self.contacts = np.zeros((4,3))     
+            
             counter = 0
-#            print self.state_machineLF, self.stanceFeet
+            print self.state_machineLF, self.stanceFeet
             for i in range(0,4):
+                self.contacts[i] = self.feetPos[i]
 #                print i, self.stanceFeet[i]
                 if self.stanceFeet[i] == 1:
-                    self.contacts[counter] = self.feetPos[i]
+#                    self.contacts[counter] = self.feetPos[i]
                     counter += 1
             
             self.numberOfContacts = counter
 
-if __name__ == '__main__':
-    
+def talker():
     compDyn = ComputationalDynamics()
     math = Math()
     p=HyQSim()
     p.start()
     p.register_node()
-    name = "Miki"
-#    data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    name = "Actuation_region"
     point = Point()
-#    point.x = 1.0
-#    point.y = 1.5
-#    point.z = 2.0
-#    vertex = [point, point]
     
     actuationParams = ActuationParameters()
     i = 0
+
     while not ros.is_shutdown():
         vertices = [point]
         print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
-#        crt_wbs = p.get_sim_wbs()
-        crt_wbs = p.get_sim_wbs()
+        p.get_sim_wbs()
         actuationParams.getParams(p.hyq_rcf_debug)
-        print 'contacts ', actuationParams.contacts, actuationParams.numberOfContacts
         trunk_mass = 85.
         axisZ= np.array([[0.0], [0.0], [1.0]])
         ''' normals '''    
@@ -231,8 +225,8 @@ if __name__ == '__main__':
 
         """ contact points """
         nc = actuationParams.numberOfContacts
-        contacts = actuationParams.contacts[0:nc, :]
-        print 'contacts: ',contacts
+        contacts = actuationParams.contacts[0:nc+1, :]
+#        print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
         IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
@@ -247,13 +241,18 @@ if __name__ == '__main__':
         
         p.send_polygons(name, vertices)
         
-        time.sleep(1.0/2.0)
+        time.sleep(1.0/5.0)
         i+=1
         
     print 'de registering...'
     p.deregister_node()
         
+
+if __name__ == '__main__':
     
-        
-            
+    try:
+        talker()
+    except ros.ROSInterruptException:
+        pass
+    
         
