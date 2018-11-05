@@ -35,7 +35,7 @@ mu = 0.8
 
 terrain = HeightMap()
 comWF = np.array([0.1, 0.1, 0.0])
-iterProj = PathIterativeProjection()        
+#iterProj = PathIterativeProjection()        
 
 #print "direction: ", desired_direction
 """ contact points """
