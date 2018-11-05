@@ -184,7 +184,7 @@ class ActuationParameters:
             else:
                 self.stanceFeet[3] = 0
                     
-            self.contacts = np.zeros((4,3))     
+#            self.contacts = np.zeros((4,3))     
             
             counter = 0
 #            print self.state_machineLF, self.stanceFeet
@@ -211,7 +211,7 @@ def talker():
 
     while not ros.is_shutdown():
         vertices = [point]
-        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
+#        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
         actuationParams.getParams(p.hyq_rcf_debug)
         trunk_mass = 85.
@@ -229,11 +229,12 @@ def talker():
 #        print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-        constraint_mode = 'FRICTION_AND_ACTUATION'
+        constraint_mode = 'ONLY_ACTUATION'
         IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0)
 #        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
-        print np.size(IAR,0)
+#        print number_of_vertices
+#        print np.size(IAR,0)
         for i in range(0, number_of_vertices):
             point = Point()
             point.x = IAR[i][0]
@@ -244,7 +245,7 @@ def talker():
         
         p.send_polygons(name, vertices)
         
-        time.sleep(1.0/2.0)
+#        time.sleep(1.0/25.0)
         i+=1
         
     print 'de registering...'

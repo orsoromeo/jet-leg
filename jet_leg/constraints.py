@@ -22,7 +22,6 @@ class Constraints:
             C = block_diag(C, np.dot(constraints_local_frame, rotationMatrix.T))
             d = np.hstack([d, d_cone])
          
-        
         return C, d
         
     def linearized_cone_vertices(self, ng, mu, cone_height = 100.):
@@ -34,8 +33,7 @@ class Constraints:
             [-mu*cone_height, -mu*cone_height, cone_height],
             [+mu*cone_height, -mu*cone_height, cone_height]])
         elif ng == 8:
-            angle = 6.283/8.+np.arange(0,6.283,6.283/8.)
-            #print angle
+            angle = 6.283/8.0+np.arange(0,6.283,6.283/8.)
             c_force = np.array([
             [0., 0., 0.],
             [+mu*cone_height*np.cos(angle[0]), +mu*cone_height*np.sin(angle[0]), cone_height],
@@ -46,7 +44,7 @@ class Constraints:
             [+mu*cone_height*np.cos(angle[5]), +mu*cone_height*np.sin(angle[5]), cone_height],
             [+mu*cone_height*np.cos(angle[6]), +mu*cone_height*np.sin(angle[6]), cone_height],
             [+mu*cone_height*np.cos(angle[7]), +mu*cone_height*np.sin(angle[7]), cone_height]])
-            #print c_force
+
         return c_force
         
     def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force):
@@ -112,17 +110,7 @@ class Constraints:
                                 [-h_rep3[3]],
                                 [-h_rep4[3]],
                                 [-h_rep5[3]],
-                                [h_rep6[3]]])  
-        
-        #h_rep = np.vstack([h_rep1, -h_rep2, -h_rep3, -h_rep4, -h_rep5, h_rep6])        
-        #constraint = h_rep[:,0:3]
-        #known_term = np.vstack([[-h_rep1[3]],
-        #                        [h_rep2[3]],
-        #                        [h_rep3[3]],
-        #                        [h_rep4[3]],
-        #                        [h_rep5[3]],
-        #                        [-h_rep6[3]]])
-                                
+                                [h_rep6[3]]])                        
         
         #print constraint, known_term
         return constraint, known_term
@@ -137,7 +125,7 @@ class Constraints:
                 stanceIndex = np.hstack([stanceIndex, iter])
             else:
                 swingIndex = iter
-         
+                
 #        print 'stance ind ', stanceIndex 
         if np.sum(stanceFeet) == 4:
             actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[0]),
@@ -150,7 +138,6 @@ class Constraints:
                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])]), 
                                         self.computeLegActuationPolygon(legsJacobians[int(swingIndex)])])            
                                             
-                                        
 #        print 'actuation polygons ', actuation_polygons
         return actuation_polygons
         

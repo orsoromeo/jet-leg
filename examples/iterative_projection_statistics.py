@@ -29,7 +29,7 @@ nc = 3
 ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+constraint_mode_IP = 'ONLY_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
@@ -42,7 +42,7 @@ mu = 0.8
 axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
-number_of_tests = 50
+number_of_tests = 1000
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
 
@@ -65,14 +65,24 @@ for iter in range(0,number_of_tests):
     
     """ contact points """
     sigma = 0.05 # mean and standard deviation
-    randX = np.floor(np.random.normal(30, sigma))
-    randY = np.floor(np.random.normal(20, sigma))
-    LF_foot = np.array([randX/100, randY/100, -0.5])
-    RF_foot = np.array([randX/100, -randY/100, -0.5])
-    LH_foot = np.array([-randX/100, randY/100, -0.5])
-    RH_foot = np.array([-randX/100, -randY/100, -0.5])
-    
+    randX = np.random.normal(0.3, sigma)
+    randY = np.random.normal(0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    LF_foot = np.array([randX, randY, randZ])
+    randX = np.random.normal(0.3, sigma)
+    randY = np.random.normal(-0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    RF_foot = np.array([randX, randY, randZ])
+    randX = np.random.normal(-0.3, sigma)
+    randY = np.random.normal(0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    LH_foot = np.array([randX, randY, randZ])
+    randX = np.random.normal(-0.3, sigma)
+    randY = np.random.normal(-0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    RH_foot = np.array([randX, randY, randZ])
     contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+#    print contacts
 #    contacts = contactsToStack[0:nc, :]
 
     ''' compute iterative projection '''
@@ -80,16 +90,12 @@ for iter in range(0,number_of_tests):
 #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu)
     comp_time = comp_time * 1000.0
+    
+    print comp_time
     tests3contacts[iter] = comp_time
 
 nc = 4
-LF_foot = np.array([0.3, 0.2, -0.5])
-RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.2, 0.0, -0.5])
-RH_foot = np.array([-0.3, -0.2, -0.5])
-    
-contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
+
 for iter in range(0,number_of_tests):
     
     ''' random normals '''    
@@ -113,15 +119,24 @@ for iter in range(0,number_of_tests):
     
     """ contact points """
     sigma = 0.05 # mean and standard deviation
-    randX = np.floor(np.random.normal(30, sigma))
-    randY = np.floor(np.random.normal(20, sigma))
-    LF_foot = np.array([randX/100, randY/100, -0.5])
-    RF_foot = np.array([randX/100, -randY/100, -0.5])
-    LH_foot = np.array([-0.2, 0.0, -0.5])
-    RH_foot = np.array([-0.3, -0.2, -0.5])
-    
-    contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-    contacts = contactsToStack[0:nc, :]
+    randX = np.random.normal(0.3, sigma)
+    randY = np.random.normal(0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    LF_foot = np.array([randX, randY, randZ])
+    randX = np.random.normal(0.3, sigma)
+    randY = np.random.normal(-0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    RF_foot = np.array([randX, randY, randZ])
+    randX = np.random.normal(-0.3, sigma)
+    randY = np.random.normal(0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    LH_foot = np.array([randX, randY, randZ])
+    randX = np.random.normal(-0.3, sigma)
+    randY = np.random.normal(-0.2, sigma)
+    randZ = np.random.normal(-0.5, sigma)
+    RH_foot = np.array([randX, randY, randZ])
+    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+#    print contacts
 
     stanceLegs = [1 ,1, 1, 1]
     ''' compute iterative projection '''
@@ -144,7 +159,7 @@ plt.plot([1,2,3])
 plt.subplot(121)
 #print tests
 plt.grid()
-plt.hist(tests3contacts,bins=np.arange(0,20,0.1))
+plt.hist(tests3contacts,bins=np.arange(0,50,1))
 plt.title("Histogram on 1000 tests of the IP with 3 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
@@ -152,7 +167,7 @@ plt.ylabel("count")
 plt.subplot(122)
 #print tests
 plt.grid()
-plt.hist(tests4contacts,bins=np.arange(0,20,0.1))
+plt.hist(tests4contacts,bins=np.arange(0,50,1))
 plt.title("Histogram on 1000 tests of the IP with 3 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")

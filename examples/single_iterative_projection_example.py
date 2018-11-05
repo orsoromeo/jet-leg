@@ -35,10 +35,10 @@ math = Math()
 # number of contacts
 #nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
-ng = 4
+ng = 8
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+constraint_mode_IP = 'ONLY_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
@@ -89,14 +89,14 @@ comp_dyn = ComputationalDynamics()
 ''' compute iterative projection '''
 IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu)
 
-print IP_points
+#print IP_points
 ''' plotting Iterative Projection points '''
 plotter = Plotter()
 scaling_factor = 2000
 if constraint_mode_IP == 'ONLY_ACTUATION':
     plotter.plot_polygon(np.transpose(IP_points))
     for j in range(0,4):
-        print 'a',actuation_polygons[j], contacts[j,:]
+#        print 'a',actuation_polygons[j], contacts[j,:]
         plotter.plot_actuation_polygon(ax, actuation_polygons[j], contacts[j,:], scaling_factor)
 
 ''' 2D figure '''

@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon Nov  5 11:09:53 2018
+
+@author: rorsolino
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Nov  2 16:52:08 2018
 
 @author: rorsolino
@@ -46,29 +53,17 @@ class HyQSim(threading.Thread):
         
         self.clock_sub_name = 'clock'
         self.hyq_wbs_sub_name = "/hyq/robot_states"
-        self.hyq_actuation_params_sub_name = "/hyq/actuation_polygon"
-#        self.hyq_rcf_params_sub_name = "/hyq/crt_rcf_params"
-#        self.hyq_rcf_aux_sub_name = "/hyq/crt_rcf_aux"
-#        self.hyq_rcf_debug_sub_name = "/hyq/crt_rcf_debug"
+        self.hyq_actuation_params_sub_name = "/hyq/planner_debug"
         self.hyq_wbs = dict()
-        self.hyq_rcf_debug = Polygon3D()  
+        self.hyq_rcf_debug = StringDoubleArray()  
         self.actuation_polygon_topic_pub_name = "/hyq/actuation_polygon"
-#        self.debug_topic_name = "/hyq/planner_back"
         self.sim_time  = 0.0
         self.numberOfReceivedMessages = 0
         
     def run(self):
         self.sub_clock = ros.Subscriber(self.clock_sub_name, Clock, callback=self._reg_sim_time, queue_size=1)
-#        self.sub_wbs = ros.Subscriber(self.hyq_wbs_sub_name, WholeBodyState, callback=self._reg_sim_wbs, queue_size=1)
-        self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, Polygon3D, callback=self._reg_sim_rcf_debug, queue_size=1)
-#        self.sub_rcf_aux = ros.Subscriber(self.hyq_rcf_aux_sub_name, RCFaux, callback=self._reg_sim_rcf_aux, queue_size=1)
-#        self.sub_rcf_debug = ros.Subscriber(self.hyq_rcf_debug_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
-#        self.sub_rcf_params = ros.Subscriber(self.hyq_rcf_params_sub_name, RCFParams, callback=self._reg_sim_rcf_params, queue_size=1)
-#        self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
+        self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_pub_name, Polygon3D, queue_size=1)
-#        self.fbs = ros.ServiceProxy('/hyq/freeze_base', Empty)
-#        self.startRCF = ros.ServiceProxy('/hyq/start_RCF', Empty)
-#        self.stopRCF = ros.ServiceProxy('/hyq/stop_RCF', Empty)   
 
     def _reg_sim_time(self, time):
         self.sim_time = time.clock.secs + time.clock.nsecs/1000000000.0
@@ -79,7 +74,6 @@ class HyQSim(threading.Thread):
 
     def _reg_sim_rcf_debug(self, msg):
         self.numberOfReceivedMessages += 1
-        print 'number of received messages: ', self.numberOfReceivedMessages
         self.hyq_rcf_debug = copy.deepcopy(msg)  
         
     def register_node(self):
@@ -111,29 +105,99 @@ class HyQSim(threading.Thread):
 class ActuationParameters:
     def __init__(self):
         self.CoMposition = [0., 0., 0.]
-        self.footPosLF = [0.3, 0.25, -.5]
-        self.footPosRF = [-0.3, 0.25, -.5]
-        self.footPosLH = [0.4, -0.25, -.5]
-        self.footPosRH = [-0.3, -0.25, -.5]
+        self.footPosLF = [0.3, 0.2, -.51]
+        self.footPosRF = [0.3, -0.2, -.52]
+        self.footPosLH = [-0.3, 0.2, -.55]
+        self.footPosRH = [-0.3, -0.2, -.53]
         self.state_machineLF = True
         self.state_machineRF = True
         self.state_machineLH = True
         self.state_machineRH = True
         self.stanceFeet = [1, 1, 1, 0]
         self.numberOfContacts = 3
-        LF_foot = np.array([0.3, 0.2, -0.5])
-        RF_foot = np.array([0.3, -0.2, -0.5])
-        LH_foot = np.array([-0.3, 0.2, -0.5])
-        RH_foot = np.array([-0.3, -0.2, -0.5])
-        contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+        contacts = np.vstack((self.footPosLF,self.footPosRF,self.footPosLH,self.footPosRH))
         self.feetPos = contacts
         self.contacts = contacts
         self.numberOfPublishedMessages = 0
     
+#    def getParams(self, received_data):
+#        num_of_elements = np.size(received_data.data)
+#        self.numberOfPublishedMessages +=1
+        
     def getParams(self, received_data):
-        num_of_elements = np.size(received_data.vertices)
-        self.numberOfPublishedMessages += 1
-        print 'main for loop ', num_of_elements, self.numberOfPublishedMessages
+        num_of_elements = np.size(received_data.data)
+        self.numberOfPublishedMessages +=1
+#        print 'number of elements: ', num_of_elements
+        for j in range(0,num_of_elements):
+#            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
+            if str(received_data.name[j]) == str("footPosLFx"):
+                self.footPosLF[0] = np.random.normal(0.3, 0.0001)
+            if str(received_data.name[j]) == str("footPosLFy"):
+                self.footPosLF[1] = np.random.normal(0.2, 0.0001)
+            if str(received_data.name[j]) == str("footPosLFz"):
+                self.footPosLF[2] = np.random.normal(-0.5, 0.0001)
+            if str(received_data.name[j]) == str("footPosRFx"):
+                self.footPosRF[0] = np.random.normal(0.3, 0.0001)
+            if str(received_data.name[j]) == str("footPosRFy"):
+                self.footPosRF[1] = np.random.normal(-0.2, 0.0001)
+            if str(received_data.name[j]) == str("footPosRFz"):
+                self.footPosRF[2] = np.random.normal(-0.5, 0.0001)
+            if str(received_data.name[j]) == str("footPosLHx"):
+                self.footPosLH[0] = np.random.normal(-0.3, 0.0001)
+            if str(received_data.name[j]) == str("footPosLHy"):
+                self.footPosLH[1] = np.random.normal(0.2, 0.0001)
+            if str(received_data.name[j]) == str("footPosLHz"):
+                self.footPosLH[2] = np.random.normal(-0.5, 0.0001)
+            if str(received_data.name[j]) == str("footPosRHx"):
+                self.footPosRH[0] = np.random.normal(-0.3, 0.0001)
+            if str(received_data.name[j]) == str("footPosRHy"):
+                self.footPosRH[1] = np.random.normal(-0.2, 0.0001)
+            if str(received_data.name[j]) == str("footPosRHz"):
+                self.footPosRH[2] = np.random.normal(-0.5, 0.0001)
+            if str(received_data.name[j]) == str("state_machineLF"):
+                self.state_machineLF = received_data.data[j]
+            if str(received_data.name[j]) == str("state_machineRF"):
+                self.state_machineRF = received_data.data[j]
+            if str(received_data.name[j]) == str("state_machineLH"):
+                self.state_machineLH = received_data.data[j]
+            if str(received_data.name[j]) == str("state_machineRH"):
+                self.state_machineRH = received_data.data[j]  
+                
+            self.feetPos = np.array([[self.footPosLF],
+                                     [self.footPosRF],
+                                        [self.footPosLH],
+                                            [self.footPosRH]])
+            
+            if self.state_machineLF == 0.0 or self.state_machineLF == 1.0:
+                self.stanceFeet[0] = 1
+            else:
+                self.stanceFeet[0] = 0
+                
+            if self.state_machineRF == 0.0 or self.state_machineRF == 1.0:
+                self.stanceFeet[1] = 1
+            else:
+                self.stanceFeet[1] = 0
+                
+            if self.state_machineLH == 0.0 or self.state_machineLH == 1.0:
+                self.stanceFeet[2] = 1
+            else:
+                self.stanceFeet[2] = 0
+                
+            if self.state_machineRH == 0.0 or self.state_machineRH == 1.0:
+                self.stanceFeet[3] = 1                
+            else:
+                self.stanceFeet[3] = 0
+                            
+            counter = 0
+#            print self.state_machineLF, self.stanceFeet
+            for i in range(0,4):
+#                self.contacts[i] = self.feetPos[i]
+#                print i, self.stanceFeet[i]
+                if self.stanceFeet[i] == 1:
+#                    self.contacts[counter] = self.feetPos[i]
+                    counter += 1
+            
+            self.numberOfContacts = counter
 
 def talker():
     compDyn = ComputationalDynamics()
@@ -149,7 +213,7 @@ def talker():
 
     start_t_IP = time.time()
     
-    for j in range (0,100):
+    for j in range (0,1000):
         vertices = [point]
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
@@ -166,8 +230,8 @@ def talker():
         """ contact points """
         nc = actuationParams.numberOfContacts
         contacts = actuationParams.contacts[0:nc+1, :]
-#        print 'contacts: ',contacts
-#        print contacts, actuationParams.stanceFeet
+        print 'contacts number: ',actuationParams.numberOfContacts
+        print contacts, actuationParams.stanceFeet
         IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
 #        number_of_vertices = 10
@@ -182,7 +246,7 @@ def talker():
         
         p.send_polygons(name, vertices)
         
-#        time.sleep(1.0/5.0)
+        time.sleep(1.0/5.0)
         i+=1
         
     print 'de registering...'
@@ -198,8 +262,8 @@ def talker():
     print 'number of received messages ', p.numberOfReceivedMessages
     avgTime = computation_time/p.numberOfReceivedMessages    
     print 'average subscription time [ms]', avgTime
-    print 'average subscription frequency [Hz]', 1.0/avgTime        
-
+    print 'average subscription frequency [Hz]', 1.0/avgTime 
+    
 if __name__ == '__main__':
     
     try:

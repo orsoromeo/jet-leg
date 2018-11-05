@@ -47,28 +47,16 @@ class HyQSim(threading.Thread):
         self.clock_sub_name = 'clock'
         self.hyq_wbs_sub_name = "/hyq/robot_states"
         self.hyq_actuation_params_sub_name = "/hyq/planner_debug"
-#        self.hyq_rcf_params_sub_name = "/hyq/crt_rcf_params"
-#        self.hyq_rcf_aux_sub_name = "/hyq/crt_rcf_aux"
-#        self.hyq_rcf_debug_sub_name = "/hyq/crt_rcf_debug"
         self.hyq_wbs = dict()
         self.hyq_rcf_debug = StringDoubleArray()  
         self.actuation_polygon_topic_pub_name = "/hyq/actuation_polygon"
-#        self.debug_topic_name = "/hyq/planner_back"
         self.sim_time  = 0.0
         self.numberOfReceivedMessages = 0
         
     def run(self):
         self.sub_clock = ros.Subscriber(self.clock_sub_name, Clock, callback=self._reg_sim_time, queue_size=1)
-#        self.sub_wbs = ros.Subscriber(self.hyq_wbs_sub_name, WholeBodyState, callback=self._reg_sim_wbs, queue_size=1)
         self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
-#        self.sub_rcf_aux = ros.Subscriber(self.hyq_rcf_aux_sub_name, RCFaux, callback=self._reg_sim_rcf_aux, queue_size=1)
-#        self.sub_rcf_debug = ros.Subscriber(self.hyq_rcf_debug_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
-#        self.sub_rcf_params = ros.Subscriber(self.hyq_rcf_params_sub_name, RCFParams, callback=self._reg_sim_rcf_params, queue_size=1)
-#        self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_pub_name, Polygon3D, queue_size=1)
-#        self.fbs = ros.ServiceProxy('/hyq/freeze_base', Empty)
-#        self.startRCF = ros.ServiceProxy('/hyq/start_RCF', Empty)
-#        self.stopRCF = ros.ServiceProxy('/hyq/stop_RCF', Empty)   
 
     def _reg_sim_time(self, time):
         self.sim_time = time.clock.secs + time.clock.nsecs/1000000000.0
@@ -79,7 +67,6 @@ class HyQSim(threading.Thread):
 
     def _reg_sim_rcf_debug(self, msg):
         self.numberOfReceivedMessages += 1
-#        print 'number of received messages: ', self.numberOfReceivedMessages
         self.hyq_rcf_debug = copy.deepcopy(msg)  
         
     def register_node(self):
@@ -166,6 +153,7 @@ def talker():
 #        print contacts, actuationParams.stanceFeet
         IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
+#        number_of_vertices = 10
 #        print IAR
         for i in range(0, number_of_vertices):
             point = Point()
@@ -177,7 +165,7 @@ def talker():
         
         p.send_polygons(name, vertices)
         
-#        time.sleep(1.0/5.0)
+#        time.sleep(1.0/50.0)
         i+=1
         
     print 'de registering...'
