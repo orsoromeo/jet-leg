@@ -45,14 +45,12 @@ class HyQSim(threading.Thread):
         
         self.clock_sub_name = 'clock'
         self.hyq_wbs_sub_name = "/hyq/robot_states"
-        self.hyq_actuation_params_sub_name = "/hyq/planner_debug"
-#        self.hyq_rcf_params_sub_name = "/hyq/crt_rcf_params"
-#        self.hyq_rcf_aux_sub_name = "/hyq/crt_rcf_aux"
-#        self.hyq_rcf_debug_sub_name = "/hyq/crt_rcf_debug"
+        self.hyq_actuation_params_sub_name = "/hyq/debug"
+
         self.hyq_wbs = dict()
         self.hyq_rcf_debug = StringDoubleArray()  
         self.polygon_topic_name = "/hyq/actuation_polygon"
-#        self.debug_topic_name = "/hyq/planner_back"
+
         self.sim_time  = 0.0
         
     def run(self):
@@ -112,6 +110,13 @@ class ActuationParameters:
         self.footPosRF = [-0.3, 0.25, -.5]
         self.footPosLH = [0.4, -0.25, -.5]
         self.footPosRH = [-0.3, -0.25, -.5]
+
+        self.LF_tau_lim = [50.0, 50.0, 50.0]
+        self.RF_tau_lim = [50.0, 50.0, 50.0]
+        self.LH_tau_lim = [50.0, 50.0, 50.0]
+        self.RH_tau_lim = [50.0, 50.0, 50.0]
+        self.torque_limits = np.array([self.LF_tau_lim, self.RF_tau_lim, self.LH_tau_lim, self.RH_tau_lim, ])
+        
         self.state_machineLF = True
         self.state_machineRF = True
         self.state_machineLH = True
@@ -126,6 +131,36 @@ class ActuationParameters:
 #        print 'number of elements: ', num_of_elements
         for j in range(0,num_of_elements):
 #            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
+            if str(received_data.name[j]) == str("LF_HAAmin"):
+                self.LF_tau_lim[0] = received_data.data[j]           
+            if str(received_data.name[j]) == str("LF_HFEmin"):
+                self.LF_tau_lim[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("LF_KFEmin"):
+                self.LF_tau_lim[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("RF_HAAmin"):
+                self.RF_tau_lim[0] = received_data.data[j]           
+            if str(received_data.name[j]) == str("RF_HFEmin"):
+                self.RF_tau_lim[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("RF_KFEmin"):
+                self.RF_tau_lim[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("LH_HAAmin"):
+                self.LH_tau_lim[0] = received_data.data[j]           
+            if str(received_data.name[j]) == str("LH_HFEmin"):
+                self.LH_tau_lim[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("LH_KFEmin"):
+                self.LH_tau_lim[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("RH_HAAmin"):
+                self.RH_tau_lim[0] = received_data.data[j]           
+            if str(received_data.name[j]) == str("RH_HFEmin"):
+                self.RH_tau_lim[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("RH_KFEmin"):
+                self.RH_tau_lim[2] = received_data.data[j]
+                
+            self.torque_limits = np.array([self.LF_tau_lim, 
+                                           self.RF_tau_lim, 
+                                           self.LH_tau_lim, 
+                                           self.RH_tau_lim, ])
+            
             if str(received_data.name[j]) == str("footPosLFx"):
                 self.footPosLF[0] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosLFy"):
@@ -164,22 +199,22 @@ class ActuationParameters:
                                         [self.footPosLH],
                                             [self.footPosRH]])
             
-            if self.state_machineLF == 0.0 or self.state_machineLF == 1.0:
+            if self.state_machineLF == 0.0 or self.state_machineLF == 3.0:
                 self.stanceFeet[0] = 1
             else:
                 self.stanceFeet[0] = 0
                 
-            if self.state_machineRF == 0.0 or self.state_machineRF == 1.0:
+            if self.state_machineRF == 0.0 or self.state_machineRF == 3.0:
                 self.stanceFeet[1] = 1
             else:
                 self.stanceFeet[1] = 0
                 
-            if self.state_machineLH == 0.0 or self.state_machineLH == 1.0:
+            if self.state_machineLH == 0.0 or self.state_machineLH == 3.0:
                 self.stanceFeet[2] = 1
             else:
                 self.stanceFeet[2] = 0
                 
-            if self.state_machineRH == 0.0 or self.state_machineRH == 1.0:
+            if self.state_machineRH == 0.0 or self.state_machineRH == 3.0:
                 self.stanceFeet[3] = 1                
             else:
                 self.stanceFeet[3] = 0
@@ -228,11 +263,14 @@ def talker():
         contacts = actuationParams.contacts[0:nc+1, :]
 #        print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
+        print actuationParams.LF_tau_lim
+        comWF = np.array([0.0,0.0,0.0])
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-        constraint_mode = 'ONLY_ACTUATION'
-        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0)
+        constraint_mode = 'FRICTION_AND_ACTUATION'
+        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
 #        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         number_of_vertices = np.size(IAR, 0)
+#        number_of_vertices = 0
 #        print number_of_vertices
 #        print np.size(IAR,0)
         for i in range(0, number_of_vertices):

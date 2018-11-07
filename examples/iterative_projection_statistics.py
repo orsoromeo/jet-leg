@@ -42,7 +42,7 @@ mu = 0.8
 axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
-number_of_tests = 1000
+number_of_tests = 50
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
 
@@ -159,16 +159,16 @@ plt.plot([1,2,3])
 plt.subplot(121)
 #print tests
 plt.grid()
-plt.hist(tests3contacts,bins=np.arange(0,50,1))
-plt.title("Histogram on 1000 tests of the IP with 3 point contacts")
+plt.hist(tests3contacts,bins=np.arange(0,25,0.1))
+plt.title("Histogram on 50 tests of the IP with 3 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
 
 plt.subplot(122)
 #print tests
 plt.grid()
-plt.hist(tests4contacts,bins=np.arange(0,50,1))
-plt.title("Histogram on 1000 tests of the IP with 3 point contacts")
+plt.hist(tests4contacts,bins=np.arange(0,50,0.1))
+plt.title("Histogram on 50 tests of the IP with 4 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
 

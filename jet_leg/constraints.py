@@ -115,7 +115,7 @@ class Constraints:
         #print constraint, known_term
         return constraint, known_term
 
-    def computeActuationPolygons(self, stanceFeet, legsJacobians):
+    def computeActuationPolygons(self, stanceFeet, legsJacobians, torque_limits):
 
         stanceIndex = []
 #        print 'stance', stanceFeet
@@ -128,15 +128,17 @@ class Constraints:
                 
 #        print 'stance ind ', stanceIndex 
         if np.sum(stanceFeet) == 4:
-            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[0]),
-                                       self.computeLegActuationPolygon(legsJacobians[1]),
-                                       self.computeLegActuationPolygon(legsJacobians[2]), 
-                                        self.computeLegActuationPolygon(legsJacobians[3])])
-        if np.sum(stanceFeet) == 3:       
-            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])]),
-                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])]),
-                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])]), 
-                                        self.computeLegActuationPolygon(legsJacobians[int(swingIndex)])])            
+            print 'test', torque_limits[0]
+            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[0], torque_limits[0]),
+                                       self.computeLegActuationPolygon(legsJacobians[1], torque_limits[1]),
+                                       self.computeLegActuationPolygon(legsJacobians[2], torque_limits[2]), 
+                                        self.computeLegActuationPolygon(legsJacobians[3], torque_limits[3])])
+        if np.sum(stanceFeet) == 3:
+            print 'test', torque_limits[0]
+            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])], torque_limits[int(stanceIndex[0])]),
+                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])], torque_limits[int(stanceIndex[1])]),
+                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])], torque_limits[int(stanceIndex[2])]), 
+                                        self.computeLegActuationPolygon(legsJacobians[int(swingIndex)], torque_limits[int(swingIndex)])])       
                                             
 #        print 'actuation polygons ', actuation_polygons
         return actuation_polygons
@@ -148,10 +150,10 @@ class Constraints:
     it is restricted to 3 DoFs and point contacts. If the latter assumption is not
     respected the Jacobian matrix might become not invertible.
     """        
-    def computeLegActuationPolygon(self, leg_jacobian, tau_HAA = 80, tau_HFE = 100, tau_KFE = 100):
-        dx = tau_HAA
-        dy = tau_HFE
-        dz = tau_KFE
+    def computeLegActuationPolygon(self, leg_jacobian, tau_lim = [80.0, 100.0, 100.0]):
+        dx = tau_lim[0]
+        dy = tau_lim[1]
+        dz = tau_lim[2]
         vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
                          [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
                          [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])

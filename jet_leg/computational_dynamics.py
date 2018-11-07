@@ -50,10 +50,11 @@ class ComputationalDynamics():
     mu = friction coefficient (we assume here the same coeff for all the contact points)
     saturate_normal_force = if True this sets a max constant value on the normal force of the friction cones
     '''
-    def setup_iterative_projection(self, constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force):
+    def setup_iterative_projection(self, constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, saturate_normal_force):
         ''' parameters to be tuned'''
         g = 9.81
         isOutOfWorkspace = False;
+        print 'torque lims', torque_limits
 
         grav = array([0., 0., -g])
         contactsNumber = np.sum(stanceLegs)
@@ -124,7 +125,7 @@ class ComputationalDynamics():
  
                 jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
 
-                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices)
+                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices, torque_limits)
 #                print 'actuation polygon ',actuation_polygons 
                 ''' in the case of the IP alg. the contact force limits must be divided by the mass
                 because the gravito inertial wrench is normalized'''
@@ -195,11 +196,11 @@ class ComputationalDynamics():
                 
         return proj, eq, ineq, actuation_polygons
         
-    def iterative_projection_bretl(self, constraint_mode, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), saturate_normal_force = False):
+    def iterative_projection_bretl(self, constraint_mode, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), torque_limits = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]), saturate_normal_force = False):
 
         start_t_IP = time.time()
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
-        proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, saturate_normal_force)       
+        proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, saturate_normal_force)       
 #        print 'hereee'  
 #        points = np.random.rand(30, 2)   # 30 random points in 2-D
 #        print points
