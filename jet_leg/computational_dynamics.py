@@ -54,7 +54,7 @@ class ComputationalDynamics():
         ''' parameters to be tuned'''
         g = 9.81
         isOutOfWorkspace = False;
-        print 'torque lims', torque_limits
+#        print 'torque lims', torque_limits
 
         grav = array([0., 0., -g])
         contactsNumber = np.sum(stanceLegs)
@@ -77,13 +77,14 @@ class ComputationalDynamics():
                 swingIndex = iter
                 
         for j in range(0,contactsNumber):
-#            print 'iter',j, int(stanceIndex[j])
+            print 'iter',j, int(stanceIndex[j])
             r = contacts[int(stanceIndex[j]),:]
             graspMatrix = self.getGraspMatrix(r)[:,0:3]
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
             G = hstack([G, graspMatrix])            
             
+        print 'grasp matrix',G
         E = vstack((Ex, Ey)) / (g)
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
@@ -106,6 +107,11 @@ class ComputationalDynamics():
         # Inequality matrix for a contact force in local contact frame:
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
+        if constraint_mode == 'ONLY_FRICTION':
+            print contactsNumber
+            C, d = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+#            print np.size(C,0), np.size(C,1), C
+#            print C,d
         if constraint_mode == 'FRICTION_AND_ACTUATION':
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             contactsFourLegs = contacts
@@ -146,13 +152,8 @@ class ComputationalDynamics():
                 d = np.hstack([d1[0], d2])
 #                print d
                 d = d.reshape((6+ng)*contactsNumber)
-                
-        elif constraint_mode == 'ONLY_FRICTION':
-            C, d = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
-#            print np.size(C,0), np.size(C,1), C
-#            print C,d
             
-        elif constraint_mode == 'ONLY_ACTUATION':
+        if constraint_mode == 'ONLY_ACTUATION':
 
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             contactsFourLegs = contacts
@@ -172,7 +173,7 @@ class ComputationalDynamics():
  
                 jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
 
-                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices)
+                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices, torque_limits)
 #                print 'actuation polygon ',actuation_polygons 
                 ''' in the case of the IP alg. the contact force limits must be divided by the mass
                 because the gravito inertial wrench is normalized'''

@@ -25,7 +25,6 @@ from jet_leg.plotting_tools import Plotter
 
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
-from jet_leg.vertex_based_projection import VertexBasedProjection
 
 import matplotlib.pyplot as plt
 from jet_leg.arrow3D import Arrow3D
@@ -35,14 +34,14 @@ math = Math()
 # number of contacts
 #nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
-ng = 8
+ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+constraint_mode_IP = 'ONLY_FRICTION'
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
-
+comWF = np.array([0.0, 0.0, 0.0])
 # contact positions
 """ contact points """
 
@@ -59,7 +58,7 @@ contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 g = 9.81
 trunk_mass = 85.
 mu = 1.0
-stanceFeet = [1,1,1,1]
+stanceFeet = [1,1,1,0]
 axisZ= array([[0.0], [0.0], [1.0]])
 
 n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -69,6 +68,12 @@ n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 # %% Cell 2
 
 normals = np.vstack([n1, n2, n3, n4])
+
+LF_tau_lim = [50.0, 50.0, 50.0]
+RF_tau_lim = [50.0, 50.0, 50.0]
+LH_tau_lim = [50.0, 50.0, 50.0]
+RH_tau_lim = [50.0, 50.0, 50.0]
+torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim, ])
 
 #
 fig = plt.figure()
@@ -87,7 +92,7 @@ for j in range(0,nc):
 comp_dyn = ComputationalDynamics()
 
 ''' compute iterative projection '''
-IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu)
+IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
 
 #print IP_points
 ''' plotting Iterative Projection points '''
