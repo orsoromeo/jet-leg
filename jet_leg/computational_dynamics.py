@@ -77,14 +77,14 @@ class ComputationalDynamics():
                 swingIndex = iter
                 
         for j in range(0,contactsNumber):
-            print 'iter',j, int(stanceIndex[j])
+#            print 'iter',j, int(stanceIndex[j])
             r = contacts[int(stanceIndex[j]),:]
             graspMatrix = self.getGraspMatrix(r)[:,0:3]
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
             G = hstack([G, graspMatrix])            
             
-        print 'grasp matrix',G
+#        print 'grasp matrix',G
         E = vstack((Ex, Ey)) / (g)
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
