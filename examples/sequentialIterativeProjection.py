@@ -64,9 +64,17 @@ n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         # %% Cell 2
-        
+
 normals = np.vstack([n1, n2, n3, n4])
-feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, mu, useVariableJacobian, 0.05, 0.05)
+
+LF_tau_lim = [50.0, 100.0, 100.0]
+RF_tau_lim = [50.0, 100.0, 100.0]
+LH_tau_lim = [50.0, 100.0, 100.0]
+RH_tau_lim = [50.0, 100.0, 100.0]
+torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+#comWF = np.array([0.0,0.0,0.0])
+
+feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, torque_limits, useVariableJacobian, 0.05, 0.05)
 
 desired_direction = [-1.0, -1.0]
 

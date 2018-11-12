@@ -18,11 +18,12 @@ class Constraints:
     def compute_actuation_constraints(self, contactsWF, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 #            print '4 legs', contactsFourLegs
-        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsWF[:,0] - comWF[0]),
+        contactsBF = contactsWF - comWF
+        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
                                                   np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsWF[:,1] - comWF[1]),
+                                                    np.transpose(contactsBF[:,1]),
                                                     np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsWF[:,2] - comWF[2]),
+                                                    np.transpose(contactsBF[:,2]),
                                                     np.transpose(foot_vel[:,2]))
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
 
@@ -45,7 +46,7 @@ class Constraints:
                 hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[j]/trunk_mass)
                 C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
                 d1 = np.hstack([d1, knownTerm.T])        
-        return C1, d1
+        return C1, d1, actuation_polygons
         
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
         math = Math()
@@ -211,16 +212,16 @@ class Constraints:
 #        actuation_polygon = vertices
         return actuation_polygon
     
-    def getInequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, saturate_normal_force = False):
+    def getInequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, tau_lim, saturate_normal_force = False):
         cons1 = np.zeros((0,0))
         h_vec1 = np.zeros((0,1))
         cons2 = np.zeros((0,0))
         h_vec2 = np.zeros((0,1))
         error = True
-        actuation_polygon_LF = self.computeLegActuationPolygon(J_LF)
-        actuation_polygon_RF = self.computeLegActuationPolygon(J_RF)
-        actuation_polygon_LH = self.computeLegActuationPolygon(J_LH)
-        actuation_polygon_RH = self.computeLegActuationPolygon(J_RH)
+        actuation_polygon_LF = self.computeLegActuationPolygon(J_LF, tau_lim)
+        actuation_polygon_RF = self.computeLegActuationPolygon(J_RF, tau_lim)
+        actuation_polygon_LH = self.computeLegActuationPolygon(J_LH, tau_lim)
+        actuation_polygon_RH = self.computeLegActuationPolygon(J_RH, tau_lim)
         actuation_polygons = np.array([actuation_polygon_LF,
                                        actuation_polygon_RF,
                                        actuation_polygon_LH,

@@ -15,7 +15,7 @@ from scipy.linalg import block_diag
 from scipy.spatial import ConvexHull
 
 from constraints import Constraints
-#from hyq_kinematics import HyQKinematics
+from hyq_kinematics import HyQKinematics
 from math_tools import Math
 from geometry import Geometry
 from cvxopt import matrix, solvers
@@ -28,7 +28,7 @@ class ComputationalDynamics():
         self.geom = Geometry()
         self.math = Math()
         self.constr = Constraints()
-#        self.kin = HyQKinematics()
+        self.kin = HyQKinematics()
         
     def getGraspMatrix(self, r):
 
@@ -114,7 +114,7 @@ class ComputationalDynamics():
 #            print np.size(C,0), np.size(C,1), C
 #            print C,d
         if constraint_mode == 'FRICTION_AND_ACTUATION':
-            C1, d1 = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
+            C1, d1, actuation_polygons = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
             C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
                 
             C = np.vstack([C1, C2])
@@ -124,7 +124,7 @@ class ComputationalDynamics():
             d = d.reshape((6+ng)*contactsNumber)
             
         if constraint_mode == 'ONLY_ACTUATION':
-            C, d = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
+            C, d, actuation_polygons = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
                   
             d = d.reshape(6*contactsNumber)        
         
@@ -184,7 +184,7 @@ class ComputationalDynamics():
     nc = number of point contacts
     ng = number of edges to be used to linearize the friction cones (in case that the friction constraint is considered)
     '''
-    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, useVariableJacobian = False, stepX = 0.05, stepY = 0.05, stepZ = 0.05):
+    def LP_projection(self, constraint_mode, contacts, normals, mass, friction_coeff, ng, nc, tau_lim, useVariableJacobian = False, stepX = 0.05, stepY = 0.05, stepZ = 0.05):
         start_t_LP = time.time()
         feasible_points = np.zeros((0,3))
         unfeasible_points = np.zeros((0,3))
@@ -192,7 +192,7 @@ class ComputationalDynamics():
         verbose = False
         com_WF = np.array([0.0, 0.0, 0.0])
         default_com_WF = com_WF
-        p, G, h, A, b, isConstraintOk, LP_actuation_polygons = self.setup_lp(mass, contacts, nc, ng, normals, com_WF, constraint_mode, friction_coeff)
+        p, G, h, A, b, isConstraintOk, LP_actuation_polygons = self.setup_lp(mass, contacts, nc, ng, normals, com_WF, constraint_mode, friction_coeff, tau_lim)
         
         """ Defining the equality constraints """
         for com_x in np.arange(-0.5,0.5,stepX):
@@ -276,7 +276,7 @@ class ComputationalDynamics():
             #kin.update_jacobians(q)
             J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
             #print J_LF
-            G, h, isLpOK, LP_actuation_polygons = constraint.getInequalities(constraint_mode, nc, numberOfGenerators, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH)
+            G, h, isLpOK, LP_actuation_polygons = self.constr.getInequalities(constraint_mode, nc, numberOfGenerators, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, tau_lim)
         
         else:
             LP_actuation_polygons = [None]

@@ -20,7 +20,7 @@ from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
-from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D
+from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
 from dwl_msgs.msg import WholeBodyState, WholeBodyTrajectory, JointState, ContactState, BaseState
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32, Header
@@ -51,6 +51,7 @@ class HyQSim(threading.Thread):
         self.hyq_rcf_debug = StringDoubleArray()  
         self.actuation_polygon_topic_name = "/hyq/actuation_polygon"
         self.support_region_topic_name = "/hyq/support_region"
+        self.force_polygons_topic_name = "/hyq/force_polygons"
 
 
         self.sim_time  = 0.0
@@ -65,6 +66,7 @@ class HyQSim(threading.Thread):
 #        self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_name, Polygon3D, queue_size=1)
         self.pub_support_region = ros.Publisher(self.support_region_topic_name, Polygon3D, queue_size=1)
+        self.pub_force_polygons = ros.Publisher(self.force_polygons_topic_name, LegsPolygons, queue_size=1)
 #        self.fbs = ros.ServiceProxy('/hyq/freeze_base', Empty)
 #        self.startRCF = ros.ServiceProxy('/hyq/start_RCF', Empty)
 #        self.stopRCF = ros.ServiceProxy('/hyq/stop_RCF', Empty)   
@@ -92,6 +94,13 @@ class HyQSim(threading.Thread):
     def get_sim_wbs(self):
         return self.hyq_wbs
 
+    def send_force_polygons(self, name, polygons):
+#        self.output = dict()
+        output = LegsPolygons()
+        output.names = name
+        output.polygons = polygons
+        self.pub_force_polygons.publish(output) 
+        
     def send_support_region(self, name, vertices):
 #        self.output = dict()
         output = Polygon3D()
@@ -253,12 +262,13 @@ def talker():
     p.register_node()
     name = "Actuation_region"
     point = Point()
-    
+    actPolygon = LegsPolygons()
     actuationParams = ActuationParameters()
     i = 0
 
     while not ros.is_shutdown():
         vertices1 = [point]
+        poly = []
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
         actuationParams.getParams(p.hyq_rcf_debug)
@@ -280,21 +290,36 @@ def talker():
         comWF = np.array([0.0,0.0,0.0])
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode = 'FRICTION_AND_ACTUATION'
-        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
+        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
 #        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         num_actuation_vertices = np.size(IAR, 0)
         
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z =  -0.5
+        point.z =  -0.2
         vertices1 = [point]
+#        poly = 
         for i in range(0, num_actuation_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = -0.5
+            point.z = -0.2
             vertices1 = np.hstack([vertices1, point])
+
+        for i in range(0, nc):
+            vx = Point()
+            for j in range(0,7):
+#                print 'act', actuation_polygons_array[i][0][j]
+                vx.x = actuation_polygons_array[i][0][j]
+                vx.y = actuation_polygons_array[i][1][j]
+                vx.z = actuation_polygons_array[i][2][j]
+                actPolygon = np.hstack([actPolygon, vx])          
+            poly = np.hstack([poly, actPolygon])  
+            
         p.send_actuation_polygons(name, vertices1)
+        
+        p.send_force_polygons(name, poly)
+
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode = 'ONLY_FRICTION'
         IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
@@ -302,18 +327,18 @@ def talker():
         num_support_vertices = np.size(IAR, 0)
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z =  -0.5
+        point.z =  -0.2
         vertices2 = [point]
         for i in range(0, num_support_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = -0.5
+            point.z = -0.2
             vertices2 = np.hstack([vertices2, point])
             
 #        print'vertices', vertices2        
         p.send_support_region(name, vertices2)
-
+        
         
         time.sleep(1.0/35.0)
         i+=1
