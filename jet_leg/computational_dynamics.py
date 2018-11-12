@@ -172,7 +172,7 @@ class ComputationalDynamics():
  
                 jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
 
-                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices)
+                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices, torque_limits)
 #                print 'actuation polygon ',actuation_polygons 
                 ''' in the case of the IP alg. the contact force limits must be divided by the mass
                 because the gravito inertial wrench is normalized'''

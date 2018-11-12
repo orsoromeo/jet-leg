@@ -42,7 +42,7 @@ mu = 0.8
 axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
-number_of_tests = 50
+number_of_tests = 1000
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
 
