@@ -22,7 +22,7 @@ from context import jet_leg
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
 from jet_leg.plotting_tools import Plotter
-
+import random
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.vertex_based_projection import VertexBasedProjection
@@ -38,7 +38,7 @@ math = Math()
 ng = 8
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+constraint_mode_IP = 'ONLY_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
@@ -60,6 +60,10 @@ g = 9.81
 trunk_mass = 85.
 mu = 1.0
 stanceFeet = [1,1,1,1]
+randomSwingLeg = random.randint(0,3)
+print 'Swing leg', randomSwingLeg
+stanceFeet[randomSwingLeg] = 0
+print 'stanceLegs ' ,stanceFeet
 axisZ= array([[0.0], [0.0], [1.0]])
 
 n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -70,6 +74,13 @@ n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 
 normals = np.vstack([n1, n2, n3, n4])
 
+LF_tau_lim = [50.0, 100.0, 100.0]
+RF_tau_lim = [50.0, 100.0, 100.0]
+LH_tau_lim = [50.0, 100.0, 100.0]
+RH_tau_lim = [50.0, 100.0, 100.0]
+torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+comWF = np.array([0.0,0.0,0.0])
+    
 #
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -87,7 +98,7 @@ for j in range(0,nc):
 comp_dyn = ComputationalDynamics()
 
 ''' compute iterative projection '''
-IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu)
+IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
 
 #print IP_points
 ''' plotting Iterative Projection points '''

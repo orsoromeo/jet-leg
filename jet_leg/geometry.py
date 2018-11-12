@@ -11,7 +11,7 @@ class Geometry:
     
     def clockwise_sort(self, polygon):
         
-        vertices_number = np.size(polygon,0)-1
+        vertices_number = np.size(polygon,0)
         angle = np.zeros((1,vertices_number))
 #        print polygon, vertices_number
         for j in range(0,vertices_number):

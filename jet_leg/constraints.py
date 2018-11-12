@@ -150,7 +150,7 @@ class Constraints:
     it is restricted to 3 DoFs and point contacts. If the latter assumption is not
     respected the Jacobian matrix might become not invertible.
     """        
-    def computeLegActuationPolygon(self, leg_jacobian, tau_lim = [80.0, 100.0, 100.0]):
+    def computeLegActuationPolygon(self, leg_jacobian, tau_lim):
         dx = tau_lim[0]
         dy = tau_lim[1]
         dz = tau_lim[2]

@@ -19,6 +19,7 @@ from jet_leg.computational_dynamics import ComputationalDynamics
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import random
         
 plt.close('all')
 math = Math()
@@ -29,7 +30,7 @@ nc = 3
 ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = 'ONLY_ACTUATION'
+constraint_mode_IP = 'FRICTION_AND_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
@@ -85,10 +86,20 @@ for iter in range(0,number_of_tests):
 #    print contacts
 #    contacts = contactsToStack[0:nc, :]
 
+    LF_tau_lim = [80.0, 100.0, 100.0]
+    RF_tau_lim = [80.0, 100.0, 100.0]
+    LH_tau_lim = [80.0, 100.0, 100.0]
+    RH_tau_lim = [80.0, 100.0, 100.0]
+    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+    comWF = np.array([0.0,0.0,0.0])
+    
     ''' compute iterative projection '''
-    stanceLegs = [1 ,1, 1, 0]
+    stanceLegs = [1 ,1, 1, 1]
+    randomSwingLeg = random.randint(0,3)
+    #    print 'Swing leg', randomSwingLeg
+    stanceLegs[randomSwingLeg] = 0
 #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
     comp_time = comp_time * 1000.0
     
     print comp_time
@@ -138,9 +149,17 @@ for iter in range(0,number_of_tests):
     contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 #    print contacts
 
+    LF_tau_lim = [80.0, 100.0, 100.0]
+    RF_tau_lim = [80.0, 100.0, 100.0]
+    LH_tau_lim = [80.0, 100.0, 100.0]
+    RH_tau_lim = [80.0, 100.0, 100.0]
+    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+    comWF = np.array([0.0,0.0,0.0])
+        
     stanceLegs = [1 ,1, 1, 1]
+
     ''' compute iterative projection '''
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
     comp_time = comp_time * 1000.0
     tests4contacts[iter] = comp_time
     
