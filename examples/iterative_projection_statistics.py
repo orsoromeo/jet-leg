@@ -29,7 +29,7 @@ nc = 3
 ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = 'ONLY_ACTUATION'
+constraint_mode_IP = 'ONLY_FRICTION'
 useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
@@ -42,7 +42,7 @@ mu = 0.8
 axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
-number_of_tests = 50
+number_of_tests = 500
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
 
@@ -95,6 +95,7 @@ for iter in range(0,number_of_tests):
     tests3contacts[iter] = comp_time
 
 nc = 4
+comWF = np.array([0.0, 0.0, 0.0])
 
 for iter in range(0,number_of_tests):
     
@@ -137,10 +138,15 @@ for iter in range(0,number_of_tests):
     RH_foot = np.array([randX, randY, randZ])
     contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 #    print contacts
+    LF_tau_lim = [100.0, 100.0, 100.0]
+    RF_tau_lim = [100.0, 100.0, 100.0]
+    LH_tau_lim = [100.0, 100.0, 100.0]
+    RH_tau_lim = [100.0, 100.0, 100.0]
+    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim, ])
 
     stanceLegs = [1 ,1, 1, 1]
     ''' compute iterative projection '''
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
     comp_time = comp_time * 1000.0
     tests4contacts[iter] = comp_time
     
