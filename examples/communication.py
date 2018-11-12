@@ -170,6 +170,8 @@ class ActuationParameters:
                                            self.RF_tau_lim, 
                                            self.LH_tau_lim, 
                                            self.RH_tau_lim, ])
+                                                                                    
+#            print 'torque lims',self.torque_limits
             
             if str(received_data.name[j]) == str("footPosLFx"):
                 self.footPosLF[0] = int(received_data.data[j]*100.0)/100.0
@@ -284,13 +286,13 @@ def talker():
         
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z = 0.0
+        point.z =  -0.5
         vertices1 = [point]
         for i in range(0, num_actuation_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = 0.0
+            point.z = -0.5
             vertices1 = np.hstack([vertices1, point])
         p.send_actuation_polygons(name, vertices1)
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
@@ -300,20 +302,20 @@ def talker():
         num_support_vertices = np.size(IAR, 0)
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z = 0.0
+        point.z =  -0.5
         vertices2 = [point]
         for i in range(0, num_support_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = 0.0
+            point.z = -0.5
             vertices2 = np.hstack([vertices2, point])
             
-        print'vertices', vertices2        
+#        print'vertices', vertices2        
         p.send_support_region(name, vertices2)
 
         
-        time.sleep(1.0/1.0)
+        time.sleep(1.0/35.0)
         i+=1
         
     print 'de registering...'

@@ -15,7 +15,7 @@ from scipy.linalg import block_diag
 from scipy.spatial import ConvexHull
 
 from constraints import Constraints
-from hyq_kinematics import HyQKinematics
+#from hyq_kinematics import HyQKinematics
 from math_tools import Math
 from geometry import Geometry
 from cvxopt import matrix, solvers
@@ -28,7 +28,7 @@ class ComputationalDynamics():
         self.geom = Geometry()
         self.math = Math()
         self.constr = Constraints()
-        self.kin = HyQKinematics()
+#        self.kin = HyQKinematics()
         
     def getGraspMatrix(self, r):
 
@@ -68,6 +68,7 @@ class ComputationalDynamics():
         G = np.zeros((6,0))   
         
         stanceIndex = []
+        swingIndex = []
         print 'stance', stanceLegs
         for iter in range(0, 4):
             if stanceLegs[iter] == 1:
@@ -113,85 +114,19 @@ class ComputationalDynamics():
 #            print np.size(C,0), np.size(C,1), C
 #            print C,d
         if constraint_mode == 'FRICTION_AND_ACTUATION':
-            foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-            contactsFourLegs = contacts
-#            print '4 legs', contactsFourLegs
-            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - comWF[0]),
-                                                  np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,1] - comWF[1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsFourLegs[:,2] - comWF[2]),
-                                                    np.transpose(foot_vel[:,2]))
-            J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
-
-            if isOutOfWorkspace:
-                C = np.zeros((0,0))
-                d = np.zeros((1,0))
-            else:
- 
-                jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
-
-                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices, torque_limits)
-#                print 'actuation polygon ',actuation_polygons 
-                ''' in the case of the IP alg. the contact force limits must be divided by the mass
-                because the gravito inertial wrench is normalized'''
+            C1, d1 = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
+            C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
                 
-                C1 = np.zeros((0,0))
-                d1 = np.zeros((1,0))
-#                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-                for j in range (0,contactsNumber):
-#                    print 'second iter', j
-                    hexahedronHalfSpaceConstraints, knownTerm = self.constr.hexahedron(actuation_polygons[j]/trunk_mass)
-                    C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
-                    d1 = hstack([d1, knownTerm.T])
-                    
-            
-                C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
-                C = np.vstack([C1, C2])
-#                print np.size(C,0), np.size(C,1), C
-                d = np.hstack([d1[0], d2])
+            C = np.vstack([C1, C2])
+#               print np.size(C,0), np.size(C,1), C
+            d = np.hstack([d1[0], d2])
 #                print d
-                d = d.reshape((6+ng)*contactsNumber)
+            d = d.reshape((6+ng)*contactsNumber)
             
         if constraint_mode == 'ONLY_ACTUATION':
-
-            foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-            contactsFourLegs = contacts
-#            print '4 legs', contactsFourLegs
-            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - comWF[0]),
-                                                  np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,1] - comWF[1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsFourLegs[:,2] - comWF[2]),
-                                                    np.transpose(foot_vel[:,2]))
-            J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
-
-            if isOutOfWorkspace:
-                C = np.zeros((0,0))
-                d = np.zeros((1,0))
-            else:
- 
-                jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
-
-                actuation_polygons = self.constr.computeActuationPolygons(stanceLegs, jacobianMatrices, torque_limits)
-#                print 'actuation polygon ',actuation_polygons 
-                ''' in the case of the IP alg. the contact force limits must be divided by the mass
-                because the gravito inertial wrench is normalized'''
-                
-                C = np.zeros((0,0))
-                d = np.zeros((1,0))
-#                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-                for j in range (0,contactsNumber):
-#                    print 'second iter', j
-                    hexahedronHalfSpaceConstraints, knownTerm = self.constr.hexahedron(actuation_polygons[j]/trunk_mass)
-                    C = block_diag(C, hexahedronHalfSpaceConstraints)
-                    d = hstack([d, knownTerm.T])
-                    
-                d = d.reshape(6*contactsNumber)   
-#                print np.size(C,0), np.size(C,1), C
-                #C = block_diag(c1, c2, c3, c4)
-                #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
-                #print C, d
+            C, d = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
+                  
+            d = d.reshape(6*contactsNumber)        
         
         ineq = (C, d)  # C * x <= d
                 

@@ -7,10 +7,46 @@ Created on Mon May 28 13:00:59 2018
 import numpy as np
 from computational_geometry import ComputationalGeometry
 from math_tools import Math
+from hyq_kinematics import HyQKinematics
 from cvxopt import matrix
 from scipy.linalg import block_diag
 
-class Constraints:        
+class Constraints:    
+    def __init__(self):
+        self.kin = HyQKinematics()
+    
+    def compute_actuation_constraints(self, contactsWF, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
+        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+#            print '4 legs', contactsFourLegs
+        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsWF[:,0] - comWF[0]),
+                                                  np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsWF[:,1] - comWF[1]),
+                                                    np.transpose(foot_vel[:,1]),
+                                                    np.transpose(contactsWF[:,2] - comWF[2]),
+                                                    np.transpose(foot_vel[:,2]))
+        J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
+
+        if isOutOfWorkspace:
+            C = np.zeros((0,0))
+            d = np.zeros((1,0))
+        else:
+            jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
+            actuation_polygons = self.computeActuationPolygons(stanceLegs, stanceIndex, swingIndex, jacobianMatrices, torque_limits)
+#                print 'actuation polygon ',actuation_polygons 
+            ''' in the case of the IP alg. the contact force limits must be divided by the mass
+            because the gravito inertial wrench is normalized'''
+                
+            C1 = np.zeros((0,0))
+            d1 = np.zeros((1,0))
+            contactsNumber = np.sum(stanceLegs)
+#                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
+            for j in range (0,contactsNumber):
+                print 'second iter', j, actuation_polygons[j]
+                hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[j]/trunk_mass)
+                C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
+                d1 = np.hstack([d1, knownTerm.T])        
+        return C1, d1
+        
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
         math = Math()
         C = np.zeros((0,0))
@@ -115,16 +151,16 @@ class Constraints:
         #print constraint, known_term
         return constraint, known_term
 
-    def computeActuationPolygons(self, stanceFeet, legsJacobians, torque_limits):
+    def computeActuationPolygons(self, stanceFeet, stanceIndex, swingIndex, legsJacobians, torque_limits):
 
-        stanceIndex = []
-#        print 'stance', stanceFeet
-        for iter in range(0, 4):
-            if stanceFeet[iter] == 1:
-#                print 'new poly', stanceIndex, iter
-                stanceIndex = np.hstack([stanceIndex, iter])
-            else:
-                swingIndex = iter
+#        stanceIndex = []
+##        print 'stance', stanceFeet
+#        for iter in range(0, 4):
+#            if stanceFeet[iter] == 1:
+##                print 'new poly', stanceIndex, iter
+#                stanceIndex = np.hstack([stanceIndex, iter])
+#            else:
+#                swingIndex = iter
                 
 #        print 'stance ind ', stanceIndex 
         if np.sum(stanceFeet) == 4:
@@ -134,7 +170,7 @@ class Constraints:
                                        self.computeLegActuationPolygon(legsJacobians[2], torque_limits[2]), 
                                         self.computeLegActuationPolygon(legsJacobians[3], torque_limits[3])])
         if np.sum(stanceFeet) == 3:
-#            print 'test', torque_limits[0]
+            print 'test', torque_limits, stanceIndex
             actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])], torque_limits[int(stanceIndex[0])]),
                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])], torque_limits[int(stanceIndex[1])]),
                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])], torque_limits[int(stanceIndex[2])]), 
