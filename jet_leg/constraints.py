@@ -49,7 +49,7 @@ class Constraints:
                 C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
                 d1 = np.hstack([d1, knownTerm.T])  
                 
-        return C1, d1, actuation_polygons
+        return C1, d1, actuation_polygons, isOutOfWorkspace
         
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
         math = Math()

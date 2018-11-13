@@ -97,7 +97,7 @@ class HyQSim(threading.Thread):
     def send_force_polygons(self, name, polygons):
 #        self.output = dict()
         output = LegsPolygons()
-#        output.names = name
+        output.names = name
         output.polygons = polygons
         self.pub_force_polygons.publish(output) 
         
@@ -323,7 +323,7 @@ def talker():
             
         p.send_actuation_polygons(name, vertices1)
         
-        p.send_force_polygons(name, poly)
+#        p.send_force_polygons(name, poly)
 
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode = 'ONLY_FRICTION'

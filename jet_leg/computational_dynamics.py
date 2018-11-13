@@ -111,14 +111,15 @@ class ComputationalDynamics():
         if constraint_mode == 'ONLY_FRICTION':
 #            print contactsNumber
             C, d = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+            isIKoutOfWorkSpace = False
 #            print np.size(C,0), np.size(C,1), C
 #            print C,d
         if constraint_mode == 'FRICTION_AND_ACTUATION':
-            C1, d1, actuation_polygons = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
+            C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
             C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
 #            print C1, C2
-            if d1.shape[0] is not 1:
-                print d1
+            if isIKoutOfWorkSpace is False:
+#                print d1
                 C = np.vstack([C1, C2])
 #               print np.size(C,0), np.size(C,1), C
                 d = np.hstack([d1[0], d2])
@@ -129,21 +130,23 @@ class ComputationalDynamics():
                 d = d2
             
         if constraint_mode == 'ONLY_ACTUATION':
-            C, d, actuation_polygons = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
+            C, d, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
 #            print d.shape[0]            
-            if d.shape[0] is not 1:
+            if isIKoutOfWorkSpace is False:
 #                print d
-                d = d.reshape(6*contactsNumber)        
+                d = d.reshape(6*contactsNumber) 
+            else:
+                d = []
         
         ineq = (C, d)  # C * x <= d
                 
-        return proj, eq, ineq, actuation_polygons
+        return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
         
     def iterative_projection_bretl(self, constraint_mode, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), torque_limits = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]), saturate_normal_force = False):
 
         start_t_IP = time.time()
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
-        proj, eq, ineq, actuation_polygons = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, saturate_normal_force)       
+        proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, saturate_normal_force)       
 #        print 'hereee'  
 #        points = np.random.rand(30, 2)   # 30 random points in 2-D
 #        print points
