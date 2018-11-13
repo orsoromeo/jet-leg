@@ -30,7 +30,7 @@ class Constraints:
         if isOutOfWorkspace:
             C1 = np.zeros((0,0))
             d1 = np.zeros((1,0))
-            actuation_polygons = []
+            actuation_polygons = 0
             print 'Out of workspace IK!!!'
         else:
             jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])

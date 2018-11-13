@@ -30,8 +30,8 @@ pathIP = PathIterativeProjection()
 # number of contacts
 number_of_contacts = 3
 
-# ONLY_ACTUATION or ONLY_FRICTION
-constraint_mode = 'ONLY_ACTUATION'
+# ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+constraint_mode = 'FRICTION_AND_ACTUATION'
 useVariableJacobian = True
 trunk_mass = 100
 mu = 0.8
@@ -55,11 +55,22 @@ for LH_x in np.arange(-0.7,-0.2, 0.1):
         terrainHeight = terrain.get_height(LH_x, LH_y)
         LH_foot = np.array([LH_x, LH_y, terrainHeight-0.5])
         RH_foot = np.array([-0.3, -0.2, -0.5])
-        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-        contacts = contactsToStack[0:number_of_contacts, :]
+        contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+        
+        stanceLegs = [1,1,1,1]
+        stanceIndex = []
+        swingIndex = []
+        print 'stance', stanceLegs
+        for iter in range(0, 4):
+            if stanceLegs[iter] == 1:
+                #               print 'new poly', stanceIndex, iter
+                stanceIndex = np.hstack([stanceIndex, iter])
+            else:
+                swingIndex = iter
+        
         print 'new search angle: ', angle
         desired_direction = np.array([np.cos(angle), np.sin(angle), 0.0])
-        newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(constraint_mode, contacts, comWF, desired_direction, tolerance)
+        newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(constraint_mode, contacts, comWF, desired_direction, stanceLegs, stanceIndex, swingIndex, torque_limits, tolerance)
         comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, newLimitPoint])
         optimizedVariablesToStack = np.vstack([optimizedVariablesToStack, np.array([LH_x, LH_y, angle])])
 

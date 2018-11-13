@@ -104,7 +104,7 @@ class ComputationalDynamics():
         #print A,t
         eq = (A, t)  # A * x == t
         
-        actuation_polygons = np.zeros((0,1))
+        actuation_polygons = np.zeros((1,1))
         # Inequality matrix for a contact force in local contact frame:
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
@@ -139,7 +139,7 @@ class ComputationalDynamics():
                 d = []
         
         ineq = (C, d)  # C * x <= d
-                
+        print actuation_polygons
         return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
         
     def iterative_projection_bretl(self, constraint_mode, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), torque_limits = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]), saturate_normal_force = False):

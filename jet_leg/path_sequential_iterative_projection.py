@@ -39,15 +39,9 @@ class PathIterativeProjection:
         ''' parameters to be tuned'''
         g = 9.81
         ng = 4;
-        isOutOfWorkspace = False;
-        proj, eq, ineq, actuation_polygons = self.compDyn.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, False)
+        proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace = self.compDyn.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, False)
 
-        (E, f), (A, b), (C, d) = proj, ineq, eq
-#        print 'D',b, d
-        if d.shape[0] == 1:
-            isOutOfWorkspace = True
-            
-        if isOutOfWorkspace:
+        if isIKoutOfWorkSpace:
             lp = 0
         else:
             max_radius=1e5
@@ -83,8 +77,10 @@ class PathIterativeProjection:
             
             lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
             lp = lp_obj, A_ext, b_ext, C_ext, d_ext
+        print 'act pol ',lp
+        print 'a', actuation_polygons, trunk_mass, isIKoutOfWorkSpace
         
-        return lp, actuation_polygons/trunk_mass, isOutOfWorkspace
+        return lp, actuation_polygons/trunk_mass, isIKoutOfWorkSpace
 
     def optimize_direction_variable_constraint(self, lp, vdir, solver=GLPK_IF_AVAILABLE):
         #print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
