@@ -109,24 +109,31 @@ class ComputationalDynamics():
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            print contactsNumber
+#            print contactsNumber
             C, d = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
 #            print np.size(C,0), np.size(C,1), C
 #            print C,d
         if constraint_mode == 'FRICTION_AND_ACTUATION':
             C1, d1, actuation_polygons = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
             C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
-                
-            C = np.vstack([C1, C2])
+#            print C1, C2
+            if d1.shape[0] is not 1:
+                print d1
+                C = np.vstack([C1, C2])
 #               print np.size(C,0), np.size(C,1), C
-            d = np.hstack([d1[0], d2])
+                d = np.hstack([d1[0], d2])
 #                print d
-            d = d.reshape((6+ng)*contactsNumber)
+                d = d.reshape((6+ng)*contactsNumber)
+            else:
+                C = C2
+                d = d2
             
         if constraint_mode == 'ONLY_ACTUATION':
             C, d, actuation_polygons = self.constr.compute_actuation_constraints(contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
-                  
-            d = d.reshape(6*contactsNumber)        
+#            print d.shape[0]            
+            if d.shape[0] is not 1:
+#                print d
+                d = d.reshape(6*contactsNumber)        
         
         ineq = (C, d)  # C * x <= d
                 

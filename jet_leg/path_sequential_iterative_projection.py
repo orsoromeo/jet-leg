@@ -32,97 +32,21 @@ from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.height_map import HeightMap
         
 class PathIterativeProjection:
+    def __init__(self):
+        self.compDyn = ComputationalDynamics()
         
-    def setup_path_iterative_projection(self, constraint_mode, contacts, comWF, trunk_mass, mu, normals):
+    def setup_path_iterative_projection(self, constraint_mode, contacts, comWF, trunk_mass, mu, normals, stanceLegs, stanceIndex, swingIndex, torque_limits):
         ''' parameters to be tuned'''
         g = 9.81
-        compDyn = ComputationalDynamics()
+        ng = 4;
         isOutOfWorkspace = False;
+        proj, eq, ineq, actuation_polygons = self.compDyn.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, False)
 
-        grav = array([0., 0., -g])
-        contactsNumber = np.size(contacts,0)
-        # Unprojected state is:
-        #
-        #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
-        Ex = np.zeros((0)) 
-        Ey = np.zeros((0))        
-        G = np.zeros((6,0))   
-        for j in range(0,contactsNumber):
-            r = contacts[j,:]
-            graspMatrix = compDyn.getGraspMatrix(r)[:,0:3]
-            Ex = hstack([Ex, -graspMatrix[4]])
-            Ey = hstack([Ey, graspMatrix[3]])
-            G = hstack([G, graspMatrix])            
+        (E, f), (A, b), (C, d) = proj, ineq, eq
+#        print 'D',b, d
+        if d.shape[0] == 1:
+            isOutOfWorkspace = True
             
-        E = vstack((Ex, Ey)) / (g)
-        f = zeros(2)
-        proj = (E, f)  # y = E * x + f
-        
-        # number of the equality constraints
-        m_eq = 6
-        
-        # see Equation (52) in "ZMP Support Areas for Multicontact..."
-        A_f_and_tauz = array([
-            [1, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1]])
-        A = dot(A_f_and_tauz, G)
-        t = hstack([0, 0, g, 0])
-        #print A,t
-        eq = (A, t)  # A * x == t
-        
-        act_LF = np.zeros((0,1))
-        act_RF = np.zeros((0,1))
-        act_LH = np.zeros((0,1))
-        act_RH = np.zeros((0,1))
-        actuation_polygons = np.zeros((0,1))
-        # Inequality matrix for a contact force in local contact frame:
-        constr = Constraints()
-        #C_force = constr.linearized_cone_halfspaces(ng, mu)
-        # Inequality matrix for stacked contact forces in world frame:
-        if constraint_mode == 'ONLY_FRICTION':
-            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
-            
-        elif constraint_mode == 'ONLY_ACTUATION':
-            #kin = Kinematics()
-            kin = HyQKinematics()
-            foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-            contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0] - comWF[0]),
-                                                  np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,1] - comWF[1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsFourLegs[:,2] - comWF[2]),
-                                                    np.transpose(foot_vel[:,2]))
-            J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
-
-            if isOutOfWorkspace:
-                C = np.zeros((0,0))
-                d = np.zeros((1,0))
-            else:
-                act_LF = constr.computeLegActuationPolygon(J_LF)
-                act_RF = constr.computeLegActuationPolygon(J_RF)
-                act_LH = constr.computeLegActuationPolygon(J_LH)
-                act_RH = constr.computeLegActuationPolygon(J_RH)            
-                ''' in the case of the IP alg. the contact force limits must be divided by the mass
-                because the gravito inertial wrench is normalized'''
-                
-                C = np.zeros((0,0))
-                d = np.zeros((1,0))
-                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-                for j in range (0,contactsNumber):
-                    hexahedronHalfSpaceConstraints, knownTerm = constr.hexahedron(actuation_polygons[j]/trunk_mass)
-                    C = block_diag(C, hexahedronHalfSpaceConstraints)
-                    d = hstack([d, knownTerm.T])
-                    
-                d = d.reshape(6*contactsNumber)    
-                #C = block_diag(c1, c2, c3, c4)
-                #d = np.vstack([e1, e2, e3, e4]).reshape(6*4)
-                #print C, d
-        
-        ineq = (C, d)  # C * x <= d
-        
         if isOutOfWorkspace:
             lp = 0
         else:
@@ -226,7 +150,7 @@ class PathIterativeProjection:
         return z
 
 
-    def compute_polygon_variable_constraint(self, constraint_mode, comWorldFrame, contactsWorldFrame, max_iter=50, solver=GLPK_IF_AVAILABLE):
+    def compute_polygon_variable_constraint(self, constraint_mode, comWorldFrame, contactsWorldFrame, stanceLegs, stanceIndex, swingIndex, torque_limits, max_iter=50, solver=GLPK_IF_AVAILABLE):
         """
         Expand a polygon iteratively.
     
@@ -260,7 +184,7 @@ class PathIterativeProjection:
             
         iterProj = PathIterativeProjection()
         
-        lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_path_iterative_projection(constraint_mode, contactsWorldFrame, comWorldFrame, trunk_mass, mu, normals)
+        lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_path_iterative_projection(constraint_mode, contactsWorldFrame, comWorldFrame, trunk_mass, mu, normals, stanceLegs, stanceIndex, swingIndex, torque_limits)
         
         if isOutOfWorkspace:
             return False
@@ -331,7 +255,7 @@ class PathIterativeProjection:
                     desired_com_line = self.line(comWF, comWF+desired_direction+np.array([random()*0.01,random()*0.01,0.0]))
                     new_point = self.two_lines_intersection(desired_com_line, actuation_region_edge)
                     intersection_points = np.vstack([intersection_points, new_point])
-                    print new_point
+#                    print new_point
                     
             #print intersection_points
             epsilon = 0.0001;
@@ -369,10 +293,10 @@ class PathIterativeProjection:
                     if alpha_vertices_y >= 0.0 and alpha_vertices_y <= 1.0:                   
                         points = np.vstack([points, new_point])
                         
-        print points
+#        print points
         return points, intersection_points
     
-    def find_vertex_along_path(self, constraint_mode, contacts, comWF, desired_direction, tolerance = 0.05, max_iteration_number = 10):
+    def find_vertex_along_path(self, constraint_mode, contacts, comWF, desired_direction, stanceLegs, stanceIndex, swingIndex, torque_limits, tolerance = 0.05, max_iteration_number = 10):
         final_points = np.zeros((0,2))
         newCoM = comWF
         comToStack = np.zeros((0,3))
@@ -381,7 +305,7 @@ class PathIterativeProjection:
         while_iter = 0
         while (np.amax(np.abs(increment))>tolerance) and (while_iter<max_iteration_number):
             comToStack = np.vstack([comToStack, newCoM])
-            polygon = self.compute_polygon_variable_constraint(constraint_mode, newCoM, contacts)
+            polygon = self.compute_polygon_variable_constraint(constraint_mode, newCoM, contacts, stanceLegs, stanceIndex, swingIndex, torque_limits)
             if polygon:
                 polygon.sort_vertices()
                 vertices_list = polygon.export_vertices()

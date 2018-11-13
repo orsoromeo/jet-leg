@@ -97,7 +97,7 @@ class HyQSim(threading.Thread):
     def send_force_polygons(self, name, polygons):
 #        self.output = dict()
         output = LegsPolygons()
-        output.names = name
+#        output.names = name
         output.polygons = polygons
         self.pub_force_polygons.publish(output) 
         
@@ -262,13 +262,15 @@ def talker():
     p.register_node()
     name = "Actuation_region"
     point = Point()
-    actPolygon = LegsPolygons()
+    polygonVertex = Point()
+    actPolygon = Polygon3D()
     actuationParams = ActuationParameters()
     i = 0
 
     while not ros.is_shutdown():
         vertices1 = [point]
-        poly = []
+        actPolygons = [polygonVertex]
+#        poly = []
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
         actuationParams.getParams(p.hyq_rcf_debug)
@@ -296,25 +298,28 @@ def talker():
         
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z =  -0.2
+        point.z =  -0.55
         vertices1 = [point]
-#        poly = 
+        
         for i in range(0, num_actuation_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = -0.2
+            point.z = -0.55
             vertices1 = np.hstack([vertices1, point])
 
+        poly = [actPolygon]
         for i in range(0, nc):
-            vx = Point()
+            actPolygons = [polygonVertex]            
             for j in range(0,7):
+                vx = Point()
 #                print 'act', actuation_polygons_array[i][0][j]
                 vx.x = actuation_polygons_array[i][0][j]
                 vx.y = actuation_polygons_array[i][1][j]
                 vx.z = actuation_polygons_array[i][2][j]
-                actPolygon = np.hstack([actPolygon, vx])          
-            poly = np.hstack([poly, actPolygon])  
+#                print vx
+                actPolygons = np.hstack([actPolygons, vx])          
+            poly = np.hstack([poly, actPolygons])  
             
         p.send_actuation_polygons(name, vertices1)
         
@@ -327,13 +332,13 @@ def talker():
         num_support_vertices = np.size(IAR, 0)
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z =  -0.2
+        point.z =  -0.55
         vertices2 = [point]
         for i in range(0, num_support_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = -0.2
+            point.z = -0.55
             vertices2 = np.hstack([vertices2, point])
             
 #        print'vertices', vertices2        

@@ -17,8 +17,8 @@ class Constraints:
     
     def compute_actuation_constraints(self, contactsWF, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-#            print '4 legs', contactsFourLegs
         contactsBF = contactsWF - comWF
+#        print contactsBF
         q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsBF[:,1]),
@@ -28,8 +28,10 @@ class Constraints:
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
 
         if isOutOfWorkspace:
-            C = np.zeros((0,0))
-            d = np.zeros((1,0))
+            C1 = np.zeros((0,0))
+            d1 = np.zeros((1,0))
+            actuation_polygons = []
+            print 'Out of workspace IK!!!'
         else:
             jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
             actuation_polygons = self.computeActuationPolygons(stanceLegs, stanceIndex, swingIndex, jacobianMatrices, torque_limits)
@@ -42,10 +44,11 @@ class Constraints:
             contactsNumber = np.sum(stanceLegs)
 #                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
             for j in range (0,contactsNumber):
-                print 'second iter', j, actuation_polygons[j]
+#                print 'second iter', j, actuation_polygons[j]
                 hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[j]/trunk_mass)
                 C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
-                d1 = np.hstack([d1, knownTerm.T])        
+                d1 = np.hstack([d1, knownTerm.T])  
+                
         return C1, d1, actuation_polygons
         
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            

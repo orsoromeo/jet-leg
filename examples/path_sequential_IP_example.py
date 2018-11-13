@@ -27,8 +27,8 @@ pathIP = PathIterativeProjection()
 # number of contacts
 number_of_contacts = 3
 
-# ONLY_ACTUATION or ONLY_FRICTION
-constraint_mode = 'ONLY_ACTUATION'
+# ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+constraint_mode = 'FRICTION_AND_ACTUATION'
 useVariableJacobian = True
 trunk_mass = 100
 mu = 0.8
@@ -45,13 +45,32 @@ terrainHeight = terrain.get_height(-.4, 0.3)
 LH_foot = np.array([-.4, 0.3, terrainHeight-0.5])     
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
-angle = np.random.normal(3.1415, 0.2)
+angle = np.random.normal(np.pi, 0.2)
 desired_direction = np.array([np.cos(angle), np.sin(angle), 0.0])
-contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:number_of_contacts, :]
+contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+
+stanceLegs = [1,1,1,1]
+stanceIndex = []
+swingIndex = []
+print 'stance', stanceLegs
+for iter in range(0, 4):
+    if stanceLegs[iter] == 1:
+#               print 'new poly', stanceIndex, iter
+        stanceIndex = np.hstack([stanceIndex, iter])
+    else:
+        swingIndex = iter
+
+print stanceIndex, swingIndex
+
+LF_tau_lim = [50.0, 100.0, 100.0]
+RF_tau_lim = [50.0, 100.0, 100.0]
+LH_tau_lim = [50.0, 100.0, 100.0]
+RH_tau_lim = [50.0, 100.0, 100.0]
+torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+comWF = np.array([0.0,0.0,0.0])
 
 tolerance = 0.005
-newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(constraint_mode, contacts, comWF, desired_direction, tolerance)
+newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(constraint_mode, contacts, comWF, desired_direction, stanceLegs, stanceIndex, swingIndex, torque_limits, tolerance)
 
 print 'Errors convergence: ', stackedErrors
 
