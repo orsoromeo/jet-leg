@@ -144,6 +144,8 @@ def talker():
         p.get_sim_wbs()
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         trunk_mass = 85.
+        mu = 0.8
+        ng = 4
         axisZ= np.array([[0.0], [0.0], [1.0]])
         ''' normals '''    
         n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -238,7 +240,7 @@ def talker():
         p.send_support_region(name, vertices2)
         
         
-        time.sleep(1.0/35.0)
+        time.sleep(1.0/10.0)
         i+=1
         
     print 'de registering...'
