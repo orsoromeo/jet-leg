@@ -112,8 +112,9 @@ class ComputationalDynamics():
             [0, 0, 1, 0, 0, 0],
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
+#        print A
         t = hstack([0, 0, g, 0])
-        #print A,t
+        print A,t
         eq = (A, t)  # A * x == t
         
         actuation_polygons = np.zeros((1,1))
@@ -121,6 +122,7 @@ class ComputationalDynamics():
         d = np.zeros((0))
         
         for j in range(0,contactsNumber):    
+            print constraint_mode[j]
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
                 constraints_local_frame, d_cone = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
@@ -135,6 +137,9 @@ class ComputationalDynamics():
                 #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
                     d_cone = d_cone.reshape(6) 
+                else:
+                    Ctemp = np.zeros((0,0))
+                    d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
                 C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
@@ -147,6 +152,9 @@ class ComputationalDynamics():
                     d_cone = np.hstack([d1[0], d2])
                     #                print d
                     d_cone = d_cone.reshape((6+ng))
+                else:
+                    Ctemp = np.zeros((0,0))
+                    d_cone = np.zeros((0))
                 
             C = block_diag(C, Ctemp)
             d = np.hstack([d, d_cone])

@@ -35,11 +35,11 @@ class PathIterativeProjection:
     def __init__(self):
         self.compDyn = ComputationalDynamics()
         
-    def setup_path_iterative_projection(self, constraint_mode, contacts, comWF, trunk_mass, mu, normals, stanceLegs, stanceIndex, swingIndex, torque_limits):
+    def setup_path_iterative_projection(self, params):
         ''' parameters to be tuned'''
         g = 9.81
-        ng = 4;
-        proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace = self.compDyn.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, False)
+        ng = params.getNumberOfFrictionConesEdges();
+        proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace = self.compDyn.setup_iterative_projection(params, False)
 
         if isIKoutOfWorkSpace:
             lp = 0
@@ -77,10 +77,10 @@ class PathIterativeProjection:
             
             lp_obj = cvxopt.matrix(zeros(A.shape[1] + 2))
             lp = lp_obj, A_ext, b_ext, C_ext, d_ext
-        print 'act pol ',lp
-        print 'a', actuation_polygons, trunk_mass, isIKoutOfWorkSpace
+#        print 'act pol ',lp
+#        print 'a', actuation_polygons, trunk_mass, isIKoutOfWorkSpace
         
-        return lp, actuation_polygons/trunk_mass, isIKoutOfWorkSpace
+        return lp, actuation_polygons/params.getTrunkMass(), isIKoutOfWorkSpace
 
     def optimize_direction_variable_constraint(self, lp, vdir, solver=GLPK_IF_AVAILABLE):
         #print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
@@ -146,7 +146,7 @@ class PathIterativeProjection:
         return z
 
 
-    def compute_polygon_variable_constraint(self, constraint_mode, comWorldFrame, contactsWorldFrame, stanceLegs, stanceIndex, swingIndex, torque_limits, max_iter=50, solver=GLPK_IF_AVAILABLE):
+    def compute_polygon_variable_constraint(self, params, max_iter=50, solver=GLPK_IF_AVAILABLE):
         """
         Expand a polygon iteratively.
     
@@ -166,21 +166,22 @@ class PathIterativeProjection:
             Output polygon.
         """
     
-        trunk_mass = 100
-        mu = 0.8
+        trunk_mass = params.getTrunkMass()
+#        mu = params.getFrictionCoeffcient()
 
-        axisZ= array([[0.0], [0.0], [1.0]])
-        math = Math()
-        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        # %% Cell 2
-        normals = np.vstack([n1, n2, n3, n4])
+#        axisZ= array([[0.0], [0.0], [1.0]])
+#        math = Math()
+#        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        # %% Cell 2
+#        normals = np.vstack([n1, n2, n3, n4])
+        normals = params.getNormals()
             
         iterProj = PathIterativeProjection()
         
-        lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_path_iterative_projection(constraint_mode, contactsWorldFrame, comWorldFrame, trunk_mass, mu, normals, stanceLegs, stanceIndex, swingIndex, torque_limits)
+        lp, actuation_polygons, isOutOfWorkspace = iterProj.setup_path_iterative_projection(params)
         
         if isOutOfWorkspace:
             return False
@@ -292,16 +293,18 @@ class PathIterativeProjection:
 #        print points
         return points, intersection_points
     
-    def find_vertex_along_path(self, constraint_mode, contacts, comWF, desired_direction, stanceLegs, stanceIndex, swingIndex, torque_limits, tolerance = 0.05, max_iteration_number = 10):
+    def find_vertex_along_path(self, params, desired_direction, tolerance = 0.05, max_iteration_number = 10):
         final_points = np.zeros((0,2))
-        newCoM = comWF
+        newCoM = params.getCoMPos()
+        comWF = params.getCoMPos()
         comToStack = np.zeros((0,3))
         stackedIncrements = np.zeros((0,3))
         increment = np.array([100.0, 100.0, 0.0])
         while_iter = 0
+        print increment, tolerance
         while (np.amax(np.abs(increment))>tolerance) and (while_iter<max_iteration_number):
             comToStack = np.vstack([comToStack, newCoM])
-            polygon = self.compute_polygon_variable_constraint(constraint_mode, newCoM, contacts, stanceLegs, stanceIndex, swingIndex, torque_limits)
+            polygon = self.compute_polygon_variable_constraint(params)
             if polygon:
                 polygon.sort_vertices()
                 vertices_list = polygon.export_vertices()

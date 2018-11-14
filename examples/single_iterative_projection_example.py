@@ -39,9 +39,9 @@ ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 
-constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+constraint_mode_IP = ['ONLY_FRICTION',
                       'ONLY_FRICTION',
-                      'ONLY_ACTUATION',
+                      'ONLY_FRICTION',
                       'ONLY_FRICTION']
 useVariableJacobian = False
 # number of decision variables of the problem
@@ -62,12 +62,11 @@ contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 ''' parameters to be tuned'''
 g = 9.81
 trunk_mass = 85.
-mu = 1.0
+mu = 0.9
 
 stanceFeet = [1,1,1,1]
 randomSwingLeg = random.randint(0,3)
 print 'Swing leg', randomSwingLeg
-#stanceFeet[randomSwingLeg] = 0
 print 'stanceLegs ' ,stanceFeet
 
 axisZ= array([[0.0], [0.0], [1.0]])
@@ -76,18 +75,15 @@ n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-# %% Cell 2
-
 normals = np.vstack([n1, n2, n3, n4])
-
 
 LF_tau_lim = [50.0, 100.0, 100.0]
 RF_tau_lim = [50.0, 100.0, 100.0]
 LH_tau_lim = [50.0, 100.0, 100.0]
 RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+
 comWF = np.array([0.0,0.0,0.0])
-    
 #
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
