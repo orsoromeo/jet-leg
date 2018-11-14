@@ -25,6 +25,7 @@ from jet_leg.plotting_tools import Plotter
 import random
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 
 import matplotlib.pyplot as plt
 from jet_leg.arrow3D import Arrow3D
@@ -38,7 +39,7 @@ ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 
-constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+constraint_mode_IP = 'ONLY_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
@@ -99,9 +100,22 @@ for j in range(0,nc):
     ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
+params = IterativeProjectionParameters()
+params.setContactsPos(contacts)
+params.setCoMPos(comWF)
+params.setTorqueLims(torque_limits)
+params.setActiveContacts(stanceFeet)
+params.setConstraintModes([constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP])
+params.setContactNormals(normals)
+params.setFrictionCoefficient(mu)
+params.setNumberOfFrictionConesEdges(ng)
+params.setTrunkMass(trunk_mass)
 
 ''' compute iterative projection '''
-IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceFeet, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
+IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
 
 #print IP_points
 ''' plotting Iterative Projection points '''

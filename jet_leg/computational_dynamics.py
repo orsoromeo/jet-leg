@@ -50,10 +50,22 @@ class ComputationalDynamics():
     mu = friction coefficient (we assume here the same coeff for all the contact points)
     saturate_normal_force = if True this sets a max constant value on the normal force of the friction cones
     '''
-    def setup_iterative_projection(self, constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, saturate_normal_force):
+    def setup_iterative_projection(self, iterative_projection_params, saturate_normal_force):
+        
+        stanceLegs = iterative_projection_params.getStanceFeet()
+        contacts = iterative_projection_params.getContactsPos()
+        constraint_mode = iterative_projection_params.getConstraintModes()
+        constraint_mode = constraint_mode[0]
+        comWF = iterative_projection_params.getCoMPos()
+        torque_limits = iterative_projection_params.getTorqueLims()
+        trunk_mass = iterative_projection_params.getTrunkMass()
+        ng = iterative_projection_params.getNumberOfFrictionConesEdges()
+        mu = iterative_projection_params.getFrictionCoefficient()
+        normals = iterative_projection_params.getNormals()
+        
+        
         ''' parameters to be tuned'''
         g = 9.81
-        isOutOfWorkspace = False;
 #        print 'torque lims', torque_limits
 
         grav = array([0., 0., -g])
@@ -142,11 +154,11 @@ class ComputationalDynamics():
         print actuation_polygons
         return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
         
-    def iterative_projection_bretl(self, constraint_mode, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF = np.array([0.0,0.0,0.0]), torque_limits = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]), saturate_normal_force = False):
+    def iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
 
         start_t_IP = time.time()
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
-        proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(constraint_mode, stanceLegs, comWF, contacts, normals, trunk_mass, ng, mu, torque_limits, saturate_normal_force)       
+        proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)       
 #        print 'hereee'  
 #        points = np.random.rand(30, 2)   # 30 random points in 2-D
 #        print points

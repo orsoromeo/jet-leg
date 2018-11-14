@@ -30,6 +30,7 @@ from termcolor import colored
 from context import jet_leg 
 from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.math_tools import Math
+from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 
 
 stderr = sys.stderr
@@ -122,138 +123,6 @@ class HyQSim(threading.Thread):
         output.data = data
         self.pub_rcf_params.publish(output)
 
-class ActuationParameters:
-    def __init__(self):
-        self.CoMposition = [0., 0., 0.]
-        self.footPosLF = [0.3, 0.25, -.5]
-        self.footPosRF = [-0.3, 0.25, -.5]
-        self.footPosLH = [0.4, -0.25, -.5]
-        self.footPosRH = [-0.3, -0.25, -.5]
-
-        self.LF_tau_lim = [50.0, 50.0, 50.0]
-        self.RF_tau_lim = [50.0, 50.0, 50.0]
-        self.LH_tau_lim = [50.0, 50.0, 50.0]
-        self.RH_tau_lim = [50.0, 50.0, 50.0]
-        self.torque_limits = np.array([self.LF_tau_lim, self.RF_tau_lim, self.LH_tau_lim, self.RH_tau_lim, ])
-        
-        self.state_machineLF = True
-        self.state_machineRF = True
-        self.state_machineLH = True
-        self.state_machineRH = True
-        self.stanceFeet = [0, 0, 0, 0]
-        self.numberOfContacts = 0
-        self.feetPos = np.zeros((4,3))
-        self.contacts = np.zeros((4,3))
-    
-    def getParams(self, received_data):
-        num_of_elements = np.size(received_data.data)
-#        print 'number of elements: ', num_of_elements
-        for j in range(0,num_of_elements):
-#            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
-            if str(received_data.name[j]) == str("LF_HAAmin"):
-                self.LF_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("LF_HFEmin"):
-                self.LF_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("LF_KFEmin"):
-                self.LF_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("RF_HAAmin"):
-                self.RF_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("RF_HFEmin"):
-                self.RF_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("RF_KFEmin"):
-                self.RF_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("LH_HAAmin"):
-                self.LH_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("LH_HFEmin"):
-                self.LH_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("LH_KFEmin"):
-                self.LH_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("RH_HAAmin"):
-                self.RH_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("RH_HFEmin"):
-                self.RH_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("RH_KFEmin"):
-                self.RH_tau_lim[2] = received_data.data[j]
-                
-            self.torque_limits = np.array([self.LF_tau_lim, 
-                                           self.RF_tau_lim, 
-                                           self.LH_tau_lim, 
-                                           self.RH_tau_lim, ])
-                                                                                    
-#            print 'torque lims',self.torque_limits
-            
-            if str(received_data.name[j]) == str("footPosLFx"):
-                self.footPosLF[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLFy"):
-                self.footPosLF[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLFz"):
-                self.footPosLF[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRFx"):
-                self.footPosRF[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRFy"):
-                self.footPosRF[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRFz"):
-                self.footPosRF[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLHx"):
-                self.footPosLH[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLHy"):
-                self.footPosLH[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLHz"):
-                self.footPosLH[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRHx"):
-                self.footPosRH[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRHy"):
-                self.footPosRH[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRHz"):
-                self.footPosRH[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("state_machineLF"):
-                self.state_machineLF = received_data.data[j]
-            if str(received_data.name[j]) == str("state_machineRF"):
-                self.state_machineRF = received_data.data[j]
-            if str(received_data.name[j]) == str("state_machineLH"):
-                self.state_machineLH = received_data.data[j]
-            if str(received_data.name[j]) == str("state_machineRH"):
-                self.state_machineRH = received_data.data[j]  
-                
-            self.feetPos = np.array([[self.footPosLF],
-                                     [self.footPosRF],
-                                        [self.footPosLH],
-                                            [self.footPosRH]])
-            
-            if self.state_machineLF == 0.0 or self.state_machineLF == 3.0:
-                self.stanceFeet[0] = 1
-            else:
-                self.stanceFeet[0] = 0
-                
-            if self.state_machineRF == 0.0 or self.state_machineRF == 3.0:
-                self.stanceFeet[1] = 1
-            else:
-                self.stanceFeet[1] = 0
-                
-            if self.state_machineLH == 0.0 or self.state_machineLH == 3.0:
-                self.stanceFeet[2] = 1
-            else:
-                self.stanceFeet[2] = 0
-                
-            if self.state_machineRH == 0.0 or self.state_machineRH == 3.0:
-                self.stanceFeet[3] = 1                
-            else:
-                self.stanceFeet[3] = 0
-                    
-#            self.contacts = np.zeros((4,3))     
-            
-            counter = 0
-#            print self.state_machineLF, self.stanceFeet
-            for i in range(0,4):
-                self.contacts[i] = self.feetPos[i]
-#                print i, self.stanceFeet[i]
-                if self.stanceFeet[i] == 1:
-#                    self.contacts[counter] = self.feetPos[i]
-                    counter += 1
-            
-            self.numberOfContacts = counter
-
-
 def talker():
     compDyn = ComputationalDynamics()
     math = Math()
@@ -264,7 +133,7 @@ def talker():
     point = Point()
     polygonVertex = Point()
     actPolygon = Polygon3D()
-    actuationParams = ActuationParameters()
+    actuationParams = IterativeProjectionParameters()
     i = 0
 
     while not ros.is_shutdown():
@@ -273,7 +142,7 @@ def talker():
 #        poly = []
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
-        actuationParams.getParams(p.hyq_rcf_debug)
+        actuationParams.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         trunk_mass = 85.
         axisZ= np.array([[0.0], [0.0], [1.0]])
         ''' normals '''    
@@ -286,7 +155,7 @@ def talker():
         """ contact points """
         nc = actuationParams.numberOfContacts
         contacts = actuationParams.contacts[0:nc+1, :]
-#        print 'contacts: ',contacts
+        print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
 #        print actuationParams.LF_tau_lim
         comWF = np.array([0.0,0.0,0.0])

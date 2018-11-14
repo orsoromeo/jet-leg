@@ -16,6 +16,7 @@ from jet_leg.plotting_tools import Plotter
 
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -48,6 +49,8 @@ comp_dyn = ComputationalDynamics()
 number_of_tests = 1000
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
+
+params = IterativeProjectionParameters()
 
 for iter in range(0,number_of_tests):
     
@@ -100,8 +103,21 @@ for iter in range(0,number_of_tests):
     randomSwingLeg = random.randint(0,3)
     #    print 'Swing leg', randomSwingLeg
     stanceLegs[randomSwingLeg] = 0
-#    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
+    
+    params.setContactsPos(contacts)
+    params.setCoMPos(comWF)
+    params.setTorqueLims(torque_limits)
+    params.setActiveContacts(stanceLegs)
+    params.setConstraintModes([constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP])
+    params.setContactNormals(normals)
+    params.setFrictionCoefficient(mu)
+    params.setNumberOfFrictionConesEdges(ng)
+    params.setTrunkMass(trunk_mass)
+    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     comp_time = comp_time * 1000.0
     
     print comp_time
@@ -167,7 +183,21 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
+    params.setContactsPos(contacts)
+    params.setCoMPos(comWF)
+    params.setTorqueLims(torque_limits)
+    params.setActiveContacts(stanceLegs)
+    params.setConstraintModes([constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP])
+    params.setContactNormals(normals)
+    params.setFrictionCoefficient(mu)
+    params.setNumberOfFrictionConesEdges(ng)
+    params.setTrunkMass(trunk_mass)
+    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
+#    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
     comp_time = comp_time * 1000.0
     tests4contacts[iter] = comp_time
     
