@@ -175,7 +175,7 @@ class Constraints:
                                        self.computeLegActuationPolygon(legsJacobians[2], torque_limits[2]), 
                                         self.computeLegActuationPolygon(legsJacobians[3], torque_limits[3])])
         if np.sum(stanceFeet) == 3:
-            print 'test', torque_limits, stanceIndex
+#            print 'test', torque_limits, stanceIndex
             actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])], torque_limits[int(stanceIndex[0])]),
                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])], torque_limits[int(stanceIndex[1])]),
                                        self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])], torque_limits[int(stanceIndex[2])]), 

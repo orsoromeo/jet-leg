@@ -55,7 +55,7 @@ class ComputationalDynamics():
         stanceLegs = iterative_projection_params.getStanceFeet()
         contacts = iterative_projection_params.getContactsPos()
         constraint_mode = iterative_projection_params.getConstraintModes()
-        constraint_mode = constraint_mode[0]
+#        constraint_mode = constraint_mode[0]
         comWF = iterative_projection_params.getCoMPos()
         torque_limits = iterative_projection_params.getTorqueLims()
         trunk_mass = iterative_projection_params.getTrunkMass()
@@ -121,7 +121,7 @@ class ComputationalDynamics():
         d = np.zeros((0))
         
         for j in range(0,contactsNumber):    
-            if constraint_mode == 'ONLY_FRICTION':
+            if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
                 constraints_local_frame, d_cone = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
                 isIKoutOfWorkSpace = False
@@ -130,13 +130,13 @@ class ComputationalDynamics():
                 rotationMatrix = self.math.rotation_matrix_from_normal(n)
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
-            if constraint_mode == 'ONLY_ACTUATION':
+            if constraint_mode[j] == 'ONLY_ACTUATION':
                 Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
                 #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
                     d_cone = d_cone.reshape(6) 
             
-            if constraint_mode == 'FRICTION_AND_ACTUATION':
+            if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
                 C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
                 C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
                 #            print C1, C2

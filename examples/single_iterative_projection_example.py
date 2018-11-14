@@ -19,7 +19,7 @@ import numpy as np
 
 from context import jet_leg 
 
-from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
+from numpy import array
 from numpy.linalg import norm
 from jet_leg.plotting_tools import Plotter
 import random
@@ -39,7 +39,10 @@ ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 
-constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                      'ONLY_FRICTION',
+                      'ONLY_ACTUATION',
+                      'ONLY_FRICTION']
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
@@ -105,10 +108,7 @@ params.setContactsPos(contacts)
 params.setCoMPos(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceFeet)
-params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
+params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)

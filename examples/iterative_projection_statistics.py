@@ -31,7 +31,10 @@ nc = 3
 ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                      'ONLY_FRICTION',
+                      'ONLY_ACTUATION',
+                      'FRICTION_AND_ACTUATION']
 
 useVariableJacobian = False
 # number of decision variables of the problem
@@ -108,10 +111,7 @@ for iter in range(0,number_of_tests):
     params.setCoMPos(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
-    params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
+    params.setConstraintModes(constraint_mode_IP)
     params.setContactNormals(normals)
     params.setFrictionCoefficient(mu)
     params.setNumberOfFrictionConesEdges(ng)
@@ -187,10 +187,7 @@ for iter in range(0,number_of_tests):
     params.setCoMPos(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
-    params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
+    params.setConstraintModes(constraint_mode_IP)
     params.setContactNormals(normals)
     params.setFrictionCoefficient(mu)
     params.setNumberOfFrictionConesEdges(ng)
@@ -224,7 +221,7 @@ plt.ylabel("count")
 plt.subplot(122)
 #print tests
 plt.grid()
-plt.hist(tests4contacts,bins=np.arange(0,50,0.1))
+plt.hist(tests4contacts,bins=np.arange(0,25,0.1))
 plt.title("Histogram on 50 tests of the IP with 4 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
