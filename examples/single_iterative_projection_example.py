@@ -39,7 +39,7 @@ ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 
-constraint_mode_IP = 'ONLY_ACTUATION'
+constraint_mode_IP = 'FRICTION_AND_ACTUATION'
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
@@ -64,7 +64,7 @@ mu = 1.0
 stanceFeet = [1,1,1,1]
 randomSwingLeg = random.randint(0,3)
 print 'Swing leg', randomSwingLeg
-stanceFeet[randomSwingLeg] = 0
+#stanceFeet[randomSwingLeg] = 0
 print 'stanceLegs ' ,stanceFeet
 
 axisZ= array([[0.0], [0.0], [1.0]])

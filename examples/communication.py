@@ -133,7 +133,7 @@ def talker():
     point = Point()
     polygonVertex = Point()
     actPolygon = Polygon3D()
-    actuationParams = IterativeProjectionParameters()
+    params = IterativeProjectionParameters()
     i = 0
 
     while not ros.is_shutdown():
@@ -142,7 +142,7 @@ def talker():
 #        poly = []
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
-        actuationParams.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
+        params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         trunk_mass = 85.
         axisZ= np.array([[0.0], [0.0], [1.0]])
         ''' normals '''    
@@ -153,15 +153,27 @@ def talker():
         normals = np.vstack([n1, n2, n3, n4])
 
         """ contact points """
-        nc = actuationParams.numberOfContacts
-        contacts = actuationParams.contacts[0:nc+1, :]
+        nc = params.numberOfContacts
+        contacts = params.contacts[0:nc+1, :]
         print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
 #        print actuationParams.LF_tau_lim
         comWF = np.array([0.0,0.0,0.0])
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-        constraint_mode = 'FRICTION_AND_ACTUATION'
-        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
+        constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+        params.setContactsPos(contacts)
+        params.setCoMPos(comWF)
+        params.setConstraintModes([constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP])
+        params.setContactNormals(normals)
+        params.setFrictionCoefficient(mu)
+        params.setNumberOfFrictionConesEdges(ng)
+        params.setTrunkMass(trunk_mass)
+        #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
+#        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
 #        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         num_actuation_vertices = np.size(IAR, 0)
         
@@ -195,8 +207,20 @@ def talker():
 #        p.send_force_polygons(name, poly)
 
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-        constraint_mode = 'ONLY_FRICTION'
-        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
+        constraint_mode_IP = 'ONLY_FRICTION'
+        params.setContactsPos(contacts)
+        params.setCoMPos(comWF)
+        params.setConstraintModes([constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP])
+        params.setContactNormals(normals)
+        params.setFrictionCoefficient(mu)
+        params.setNumberOfFrictionConesEdges(ng)
+        params.setTrunkMass(trunk_mass)
+        #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
+#        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
 #        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         num_support_vertices = np.size(IAR, 0)
         point.x = IAR[0][0]

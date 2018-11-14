@@ -15,7 +15,7 @@ class Constraints:
     def __init__(self):
         self.kin = HyQKinematics()
     
-    def compute_actuation_constraints(self, contactsWF, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
+    def compute_actuation_constraints(self, contactIterator, contactsWF, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         contactsBF = contactsWF - comWF
 #        print contactsBF
@@ -43,11 +43,11 @@ class Constraints:
             d1 = np.zeros((1,0))
             contactsNumber = np.sum(stanceLegs)
 #                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-            for j in range (0,contactsNumber):
+#            for j in range (0,contactsNumber):
 #                print 'second iter', j, actuation_polygons[j]
-                hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[j]/trunk_mass)
-                C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
-                d1 = np.hstack([d1, knownTerm.T])  
+            hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/trunk_mass)
+            C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
+            d1 = np.hstack([d1, knownTerm.T])  
                 
         return C1, d1, actuation_polygons, isOutOfWorkspace
         
@@ -56,14 +56,15 @@ class Constraints:
         C = np.zeros((0,0))
         d = np.zeros((0))
         constraints_local_frame, d_cone = self.linearized_cone_halfspaces(ng, mu, max_normal_force, saturate_max_normal_force)
-        for j in range(0,contactsNumber):    
-            n = math.normalize(normals[j,:])
-            rotationMatrix = math.rotation_matrix_from_normal(n)
-            C = block_diag(C, np.dot(constraints_local_frame, rotationMatrix.T))
-            d = np.hstack([d, d_cone])
+#        for j in range(0,contactsNumber):    
+#            n = math.normalize(normals[j,:])
+#            rotationMatrix = math.rotation_matrix_from_normal(n)
+#            C = block_diag(C, np.dot(constraints_local_frame, rotationMatrix.T))
+#            d = np.hstack([d, d_cone])
          
-        return C, d
-        
+#        return C, d
+        return constraints_local_frame, d_cone
+            
     def linearized_cone_vertices(self, ng, mu, cone_height = 100.):
         if ng == 4:
             c_force = np.array([
