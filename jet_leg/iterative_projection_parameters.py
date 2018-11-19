@@ -107,29 +107,29 @@ class IterativeProjectionParameters:
 #        print 'number of elements: ', num_of_elements
         for j in range(0,num_of_elements):
 #            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
-            if str(received_data.name[j]) == str("LF_HAAmin"):
+            if str(received_data.name[j]) == str("LF_HAAminVar"):
                 self.LF_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("LF_HFEmin"):
+            if str(received_data.name[j]) == str("LF_HFEminVar"):
                 self.LF_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("LF_KFEmin"):
+            if str(received_data.name[j]) == str("LF_KFEminVar"):
                 self.LF_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("RF_HAAmin"):
+            if str(received_data.name[j]) == str("RF_HAAminVar"):
                 self.RF_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("RF_HFEmin"):
+            if str(received_data.name[j]) == str("RF_HFEminVar"):
                 self.RF_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("RF_KFEmin"):
+            if str(received_data.name[j]) == str("RF_KFEminVar"):
                 self.RF_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("LH_HAAmin"):
+            if str(received_data.name[j]) == str("LH_HAAminVar"):
                 self.LH_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("LH_HFEmin"):
+            if str(received_data.name[j]) == str("LH_HFEminVar"):
                 self.LH_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("LH_KFEmin"):
+            if str(received_data.name[j]) == str("LH_KFEminVar"):
                 self.LH_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("RH_HAAmin"):
+            if str(received_data.name[j]) == str("RH_HAAminVar"):
                 self.RH_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("RH_HFEmin"):
+            if str(received_data.name[j]) == str("RH_HFEminVar"):
                 self.RH_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("RH_KFEmin"):
+            if str(received_data.name[j]) == str("RH_KFEminVar"):
                 self.RH_tau_lim[2] = received_data.data[j]
                 
             self.torque_limits = np.array([self.LF_tau_lim, 
@@ -163,39 +163,56 @@ class IterativeProjectionParameters:
                 self.footPosRH[1] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRHz"):
                 self.footPosRH[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("state_machineLF"):
-                self.state_machineLF = received_data.data[j]
-            if str(received_data.name[j]) == str("state_machineRF"):
-                self.state_machineRF = received_data.data[j]
-            if str(received_data.name[j]) == str("state_machineLH"):
-                self.state_machineLH = received_data.data[j]
-            if str(received_data.name[j]) == str("state_machineRH"):
-                self.state_machineRH = received_data.data[j]  
+                            
+                
                 
             self.feetPos = np.array([[self.footPosLF],
                                      [self.footPosRF],
                                         [self.footPosLH],
                                             [self.footPosRH]])
-            
-            if self.state_machineLF == 0.0 or self.state_machineLF == 3.0:
-                self.stanceFeet[0] = 1
-            else:
-                self.stanceFeet[0] = 0
-                
-            if self.state_machineRF == 0.0 or self.state_machineRF == 3.0:
-                self.stanceFeet[1] = 1
-            else:
-                self.stanceFeet[1] = 0
-                
-            if self.state_machineLH == 0.0 or self.state_machineLH == 3.0:
-                self.stanceFeet[2] = 1
-            else:
-                self.stanceFeet[2] = 0
-                
-            if self.state_machineRH == 0.0 or self.state_machineRH == 3.0:
-                self.stanceFeet[3] = 1                
-            else:
-                self.stanceFeet[3] = 0
+#                                            
+#            if str(received_data.name[j]) == str("state_machineLF"):
+#                self.state_machineLF = received_data.data[j]
+#            if str(received_data.name[j]) == str("state_machineRF"):
+#                self.state_machineRF = received_data.data[j]
+#            if str(received_data.name[j]) == str("state_machineLH"):
+#                self.state_machineLH = received_data.data[j]
+#            if str(received_data.name[j]) == str("state_machineRH"):
+#                self.state_machineRH = received_data.data[j]  
+#                
+#            
+#            if self.state_machineLF == 0.0 or self.state_machineLF == 3.0:
+#                self.stanceFeet[0] = 1
+#            else:
+#                self.stanceFeet[0] = 0
+#                
+#            if self.state_machineRF == 0.0 or self.state_machineRF == 3.0:
+#                self.stanceFeet[1] = 1
+#            else:
+#                self.stanceFeet[1] = 0
+#                
+#            if self.state_machineLH == 0.0 or self.state_machineLH == 3.0:
+#                self.stanceFeet[2] = 1
+#            else:
+#                self.stanceFeet[2] = 0
+#                
+#            if self.state_machineRH == 0.0 or self.state_machineRH == 3.0:
+#                self.stanceFeet[3] = 1                
+#            else:
+#                self.stanceFeet[3] = 0
+
+
+            if str(received_data.name[j]) == str("future_stance_LF"):
+                self.stanceFeet[0] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("future_stance_RF"):
+                self.stanceFeet[1] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("future_stance_LH"):
+                self.stanceFeet[2] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("future_stance_RH"):
+                self.stanceFeet[3] = int(received_data.data[j])  
+
+                 
+                   
                     
 #            self.contacts = np.zeros((4,3))     
             
