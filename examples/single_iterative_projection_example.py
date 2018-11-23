@@ -39,10 +39,10 @@ ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 
-constraint_mode_IP = ['ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION']
+constraint_mode_IP = ['ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION']
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
@@ -56,6 +56,7 @@ LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+
 #contacts = contactsToStack[0:nc+1, :]
 #print contacts
 
