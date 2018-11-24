@@ -5,7 +5,7 @@ Created on Wed Nov 14 15:07:45 2018
 @author: Romeo Orsolino
 """
 import numpy as np
-from jet_leg.math_tools import Math
+from math_tools import Math
 
 class IterativeProjectionParameters:
     def __init__(self):

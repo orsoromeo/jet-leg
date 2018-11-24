@@ -240,7 +240,7 @@ def talker():
         p.send_support_region(name, vertices2)
         
         
-        time.sleep(1.0/10.0)
+        time.sleep(1.0/25.0)
         i+=1
         
     print 'de registering...'
