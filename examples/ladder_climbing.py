@@ -227,8 +227,22 @@ if __name__ == "__main__":
     sim = pymanoid.Simulation(dt=0.03)
     robot = pymanoid.robots.JVRC1()
     set_torque_limits(robot)
+
+    q_max = robot.q_max.copy()
+    q_max[robot.CHEST_P] = 0
+    q_max[robot.ROT_P] = 0.5
+    robot.set_dof_limits(robot.q_min, q_max)
+
+    robot.set_dof_values(
+        [1., -1.5, -1.5, 0.1, -1, -1],
+        [robot.L_LTHUMB, robot.L_LINDEX, robot.L_LLITTLE, robot.L_UTHUMB,
+         robot.L_UINDEX, robot.L_ULITTLE])
+    robot.set_dof_values(
+        [1., -1.5, -1.5, 0.1, -1, -1],
+        [robot.R_LTHUMB, robot.R_LINDEX, robot.R_LLITTLE, robot.R_UTHUMB,
+         robot.R_UINDEX, robot.R_ULITTLE])
+
     sim.set_viewer()
-    # sim.set_camera_top(x=0., y=0., z=2.8)
     sim.set_camera_left(x=0.2, y=4)
     robot.set_transparency(0.25)
 
@@ -246,8 +260,8 @@ if __name__ == "__main__":
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
     sim.schedule(robot.ik)
-    sim.schedule_extra(uncons_polygon_drawer)
-    sim.schedule_extra(act_polygon_drawer)
+    # sim.schedule_extra(uncons_polygon_drawer)
+    # sim.schedule_extra(act_polygon_drawer)
     sim.schedule_extra(wrench_drawer)
     sim.start()
 
