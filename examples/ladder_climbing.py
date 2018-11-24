@@ -27,7 +27,7 @@ import pymanoid
 
 from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
-from pymanoid.gui import draw_point, draw_polygon
+from pymanoid.gui import draw_polygon
 from pymanoid.misc import norm
 from pymanoid.sim import gravity_const
 from pypoman import project_polytope
@@ -225,14 +225,14 @@ def set_torque_limits(robot):
 
 if __name__ == "__main__":
     sim = pymanoid.Simulation(dt=0.03)
-    robot = pymanoid.robots.HRP4()
+    robot = pymanoid.robots.JVRC1()
     set_torque_limits(robot)
     sim.set_viewer()
     # sim.set_camera_top(x=0., y=0., z=2.8)
     sim.set_camera_left(x=0.2, y=4)
     robot.set_transparency(0.25)
 
-    stance = Stance.from_json('hrp4_ladder.json')
+    stance = Stance.from_json('jvrc1_ladder.json')
     stance.bind(robot)
     # stance.com.hide()
     robot.ik.solve()
