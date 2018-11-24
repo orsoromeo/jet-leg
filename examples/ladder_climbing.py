@@ -263,7 +263,7 @@ if __name__ == "__main__":
     sim.schedule(robot.ik)
     # sim.schedule_extra(uncons_polygon_drawer)
     # sim.schedule_extra(act_polygon_drawer)
-    # sim.schedule_extra(wrench_drawer)
+    sim.schedule_extra(wrench_drawer)
     sim.start()
 
     if IPython.get_ipython() is None:
