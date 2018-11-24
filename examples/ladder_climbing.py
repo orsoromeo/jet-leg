@@ -233,12 +233,13 @@ if __name__ == "__main__":
     q_max[robot.ROT_P] = 0.5
     robot.set_dof_limits(robot.q_min, q_max)
 
+    q_fingers = array([+1., -1.5, -1.5, +0.1, -0.5, -0.5])
     robot.set_dof_values(
-        [1., -1.5, -1.5, 0.1, -1, -1],
+        q_fingers,
         [robot.L_LTHUMB, robot.L_LINDEX, robot.L_LLITTLE, robot.L_UTHUMB,
          robot.L_UINDEX, robot.L_ULITTLE])
     robot.set_dof_values(
-        [1., -1.5, -1.5, 0.1, -1, -1],
+        -q_fingers,
         [robot.R_LTHUMB, robot.R_LINDEX, robot.R_LLITTLE, robot.R_UTHUMB,
          robot.R_UINDEX, robot.R_ULITTLE])
 
@@ -262,7 +263,7 @@ if __name__ == "__main__":
     sim.schedule(robot.ik)
     # sim.schedule_extra(uncons_polygon_drawer)
     # sim.schedule_extra(act_polygon_drawer)
-    sim.schedule_extra(wrench_drawer)
+    # sim.schedule_extra(wrench_drawer)
     sim.start()
 
     if IPython.get_ipython() is None:
