@@ -14,6 +14,7 @@ from numpy.linalg import norm
 
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 
 import matplotlib as mpl
 import matplotlib.colors as colors
@@ -53,13 +54,17 @@ def set_axes_equal(ax):
 plt.close('all')
 math = Math()
 # number of contacts
-nc = 3
+
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
-# ONLY_ACTUATION or ONLY_FRICTION
-constraint_mode = 'ONLY_ACTUATION'
-constraint_mode_IP = 'ONLY_ACTUATION'
+# ONLY_ACTUATION or ONLY_FRICTION or FRICTION_AND_ACTUATION
+#constraint_mode = 'ONLY_ACTUATION'
+constraint_mode = ['ONLY_ACTUATION',
+                   'ONLY_ACTUATION',
+                   'ONLY_ACTUATION',
+                   'ONLY_ACTUATION']
+                   
 useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
@@ -76,14 +81,23 @@ RF_foot = np.array([0.3, -0.2, -0.5])
 LH_foot = np.array([-0.3, 0.3, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.3])
 
-contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
-
-
+contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+stanceLegs = [1,1,1,1]
+nc = np.sum(stanceLegs)
+stanceIndex = []
+swingIndex = []
+print 'stance', stanceLegs
+for iter in range(0, 4):
+    if stanceLegs[iter] == 1:
+#               print 'new poly', stanceIndex, iter
+        stanceIndex = np.hstack([stanceIndex, iter])
+    else:
+        swingIndex = iter
+        
 ''' parameters to be tuned'''
 g = 9.81
 mu = 0.8
-
+comWF = np.array([0.0, 0.0, 0.0])
 axisZ= array([[0.0], [0.0], [1.0]])
 
 n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -93,6 +107,11 @@ n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 # %% Cell 2
 
 normals = np.vstack([n1, n2, n3, n4])
+LF_tau_lim = [50.0, 100.0, 100.0]
+RF_tau_lim = [50.0, 100.0, 100.0]
+LH_tau_lim = [50.0, 100.0, 100.0]
+RH_tau_lim = [50.0, 100.0, 100.0]
+torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 comp_dyn = ComputationalDynamics()
 
 ''' Add 2D figure '''
@@ -106,8 +125,20 @@ cNorm  = colors.Normalize(vmin=50, vmax=150)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
 
+params = IterativeProjectionParameters()
+params.setContactsPos(contacts)
+params.setCoMPos(comWF)
+params.setTorqueLims(torque_limits)
+params.setActiveContacts(stanceLegs)
+params.setConstraintModes(constraint_mode)
+params.setContactNormals(normals)
+params.setFrictionCoefficient(mu)
+params.setNumberOfFrictionConesEdges(ng)
+params.setTrunkMass(trunk_mass)
+
 for trunk_mass in range(140, 40, -10):
-    IP_points, actuation_polygons = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu)
+    params.setTrunkMass(trunk_mass)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
     colorVal = scalarMap.to_rgba(scale[idx])
     colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
@@ -118,15 +149,27 @@ for trunk_mass in range(140, 40, -10):
     h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(trunk_mass*10) + ' N')
 
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
-    
+constraint_mode = ['ONLY_FRICTION',
+                   'ONLY_FRICTION',
+                   'ONLY_FRICTION',
+                   'ONLY_FRICTION']
+params.setConstraintModes(constraint_mode)
+IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
+point = np.vstack([IP_points])
+x = np.hstack([point[:,0], point[0,0]])
+y = np.hstack([point[:,1], point[0,1]])
+h2 = plt.plot(x,y, color = 'blue', linestyle='dashed', linewidth=5., label = 'only friction')
+
+plt.rc('font', family='serif', size=20)
 plt.grid()
 plt.xlabel("x [m]")
 plt.ylabel("y [m]")
-plt.legend()
-plt.axis('equal')
+plt.legend(prop={'size': 20}, bbox_to_anchor=(1.1, 1.1))
+#plt.axis('equal')
+plt.axis([-1.25, 1.75, -1.45, 1.55])
 plt.show()
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_3contacts.pdf')
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_3contacts.png')
+fig.savefig('../../figs/IP_bretl/4contacts_only_actuation.pdf')
+fig.savefig('../../figs/IP_bretl/4contacts_only_actuation.png')
 
 ''' Add 3D figure '''
 
@@ -138,9 +181,24 @@ jet = cm = plt.get_cmap('RdYlGn')
 cNorm  = colors.Normalize(vmin=50, vmax=150)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
+constraint_mode = ['ONLY_ACTUATION',
+                   'ONLY_ACTUATION',
+                   'ONLY_ACTUATION',
+                   'ONLY_ACTUATION']
+
+params.setContactsPos(contacts)
+params.setCoMPos(comWF)
+params.setTorqueLims(torque_limits)
+params.setActiveContacts(stanceLegs)
+params.setConstraintModes(constraint_mode)
+params.setContactNormals(normals)
+params.setFrictionCoefficient(mu)
+params.setNumberOfFrictionConesEdges(ng)
+params.setTrunkMass(trunk_mass)
 
 for trunk_mass in range(140, 40, -10):
-    IP_points, actuation_polygons = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu)
+    params.setTrunkMass(trunk_mass)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
     colorVal = scalarMap.to_rgba(scale[idx])
     colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
@@ -151,6 +209,16 @@ for trunk_mass in range(140, 40, -10):
     h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(trunk_mass*10) + ' N')
 
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
+constraint_mode = ['ONLY_FRICTION',
+                   'ONLY_FRICTION',
+                   'ONLY_FRICTION',
+                   'ONLY_FRICTION']
+params.setConstraintModes(constraint_mode)
+IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
+point = np.vstack([IP_points])
+x = np.hstack([point[:,0], point[0,0]])
+y = np.hstack([point[:,1], point[0,1]])
+h2 = plt.plot(x,y, color = 'blue', linestyle='dashed', linewidth=5., label = 'only friction')
 
 '''plot robot'''
 r = [-1,1]
@@ -204,5 +272,4 @@ ax.set_xlim3d([-0.6, 1.0])
 ax.set_ylim3d([-0.5, 1.1])
 ax.set_zlim3d([0.0, 1.6])
 plt.show()
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_3contacts_3D.pdf')
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_3contacts_3D.png')
+#fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_3contacts_3D.png')

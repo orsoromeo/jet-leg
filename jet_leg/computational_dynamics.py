@@ -107,7 +107,7 @@ class ComputationalDynamics():
         A = dot(A_f_and_tauz, G)
 #        print A
         t = hstack([0, 0, g, 0])
-        print A,t
+#        print A,t
         eq = (A, t)  # A * x == t
         
 #        actuation_polygons = np.zeros((1,1))
