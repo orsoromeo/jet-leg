@@ -191,7 +191,7 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
         self.handle = []
         self.last_vertices = None
         robot.show_com()
-        try:
+        with sim.env:
             com_height = self.stance.com.z
             for height in numpy.arange(0.63, 0.95, 0.03):
                 self.stance.com.set_z(height)
@@ -199,8 +199,6 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
                     self.robot.ik.step(sim.dt)
                 self.redraw_polygon()
             self.stance.com.set_z(com_height)
-        except Exception as e:
-            print("ActuationDependentPolygonDrawer: {}".format(e))
 
     def tau_scale(self, tau_scale):
         self._tau_scale = min(1., max(0., tau_scale))
@@ -261,7 +259,12 @@ if __name__ == "__main__":
          robot.R_UINDEX, robot.R_ULITTLE])
 
     sim.set_viewer()
-    sim.set_camera_left(x=0.2, y=4)
+    # sim.set_camera_left(x=0.2, y=4)
+    sim.set_camera_transform(array([
+        [-0.75318301, -0.33670976,  0.56510344, -1.27825475],
+        [-0.65389426,  0.28962469, -0.69895625,  1.3535881],
+        [0.07167748, -0.89595987, -0.43831297, 1.87996328],
+        [0.,  0., 0.,  1.]]))
     robot.set_transparency(0.25)
 
     stance = Stance.from_json('jvrc1_ladder.json')
