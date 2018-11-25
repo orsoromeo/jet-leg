@@ -19,6 +19,8 @@
 # along with jet-leg. If not, see <http://www.gnu.org/licenses/>.
 
 import IPython
+import numpy
+# import pylab
 
 from numpy import array, hstack, ones, vstack, zeros
 from scipy.linalg import block_diag
@@ -27,7 +29,7 @@ import pymanoid
 
 from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
-from pymanoid.gui import draw_polygon
+from pymanoid.gui import draw_polygon, draw_polytope
 from pymanoid.misc import norm
 from pymanoid.sim import gravity_const
 from pypoman import project_polytope
@@ -147,7 +149,7 @@ def compute_actuation_dependent_polygon(robot, contacts, tau_scale, method):
         ineq=(A, b), eq=(C, d), proj=(E, f), method=method)
 
 
-class ActuationDependentPolygonDrawer(UnconstrainedPolygonDrawer):
+class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
 
     """
     Draw the static-equilibrium polygon of a contact set.
@@ -164,24 +166,39 @@ class ActuationDependentPolygonDrawer(UnconstrainedPolygonDrawer):
         self._tau_scale = 1.0
         self.last_com = robot.com
         self.robot = robot
+        self.last_vertices = None
         # parent constructor is called after
-        super(ActuationDependentPolygonDrawer, self).__init__(
+        super(ActuationDependentPolytopeDrawer, self).__init__(
             stance, height, color)
 
     def on_tick(self, sim):
         if norm(self.robot.com - self.last_com) > 1e-2:
             self.last_com = self.robot.com
             self.update_polygon()
-        super(ActuationDependentPolygonDrawer, self).on_tick(sim)
+        super(ActuationDependentPolytopeDrawer, self).on_tick(sim)
+
+    def redraw_polygon(self):
+        vertices_2d = compute_actuation_dependent_polygon(
+            self.robot, self.stance, self._tau_scale,
+            method=self._method)
+        vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
+        if self.last_vertices is not None:
+            self.handle.append(draw_polytope(
+                self.last_vertices + vertices, color=[0.3, 0.6, 0.6, 0.6]))
+        self.last_vertices = vertices
 
     def update_polygon(self):
-        self.handle = None
+        self.handle = []
+        self.last_vertices = None
+        robot.show_com()
         try:
-            vertices = compute_actuation_dependent_polygon(
-                self.robot, self.stance, self._tau_scale, method=self._method)
-            self.handle = draw_polygon(
-                [(x[0], x[1], self.height) for x in vertices],
-                normal=[0, 0, 1], color=self.color)
+            com_height = self.stance.com.z
+            for height in numpy.arange(0.63, 0.95, 0.03):
+                self.stance.com.set_z(height)
+                for _ in xrange(10):
+                    self.robot.ik.step(sim.dt)
+                self.redraw_polygon()
+            self.stance.com.set_z(com_height)
         except Exception as e:
             print("ActuationDependentPolygonDrawer: {}".format(e))
 
@@ -254,9 +271,9 @@ if __name__ == "__main__":
 
     polygon_height = 2.  # [m]
 
-    uncons_polygon_drawer = UnconstrainedPolygonDrawer(
+    uncons_drawer = UnconstrainedPolygonDrawer(
         stance, polygon_height, color='g')
-    act_polygon_drawer = ActuationDependentPolygonDrawer(
+    act_drawer = ActuationDependentPolytopeDrawer(
         robot, stance, polygon_height, color='b')
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
