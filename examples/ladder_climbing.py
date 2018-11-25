@@ -29,7 +29,7 @@ import pymanoid
 
 from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
-from pymanoid.gui import draw_polygon, draw_polytope
+from pymanoid.gui import draw_point, draw_polygon, draw_polytope
 from pymanoid.misc import norm
 from pymanoid.sim import gravity_const
 from pypoman import project_polytope
@@ -177,7 +177,7 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
             self.update_polygon()
         super(ActuationDependentPolytopeDrawer, self).on_tick(sim)
 
-    def redraw_polygon(self):
+    def draw_polytope_slice(self):
         vertices_2d = compute_actuation_dependent_polygon(
             self.robot, self.stance, self._tau_scale,
             method=self._method)
@@ -186,6 +186,14 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
             self.handle.append(draw_polytope(
                 self.last_vertices + vertices, color=[0.3, 0.6, 0.6, 0.6]))
         self.last_vertices = vertices
+
+    def draw_polygon(self):
+        vertices_2d = compute_actuation_dependent_polygon(
+            self.robot, self.stance, self._tau_scale,
+            method=self._method)
+        vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
+        self.handle.append(draw_polygon(
+            vertices, normal=[0, 0, 1], color=[0.3, 0.3, 0.6, 0.5]))
 
     def update_polygon(self):
         self.handle = []
@@ -197,7 +205,8 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
                 self.stance.com.set_z(height)
                 for _ in xrange(10):
                     self.robot.ik.step(sim.dt)
-                self.redraw_polygon()
+                self.draw_polytope_slice()
+                self.handle.append(draw_point(robot.com))
             self.stance.com.set_z(com_height)
 
     def tau_scale(self, tau_scale):
