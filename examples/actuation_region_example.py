@@ -32,10 +32,10 @@ pathIP = PathIterativeProjection()
 number_of_contacts = 3
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode = ['ONLY_FRICTION',
-                   'ONLY_FRICTION',
-                   'ONLY_FRICTION',
-                   'ONLY_FRICTION']
+constraint_mode = ['ONLY_ACTUATION',
+                   'ONLY_ACTUATION',
+                   'ONLY_ACTUATION',
+                   'ONLY_ACTUATION']
 useVariableJacobian = True
 trunk_mass = 100
 mu = 0.8
@@ -68,7 +68,7 @@ RF_foot = np.array([0.3, -0.2, -0.5])
 LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-stanceLegs = [1,1,0,1]
+stanceLegs = [1,1,1,1]
 stanceIndex = []
 swingIndex = []
 print 'stance', stanceLegs
@@ -111,7 +111,6 @@ print 'Errors convergence: ', stackedErrors
 
 print("Actuation Region estimation time: --- %s seconds ---" % (time.time() - start_t_IPVC))
 
-
 '''Plotting'''
 plt.figure()
 plt.grid()
@@ -122,7 +121,12 @@ plt.plot(comTrajectoriesToStack[:,0], comTrajectoriesToStack[:,1], 'g--', linewi
 plt.plot(comTrajectoriesToStack[:,0], comTrajectoriesToStack[:,1], 'g^', markersize=20, label= 'Actuation region vertices')
 plt.plot(comWF[0], comWF[1], 'ro', markersize=20, label= 'Initial CoM position used in the SIP alg.')
 segment = np.vstack([comWF,newLimitPoint])
-plt.plot(contacts[0:number_of_contacts,0],contacts[0:number_of_contacts,1],'ko',markersize=15, label='Stance feet')
+print int(stanceIndex[0])
+print contacts[int(stanceIndex[0])][0]
+contactsX = [contacts[int(stanceIndex[0])][0], contacts[int(stanceIndex[1])][0], contacts[int(stanceIndex[2])][0]]
+contactsY = [contacts[int(stanceIndex[0])][1], contacts[int(stanceIndex[1])][1], contacts[int(stanceIndex[2])][0]]
+print contactsX, contactsY
+plt.plot(contactsX,contactsY,'ko',markersize=15, label='Stance feet')
 
 plt.xlim(-0.8, 0.6)
 plt.ylim(-0.7, 0.7)
