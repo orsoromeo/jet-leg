@@ -36,16 +36,15 @@ compDyn = ComputationalDynamics()
 ng = 4
 
 # ONLY_ACTUATION or ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = ['FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION']
+constraint_mode_IP = ['ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION']
 useVariableJacobian = True
 g = 9.81
 trunk_mass = 85.
 mu = 0.9
-# number of decision variables of the problem
-n = nc*6
+
 
 """ contact points """
 LF_foot = np.array([0.3, 0.2, -0.5])
@@ -86,9 +85,10 @@ params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTrunkMass(trunk_mass)
 
-#feasible, unfeasible, contact_forces = compDyn.LP_projection(constraint_mode, contacts, normals, trunk_mass, mu, ng, nc, torque_limits, useVariableJacobian, 0.05, 0.05)
-
-desired_direction = [-1.0, -1.0]
+feasible, unfeasible, contact_forces = compDyn.LP_projection(params, useVariableJacobian, 0.2, 0.2)
+print feasible
+print unfeasible
+#desired_direction = [-1.0, -1.0]
 
 IP_points1, actuation_polygons, comp_time = compDyn.iterative_projection_bretl(params)
 
@@ -121,6 +121,8 @@ plt.figure()
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
+contacts = params.getContactsPos()
+print nc, contacts
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 
 plotter.plot_polygon(np.transpose(IP_points1), color = 'b')
@@ -131,17 +133,17 @@ plotter.plot_polygon(np.transpose(IP_points5), color = 'k')
 plotter.plot_polygon(np.transpose(IP_points6), color = 'b')
 #plotter.plot_polygon(np.transpose(IP_points_saturated_friction), color = '--r')
 
-#feasiblePointsSize = np.size(feasible,0)
-#for j in range(0, feasiblePointsSize):
-#    if (feasible[j,2]<0.01)&(feasible[j,2]>-0.01):
-#        plt.scatter(feasible[j,0], feasible[j,1],c='g',s=50)
-#        lastFeasibleIndex = j
-#unfeasiblePointsSize = np.size(unfeasible,0)
-#
-#for j in range(0, unfeasiblePointsSize):
-#    if (unfeasible[j,2]<0.01)&(unfeasible[j,2]>-0.01):
-#        plt.scatter(unfeasible[j,0], unfeasible[j,1],c='r',s=50)
-#        lastUnfeasibleIndex = j
+feasiblePointsSize = np.size(feasible,0)
+for j in range(0, feasiblePointsSize):
+    if (feasible[j,2]<0.01)&(feasible[j,2]>-0.01):
+        plt.scatter(feasible[j,0], feasible[j,1],c='g',s=50)
+        lastFeasibleIndex = j
+unfeasiblePointsSize = np.size(unfeasible,0)
+print unfeasiblePointsSize
+for j in range(0, unfeasiblePointsSize):
+    if (unfeasible[j,2]<0.01)&(unfeasible[j,2]>-0.01):
+        plt.scatter(unfeasible[j,0], unfeasible[j,1],c='r',s=50)
+        lastUnfeasibleIndex = j
 #h2 = plt.scatter(feasible[lastFeasibleIndex,0], feasible[lastFeasibleIndex,1],c='g',s=50, label='LP feasible')
 #h3 = plt.scatter(unfeasible[lastUnfeasibleIndex,0], unfeasible[lastUnfeasibleIndex,1],c='r',s=50, label='LP unfeasible')
 

@@ -28,7 +28,7 @@ class IterativeProjectionParameters:
         self.stanceFeet = [0, 0, 0, 0]
         self.numberOfContacts = 0
         self.feetPos = np.zeros((4,3))
-        self.contacts = np.zeros((4,3))
+        self.contactsPos = np.zeros((4,3))
 
         self.math = Math()        
         axisZ= np.array([[0.0], [0.0], [1.0]])
@@ -49,7 +49,7 @@ class IterativeProjectionParameters:
 
         
     def setContactsPos(self, contacts):
-        self.contacts = contacts
+        self.contactsPos = contacts
 
     def setCoMPos(self, comWF):
         self.CoMposition = comWF
@@ -76,7 +76,7 @@ class IterativeProjectionParameters:
         self.trunkMass = mass
         
     def getContactsPos(self):
-        return self.contacts
+        return self.contactsPos
         
     def getCoMPos(self):
         return self.CoMposition

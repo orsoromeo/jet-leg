@@ -49,7 +49,7 @@ axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
 
-number_of_tests = 1000
+number_of_tests = 100
 onlyFrictionTests3contacts = np.zeros((number_of_tests))
 onlyFrictionTests4contacts = np.zeros((number_of_tests))  
 onlyActuationTests3contacts = np.zeros((number_of_tests))

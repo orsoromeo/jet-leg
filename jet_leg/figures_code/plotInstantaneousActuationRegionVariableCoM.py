@@ -9,7 +9,7 @@ import numpy as np
 
 from context import jet_leg 
 
-from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
+from numpy import array
 from numpy.linalg import norm
 
 from jet_leg.math_tools import Math
@@ -163,7 +163,7 @@ x = np.hstack([point[:,0], point[0,0]])
 y = np.hstack([point[:,1], point[0,1]])
 h2 = plt.plot(x,y, color = 'gray', linestyle='dashed', linewidth=5., label = 'only friction')
 
-print comToStack
+#print comToStack
 ''' Add 2D figure '''
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.unicode'] = True
