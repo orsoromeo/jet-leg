@@ -783,7 +783,7 @@ class HyQKinematics:
         self.fr_trunk_J_RH_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
         #print self.fr_trunk_J_LF_foot[3:6,:]
         
-        print self.fr_trunk_J_LF_foot, self.fr_trunk_J_RF_foot, self.fr_trunk_J_LH_foot, self.fr_trunk_J_RH_foot
+#        print self.fr_trunk_J_LF_foot, self.fr_trunk_J_RF_foot, self.fr_trunk_J_LH_foot, self.fr_trunk_J_RH_foot
         return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:]
 
     def get_jacobians(self):
@@ -839,8 +839,8 @@ class HyQKinematics:
         # add the x component
         # hfe2foot = sqrt(hfe2foot * hfe2foot);
         # HAA joints
-        print 'y', y[0] 
-        print 'foot', footPosHAA
+        #        print 'y', y[0] 
+        #        print 'foot', footPosHAA
         q[0] = -np.arctan2(footPosHAA[0,0],-footPosHAA[1,0]); # LF HAA
         q[6] = -np.arctan2(footPosHAA[0,1],-footPosHAA[1,1]); # LH HAA
         q[3] = -np.arctan2(footPosHAA[0,2],-footPosHAA[1,2]);# RF HAA
@@ -899,7 +899,7 @@ class HyQKinematics:
                            [np.asscalar(l1*np.sin(q[10]) + l2 * np.sin(q[10]+q[11])), np.asscalar( l2 * np.sin(q[10] + q[11]))]])     
 
         #footVelDes = np.vstack([x_dot, z_dot]); 
-        print q*180.0/np.pi
+        #        print q*180.0/np.pi
     
         #q_dot[1:2] = np.linalg.inv(Jac_LF)*footVelDes;
         #q_dot[4:5] = np.linalg.inv(Jac_RF)*footVelDes;

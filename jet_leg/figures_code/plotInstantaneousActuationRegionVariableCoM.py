@@ -11,6 +11,7 @@ from context import jet_leg
 
 from numpy import array
 from numpy.linalg import norm
+import matplotlib.path as mpath
 
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
@@ -24,9 +25,53 @@ from matplotlib.patches import Circle, Wedge, Polygon
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 from matplotlib.collections import PatchCollection
+from matplotlib.collections import LineCollection
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
 from jet_leg.arrow3D import Arrow3D
 
+def colorline(
+    x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0, 1.0),
+        linewidth=15, alpha=1.0):
+    """
+    http://nbviewer.ipython.org/github/dpsanders/matplotlib-examples/blob/master/colorline.ipynb
+    http://matplotlib.org/examples/pylab_examples/multicolored_line.html
+    Plot a colored line with coordinates x and y
+    Optionally specify colors in the array z
+    Optionally specify a colormap, a norm function and a line width
+    """
+
+    # Default colors equally spaced on [0,1]:
+    if z is None:
+        z = np.linspace(0.0, 1.0, len(x))
+
+    # Special case if a single number:
+    if not hasattr(z, "__iter__"):  # to check for numerical input -- this is a hack
+        z = np.array([z])
+
+    z = np.asarray(z)
+
+    segments = make_segments(x, y)
+    lc = mcoll.LineCollection(segments, array=z, cmap=cmap, norm=norm,
+                              linewidth=linewidth, alpha=alpha)
+
+    ax = plt.gca()
+    ax.add_collection(lc)
+
+    return lc
+
+
+def make_segments(x, y):
+    """
+    Create list of line segments from x and y coordinates, in the correct format
+    for LineCollection: an array of the form numlines x (points per line) x 2 (x
+    and y) array
+    """
+
+    points = np.array([x, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    return segments
+    
 def set_axes_radius(ax, origin, radius):
     ax.set_xlim3d([origin[0] - radius, origin[0] + radius])
     ax.set_ylim3d([origin[1] - radius, origin[1] + radius])
@@ -81,6 +126,17 @@ LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.3])
 
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+stanceLegs = [1,1,1,1]
+nc = np.sum(stanceLegs)
+stanceIndex = []
+swingIndex = []
+print 'stance', stanceLegs
+for iter in range(0, 4):
+    if stanceLegs[iter] == 1:
+#               print 'new poly', stanceIndex, iter
+        stanceIndex = np.hstack([stanceIndex, iter])
+    else:
+        swingIndex = iter
 
 ''' parameters to be tuned'''
 g = 9.81
@@ -118,14 +174,14 @@ params.setNumberOfFrictionConesEdges(ng)
 params.setTrunkMass(trunk_mass)
 
 lowel_lim = -30
-upper_lim = 30
-scale = np.linspace(lowel_lim, upper_lim, 12)
-jet = cm = plt.get_cmap('jet') 
-cNorm  = colors.Normalize(vmin=-30, vmax=30)
+upper_lim = 40
+scale = np.linspace(lowel_lim, upper_lim, 7)
+jet = cm = plt.get_cmap('seismic') 
+cNorm  = colors.Normalize(vmin=-30, vmax=35)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 comToStackX = []
 comToStackY = []
-for com_x in range(lowel_lim, upper_lim, 5):
+for com_x in range(lowel_lim, upper_lim, 10):
 #    print com_x/100.0
     comWF = np.array([com_x/100.0, 0.0, 0.0])
 #    print comWF, comToStack
@@ -144,13 +200,6 @@ for com_x in range(lowel_lim, upper_lim, 5):
     y = np.hstack([point[:,1], point[0,1]])
     h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(com_x/100.0) + ' cm')
     
-idx = 0
-for com_x in range(lowel_lim, upper_lim, 5):
-    colorVal = scalarMap.to_rgba(scale[idx])
-    colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
-    idx += 1
-    comWF = np.array([com_x/100.0, 0.0, 0.0])
-    h2 = plt.plot(comWF[0], comWF[1], color = colorVal, marker='.', markersize=15)
 
 constraint_mode = ['ONLY_FRICTION',
                    'ONLY_FRICTION',
@@ -162,6 +211,24 @@ point = np.vstack([IP_points])
 x = np.hstack([point[:,0], point[0,0]])
 y = np.hstack([point[:,1], point[0,1]])
 h2 = plt.plot(x,y, color = 'gray', linestyle='dashed', linewidth=5., label = 'only friction')
+
+idx = 0
+for com_x in range(lowel_lim, upper_lim, 10):
+    colorVal = scalarMap.to_rgba(scale[idx])
+    colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
+    idx += 1
+    comWF = np.array([com_x/100.0, 0.0, 0.0])
+    print idx, com_x
+    if idx <=1 or idx >= 7:
+        h2 = plt.plot(comWF[0], comWF[1], color = colorVal, marker='s', markersize=15)
+    else:
+        h2 = plt.plot(comWF[0], comWF[1], color = colorVal, marker='^', markersize=15)
+
+path = mpath.Path(np.column_stack([comToStackX, comToStackY]))
+verts = path.interpolated(steps=3).vertices
+x, y = verts[:, 0], verts[:, 1]
+z = np.linspace(0, 1, len(x))
+colorline(x, y, z, cmap=plt.get_cmap('seismic'), linewidth=5)
 
 #print comToStack
 ''' Add 2D figure '''

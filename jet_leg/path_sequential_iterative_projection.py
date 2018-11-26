@@ -177,7 +177,7 @@ class PathIterativeProjection:
 #        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 #        # %% Cell 2
 #        normals = np.vstack([n1, n2, n3, n4])
-        normals = params.getNormals()
+#        normals = params.getNormals()
             
         iterProj = PathIterativeProjection()
         
@@ -304,6 +304,7 @@ class PathIterativeProjection:
         print increment, tolerance
         while (np.amax(np.abs(increment))>tolerance) and (while_iter<max_iteration_number):
             comToStack = np.vstack([comToStack, newCoM])
+            params.setCoMPos(newCoM)
             polygon = self.compute_polygon_variable_constraint(params)
             if polygon:
                 polygon.sort_vertices()
@@ -316,7 +317,7 @@ class PathIterativeProjection:
                     final_points = np.vstack([final_points, new_p])
                     increment = np.hstack([new_p[0], 0.0]) - newCoM
                     stackedIncrements = np.vstack([stackedIncrements, increment])
-                    newCoM = 0.5*increment + newCoM
+                    newCoM = 0.2*increment + newCoM
                     while_iter += 1
             else:
                 print "foot position is out of workspace!"
