@@ -14,6 +14,7 @@ from numpy.linalg import norm
 
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 
 import matplotlib as mpl
 import matplotlib.colors as colors
@@ -53,13 +54,16 @@ def set_axes_equal(ax):
 plt.close('all')
 math = Math()
 # number of contacts
-nc = 3
+nc = 4
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
-# ONLY_ACTUATION or ONLY_FRICTION
-constraint_mode = 'ONLY_ACTUATION'
-constraint_mode_IP = 'ONLY_ACTUATION'
+# ONLY_ACTUATION or ONLY_FRICTION or FRICTION_AND_ACTUATION
+constraint_mode = ['FRICTION_AND_ACTUATION',
+                   'FRICTION_AND_ACTUATION',
+                   'FRICTION_AND_ACTUATION',
+                   'FRICTION_AND_ACTUATION']
+                   
 useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
@@ -71,14 +75,12 @@ n = nc*6
 #LH_foot = np.array([-0.3, 0.2, -0.5])
 #RH_foot = np.array([-0.3, -0.2, -0.5])
 
-LF_foot = np.array([0.3, 0.3, -0.5])
+LF_foot = np.array([0.3, 0.2, -0.5])
 RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.3, 0.3, -0.5])
+LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.3])
 
-contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
-
+contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
 ''' parameters to be tuned'''
 g = 9.81
@@ -94,27 +96,46 @@ n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 
 normals = np.vstack([n1, n2, n3, n4])
 comp_dyn = ComputationalDynamics()
+comWF = np.array([0.0, 0.0, 0.0])
+trunk_mass = 90
+idx = 0
 
-''' Add 2D figure '''
-mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.unicode'] = True
-fig = plt.figure(1)
+LF_tau_lim = [50.0, 100.0, 100.0]
+RF_tau_lim = [50.0, 100.0, 100.0]
+LH_tau_lim = [50.0, 100.0, 100.0]
+RH_tau_lim = [50.0, 100.0, 100.0]
+torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
-scale = np.linspace(-30, 30, 12)
-jet = cm = plt.get_cmap('RdYlGn') 
+params = IterativeProjectionParameters()
+params.setContactsPos(contacts)
+params.setCoMPos(comWF)
+params.setTorqueLims(torque_limits)
+params.setActiveContacts(stanceLegs)
+params.setConstraintModes(constraint_mode)
+params.setContactNormals(normals)
+params.setFrictionCoefficient(mu)
+params.setNumberOfFrictionConesEdges(ng)
+params.setTrunkMass(trunk_mass)
+
+lowel_lim = -30
+upper_lim = 30
+scale = np.linspace(lowel_lim, upper_lim, 12)
+jet = cm = plt.get_cmap('jet') 
 cNorm  = colors.Normalize(vmin=-30, vmax=30)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-idx = 0
-#comWF = np.array([0.0, 0.0, 0.58])
-trunk_mass = 90
-
-for com_x in range(-30, 30, 5):
-    print com_x/100.0
+comToStackX = []
+comToStackY = []
+for com_x in range(lowel_lim, upper_lim, 5):
+#    print com_x/100.0
     comWF = np.array([com_x/100.0, 0.0, 0.0])
-    IP_points, actuation_polygons = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu, comWF)
+#    print comWF, comToStack
+    comToStackX = np.hstack([comToStackX, comWF[0]])
+    comToStackY = np.hstack([comToStackY, comWF[1]])
+    params.setCoMPos(comWF)
+    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
-    print idx, scale
-    print scale[idx]
+#    print idx, scale
+#    print scale[idx]
     colorVal = scalarMap.to_rgba(scale[idx])
     colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
     idx += 1
@@ -122,95 +143,122 @@ for com_x in range(-30, 30, 5):
     x = np.hstack([point[:,0], point[0,0]])
     y = np.hstack([point[:,1], point[0,1]])
     h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(com_x/100.0) + ' cm')
-
-h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
     
+idx = 0
+for com_x in range(lowel_lim, upper_lim, 5):
+    colorVal = scalarMap.to_rgba(scale[idx])
+    colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
+    idx += 1
+    comWF = np.array([com_x/100.0, 0.0, 0.0])
+    h2 = plt.plot(comWF[0], comWF[1], color = colorVal, marker='.', markersize=15)
+
+constraint_mode = ['ONLY_FRICTION',
+                   'ONLY_FRICTION',
+                   'ONLY_FRICTION',
+                   'ONLY_FRICTION']
+params.setConstraintModes(constraint_mode)
+IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
+point = np.vstack([IP_points])
+x = np.hstack([point[:,0], point[0,0]])
+y = np.hstack([point[:,1], point[0,1]])
+h2 = plt.plot(x,y, color = 'gray', linestyle='dashed', linewidth=5., label = 'only friction')
+
+print comToStack
+''' Add 2D figure '''
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.unicode'] = True
+
+
+fig = plt.figure(1)
+h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
+#h2 = plt.plot(comToStackX,comToStackY,'ko',markersize=15, label='path')
 plt.grid()
 plt.xlabel("x [m]")
 plt.ylabel("y [m]")
 plt.legend()
 plt.axis('equal')
 plt.show()
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com.pdf')
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com.png')
+#fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com.pdf')
+#fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com.png')
 
 ''' Add 3D figure '''
 
-fig = plt.figure(2)
-ax = fig.add_subplot(111, projection='3d')
-
-scale = np.linspace(50, 150, 10)
-jet = cm = plt.get_cmap('RdYlGn') 
-cNorm  = colors.Normalize(vmin=50, vmax=150)
-scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-idx = 0
-
-comWF = np.array([com_x/10., 0.0, 0.58])
-
-for com_x in range(-10, 10, 5):
-    comWF = np.array([com_x/100.0, 0.0, 0.0])
-    IP_points, actuation_polygons = comp_dyn.iterative_projection_bretl(constraint_mode_IP, contacts, normals, trunk_mass, ng, mu, comWF)
-    point = np.vstack([IP_points])
-    colorVal = scalarMap.to_rgba(scale[idx])
-    colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
-    idx += 1
-    #plotter.plot_polygon(np.transpose(IP_points), x[0],'trunk mass ' + str(trunk_mass*10) + ' N')    
-    x = np.hstack([point[:,0], point[0,0]])
-    y = np.hstack([point[:,1], point[0,1]])
-    h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(trunk_mass*10) + ' N')
-
-h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
-
-'''plot robot'''
-r = [-1,1]
-
-X, Y = np.meshgrid(r, r)
-trunk_x_half_length = 0.45
-trunk_y_half_length = 0.25
-trunk_z_half_length = 0.1
-
-points = np.array([[-trunk_x_half_length, -trunk_y_half_length, -trunk_z_half_length],
-                  [trunk_x_half_length, -trunk_y_half_length, -trunk_z_half_length ],
-                  [trunk_x_half_length, trunk_y_half_length, -trunk_z_half_length],
-                  [-trunk_x_half_length, trunk_y_half_length, -trunk_z_half_length],
-                  [-trunk_x_half_length, -trunk_y_half_length, trunk_z_half_length],
-                  [trunk_x_half_length, -trunk_y_half_length, trunk_z_half_length],
-                  [trunk_x_half_length, trunk_y_half_length, trunk_z_half_length],
-                  [-trunk_x_half_length, trunk_y_half_length, trunk_z_half_length]])
-                  
-points= points + comWF
-                  
-
-P = np.eye((3))
-
-Z = np.zeros((8,3))
-for i in range(8): Z[i,:] = np.dot(points[i,:],P)
-
-#ax.scatter3D(Z[:, 0], Z[:, 1], Z[:, 2])
-
-
-# list of sides' polygons of figure
-verts = [[Z[0],Z[1],Z[2],Z[3]],
- [Z[4],Z[5],Z[6],Z[7]], 
- [Z[0],Z[1],Z[5],Z[4]], 
- [Z[2],Z[3],Z[7],Z[6]], 
- [Z[1],Z[2],Z[6],Z[5]],
- [Z[4],Z[7],Z[3],Z[0]], 
- [Z[2],Z[3],Z[7],Z[6]]]
+#fig = plt.figure(2)
+#ax = fig.add_subplot(111, projection='3d')
+#
+#scale = np.linspace(50, 150, 10)
+#jet = cm = plt.get_cmap('RdYlGn') 
+#cNorm  = colors.Normalize(vmin=50, vmax=150)
+#scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+#idx = 0
+#
+#comWF = np.array([com_x/10., 0.0, 0.58])
+#
+#for com_x in range(-10, 10, 5):
+#    comWF = np.array([com_x/100.0, 0.0, 0.0])
+#    params.setCoMPos(comWF)
+#    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
+#    point = np.vstack([IP_points])
+#    colorVal = scalarMap.to_rgba(scale[idx])
+#    colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
+#    idx += 1
+#    #plotter.plot_polygon(np.transpose(IP_points), x[0],'trunk mass ' + str(trunk_mass*10) + ' N')    
+#    x = np.hstack([point[:,0], point[0,0]])
+#    y = np.hstack([point[:,1], point[0,1]])
+#    h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(trunk_mass*10) + ' N')
+#
+#h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
+#
+#'''plot robot'''
+#r = [-1,1]
+#
+#X, Y = np.meshgrid(r, r)
+#trunk_x_half_length = 0.45
+#trunk_y_half_length = 0.25
+#trunk_z_half_length = 0.1
+#
+#points = np.array([[-trunk_x_half_length, -trunk_y_half_length, -trunk_z_half_length],
+#                  [trunk_x_half_length, -trunk_y_half_length, -trunk_z_half_length ],
+#                  [trunk_x_half_length, trunk_y_half_length, -trunk_z_half_length],
+#                  [-trunk_x_half_length, trunk_y_half_length, -trunk_z_half_length],
+#                  [-trunk_x_half_length, -trunk_y_half_length, trunk_z_half_length],
+#                  [trunk_x_half_length, -trunk_y_half_length, trunk_z_half_length],
+#                  [trunk_x_half_length, trunk_y_half_length, trunk_z_half_length],
+#                  [-trunk_x_half_length, trunk_y_half_length, trunk_z_half_length]])
+#                  
+#points= points + comWF
+#                  
+#
+#P = np.eye((3))
+#
+#Z = np.zeros((8,3))
+#for i in range(8): Z[i,:] = np.dot(points[i,:],P)
+#
+##ax.scatter3D(Z[:, 0], Z[:, 1], Z[:, 2])
+#
+#
+## list of sides' polygons of figure
+#verts = [[Z[0],Z[1],Z[2],Z[3]],
+# [Z[4],Z[5],Z[6],Z[7]], 
+# [Z[0],Z[1],Z[5],Z[4]], 
+# [Z[2],Z[3],Z[7],Z[6]], 
+# [Z[1],Z[2],Z[6],Z[5]],
+# [Z[4],Z[7],Z[3],Z[0]], 
+# [Z[2],Z[3],Z[7],Z[6]]]
 
 # plot sides
 #ax.add_collection3d(Poly3DCollection(verts, 
 # facecolors='cyan', linewidths=1, edgecolors='k', alpha=.5))
 
     
-plt.grid()
-ax.set_xlabel("x [m]")
-ax.set_ylabel("y [m]")
-ax.set_zlabel("z [m]")
-ax.legend(loc='upper right')
-ax.set_xlim3d([-0.6, 1.0])
-ax.set_ylim3d([-0.5, 1.1])
-ax.set_zlim3d([0.0, 1.6])
-plt.show()
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com_3D.pdf')
-fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com_3D.png')
+#plt.grid()
+#ax.set_xlabel("x [m]")
+#ax.set_ylabel("y [m]")
+#ax.set_zlabel("z [m]")
+#ax.legend(loc='upper right')
+#ax.set_xlim3d([-0.6, 1.0])
+#ax.set_ylim3d([-0.5, 1.1])
+#ax.set_zlim3d([0.0, 1.6])
+#plt.show()
+#fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com_3D.pdf')
+#fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_variable_com_3D.png')
