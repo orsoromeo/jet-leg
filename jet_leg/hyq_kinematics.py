@@ -784,6 +784,8 @@ class HyQKinematics:
         #print self.fr_trunk_J_LF_foot[3:6,:]
         return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:]
 
+    def get_jacobians(self):
+        return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace
 
     def forward_kin(self, q):
         LF_foot = self.fr_trunk_Xh_LF_foot[0:3,3]

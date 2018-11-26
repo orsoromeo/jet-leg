@@ -20,13 +20,14 @@ class Constraints:
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         contactsBF = contactsWF - comWF
 #        print contactsBF
-        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
-                                                  np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsBF[:,1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsBF[:,2]),
-                                                    np.transpose(foot_vel[:,2]))
-        J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
+#        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
+#                                                  np.transpose(foot_vel[:,0]),
+#                                                    np.transpose(contactsBF[:,1]),
+#                                                    np.transpose(foot_vel[:,1]),
+#                                                    np.transpose(contactsBF[:,2]),
+#                                                    np.transpose(foot_vel[:,2]))
+#        J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
+        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
 
         if isOutOfWorkspace:
             C1 = np.zeros((0,0))
@@ -243,6 +244,17 @@ class Constraints:
                 stanceIndex = np.hstack([stanceIndex, iter])
             else:
                 swingIndex = iter
+        
+        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+        contactsBF = contacts - comWF #TODO: make a proper mapping from world to base frame including rotation
+#        print contactsBF
+        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
+                                                  np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsBF[:,1]),
+                                                    np.transpose(foot_vel[:,1]),
+                                                    np.transpose(contactsBF[:,2]),
+                                                    np.transpose(foot_vel[:,2]))
+        J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
         for j in range(0,contactsNumber):    
             print constraint_mode[j]
