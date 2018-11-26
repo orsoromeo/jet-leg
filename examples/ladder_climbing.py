@@ -46,7 +46,7 @@ class CoMPolygonDrawer(pymanoid.Process):
         Contacts and COM position of the robot.
     """
 
-    def __init__(self, stance, height=2.):
+    def __init__(self, stance, height=1.5):
         super(CoMPolygonDrawer, self).__init__()
         self.contact_poses = {}
         self.handle = None
@@ -54,22 +54,22 @@ class CoMPolygonDrawer(pymanoid.Process):
         self.stance = stance
         #
         self.update_contact_poses()
-        self.update_polygon()
+        self.update_handle()
 
     def on_tick(self, sim):
         if self.handle is None:
-            self.update_polygon()
+            self.update_handle()
         for contact in self.stance.contacts:
             if norm(contact.pose - self.contact_poses[contact.name]) > 1e-10:
                 self.update_contact_poses()
-                self.update_polygon()
+                self.update_handle()
                 break
 
     def update_contact_poses(self):
         for contact in self.stance.contacts:
             self.contact_poses[contact.name] = contact.pose
 
-    def update_polygon(self):
+    def update_handle(self):
         self.handle = None
         try:
             vertices = self.stance.compute_static_equilibrium_polygon(
@@ -163,7 +163,7 @@ class InstantaneousActuationDependentPolytopeDrawer(CoMPolygonDrawer):
     def on_tick(self, sim):
         if norm(self.robot.com - self.last_com) > 1e-2:
             self.last_com = self.robot.com
-            self.update_polygon()
+            self.update_handle()
         super(InstantaneousActuationDependentPolytopeDrawer, self).on_tick(sim)
 
     def draw_polytope_slice(self):
@@ -182,7 +182,7 @@ class InstantaneousActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         self.handle.append(draw_polygon(
             vertices, normal=[0, 0, 1], color=[0.3, 0.3, 0.6, 0.5]))
 
-    def update_polygon(self):
+    def update_handle(self):
         self.handle = []
         self.last_vertices = None
         robot.show_com()
