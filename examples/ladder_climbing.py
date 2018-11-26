@@ -44,19 +44,10 @@ class CoMPolygonDrawer(pymanoid.Process):
     ----------
     stance : Stance
         Contacts and COM position of the robot.
-    color : tuple or string, optional
-        Area color.
     """
 
-    def __init__(self, stance, height, color):
-        if color is None:
-            color = (0., 0.5, 0., 0.5)
-        if type(color) is str:
-            from pymanoid.misc import matplotlib_to_rgb
-            color = matplotlib_to_rgb(color) + [0.5]
+    def __init__(self, stance, height=2.):
         super(CoMPolygonDrawer, self).__init__()
-        self._method = "bretl"
-        self.color = color
         self.contact_poses = {}
         self.handle = None
         self.height = height
@@ -82,16 +73,12 @@ class CoMPolygonDrawer(pymanoid.Process):
         self.handle = None
         try:
             vertices = self.stance.compute_static_equilibrium_polygon(
-                method=self._method)
+                method="bretl")
             self.handle = draw_polygon(
                 [(x[0], x[1], self.height) for x in vertices],
-                normal=[0, 0, 1], color=self.color)
+                normal=[0, 0, 1], color='g')
         except Exception as e:
             print("CoMPolygonDrawer: {}".format(e))
-
-    def method(self, method):
-        self._method = method
-        self.update_polygon()
 
 
 def compute_actuation_dependent_polygon(robot, contacts):
@@ -156,23 +143,22 @@ def compute_actuation_dependent_polygon(robot, contacts):
 class InstantaneousActuationDependentPolytopeDrawer(CoMPolygonDrawer):
 
     """
-    Draw the static-equilibrium polygon of a contact set.
+    Draw the static-equilibrium polygon of a contact set under instantaneous
+    actuation constraints.
 
     Parameters
     ----------
     stance : Stance
         Contacts and COM position of the robot.
-    color : tuple or string, optional
-        Area color.
     """
 
-    def __init__(self, robot, stance, height, color):
+    def __init__(self, robot, stance):
         self.last_com = robot.com
         self.robot = robot
         self.last_vertices = None
         # parent constructor is called after
         super(InstantaneousActuationDependentPolytopeDrawer, self).__init__(
-            stance, height, color)
+            stance)
 
     def on_tick(self, sim):
         if norm(self.robot.com - self.last_com) > 1e-2:
@@ -281,12 +267,8 @@ if __name__ == "__main__":
     robot.ik.verbosity = 0
     robot.ik.solve(impr_stop=1e-3)
 
-    polygon_height = 2.  # [m]
-
-    polygon_drawer = CoMPolygonDrawer(
-        stance, polygon_height, color='g')
-    iap_drawer = InstantaneousActuationDependentPolytopeDrawer(
-        robot, stance, polygon_height, color='b')
+    polygon_drawer = CoMPolygonDrawer(stance)
+    iap_drawer = InstantaneousActuationDependentPolytopeDrawer(robot, stance)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
     sim.schedule(robot.ik)
