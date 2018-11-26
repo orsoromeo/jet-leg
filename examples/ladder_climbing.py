@@ -219,16 +219,11 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
             for point in points:
                 self.stance.com.set_x(init_com[0] + point[0])
                 self.stance.com.set_y(init_com[1] + point[1])
-                self.handle.append(draw_point(stance.com.p))
-                raw_input("KRON")
-                # self.stance.com.set_x(self.stance.com.x + dx * dx_sign)
-                    # self.robot.ik.solve(warm_start=True, impr_stop=1e-3)
-                    # self.draw_polytope_slice()
-                    # self.draw_polygon()
-                    # if pylab.norm(self.robot.com - self.stance.com.p) < 0.02:
-                    # self.handle.append(draw_point(robot.com))
-                    # else:
-                        # print pylab.norm(self.robot.com - self.stance.com.p)
+                self.robot.ik.solve(warm_start=True, impr_stop=1e-3)
+                # self.draw_polytope_slice()
+                # self.draw_polygon()
+                if pylab.norm(self.robot.com - self.stance.com.p) < 0.02:
+                    self.handle.append(draw_point(robot.com))
         self.stance.com.set_pos(init_com)
         self.stance.com.show()
         self.robot.set_dof_values(q_init)
