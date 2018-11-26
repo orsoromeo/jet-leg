@@ -20,9 +20,9 @@
 
 import IPython
 import numpy
-# import pylab
+import pylab
 
-from numpy import array, hstack, ones, vstack, zeros
+from numpy import arange, array, hstack, ones, vstack, zeros
 from scipy.linalg import block_diag
 
 import pymanoid
@@ -140,7 +140,7 @@ def compute_actuation_dependent_polygon(robot, contacts):
         ineq=(A, b), eq=(C, d), proj=(E, f), method="bretl")
 
 
-class InstantaneousActuationDependentPolytopeDrawer(CoMPolygonDrawer):
+class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
 
     """
     Draw the static-equilibrium polygon of a contact set under instantaneous
@@ -157,14 +157,14 @@ class InstantaneousActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         self.robot = robot
         self.last_vertices = None
         # parent constructor is called after
-        super(InstantaneousActuationDependentPolytopeDrawer, self).__init__(
+        super(ActuationDependentPolytopeDrawer, self).__init__(
             stance)
 
     def on_tick(self, sim):
         if norm(self.robot.com - self.last_com) > 1e-2:
             self.last_com = self.robot.com
             self.update_handle()
-        super(InstantaneousActuationDependentPolytopeDrawer, self).on_tick(sim)
+        super(ActuationDependentPolytopeDrawer, self).on_tick(sim)
 
     def draw_polytope_slice(self):
         vertices_2d = compute_actuation_dependent_polygon(
@@ -186,15 +186,26 @@ class InstantaneousActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         self.handle = []
         self.last_vertices = None
         robot.show_com()
+        com_grid = [
+            (dx, dy) for dx in arange(-0.5, +0.5, 0.05)
+            for dy in arange(-0.1, +0.1, 0.05)]
         with sim.env:
             com_height = self.stance.com.z
+            init_com = self.stance.com.p
             q_init = self.robot.q
-            for height in numpy.arange(0.63, 0.95, 0.03):
+            self.stance.com.hide()
+            for height in arange(0.7, 0.9, 0.03):
                 self.stance.com.set_z(height)
-                self.robot.ik.solve(warm_start=True, impr_stop=1e-3)
-                self.draw_polytope_slice()
-                self.handle.append(draw_point(robot.com))
-            self.stance.com.set_z(com_height)
+                for (dx, dy) in com_grid:
+                    self.stance.com.set_x(init_com[0] + dx)
+                    self.stance.com.set_y(init_com[1] + dy)
+                    self.robot.ik.solve(warm_start=True, impr_stop=1e-3)
+                    # self.draw_polytope_slice()
+                    # self.draw_polygon()
+                    if pylab.norm(self.robot.com - self.stance.com.p) < 0.01:
+                        self.handle.append(draw_point(robot.com))
+            self.stance.com.set_pos(init_com)
+            self.stance.com.show()
             self.robot.set_dof_values(q_init)
 
 
@@ -268,12 +279,12 @@ if __name__ == "__main__":
     robot.ik.solve(impr_stop=1e-3)
 
     polygon_drawer = CoMPolygonDrawer(stance)
-    iap_drawer = InstantaneousActuationDependentPolytopeDrawer(robot, stance)
+    polytope_drawer = ActuationDependentPolytopeDrawer(robot, stance)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
     sim.schedule(robot.ik)
-    # sim.schedule_extra(polygon_polygon_drawer)
-    # sim.schedule_extra(iap_polygon_drawer)
+    # sim.schedule_extra(polygon_drawer)
+    # sim.schedule_extra(polytope_drawer)
     sim.schedule_extra(wrench_drawer)
     sim.start()
 
