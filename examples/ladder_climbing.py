@@ -35,7 +35,7 @@ from pymanoid.sim import gravity_const
 from pypoman import project_polytope
 
 
-class UnconstrainedPolygonDrawer(pymanoid.Process):
+class CoMPolygonDrawer(pymanoid.Process):
 
     """
     Draw the static-equilibrium polygon of a contact set.
@@ -54,7 +54,7 @@ class UnconstrainedPolygonDrawer(pymanoid.Process):
         if type(color) is str:
             from pymanoid.misc import matplotlib_to_rgb
             color = matplotlib_to_rgb(color) + [0.5]
-        super(UnconstrainedPolygonDrawer, self).__init__()
+        super(CoMPolygonDrawer, self).__init__()
         self._method = "bretl"
         self.color = color
         self.contact_poses = {}
@@ -87,14 +87,14 @@ class UnconstrainedPolygonDrawer(pymanoid.Process):
                 [(x[0], x[1], self.height) for x in vertices],
                 normal=[0, 0, 1], color=self.color)
         except Exception as e:
-            print("UnconstrainedPolygonDrawer: {}".format(e))
+            print("CoMPolygonDrawer: {}".format(e))
 
     def method(self, method):
         self._method = method
         self.update_polygon()
 
 
-def compute_actuation_dependent_polygon(robot, contacts, tau_scale, method):
+def compute_actuation_dependent_polygon(robot, contacts):
     """
     Compute constraint matrices of the problem:
 
@@ -106,10 +106,14 @@ def compute_actuation_dependent_polygon(robot, contacts, tau_scale, method):
         [x_com y_com]  =  E * w_all + f
 
     where w_all is the stacked vector of external contact wrenches.
+
+    Returns
+    -------
+    vertices : list of arrays
+        2D vertices of the static-equilibrium polygon.
     """
     g = robot.compute_static_gravity_torques()
     J_contact = robot.compute_contact_jacobian(contacts)
-    tau_max = tau_scale * robot.tau_max
 
     # Friction limits:
     #
@@ -120,12 +124,12 @@ def compute_actuation_dependent_polygon(robot, contacts, tau_scale, method):
 
     # Torque limits:
     #
-    #     |tau| <= tau_max
+    #     |tau| <= robot.tau_max
     #
     # where tau == g - J_c^T w_all in static equilibrium.
     #
     A_act = vstack([-J_contact.T[:-6], +J_contact.T[:-6]])
-    b_act = hstack([(tau_max - g)[:-6], (tau_max + g)[:-6]])
+    b_act = hstack([(robot.tau_max - g)[:-6], (robot.tau_max + g)[:-6]])
 
     # Net wrench constraint:
     #
@@ -146,10 +150,10 @@ def compute_actuation_dependent_polygon(robot, contacts, tau_scale, method):
     A = vstack([A_fric, A_act])
     b = hstack([b_fric, b_act])
     return project_polytope(
-        ineq=(A, b), eq=(C, d), proj=(E, f), method=method)
+        ineq=(A, b), eq=(C, d), proj=(E, f), method="bretl")
 
 
-class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
+class InstantaneousActuationDependentPolytopeDrawer(CoMPolygonDrawer):
 
     """
     Draw the static-equilibrium polygon of a contact set.
@@ -163,24 +167,22 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
     """
 
     def __init__(self, robot, stance, height, color):
-        self._tau_scale = 1.0
         self.last_com = robot.com
         self.robot = robot
         self.last_vertices = None
         # parent constructor is called after
-        super(ActuationDependentPolytopeDrawer, self).__init__(
+        super(InstantaneousActuationDependentPolytopeDrawer, self).__init__(
             stance, height, color)
 
     def on_tick(self, sim):
         if norm(self.robot.com - self.last_com) > 1e-2:
             self.last_com = self.robot.com
             self.update_polygon()
-        super(ActuationDependentPolytopeDrawer, self).on_tick(sim)
+        super(InstantaneousActuationDependentPolytopeDrawer, self).on_tick(sim)
 
     def draw_polytope_slice(self):
         vertices_2d = compute_actuation_dependent_polygon(
-            self.robot, self.stance, self._tau_scale,
-            method=self._method)
+            self.robot, self.stance)
         vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
         if self.last_vertices is not None:
             self.handle.append(draw_polytope(
@@ -189,8 +191,7 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
 
     def draw_polygon(self):
         vertices_2d = compute_actuation_dependent_polygon(
-            self.robot, self.stance, self._tau_scale,
-            method=self._method)
+            self.robot, self.stance)
         vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
         self.handle.append(draw_polygon(
             vertices, normal=[0, 0, 1], color=[0.3, 0.3, 0.6, 0.5]))
@@ -201,17 +202,14 @@ class ActuationDependentPolytopeDrawer(UnconstrainedPolygonDrawer):
         robot.show_com()
         with sim.env:
             com_height = self.stance.com.z
+            q_init = self.robot.q
             for height in numpy.arange(0.63, 0.95, 0.03):
                 self.stance.com.set_z(height)
-                for _ in xrange(10):
-                    self.robot.ik.step(sim.dt)
+                self.robot.ik.solve(warm_start=True, impr_stop=1e-3)
                 self.draw_polytope_slice()
                 self.handle.append(draw_point(robot.com))
             self.stance.com.set_z(com_height)
-
-    def tau_scale(self, tau_scale):
-        self._tau_scale = min(1., max(0., tau_scale))
-        self.update_polygon()
+            self.robot.set_dof_values(q_init)
 
 
 def set_torque_limits(robot):
@@ -279,19 +277,21 @@ if __name__ == "__main__":
     stance = Stance.from_json('jvrc1_ladder.json')
     stance.bind(robot)
     # stance.com.hide()
-    robot.ik.solve()
+    robot.ik.maximize_margins = True
+    robot.ik.verbosity = 0
+    robot.ik.solve(impr_stop=1e-3)
 
     polygon_height = 2.  # [m]
 
-    uncons_drawer = UnconstrainedPolygonDrawer(
+    polygon_drawer = CoMPolygonDrawer(
         stance, polygon_height, color='g')
-    act_drawer = ActuationDependentPolytopeDrawer(
+    iap_drawer = InstantaneousActuationDependentPolytopeDrawer(
         robot, stance, polygon_height, color='b')
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
     sim.schedule(robot.ik)
-    # sim.schedule_extra(uncons_polygon_drawer)
-    # sim.schedule_extra(act_polygon_drawer)
+    # sim.schedule_extra(polygon_polygon_drawer)
+    # sim.schedule_extra(iap_polygon_drawer)
     sim.schedule_extra(wrench_drawer)
     sim.start()
 
