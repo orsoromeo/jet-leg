@@ -49,7 +49,7 @@ axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
 
-number_of_tests = 10
+number_of_tests = 1000
 onlyFrictionTests3contacts = np.zeros((number_of_tests))
 onlyFrictionTests4contacts = np.zeros((number_of_tests))  
 onlyActuationTests3contacts = np.zeros((number_of_tests))
@@ -496,61 +496,64 @@ for iter in range(0,number_of_tests):
 plotter = Plotter()
 
 ''' 2D figure '''
-
+fig = plt.figure()
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 plt.legend()
 
-#fig = plt.figure()
 plt.plot([1,2,3])
+fig.suptitle('Computation times for ' + str(number_of_tests) + ' tests', fontsize=18)
 plt.subplot(321)
 #print tests
 plt.grid()
-plt.hist(onlyFrictionTests3contacts, color = "salmon", bins=np.arange(0,15,0.15))
+plt.hist(onlyFrictionTests3contacts, color = "salmon", bins=np.arange(0,25,0.25))
 plt.title("3 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
 
-plt.subplot(322)
+subpl2 = plt.subplot(322)
 #print tests
 plt.grid()
 plt.hist(onlyFrictionTests4contacts, color = "salmon", bins=np.arange(0,25,0.25))
 plt.title("4 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
+subpl2.yaxis.set_label_position("right")
 
 plt.subplot(323)
 #print tests
 plt.grid()
-plt.hist(onlyActuationTests3contacts, color = "limegreen", bins=np.arange(0,15,0.15))
+plt.hist(onlyActuationTests3contacts, color = "limegreen", bins=np.arange(0,25,0.25))
 #plt.title("only friction, 3 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
 
-plt.subplot(324)
+subpl4 = plt.subplot(324)
 #print tests
 plt.grid()
 plt.hist(onlyActuationTests4contacts, color = "limegreen", bins=np.arange(0,25,0.25))
 #plt.title("only friction, 4 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
+subpl4.yaxis.set_label_position("right")
 
 plt.subplot(325)
 #print tests
 plt.grid()
-plt.hist(frictionAndActuation3contacts, color = "skyblue", bins=np.arange(0,15,0.15))
+plt.hist(frictionAndActuation3contacts, color = "skyblue", bins=np.arange(0,25,0.25))
 #plt.title("only friction, 3 point contacts")
-plt.xlabel("times [ms]")
+plt.xlabel("time [ms]")
 plt.ylabel("count")
 
-plt.subplot(326)
+subpl6 = plt.subplot(326)
 #print tests
 plt.grid()
 plt.hist(frictionAndActuation4contacts, color = "skyblue", bins=np.arange(0,25,0.25))
 #plt.title("only friction, 4 point contacts")
-plt.xlabel("times [ms]")
+plt.xlabel("time [ms]")
 plt.ylabel("count")
+subpl6.yaxis.set_label_position("right")
 plt.show()
-mpl.rcParams.update({'font.size': 15})
+mpl.rcParams.update({'font.size': 14})
 plt.savefig('../../figs/IP_bretl/statsIP.pdf')
