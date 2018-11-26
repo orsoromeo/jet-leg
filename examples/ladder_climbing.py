@@ -35,19 +35,22 @@ from pymanoid.sim import gravity_const
 from pypoman import project_polytope
 
 
-def generate_point_grid(zrange, dx=0.05, dy=0.05, nb_dx=10, nb_dy=10):
-    assert nb_dx % 2 == 0 and nb_dy % 2 == 0
+def generate_point_grid(xlim, ylim, zlim, xres=10, yres=10):
+    assert xres % 2 == 0 and yres % 2 == 0
     p = zeros(2)
+    dx = (xlim[1] - xlim[0]) / xres
+    dy = (ylim[1] - ylim[0]) / yres
     dx_sign = +1
     dy_sign = +1
-    p[0] = -dx * dx_sign * nb_dx / 2
+    p[0] = -dx * dx_sign * (1 + xres / 2)
     output = []
+    zrange = arange(zlim[0], zlim[1], 0.03)
     for height in zrange:
         points = []
-        p[1] = -dy * dy_sign * nb_dy / 2
-        for _ in xrange(nb_dx):
+        p[1] = -dy * dy_sign * (1 + yres / 2)
+        for _ in xrange(xres + 1):
             p[0] += dx * dx_sign
-            for _ in xrange(nb_dy):
+            for _ in xrange(yres + 1):
                 p[1] += dy * dy_sign
                 points.append(p.copy())
             p[1] += dy * dy_sign
@@ -213,17 +216,19 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         init_com = self.stance.com.p
         q_init = self.robot.q
         self.stance.com.hide()
-        grid = generate_point_grid(zrange=arange(0.8, 0.9, 0.03))
+        grid = generate_point_grid(
+            xlim=(-0.25, 0.25), ylim=(-0.25, 0.25), zlim=(0.8, 0.9))
         for (height, points) in grid:
             self.stance.com.set_z(height)
             for point in points:
                 self.stance.com.set_x(init_com[0] + point[0])
                 self.stance.com.set_y(init_com[1] + point[1])
-                self.robot.ik.solve(warm_start=True, impr_stop=1e-3)
+                # self.robot.ik.solve(warm_start=True, impr_stop=1e-3)
                 # self.draw_polytope_slice()
                 # self.draw_polygon()
-                if pylab.norm(self.robot.com - self.stance.com.p) < 0.02:
-                    self.handle.append(draw_point(robot.com))
+                # if pylab.norm(self.robot.com - self.stance.com.p) < 0.02:
+                #     self.handle.append(draw_point(robot.com))
+                self.handle.append(draw_point(self.stance.com.p))
         self.stance.com.set_pos(init_com)
         self.stance.com.show()
         self.robot.set_dof_values(q_init)
