@@ -27,7 +27,6 @@ class IterativeProjectionParameters:
         self.state_machineRH = True
         self.stanceFeet = [0, 0, 0, 0]
         self.numberOfContacts = 0
-        self.feetPos = np.zeros((4,3))
         self.contactsPos = np.zeros((4,3))
 
         self.math = Math()        
@@ -76,7 +75,8 @@ class IterativeProjectionParameters:
         self.trunkMass = mass
         
     def getContactsPos(self):
-        return self.contactsPos
+        print self.contactsPos
+        return self.contactsPos[:,0]
         
     def getCoMPos(self):
         return self.CoMposition
@@ -164,12 +164,13 @@ class IterativeProjectionParameters:
             if str(received_data.name[j]) == str("footPosRHz"):
                 self.footPosRH[2] = int(received_data.data[j]*100.0)/100.0
                             
-                
-                
-            self.feetPos = np.array([[self.footPosLF],
-                                     [self.footPosRF],
-                                        [self.footPosLH],
-                                            [self.footPosRH]])
+        contactsPosTMP = np.array([[self.footPosLF],
+                                         [self.footPosRF],
+                                         [self.footPosLH],
+                                         [self.footPosRH]])
+                                            
+        self.setContactsPos(contactsPosTMP)
+        print self.getContactsPos()
 #                                            
 #            if str(received_data.name[j]) == str("state_machineLF"):
 #                self.state_machineLF = received_data.data[j]
@@ -201,7 +202,10 @@ class IterativeProjectionParameters:
 #            else:
 #                self.stanceFeet[3] = 0
 
+    def getFutureStanceFeet(self, received_data):
 
+        num_of_elements = np.size(received_data.data)         
+        for j in range(0,num_of_elements):
             if str(received_data.name[j]) == str("future_stance_LF"):
                 self.stanceFeet[0] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RF"):
@@ -209,20 +213,55 @@ class IterativeProjectionParameters:
             if str(received_data.name[j]) == str("future_stance_LH"):
                 self.stanceFeet[2] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RH"):
-                self.stanceFeet[3] = int(received_data.data[j])  
-
-                 
+                self.stanceFeet[3] = int(received_data.data[j]) 
+        self.setActiveContacts(self.stanceFeet)
+        self.numberOfContacts = np.sum(self.stanceFeet)
+        
+    def getCurrentStanceFeet(self, received_data):
+        
+        num_of_elements = np.size(received_data.data)
+        for j in range(0,num_of_elements):
+            if str(received_data.name[j]) == str("state_machineLF"):
+                self.stanceFeet[0] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("state_machineRF"):
+                self.stanceFeet[1] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("state_machineLH"):
+                self.stanceFeet[2] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("state_machineRH"):
+                self.stanceFeet[3] = int(received_data.data[j]) 
+                
+            if self.state_machineLF < 4.0:
+                self.stanceFeet[0] = 1
+            else:
+                self.stanceFeet[0] = 0
+                
+            if self.state_machineRF < 4.0:
+                self.stanceFeet[1] = 1
+            else:
+                self.stanceFeet[1] = 0
+                
+            if self.state_machineLH < 4.0:
+                self.stanceFeet[2] = 1
+            else:
+                self.stanceFeet[2] = 0
+                
+            if self.state_machineRH < 4.0:
+                self.stanceFeet[3] = 1                
+            else:
+                self.stanceFeet[3] = 0
+            
+#        self.setActiveContacts(self.stanceFeet)
+        self.numberOfContacts = np.sum(self.stanceFeet)
                    
                     
 #            self.contacts = np.zeros((4,3))     
             
-            counter = 0
-#            print self.state_machineLF, self.stanceFeet
-            for i in range(0,4):
-                self.contacts[i] = self.feetPos[i]
-#                print i, self.stanceFeet[i]
-                if self.stanceFeet[i] == 1:
-#                    self.contacts[counter] = self.feetPos[i]
-                    counter += 1
+#            counter = 0
+##            print self.state_machineLF, self.stanceFeet
+#            for i in range(0,4):
+#                self.contactsPos[i] = self.feetPos[i]
+##                print i, self.stanceFeet[i]
+#                if self.stanceFeet[i] == 1:
+##                    self.contacts[counter] = self.feetPos[i]
+#                    counter += 1
             
-            self.numberOfContacts = counter
