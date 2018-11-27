@@ -56,7 +56,7 @@ class IterativeProjectionParameters:
 
         
 
-    def setContactsPos(self, contactsBF):
+    def setContactsPosBF(self, contactsBF):
         self.contactsBF = contactsBF
 
     def setCoMPos(self, comWF):
@@ -80,16 +80,11 @@ class IterativeProjectionParameters:
     def setNumberOfFrictionConesEdges(self, ng):
         self.numberOfGenerators = ng
         
-    def setTrunkMass(self, mass):
+    def setTotalMass(self, mass):
         self.trunkMass = mass
         
-    def getContactsPos(self):
-        print self.contactsBF
+    def getContactsPosBF(self):
         return self.contactsBF
-#=======
-#        print self.contactsPos
-#        return self.contactsPos[:,0]
-#>>>>>>> master
         
     def getCoMPos(self):
         return self.comPositionBF
@@ -112,7 +107,7 @@ class IterativeProjectionParameters:
     def getNumberOfFrictionConesEdges(self):
         return self.numberOfGenerators
         
-    def getTrunkMass(self):
+    def getTotalMass(self):
         return self.trunkMass
         
     def getParamsFromRosDebugTopic(self, received_data):

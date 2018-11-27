@@ -34,7 +34,6 @@ from jet_leg.iterative_projection_parameters import IterativeProjectionParameter
 
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
-#import utils
 sys.stderr = stderr
 
 
@@ -46,7 +45,6 @@ class HyQSim(threading.Thread):
         self.clock_sub_name = 'clock'
         self.hyq_wbs_sub_name = "/hyq/robot_states"
         self.hyq_actuation_params_sub_name = "/hyq/debug"
-
         self.hyq_wbs = dict()
         self.hyq_rcf_debug = StringDoubleArray()  
         self.actuation_polygon_topic_name = "/hyq/actuation_polygon"
@@ -58,18 +56,10 @@ class HyQSim(threading.Thread):
         
     def run(self):
         self.sub_clock = ros.Subscriber(self.clock_sub_name, Clock, callback=self._reg_sim_time, queue_size=1)
-#        self.sub_wbs = ros.Subscriber(self.hyq_wbs_sub_name, WholeBodyState, callback=self._reg_sim_wbs, queue_size=1)
         self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
-#        self.sub_rcf_aux = ros.Subscriber(self.hyq_rcf_aux_sub_name, RCFaux, callback=self._reg_sim_rcf_aux, queue_size=1)
-#        self.sub_rcf_debug = ros.Subscriber(self.hyq_rcf_debug_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
-#        self.sub_rcf_params = ros.Subscriber(self.hyq_rcf_params_sub_name, RCFParams, callback=self._reg_sim_rcf_params, queue_size=1)
-#        self.pub_rcf_params = ros.Publisher(self.debug_topic_name, SimpleDoubleArray, queue_size=1)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_name, Polygon3D, queue_size=1)
         self.pub_support_region = ros.Publisher(self.support_region_topic_name, Polygon3D, queue_size=1)
         self.pub_force_polygons = ros.Publisher(self.force_polygons_topic_name, LegsPolygons, queue_size=1)
-#        self.fbs = ros.ServiceProxy('/hyq/freeze_base', Empty)
-#        self.startRCF = ros.ServiceProxy('/hyq/start_RCF', Empty)
-#        self.stopRCF = ros.ServiceProxy('/hyq/stop_RCF', Empty)   
 
     def _reg_sim_time(self, time):
         self.sim_time = time.clock.secs + time.clock.nsecs/1000000000.0
@@ -95,28 +85,24 @@ class HyQSim(threading.Thread):
         return self.hyq_wbs
 
     def send_force_polygons(self, name, polygons):
-#        self.output = dict()
         output = LegsPolygons()
         output.names = name
         output.polygons = polygons
         self.pub_force_polygons.publish(output) 
         
     def send_support_region(self, name, vertices):
-#        self.output = dict()
         output = Polygon3D()
         output.names = name
         output.vertices = vertices
         self.pub_support_region.publish(output) 
         
     def send_actuation_polygons(self, name, vertices):
-#        self.output = dict()
         output = Polygon3D()
         output.names = name
         output.vertices = vertices
         self.pub_polygon.publish(output)    
     
     def send_simple_array(self, name, data):
-#        self.output = dict()
         output = SimpleDoubleArray()
         output.name = name
         output.data = data
@@ -144,7 +130,7 @@ def talker():
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         params.getFutureStanceFeet(p.hyq_rcf_debug)
 #        params.getCurrentStanceFeet(p.hyq_rcf_debug)
-        trunk_mass = 85.
+        total_mass = 85.
         mu = 0.8
         ng = 4
         axisZ= np.array([[0.0], [0.0], [1.0]])
@@ -157,9 +143,6 @@ def talker():
 
         """ contact points """
         nc = params.numberOfContacts
-#        print contacts, actuationParams.stanceFeet
-#        print actuationParams.LF_tau_lim
-#        comWF = np.array([0.0,0.0,0.0])
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'FRICTION_AND_ACTUATION'
         params.setConstraintModes([constraint_mode_IP,
@@ -169,11 +152,9 @@ def talker():
         #params.setContactNormals(normals)
         #params.setFrictionCoefficient(mu)
         params.setNumberOfFrictionConesEdges(ng)
-        params.setTrunkMass(trunk_mass)
+        params.setTotalMass(total_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
         IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
-#        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
-#        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         num_actuation_vertices = np.size(IAR, 0)
         
         point.x = IAR[0][0]
@@ -214,11 +195,9 @@ def talker():
         #params.setContactNormals(normals)
         #params.setFrictionCoefficient(mu)
         params.setNumberOfFrictionConesEdges(ng)
-        params.setTrunkMass(trunk_mass)
+#        params.setTrunkMass(trunk_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
         IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
-#        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(constraint_mode, actuationParams.stanceFeet, contacts, normals, trunk_mass, 4, 1.0, comWF, actuationParams.torque_limits)
-#        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
         num_support_vertices = np.size(IAR, 0)
         point.x = IAR[0][0]
         point.y = IAR[0][1]

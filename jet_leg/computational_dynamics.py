@@ -53,9 +53,9 @@ class ComputationalDynamics():
     def setup_iterative_projection(self, iterative_projection_params, saturate_normal_force):
         
         stanceLegs = iterative_projection_params.getStanceFeet()
-        contacts = iterative_projection_params.getContactsPos()
+        contacts = iterative_projection_params.getContactsPosBF()
         constraint_mode = iterative_projection_params.getConstraintModes()
-        trunk_mass = iterative_projection_params.getTrunkMass()
+        total_mass = iterative_projection_params.getTotalMass()
 #        constraint_mode = constraint_mode[0]
         
         ''' parameters to be tuned'''

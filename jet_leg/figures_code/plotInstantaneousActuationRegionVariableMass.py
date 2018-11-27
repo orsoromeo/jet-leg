@@ -66,8 +66,6 @@ constraint_mode = ['ONLY_ACTUATION',
                    'ONLY_ACTUATION']
                    
 useVariableJacobian = False
-# number of decision variables of the problem
-n = nc*6
 
 # contact positions
 """ contact points """
@@ -126,7 +124,7 @@ scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
 
 params = IterativeProjectionParameters()
-params.setContactsPos(contacts)
+params.setContactsPosBF(contacts)
 params.setCoMPos(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
@@ -134,10 +132,10 @@ params.setConstraintModes(constraint_mode)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
 
-for trunk_mass in range(140, 40, -10):
-    params.setTrunkMass(trunk_mass)
+
+for total_mass in range(140, 40, -10):
+    params.setTotalMass(total_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
     colorVal = scalarMap.to_rgba(scale[idx])
@@ -146,7 +144,7 @@ for trunk_mass in range(140, 40, -10):
     #plotter.plot_polygon(np.transpose(IP_points), x[0],'trunk mass ' + str(trunk_mass*10) + ' N')    
     x = np.hstack([point[:,0], point[0,0]])
     y = np.hstack([point[:,1], point[0,1]])
-    h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(trunk_mass*10) + ' N')
+    h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(total_mass*10) + ' N')
 
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 constraint_mode = ['ONLY_FRICTION',
@@ -194,10 +192,10 @@ params.setConstraintModes(constraint_mode)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
 
-for trunk_mass in range(140, 40, -10):
-    params.setTrunkMass(trunk_mass)
+
+for total_mass in range(140, 40, -10):
+    params.setTrunkMass(total_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
     colorVal = scalarMap.to_rgba(scale[idx])
@@ -206,7 +204,7 @@ for trunk_mass in range(140, 40, -10):
     #plotter.plot_polygon(np.transpose(IP_points), x[0],'trunk mass ' + str(trunk_mass*10) + ' N')    
     x = np.hstack([point[:,0], point[0,0]])
     y = np.hstack([point[:,1], point[0,1]])
-    h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(trunk_mass*10) + ' N')
+    h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(total_mass*10) + ' N')
 
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 constraint_mode = ['ONLY_FRICTION',
