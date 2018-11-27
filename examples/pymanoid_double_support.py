@@ -20,7 +20,7 @@
 
 import IPython
 
-from numpy import array, dot, hstack, ones, vstack
+from numpy import array, dot, hstack, ones, sqrt, vstack
 
 import pymanoid
 import pypoman
@@ -35,6 +35,12 @@ from pypoman import compute_polytope_vertices
 from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_local_actuation_dependent_polygon
 from pymanoid_common import shrink_polygon
+from pymanoid_common import sample_points_from_polygon
+from pymanoid_common import grid_polygon
+
+
+WS_NB_POINTS = 100
+WS_TYPE = "sample"
 
 
 class COMSync(pymanoid.Process):
@@ -158,14 +164,24 @@ if __name__ == "__main__":
 
     uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
     uncons_polygon_drawer.update()
-    working_polygon = shrink_polygon(
-        uncons_polygon_drawer.vertices, shrink_ratio=0.5, res=50)
+    # working_set = shrink_polygon(
+    #     uncons_polygon_drawer.vertices, shrink_ratio=0.5, res=50)
+    uncons_vertices = uncons_polygon_drawer.vertices
+    if WS_TYPE == "shrink":
+        working_set = shrink_polygon(
+            uncons_vertices, shrink_ratio=0.5, res=WS_NB_POINTS)
+    elif WS_TYPE == "sample":
+        working_set = sample_points_from_polygon(uncons_vertices, WS_NB_POINTS)
+    else:  # WS_TYPE == "grid"
+        res = int(sqrt(WS_NB_POINTS))
+        working_set = grid_polygon(uncons_vertices, res=res)
+
     # h1 = draw_polygon(
-    #     [(v[0], v[1], polygon_height) for v in working_polygon],
+    #     [(v[0], v[1], polygon_height) for v in working_set],
     #     normal=[0, 0, 1], combined='m-#')
     h2 = [draw_point(
-        [v[0], v[1], polygon_height], color='m', pointsize=5e-3)
-        for v in working_polygon]
+        [v[0], v[1], polygon_height], color='m', pointsize=1e-3)
+        for v in working_set]
 
     sim.schedule(robot.ik)
     sim.schedule_extra(com_sync)
@@ -176,10 +192,11 @@ if __name__ == "__main__":
 
     ada_polygons = []
     all_vertices = []
-    for i_cur, p_cur in enumerate(working_polygon):
+    sample_handles = []
+    for i_cur, p_cur in enumerate(working_set):
         p_cur = array(p_cur)
         A_voronoi, b_voronoi = [], []
-        for i_other, p_other in enumerate(working_polygon):
+        for i_other, p_other in enumerate(working_set):
             if i_other == i_cur:
                 continue
             p_other = array(p_other)
@@ -192,11 +209,21 @@ if __name__ == "__main__":
 
         com_above = array([p_cur[0], p_cur[1], polygon_height])
         com_sync.com_above.set_pos(com_above)
+        robot.ik.solve(warm_start=True)
         proj_vertices = compute_local_actuation_dependent_polygon(
-            robot, stance, method="bretl")
+            robot, stance, method="cdd")
         A_proj, b_proj = compute_polytope_halfspaces(proj_vertices)
         A = vstack([A_proj, A_voronoi])
         b = hstack([b_proj, b_voronoi])
+        if (dot(A, p_cur) > b).any():
+            sample_handles.append(draw_point(
+                [p_cur[0], p_cur[1], polygon_height], color='r',
+                pointsize=5e-3))
+            # continue
+        else:
+            sample_handles.append(draw_point(
+                [p_cur[0], p_cur[1], polygon_height], color='g',
+                pointsize=5e-3))
         vertices = compute_polytope_vertices(A, b)
         ada_polygons.append(draw_polygon(
             [(v[0], v[1], polygon_height) for v in vertices],

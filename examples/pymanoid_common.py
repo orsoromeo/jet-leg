@@ -20,6 +20,7 @@
 
 from numpy import arange, array, hstack, vstack, zeros
 from numpy import cos, dot, sin, pi
+from numpy import linspace, random
 from scipy.linalg import block_diag
 
 import pymanoid
@@ -210,3 +211,32 @@ def shrink_polygon(vertices, shrink_ratio, res=10):
         lambda_ = min([v[i] / u[i] for i in xrange(n) if u[i] > 1e-10])
         new_vertices.append(c + shrink_ratio * lambda_ * r)
     return new_vertices
+
+
+def sample_points_from_polygon(vertices, nb_points):
+    A, b = compute_polytope_halfspaces(vertices)
+    vertices = array(vertices)
+    p_min = vertices.min(axis=0)
+    p_max = vertices.max(axis=0)
+    points = []
+    while len(points) < nb_points:
+        p = random.random(2) * (p_max - p_min) + p_min
+        if (dot(A, p) <= b).all():
+            points.append(p)
+    return points
+
+
+def grid_polygon(vertices, res=None, xres=None, yres=None):
+    xres = res if xres is None else xres
+    yres = res if yres is None else yres
+    A, b = compute_polytope_halfspaces(vertices)
+    vertices = array(vertices)
+    p_min = vertices.min(axis=0)
+    p_max = vertices.max(axis=0)
+    points = []
+    for x in linspace(p_min[0], p_max[0], xres):
+        for y in linspace(p_min[1], p_max[1], yres):
+            p = array([x, y])
+            if (dot(A, p) <= b).all():
+                points.append(p)
+    return points
