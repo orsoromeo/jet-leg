@@ -53,9 +53,9 @@ class ComputationalDynamics():
     def setup_iterative_projection(self, iterative_projection_params, saturate_normal_force):
         
         stanceLegs = iterative_projection_params.getStanceFeet()
-        contacts = iterative_projection_params.getContactsPos()
+        contacts = iterative_projection_params.getContactsPosBF()
         constraint_mode = iterative_projection_params.getConstraintModes()
-        trunk_mass = iterative_projection_params.getTrunkMass()
+        total_mass = iterative_projection_params.getTotalMass()
 #        constraint_mode = constraint_mode[0]
         
         ''' parameters to be tuned'''
@@ -105,6 +105,53 @@ class ComputationalDynamics():
 #        print A,t
         eq = (A, t)  # A * x == t
         
+#<<<<<<< HEAD
+#        actuation_polygons = np.zeros((1,1))
+#        C = np.zeros((0,0))
+#        d = np.zeros((0))
+#        
+#        for j in range(0,contactsNumber):    
+#            print constraint_mode[j]
+#            if constraint_mode[j] == 'ONLY_FRICTION':
+#                #            print contactsNumber
+#                constraints_local_frame, d_cone = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+#                isIKoutOfWorkSpace = False
+#
+#                n = self.math.normalize(normals[j,:])
+#                rotationMatrix = self.math.rotation_matrix_from_normal(n)
+#                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
+#            
+#            if constraint_mode[j] == 'ONLY_ACTUATION':
+#                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, iterative_projection_params.getContactsPos(),  stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
+#                #            print d.shape[0]            
+#                if isIKoutOfWorkSpace is False:
+#                    d_cone = d_cone.reshape(6) 
+#                else:
+#                    Ctemp = np.zeros((0,0))
+#                    d_cone = np.zeros((0))
+#            
+#            if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
+#                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, iterative_projection_params.getContactsPos(), stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
+#                C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+#                #            print C1, C2
+#                if isIKoutOfWorkSpace is False:
+#                    #                print d1
+#                    Ctemp = np.vstack([C1, C2])
+#                    #               print np.size(C,0), np.size(C,1), C
+#                    d_cone = np.hstack([d1[0], d2])
+#                    #                print d
+#                    d_cone = d_cone.reshape((6+ng))
+#                else:
+#                    Ctemp = np.zeros((0,0))
+#                    d_cone = np.zeros((0))
+#                
+#            C = block_diag(C, Ctemp)
+#            d = np.hstack([d, d_cone])
+#        
+#        ineq = (C, d)  # C * x <= d
+##        print actuation_polygons
+##        print C, d
+#=======
         C, d, isIKoutOfWorkSpace, actuation_polygons = self.constr.getInequalities(iterative_projection_params)
         ineq = (C, d)    
         return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
