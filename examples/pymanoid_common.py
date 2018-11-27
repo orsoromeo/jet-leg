@@ -19,13 +19,16 @@
 # along with jet-leg. If not, see <http://www.gnu.org/licenses/>.
 
 from numpy import arange, array, hstack, vstack, zeros
+from numpy import cos, dot, sin, pi
 from scipy.linalg import block_diag
 
 import pymanoid
 
-from pymanoid.misc import norm
 from pymanoid.gui import draw_polygon
+from pymanoid.misc import norm
 from pymanoid.sim import gravity_const
+from pypoman import compute_chebyshev_center
+from pypoman import compute_polytope_halfspaces
 from pypoman import project_polytope
 
 
@@ -46,6 +49,7 @@ class CoMPolygonDrawer(pymanoid.Process):
         self.handle = None
         self.height = height
         self.stance = stance
+        self.vertices = None
         #
         self.update_contact_poses()
         self.update_handle()
@@ -55,9 +59,12 @@ class CoMPolygonDrawer(pymanoid.Process):
             self.update_handle()
         for contact in self.stance.contacts:
             if norm(contact.pose - self.contact_poses[contact.name]) > 1e-10:
-                self.update_contact_poses()
-                self.update_handle()
+                self.update()
                 break
+
+    def update(self):
+        self.update_contact_poses()
+        self.update_handle()
 
     def update_contact_poses(self):
         for contact in self.stance.contacts:
@@ -66,16 +73,16 @@ class CoMPolygonDrawer(pymanoid.Process):
     def update_handle(self):
         self.handle = None
         try:
-            vertices = self.stance.compute_static_equilibrium_polygon(
+            self.vertices = self.stance.compute_static_equilibrium_polygon(
                 method="cdd")
             self.handle = draw_polygon(
-                [(x[0], x[1], self.height) for x in vertices],
+                [(x[0], x[1], self.height) for x in self.vertices],
                 normal=[0, 0, 1], color='g')
         except Exception as e:
             print("CoMPolygonDrawer: {}".format(e))
 
 
-def compute_actuation_dependent_polygon(robot, contacts):
+def compute_local_actuation_dependent_polygon(robot, contacts, method="bretl"):
     """
     Compute constraint matrices of the problem:
 
@@ -87,6 +94,15 @@ def compute_actuation_dependent_polygon(robot, contacts):
         [x_com y_com]  =  E * w_all + f
 
     where w_all is the stacked vector of external contact wrenches.
+
+    Parameters
+    ----------
+    robot : pymanoid.Robot
+        Robot model.
+    contacts : pymanoid.ContactSet
+        Contacts with the environment.
+    method : string, optional
+        Choice between 'bretl' and 'cdd'.
 
     Returns
     -------
@@ -131,7 +147,8 @@ def compute_actuation_dependent_polygon(robot, contacts):
     A = vstack([A_fric, A_act])
     b = hstack([b_fric, b_act])
     return project_polytope(
-        ineq=(A, b), eq=(C, d), proj=(E, f), method="bretl", max_iter=100, init_angle=0)
+        ineq=(A, b), eq=(C, d), proj=(E, f),
+        method=method, max_iter=100)
 
 
 def generate_point_grid(xlim, ylim, zlim, xres, yres):
@@ -160,3 +177,36 @@ def generate_point_grid(xlim, ylim, zlim, xres, yres):
         dx_sign *= -1.
         output.append((height, points))
     return output
+
+
+def shrink_polygon(vertices, shrink_ratio, res=10):
+    """
+    Shrink polygon from its Chebyshev center.
+
+    Parameters
+    ----------
+    vertices : list of arrays
+        Vertices of the initial polygon.
+    shrink_ratio : scalar
+        Scalar factor between 0 and 1.
+    res : int
+        Number of vertices for the shrunk polygon.
+
+    Returns
+    -------
+    new_vertices : list of arrays
+        Vertices of the new polygon.
+    """
+    assert 0. <= shrink_ratio <= 1. and type(res) is int and res > 0
+    A, b = compute_polytope_halfspaces(vertices)
+    c = compute_chebyshev_center(A, b)
+    v = b - dot(A, c)
+    n = len(v)
+    new_vertices = []
+    for ray_index in xrange(res):
+        theta = ray_index * (2. * pi / res)
+        r = array([cos(theta), sin(theta)])
+        u = dot(A, r)
+        lambda_ = min([v[i] / u[i] for i in xrange(n) if u[i] > 1e-10])
+        new_vertices.append(c + shrink_ratio * lambda_ * r)
+    return new_vertices

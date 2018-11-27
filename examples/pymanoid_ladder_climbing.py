@@ -33,7 +33,7 @@ from pymanoid.gui import draw_point, draw_polygon, draw_polytope
 from pymanoid.misc import norm
 
 from pymanoid_common import CoMPolygonDrawer
-from pymanoid_common import compute_actuation_dependent_polygon
+from pymanoid_common import compute_local_actuation_dependent_polygon
 from pymanoid_common import generate_point_grid
 
 
@@ -64,7 +64,7 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         super(ActuationDependentPolytopeDrawer, self).on_tick(sim)
 
     def draw_polytope_slice(self):
-        vertices_2d = compute_actuation_dependent_polygon(
+        vertices_2d = compute_local_actuation_dependent_polygon(
             self.robot, self.stance)
         vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
         if self.last_vertices is not None:
@@ -73,7 +73,7 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         self.last_vertices = vertices
 
     def draw_polygon(self):
-        vertices_2d = compute_actuation_dependent_polygon(
+        vertices_2d = compute_local_actuation_dependent_polygon(
             self.robot, self.stance)
         vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
         self.handle.append(draw_polygon(

@@ -20,17 +20,21 @@
 
 import IPython
 
-from numpy import ones
+from numpy import array, dot, hstack, ones, vstack
 
 import pymanoid
+import pypoman
 
 from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
 from pymanoid.gui import draw_point, draw_polygon
 from pymanoid.misc import norm
+from pypoman import compute_polytope_halfspaces
+from pypoman import compute_polytope_vertices
 
 from pymanoid_common import CoMPolygonDrawer
-from pymanoid_common import compute_actuation_dependent_polygon
+from pymanoid_common import compute_local_actuation_dependent_polygon
+from pymanoid_common import shrink_polygon
 
 
 class COMSync(pymanoid.Process):
@@ -48,6 +52,7 @@ class COMSync(pymanoid.Process):
 
     def __init__(self, robot, stance, com_above):
         super(COMSync, self).__init__()
+        com_above.set_transparency(0.2)
         self.com_above = com_above
         self.stance = stance
         self.robot_com = None
@@ -88,7 +93,7 @@ class ActuationDependentPolygonDrawer(CoMPolygonDrawer):
     def update_polygon(self):
         self.handle = None
         try:
-            vertices = compute_actuation_dependent_polygon(
+            vertices = compute_local_actuation_dependent_polygon(
                 self.robot, self.stance)
             self.handle = draw_polygon(
                 [(x[0], x[1], self.height) for x in vertices],
@@ -147,21 +152,62 @@ if __name__ == "__main__":
     robot.ik.solve()
 
     com_sync = COMSync(robot, stance, com_above)
-    uncons_polygon_drawer = CoMPolygonDrawer(
-        stance, polygon_height)
     act_polygon_drawer = ActuationDependentPolygonDrawer(
         robot, stance, polygon_height)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
-    feasible_coms = []
-    feasible_coms.append(draw_point(com_above.p, pointsize=0.01))
+    uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
+    uncons_polygon_drawer.update()
+    working_polygon = shrink_polygon(
+        uncons_polygon_drawer.vertices, shrink_ratio=0.5, res=50)
+    # h1 = draw_polygon(
+    #     [(v[0], v[1], polygon_height) for v in working_polygon],
+    #     normal=[0, 0, 1], combined='m-#')
+    h2 = [draw_point(
+        [v[0], v[1], polygon_height], color='m', pointsize=5e-3)
+        for v in working_polygon]
 
     sim.schedule(robot.ik)
     sim.schedule_extra(com_sync)
-    sim.schedule_extra(uncons_polygon_drawer)
-    sim.schedule_extra(act_polygon_drawer)
+    # sim.schedule_extra(uncons_polygon_drawer)
+    # sim.schedule_extra(act_polygon_drawer)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
+
+    n = len(working_polygon)
+    ada_polygons = []
+    all_vertices = []
+    for i_cur, p_cur in enumerate(working_polygon):
+        p_cur = array(p_cur)
+        A_voronoi, b_voronoi = [], []
+        for i_other, p_other in enumerate(working_polygon):
+            if i_other == i_cur:
+                continue
+            p_other = array(p_other)
+            p_mid = 0.5 * (p_other + p_cur)
+            a = p_other - p_cur
+            A_voronoi.append(a)
+            b_voronoi.append(dot(a, p_mid))
+        A_voronoi = vstack(A_voronoi)
+        b_voronoi = hstack(b_voronoi)
+
+        com_above = array([p_cur[0], p_cur[1], polygon_height])
+        com_sync.com_above.set_pos(com_above)
+        proj_vertices = compute_local_actuation_dependent_polygon(
+            robot, stance, method="bretl")
+        A_proj, b_proj = compute_polytope_halfspaces(proj_vertices)
+        A = vstack([A_proj, A_voronoi])
+        b = hstack([b_proj, b_voronoi])
+        vertices = compute_polytope_vertices(A, b)
+        ada_polygons.append(draw_polygon(
+            [(v[0], v[1], polygon_height) for v in vertices],
+            normal=[0, 0, 1], combined='b-#'))
+        all_vertices.extend(vertices)
+
+    hull = pypoman.convex_hull(all_vertices)
+    h3 = draw_polygon(
+        [(v[0], v[1], polygon_height) for v in all_vertices],
+        normal=[0, 0, 1], combined='r-', linewidth=10)
 
     if IPython.get_ipython() is None:
         IPython.embed()
