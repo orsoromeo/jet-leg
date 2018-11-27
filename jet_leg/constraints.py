@@ -14,18 +14,20 @@ from scipy.linalg import block_diag
 class Constraints:    
     def __init__(self):
         self.kin = HyQKinematics()
+        self.math = Math()
     
     def compute_actuation_constraints(self, contactIterator, contactsWF, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
-        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+#        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         contactsBF = contactsWF - comWF
 #        print contactsBF
-        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
-                                                  np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsBF[:,1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsBF[:,2]),
-                                                    np.transpose(foot_vel[:,2]))
-        J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
+#        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
+#                                                  np.transpose(foot_vel[:,0]),
+#                                                    np.transpose(contactsBF[:,1]),
+#                                                    np.transpose(foot_vel[:,1]),
+#                                                    np.transpose(contactsBF[:,2]),
+#                                                    np.transpose(foot_vel[:,2]))
+#        J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
+        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
 
         if isOutOfWorkspace:
             C1 = np.zeros((0,0))
@@ -216,67 +218,142 @@ class Constraints:
 #        actuation_polygon = vertices
         return actuation_polygon
     
-    def getInequalities(self, constraint_mode, nc, ng, normals, friction_coeff, J_LF, J_RF, J_LH, J_RH, tau_lim, saturate_normal_force = False):
-        cons1 = np.zeros((0,0))
-        h_vec1 = np.zeros((0,1))
-        cons2 = np.zeros((0,0))
-        h_vec2 = np.zeros((0,1))
-        error = True
-        actuation_polygon_LF = self.computeLegActuationPolygon(J_LF, tau_lim)
-        actuation_polygon_RF = self.computeLegActuationPolygon(J_RF, tau_lim)
-        actuation_polygon_LH = self.computeLegActuationPolygon(J_LH, tau_lim)
-        actuation_polygon_RH = self.computeLegActuationPolygon(J_RH, tau_lim)
-        actuation_polygons = np.array([actuation_polygon_LF,
-                                       actuation_polygon_RF,
-                                       actuation_polygon_LH,
-                                       actuation_polygon_RH])
-        #print 'actuation polygon LF: ',actuation_polygon_LF
-        #print 'actuation polygon RF: ',actuation_polygon_RF
-        #print 'actuation polygon LH: ',actuation_polygon_LH
-        #print 'actuation polygon RH: ',actuation_polygon_RH
+    def getInequalities(self, params, saturate_normal_force = False):
         
-        """ construct the equations needed for the inequality constraints of the LP """   
-        for j in range(0,nc):
-            c, h_term = self.linear_cone(normals[j,:],friction_coeff)
-            cons1 = np.vstack([np.hstack([cons1, np.zeros((np.size(cons1,0),np.size(c,1)))]),
-                                          np.hstack([np.zeros((np.size(c,0),np.size(cons1,1))), c])])
-            if np.isnan(h_term).any:
-                error = True    
-            h_vec1 = np.vstack([h_vec1, h_term])
+        stanceLegs = params.getStanceFeet()
+        contactsNumber = np.sum(stanceLegs)
+        contacts = params.getContactsPos()
+        constraint_mode = params.getConstraintModes()
+#        constraint_mode = constraint_mode[0]
+        comWF = params.getCoMPos()
+        tau_lim = params.getTorqueLims()
+        trunk_mass = params.getTrunkMass()
+        ng = params.getNumberOfFrictionConesEdges()
+        friction_coeff = params.getFrictionCoefficient()
+        normals = params.getNormals()
+        
+        actuation_polygons = np.zeros((1,1))
+        C = np.zeros((0,0))
+        d = np.zeros((0))
+        stanceIndex = []
+        swingIndex = []
+        print 'stance', stanceLegs
+        for iter in range(0, 4):
+            if stanceLegs[iter] == 1:
+                #               print 'new poly', stanceIndex, iter
+                stanceIndex = np.hstack([stanceIndex, iter])
+            else:
+                swingIndex = iter
+        
+        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+        contactsBF = contacts - comWF #TODO: make a proper mapping from world to base frame including rotation
+#        print contactsBF
+        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
+                                                  np.transpose(foot_vel[:,0]),
+                                                    np.transpose(contactsBF[:,1]),
+                                                    np.transpose(foot_vel[:,1]),
+                                                    np.transpose(contactsBF[:,2]),
+                                                    np.transpose(foot_vel[:,2]))
+        J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
+        
+        for j in range(0,contactsNumber):    
+            print constraint_mode[j]
+            if constraint_mode[j] == 'ONLY_FRICTION':
+                #            print contactsNumber
+                constraints_local_frame, d_cone = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
+                isIKoutOfWorkSpace = False
+
+                n = self.math.normalize(normals[j,:])
+                rotationMatrix = self.math.rotation_matrix_from_normal(n)
+                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
-            c, h_term = self.hexahedron(actuation_polygons[j])
+            if constraint_mode[j] == 'ONLY_ACTUATION':
+                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, contacts, comWF, stanceLegs, stanceIndex, swingIndex, tau_lim, trunk_mass)
+                #            print d.shape[0]            
+                if isIKoutOfWorkSpace is False:
+                    d_cone = d_cone.reshape(6) 
+                else:
+                    Ctemp = np.zeros((0,0))
+                    d_cone = np.zeros((0))
             
-            if np.isnan(h_term).any:
-                error = True            
+            if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
+                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, contacts, comWF, stanceLegs, stanceIndex, swingIndex, tau_lim, trunk_mass)                           
+                C2, d2 = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
+                #            print C1, C2
+                if isIKoutOfWorkSpace is False:
+                    #                print d1
+                    Ctemp = np.vstack([C1, C2])
+                    #               print np.size(C,0), np.size(C,1), C
+                    d_cone = np.hstack([d1[0], d2])
+                    #                print d
+                    d_cone = d_cone.reshape((6+ng))
+                else:
+                    Ctemp = np.zeros((0,0))
+                    d_cone = np.zeros((0))
                 
-            cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
-                          np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
-            h_vec2 = np.vstack([h_vec2, h_term])
+            C = block_diag(C, Ctemp)
+            d = np.hstack([d, d_cone])
         
-        n1 = normals[0,:]
-        n2 = normals[1,:]
-        n3 = normals[2,:]
-        math_lp = Math()
-        n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
+        ineq = (C, d)  # C * x <= d
         
-        if constraint_mode == 'ONLY_FRICTION':
-            max_normal_force = 400;
-            cons, h_vec = self.linearized_cone_halfspaces_world(nc, ng, friction_coeff, normals, max_normal_force, saturate_normal_force)  
-            #print cons, h_vec
+        
+#        cons1 = np.zeros((0,0))
+#        h_vec1 = np.zeros((0,1))
+#        cons2 = np.zeros((0,0))
+#        h_vec2 = np.zeros((0,1))
+#        error = True
+#        actuation_polygon_LF = self.computeLegActuationPolygon(J_LF, tau_lim)
+#        actuation_polygon_RF = self.computeLegActuationPolygon(J_RF, tau_lim)
+#        actuation_polygon_LH = self.computeLegActuationPolygon(J_LH, tau_lim)
+#        actuation_polygon_RH = self.computeLegActuationPolygon(J_RH, tau_lim)
+#        actuation_polygons = np.array([actuation_polygon_LF,
+#                                       actuation_polygon_RF,
+#                                       actuation_polygon_LH,
+#                                       actuation_polygon_RH])
 
-        elif constraint_mode == 'ONLY_ACTUATION':
-            cons = cons2
-            h_vec = h_vec2
-            if np.isnan(h_term).any:
-                error = True    
-
-        elif constraint_mode == 'friction_and_actuation':
-            cons = np.vstack([cons1, cons2])
-            h_vec = np.vstack([h_vec1, h_vec2])
         
-        """Definition of the inequality constraints"""
-        m_ineq = np.size(cons,0)
-        G = matrix(cons) 
-        h = matrix(h_vec.reshape(m_ineq))
-        return G, h, error, actuation_polygons
+#        """ construct the equations needed for the inequality constraints of the LP """   
+#        for j in range(0,nc):
+#            c, h_term = self.linear_cone(normals[j,:],friction_coeff)
+#            cons1 = np.vstack([np.hstack([cons1, np.zeros((np.size(cons1,0),np.size(c,1)))]),
+#                                          np.hstack([np.zeros((np.size(c,0),np.size(cons1,1))), c])])
+#            if np.isnan(h_term).any:
+#                error = True    
+#            h_vec1 = np.vstack([h_vec1, h_term])
+#            
+#            c, h_term = self.hexahedron(actuation_polygons[j])
+#            
+#            if np.isnan(h_term).any:
+#                error = True            
+#                
+#            cons2 = np.vstack([np.hstack([cons2, np.zeros((np.size(cons2,0),np.size(c,1)))]),
+#                          np.hstack([np.zeros((np.size(c,0),np.size(cons2,1))), c])])    
+#            h_vec2 = np.vstack([h_vec2, h_term])
+#        
+#        n1 = normals[0,:]
+#        n2 = normals[1,:]
+#        n3 = normals[2,:]
+#        math_lp = Math()
+#        n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
+#        
+#        if constraint_mode == 'ONLY_FRICTION':
+#            max_normal_force = 400;
+#            cons, h_vec = self.linearized_cone_halfspaces_world(nc, ng, friction_coeff, normals, max_normal_force, saturate_normal_force)  
+#            #print cons, h_vec
+#
+#        elif constraint_mode == 'ONLY_ACTUATION':
+#            cons = cons2
+#            h_vec = h_vec2
+#            if np.isnan(h_term).any:
+#                error = True    
+#
+#        elif constraint_mode == 'friction_and_actuation':
+#            cons = np.vstack([cons1, cons2])
+#            h_vec = np.vstack([h_vec1, h_vec2])
+#        
+#        """Definition of the inequality constraints"""
+#        m_ineq = np.size(cons,0)
+#        G = matrix(cons) 
+#        h = matrix(h_vec.reshape(m_ineq))
+        return C, d, isIKoutOfWorkSpace, actuation_polygons
     

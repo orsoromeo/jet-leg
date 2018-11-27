@@ -26,7 +26,7 @@ math = Math()
 compDyn = ComputationalDynamics()
 pathIP = PathIterativeProjection()
 # number of contacts
-number_of_contacts = 3
+number_of_contacts = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 constraint_mode = ['FRICTION_AND_ACTUATION',

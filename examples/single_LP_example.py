@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Fri Nov 23 16:11:46 2018
+
+@author: rorsolino
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Oct 18 11:05:06 2018
 
 @author: rorsolino
@@ -44,9 +51,7 @@ constraint_mode_IP = ['ONLY_ACTUATION',
                       'ONLY_ACTUATION',
                       'ONLY_ACTUATION']
 useVariableJacobian = False
-# number of decision variables of the problem
-#n = nc*6
-comWF = np.array([0.0, 0.0, 0.0])
+
 # contact positions
 """ contact points """
 
@@ -57,12 +62,9 @@ RH_foot = np.array([-0.3, -0.2, -0.5])
 
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
-#contacts = contactsToStack[0:nc+1, :]
-#print contacts
-
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 85.
+trunk_mass = 25.
 mu = 0.9
 
 stanceFeet = [1,1,1,1]
@@ -84,23 +86,15 @@ LH_tau_lim = [50.0, 100.0, 100.0]
 RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
-comWF = np.array([0.0,0.0,0.0])
+comWF = np.array([0.0,-0.3,0.0])
 #
 fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.set_xlabel('X axis')
-ax.set_ylabel('Y axis')
-ax.set_zlabel('Z axis')
-
 nc = np.sum(stanceFeet)
 plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
-for j in range(0,nc):
-    ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
-    a = Arrow3D([contacts[j,0], contacts[j,0]+normals[j,0]/10], [contacts[j,1], contacts[j,1]+normals[j,1]/10],[contacts[j,2], contacts[j,2]+normals[j,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
-    ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
 params = IterativeProjectionParameters()
+
 params.setContactsPos(contacts)
 params.setCoMPos(comWF)
 params.setTorqueLims(torque_limits)
@@ -112,25 +106,27 @@ params.setNumberOfFrictionConesEdges(ng)
 params.setTrunkMass(trunk_mass)
 
 ''' compute iterative projection '''
-IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
-
+feasible_points = np.zeros((0,3))
+unfeasible_points = np.zeros((0,3))
+contact_forces = np.zeros((0,nc*3))  
+LP_actuation_polygons, feasible_points, unfeasible_points, contact_forces = comp_dyn.compute_lp(params, feasible_points, unfeasible_points, contact_forces, comWF)
+print 'is point feasible?', feasible_points
 #print IP_points
-''' plotting Iterative Projection points '''
-plotter = Plotter()
-scaling_factor = 2000
-if constraint_mode_IP == 'ONLY_ACTUATION':
-    plotter.plot_polygon(np.transpose(IP_points))
-    for j in range(0,4):
-#        print 'a',actuation_polygons[j], contacts[j,:]
-        plotter.plot_actuation_polygon(ax, actuation_polygons[j], contacts[j,:], scaling_factor)
 
-''' 2D figure '''
-plt.figure()
-h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
-h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
+''' plotting Iterative Projection points '''
+feasiblePointsSize = np.size(feasible_points,0)
+for j in range(0, feasiblePointsSize):
+    plt.scatter(feasible_points[j,0], feasible_points[j,1],c='g',s=50)
+    lastFeasibleIndex = j
+unfeasiblePointsSize = np.size(unfeasible_points,0)
+
+for j in range(0, unfeasiblePointsSize):
+    plt.scatter(unfeasible_points[j,0], unfeasible_points[j,1],c='r',s=50)
+    lastUnfeasibleIndex = j
+
     
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
-plt.legend()
+#plt.legend()
 plt.show()
