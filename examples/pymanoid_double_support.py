@@ -31,6 +31,7 @@ from pymanoid.misc import norm
 
 from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_actuation_dependent_polygon
+from pymanoid_common import shrink_polygon
 
 
 class COMSync(pymanoid.Process):
@@ -147,18 +148,25 @@ if __name__ == "__main__":
     robot.ik.solve()
 
     com_sync = COMSync(robot, stance, com_above)
-    uncons_polygon_drawer = CoMPolygonDrawer(
-        stance, polygon_height)
     act_polygon_drawer = ActuationDependentPolygonDrawer(
         robot, stance, polygon_height)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
+
+    uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
+    uncons_polygon_drawer.update()
+    working_polygon = shrink_polygon(uncons_polygon_drawer.vertices)
+    height = uncons_polygon_drawer.height
+    h = draw_polygon(
+        [(v[0], v[1], height) for v in
+         working_polygon], normal=[0, 0, 1], combined='m-#')
+    h2 = [draw_point([v[0], v[1], height], color='m') for v in working_polygon]
 
     feasible_coms = []
     feasible_coms.append(draw_point(com_above.p, pointsize=0.01))
 
     sim.schedule(robot.ik)
     sim.schedule_extra(com_sync)
-    sim.schedule_extra(uncons_polygon_drawer)
+    # sim.schedule_extra(uncons_polygon_drawer)
     sim.schedule_extra(act_polygon_drawer)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
