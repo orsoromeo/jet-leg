@@ -174,7 +174,6 @@ if __name__ == "__main__":
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 
-    n = len(working_polygon)
     ada_polygons = []
     all_vertices = []
     for i_cur, p_cur in enumerate(working_polygon):
