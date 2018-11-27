@@ -20,7 +20,7 @@
 
 import IPython
 
-from numpy import ones
+from numpy import array, ones
 
 import pymanoid
 
@@ -49,6 +49,7 @@ class COMSync(pymanoid.Process):
 
     def __init__(self, robot, stance, com_above):
         super(COMSync, self).__init__()
+        com_above.set_transparency(0.2)
         self.com_above = com_above
         self.stance = stance
         self.robot_com = None
@@ -168,6 +169,11 @@ if __name__ == "__main__":
     sim.schedule_extra(act_polygon_drawer)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
+
+    for vertex in working_polygon:
+        com_above = array([vertex[0], vertex[1], polygon_height])
+        com_sync.com_above.set_pos(com_above)
+        raw_input()
 
     if IPython.get_ipython() is None:
         IPython.embed()
