@@ -170,7 +170,25 @@ def generate_point_grid(xlim, ylim, zlim, xres, yres):
     return output
 
 
-def shrink_polygon(vertices, shrink_ratio=0.75, res=10):
+def shrink_polygon(vertices, shrink_ratio, res=10):
+    """
+    Shrink polygon from its Chebyshev center.
+
+    Parameters
+    ----------
+    vertices : list of arrays
+        Vertices of the initial polygon.
+    shrink_ratio : scalar
+        Scalar factor between 0 and 1.
+    res : int
+        Number of vertices for the shrunk polygon.
+
+    Returns
+    -------
+    new_vertices : list of arrays
+        Vertices of the new polygon.
+    """
+    assert 0. <= shrink_ratio <= 1. and type(res) is int and res > 0
     A, b = compute_polytope_halfspaces(vertices)
     c = compute_chebyshev_center(A, b)
     v = b - dot(A, c)

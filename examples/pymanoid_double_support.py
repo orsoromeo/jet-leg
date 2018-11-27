@@ -154,15 +154,13 @@ if __name__ == "__main__":
 
     uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
     uncons_polygon_drawer.update()
-    working_polygon = shrink_polygon(uncons_polygon_drawer.vertices)
-    height = uncons_polygon_drawer.height
-    h = draw_polygon(
-        [(v[0], v[1], height) for v in
-         working_polygon], normal=[0, 0, 1], combined='m-#')
-    h2 = [draw_point([v[0], v[1], height], color='m') for v in working_polygon]
-
-    feasible_coms = []
-    feasible_coms.append(draw_point(com_above.p, pointsize=0.01))
+    working_polygon = shrink_polygon(
+        uncons_polygon_drawer.vertices, shrink_ratio=0.75, res=10)
+    h1 = draw_polygon(
+        [(v[0], v[1], polygon_height) for v in working_polygon],
+        normal=[0, 0, 1], combined='m-#')
+    h2 = [draw_point(
+        [v[0], v[1], polygon_height], color='m') for v in working_polygon]
 
     sim.schedule(robot.ik)
     sim.schedule_extra(com_sync)
