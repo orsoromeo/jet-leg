@@ -148,7 +148,7 @@ def compute_local_actuation_dependent_polygon(robot, contacts, method="bretl"):
     b = hstack([b_fric, b_act])
     return project_polytope(
         ineq=(A, b), eq=(C, d), proj=(E, f),
-        method=method, max_iter=100, init_angle=0)
+        method=method, max_iter=100)
 
 
 def generate_point_grid(xlim, ylim, zlim, xres, yres):

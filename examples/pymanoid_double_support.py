@@ -23,6 +23,7 @@ import IPython
 from numpy import array, dot, hstack, ones, vstack
 
 import pymanoid
+import pypoman
 
 from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
@@ -158,22 +159,24 @@ if __name__ == "__main__":
     uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
     uncons_polygon_drawer.update()
     working_polygon = shrink_polygon(
-        uncons_polygon_drawer.vertices, shrink_ratio=0.75, res=10)
-    h1 = draw_polygon(
-        [(v[0], v[1], polygon_height) for v in working_polygon],
-        normal=[0, 0, 1], combined='m-#')
+        uncons_polygon_drawer.vertices, shrink_ratio=0.5, res=50)
+    # h1 = draw_polygon(
+    #     [(v[0], v[1], polygon_height) for v in working_polygon],
+    #     normal=[0, 0, 1], combined='m-#')
     h2 = [draw_point(
-        [v[0], v[1], polygon_height], color='m') for v in working_polygon]
+        [v[0], v[1], polygon_height], color='m', pointsize=5e-3)
+        for v in working_polygon]
 
     sim.schedule(robot.ik)
     sim.schedule_extra(com_sync)
     # sim.schedule_extra(uncons_polygon_drawer)
-    sim.schedule_extra(act_polygon_drawer)
+    # sim.schedule_extra(act_polygon_drawer)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 
     n = len(working_polygon)
     ada_polygons = []
+    all_vertices = []
     for i_cur, p_cur in enumerate(working_polygon):
         p_cur = array(p_cur)
         A_voronoi, b_voronoi = [], []
@@ -199,6 +202,12 @@ if __name__ == "__main__":
         ada_polygons.append(draw_polygon(
             [(v[0], v[1], polygon_height) for v in vertices],
             normal=[0, 0, 1], combined='b-#'))
+        all_vertices.extend(vertices)
+
+    hull = pypoman.convex_hull(all_vertices)
+    h3 = draw_polygon(
+        [(v[0], v[1], polygon_height) for v in all_vertices],
+        normal=[0, 0, 1], combined='r-', linewidth=10)
 
     if IPython.get_ipython() is None:
         IPython.embed()
