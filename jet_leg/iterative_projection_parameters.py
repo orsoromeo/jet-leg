@@ -5,8 +5,7 @@ Created on Wed Nov 14 15:07:45 2018
 @author: Romeo Orsolino
 """
 import numpy as np
-
-from jet_leg.math_tools import Math
+from math_tools import Math
 
 class IterativeProjectionParameters:
     def __init__(self):
@@ -35,6 +34,7 @@ class IterativeProjectionParameters:
         self.contactsHF = np.zeros((4,3))
         self.contactsBF = np.zeros((4,3))
 
+
         self.math = Math()        
         axisZ= np.array([[0.0], [0.0], [1.0]])
         n1 = np.transpose(np.transpose(self.math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -55,6 +55,7 @@ class IterativeProjectionParameters:
         
 
         
+
     def setContactsPos(self, contactsBF):
         self.contactsBF = contactsBF
 
@@ -83,7 +84,12 @@ class IterativeProjectionParameters:
         self.trunkMass = mass
         
     def getContactsPos(self):
-        return self.contactsBF[0]
+        print self.contactsBF
+        return self.contactsBF
+#=======
+#        print self.contactsPos
+#        return self.contactsPos[:,0]
+#>>>>>>> master
         
     def getCoMPos(self):
         return self.comPositionBF
@@ -188,53 +194,7 @@ class IterativeProjectionParameters:
 
             self.contactsBF = np.array([ self.footPosRF,self.footPosLF,self.footPosLH, self.footPosRH]) 
                 
-                
-#                                            
-#            if str(received_data.name[j]) == str("state_machineLF"):
-#                self.state_machineLF = received_data.data[j]
-#            if str(received_data.name[j]) == str("state_machineRF"):
-#                self.state_machineRF = received_data.data[j]
-#            if str(received_data.name[j]) == str("state_machineLH"):
-#                self.state_machineLH = received_data.data[j]
-#            if str(received_data.name[j]) == str("state_machineRH"):
-#                self.state_machineRH = received_data.data[j]  
-#                
-#            
-#            if self.state_machineLF == 0.0 or self.state_machineLF == 3.0:
-#                self.stanceFeet[0] = 1
-#            else:
-#                self.stanceFeet[0] = 0
-#                
-#            if self.state_machineRF == 0.0 or self.state_machineRF == 3.0:
-#                self.stanceFeet[1] = 1
-#            else:
-#                self.stanceFeet[1] = 0
-#                
-#            if self.state_machineLH == 0.0 or self.state_machineLH == 3.0:
-#                self.stanceFeet[2] = 1
-#            else:
-#                self.stanceFeet[2] = 0
-#                
-#            if self.state_machineRH == 0.0 or self.state_machineRH == 3.0:
-#                self.stanceFeet[3] = 1                
-#            else:
-#                self.stanceFeet[3] = 0
 
-
-            if str(received_data.name[j]) == str("future_stance_LF"):
-                self.stanceFeet[0] = int(received_data.data[j])
-            if str(received_data.name[j]) == str("future_stance_RF"):
-                self.stanceFeet[1] = int(received_data.data[j])
-            if str(received_data.name[j]) == str("future_stance_LH"):
-                self.stanceFeet[2] = int(received_data.data[j])
-            if str(received_data.name[j]) == str("future_stance_RH"):
-                self.stanceFeet[3] = int(received_data.data[j])  
-                
-            if str(received_data.name[j]) == str("roll"):
-                self.roll = int(received_data.data[j])              
-            if str(received_data.name[j]) == str("pitch"):
-                self.pitch = int(received_data.data[j])  
-                    
             if str(received_data.name[j]) == str("normalLFx"):
                 self.normal[0,0] = int(received_data.data[j])  
             if str(received_data.name[j]) == str("normalLFy"):
@@ -267,17 +227,62 @@ class IterativeProjectionParameters:
                 self.trunkmass = int(received_data.data[j])  
            
             if str(received_data.name[j]) == str("muEstimate"):
-                self.friction = int(received_data.data[j])  
-                               
-                        
+                self.friction = int(received_data.data[j]) 
+
+            if str(received_data.name[j]) == str("roll"):
+                self.roll = int(received_data.data[j])              
+            if str(received_data.name[j]) == str("pitch"):
+                self.pitch = int(received_data.data[j])                 
+
+    def getFutureStanceFeet(self, received_data):
+
+        num_of_elements = np.size(received_data.data)         
+        for j in range(0,num_of_elements):
+            if str(received_data.name[j]) == str("future_stance_LF"):
+                self.stanceFeet[0] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("future_stance_RF"):
+                self.stanceFeet[1] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("future_stance_LH"):
+                self.stanceFeet[2] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("future_stance_RH"):
+                self.stanceFeet[3] = int(received_data.data[j])  
+                
+        self.setActiveContacts(self.stanceFeet)
+        self.numberOfContacts = np.sum(self.stanceFeet)
+        
+    def getCurrentStanceFeet(self, received_data):
+        
+        num_of_elements = np.size(received_data.data)
+        for j in range(0,num_of_elements):
+            if str(received_data.name[j]) == str("state_machineLF"):
+                self.stanceFeet[0] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("state_machineRF"):
+                self.stanceFeet[1] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("state_machineLH"):
+                self.stanceFeet[2] = int(received_data.data[j])
+            if str(received_data.name[j]) == str("state_machineRH"):
+                self.stanceFeet[3] = int(received_data.data[j]) 
+                
+            if self.state_machineLF < 4.0:
+                self.stanceFeet[0] = 1
+            else:
+                self.stanceFeet[0] = 0
+                
+            if self.state_machineRF < 4.0:
+                self.stanceFeet[1] = 1
+            else:
+                self.stanceFeet[1] = 0
+                
+            if self.state_machineLH < 4.0:
+                self.stanceFeet[2] = 1
+            else:
+                self.stanceFeet[2] = 0
+                
+            if self.state_machineRH < 4.0:
+                self.stanceFeet[3] = 1                
+            else:
+                self.stanceFeet[3] = 0
             
-            counter = 0
-#            print self.state_machineLF, self.stanceFeet
-            for i in range(0,4):
-               
-#                print i, self.stanceFeet[i]
-                if self.stanceFeet[i] == 1:
-#                    self.contacts[counter] = self.feetPos[i]
-                    counter += 1
-            
-            self.numberOfContacts = counter
+        self.setActiveContacts(self.stanceFeet)
+        self.numberOfContacts = np.sum(self.stanceFeet)
+

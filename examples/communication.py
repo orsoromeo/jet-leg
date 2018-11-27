@@ -142,6 +142,8 @@ def talker():
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
+        params.getFutureStanceFeet(p.hyq_rcf_debug)
+#        params.getCurrentStanceFeet(p.hyq_rcf_debug)
         trunk_mass = 85.
         mu = 0.8
         ng = 4
@@ -155,16 +157,11 @@ def talker():
 
         """ contact points """
         nc = params.numberOfContacts
-        contacts = params.contactsBF[0:nc+1, :]
-        print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
 #        print actuationParams.LF_tau_lim
 #        comWF = np.array([0.0,0.0,0.0])
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'FRICTION_AND_ACTUATION'
-        
-        #params.setContactsPos(contacts) we get from hyq/debug
-        #params.setCoMPos(comPositionBF)  we get from hyq/debug
         params.setConstraintModes([constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP,
@@ -210,8 +207,6 @@ def talker():
 
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'ONLY_FRICTION'
-        #params.setContactsPos(contacts)
-        #params.setCoMPos(comPositionBF)
         params.setConstraintModes([constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP,
@@ -240,7 +235,7 @@ def talker():
         p.send_support_region(name, vertices2)
         
         
-        time.sleep(1.0/10.0)
+        time.sleep(1.0/25.0)
         i+=1
         
     print 'de registering...'

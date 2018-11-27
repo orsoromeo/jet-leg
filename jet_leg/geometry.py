@@ -14,9 +14,14 @@ class Geometry:
         vertices_number = np.size(polygon,0)
         angle = np.zeros((1,vertices_number))
 #        print polygon, vertices_number
+        centroidX = np.sum(polygon[:,0])
+        centroidX = centroidX/float(vertices_number)
+        centroidY = np.sum(polygon[:,1])
+        centroidY = centroidY/float(vertices_number)
+#        print centroidX, centroidY
+        
         for j in range(0,vertices_number):
-#            print j
-            angle[0,j] = np.arctan2(polygon[j,0], polygon[j,1])
+            angle[0,j] = np.arctan2(polygon[j,0] - centroidX, polygon[j,1] - centroidY)
         
         index = np.array(np.argsort(angle))
 #        print index
