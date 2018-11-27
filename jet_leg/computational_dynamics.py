@@ -133,7 +133,7 @@ class ComputationalDynamics():
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
-                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
+                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, iterative_projection_params.getContactsPos(),  stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
                 #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
                     d_cone = d_cone.reshape(6) 
@@ -142,7 +142,7 @@ class ComputationalDynamics():
                     d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
-                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, contacts, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
+                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, iterative_projection_params.getContactsPos(), stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)                           
                 C2, d2 = self.constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
                 #            print C1, C2
                 if isIKoutOfWorkSpace is False:

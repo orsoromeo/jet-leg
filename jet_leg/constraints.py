@@ -15,10 +15,9 @@ class Constraints:
     def __init__(self):
         self.kin = HyQKinematics()
     
-    def compute_actuation_constraints(self, contactIterator, contactsWF, comWF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
+    def compute_actuation_constraints(self, contactIterator, contactsBF, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-        contactsBF = contactsWF - comWF
-#        print contactsBF
+        
         q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
                                                   np.transpose(foot_vel[:,0]),
                                                     np.transpose(contactsBF[:,1]),

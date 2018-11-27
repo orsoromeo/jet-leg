@@ -15,7 +15,6 @@ import sys
 import time
 import threading
 
-
 from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
 from rosgraph_msgs.msg import Clock
@@ -156,21 +155,22 @@ def talker():
 
         """ contact points """
         nc = params.numberOfContacts
-        contacts = params.contacts[0:nc+1, :]
+        contacts = params.contactsBF[0:nc+1, :]
         print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
 #        print actuationParams.LF_tau_lim
-        comWF = np.array([0.0,0.0,0.0])
+#        comWF = np.array([0.0,0.0,0.0])
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'FRICTION_AND_ACTUATION'
-        params.setContactsPos(contacts)
-        params.setCoMPos(comWF)
+        
+        #params.setContactsPos(contacts) we get from hyq/debug
+        #params.setCoMPos(comPositionBF)  we get from hyq/debug
         params.setConstraintModes([constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP])
-        params.setContactNormals(normals)
-        params.setFrictionCoefficient(mu)
+        #params.setContactNormals(normals)
+        #params.setFrictionCoefficient(mu)
         params.setNumberOfFrictionConesEdges(ng)
         params.setTrunkMass(trunk_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
@@ -210,14 +210,14 @@ def talker():
 
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'ONLY_FRICTION'
-        params.setContactsPos(contacts)
-        params.setCoMPos(comWF)
+        #params.setContactsPos(contacts)
+        #params.setCoMPos(comPositionBF)
         params.setConstraintModes([constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP])
-        params.setContactNormals(normals)
-        params.setFrictionCoefficient(mu)
+        #params.setContactNormals(normals)
+        #params.setFrictionCoefficient(mu)
         params.setNumberOfFrictionConesEdges(ng)
         params.setTrunkMass(trunk_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)

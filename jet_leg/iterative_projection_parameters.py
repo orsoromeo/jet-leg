@@ -5,16 +5,21 @@ Created on Wed Nov 14 15:07:45 2018
 @author: Romeo Orsolino
 """
 import numpy as np
+
 from jet_leg.math_tools import Math
 
 class IterativeProjectionParameters:
     def __init__(self):
-        self.CoMposition = [0., 0., 0.]
+        self.math = Math()
+        self.comPositionBF = [0., 0., 0.]
         self.footPosLF = [0.3, 0.25, -.5]
         self.footPosRF = [-0.3, 0.25, -.5]
         self.footPosLH = [0.4, -0.25, -.5]
         self.footPosRH = [-0.3, -0.25, -.5]
 
+        self.roll = 0.0
+        self.pitch= 0.0
+    
         self.LF_tau_lim = [50.0, 50.0, 50.0]
         self.RF_tau_lim = [50.0, 50.0, 50.0]
         self.LH_tau_lim = [50.0, 50.0, 50.0]
@@ -27,8 +32,8 @@ class IterativeProjectionParameters:
         self.state_machineRH = True
         self.stanceFeet = [0, 0, 0, 0]
         self.numberOfContacts = 0
-        self.feetPos = np.zeros((4,3))
-        self.contacts = np.zeros((4,3))
+        self.contactsHF = np.zeros((4,3))
+        self.contactsBF = np.zeros((4,3))
 
         self.math = Math()        
         axisZ= np.array([[0.0], [0.0], [1.0]])
@@ -46,13 +51,15 @@ class IterativeProjectionParameters:
         self.friction = 0.8
         self.trunkMass = 85 #Kg
         self.numberOfGenerators = 4
+        
+        
 
         
-    def setContactsPos(self, contacts):
-        self.contacts = contacts
+    def setContactsPos(self, contactsBF):
+        self.contactsBF = contactsBF
 
     def setCoMPos(self, comWF):
-        self.CoMposition = comWF
+        self.comPositionBF = comWF
     
     def setTorqueLims(self, torqueLims):
         self.torque_limits = torqueLims
@@ -76,10 +83,10 @@ class IterativeProjectionParameters:
         self.trunkMass = mass
         
     def getContactsPos(self):
-        return self.contacts
+        return self.contactsBF[0]
         
     def getCoMPos(self):
-        return self.CoMposition
+        return self.comPositionBF
         
     def getTorqueLims(self):
         return self.torque_limits
@@ -103,6 +110,7 @@ class IterativeProjectionParameters:
         return self.trunkMass
         
     def getParamsFromRosDebugTopic(self, received_data):
+        
         num_of_elements = np.size(received_data.data)
 #        print 'number of elements: ', num_of_elements
         for j in range(0,num_of_elements):
@@ -163,13 +171,24 @@ class IterativeProjectionParameters:
                 self.footPosRH[1] = int(received_data.data[j]*100.0)/100.0
             if str(received_data.name[j]) == str("footPosRHz"):
                 self.footPosRH[2] = int(received_data.data[j]*100.0)/100.0
-                            
+
+            if str(received_data.name[j]) == str("offCoMX"):
+                self.comPositionBF[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("offCoMY"):
+                self.comPositionBF[1] = received_data.data[j]                       
+            if str(received_data.name[j]) == str("offCoMZ"):
+                self.comPositionBF[2] = received_data.data[j]        
                 
                 
-            self.feetPos = np.array([[self.footPosLF],
-                                     [self.footPosRF],
-                                        [self.footPosLH],
-                                            [self.footPosRH]])
+#            define feet in centroidal frame
+            self.contactsHF = np.array([[np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)), np.subtract(self.footPosLF, self.comPositionBF))],
+                                       [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)), np.subtract(self.footPosRF, self.comPositionBF))],
+                                        [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)), np.subtract(self.footPosLH, self.comPositionBF))],
+                                            [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)),np.subtract(self.footPosRH, self.comPositionBF))]])
+
+            self.contactsBF = np.array([ self.footPosRF,self.footPosLF,self.footPosLH, self.footPosRH]) 
+                
+                
 #                                            
 #            if str(received_data.name[j]) == str("state_machineLF"):
 #                self.state_machineLF = received_data.data[j]
@@ -210,16 +229,52 @@ class IterativeProjectionParameters:
                 self.stanceFeet[2] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RH"):
                 self.stanceFeet[3] = int(received_data.data[j])  
-
-                 
-                   
+                
+            if str(received_data.name[j]) == str("roll"):
+                self.roll = int(received_data.data[j])              
+            if str(received_data.name[j]) == str("pitch"):
+                self.pitch = int(received_data.data[j])  
                     
-#            self.contacts = np.zeros((4,3))     
+            if str(received_data.name[j]) == str("normalLFx"):
+                self.normal[0,0] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalLFy"):
+                self.normal[0,1] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalLFz"):
+                self.normal[0,2] = int(received_data.data[j])                  
+                                                 
+            if str(received_data.name[j]) == str("normalRFx"):
+                self.normal[1,0] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalRFy"):
+                self.normal[1,1] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalRFz"):
+                self.normal[1,2] = int(received_data.data[j])                  
+                                                 
+            if str(received_data.name[j]) == str("normalLHx"):
+                self.normal[2,0] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalLHy"):
+                self.normal[2,1] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalLHz"):
+                self.normal[2,2] = int(received_data.data[j])                  
+                                                 
+            if str(received_data.name[j]) == str("normalRHx"):
+                self.normal[3,0] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalRHy"):
+                self.normal[3,1] = int(received_data.data[j])  
+            if str(received_data.name[j]) == str("normalRHz"):
+                self.normal[3,2] = int(received_data.data[j])                  
+                
+            if str(received_data.name[j]) == str("trunkmass"):
+                self.trunkmass = int(received_data.data[j])  
+           
+            if str(received_data.name[j]) == str("muEstimate"):
+                self.friction = int(received_data.data[j])  
+                               
+                        
             
             counter = 0
 #            print self.state_machineLF, self.stanceFeet
             for i in range(0,4):
-                self.contacts[i] = self.feetPos[i]
+               
 #                print i, self.stanceFeet[i]
                 if self.stanceFeet[i] == 1:
 #                    self.contacts[counter] = self.feetPos[i]
