@@ -17,7 +17,7 @@ class Constraints:
         self.math = Math()
     
 
-    def compute_actuation_constraints(self, contactIterator, stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass):
+    def compute_actuation_constraints(self, contactIterator, stanceLegs, stanceIndex, swingIndex, torque_limits, total_mass):
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
 
@@ -40,7 +40,7 @@ class Constraints:
 #                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
 #            for j in range (0,contactsNumber):
 #                print 'second iter', j, actuation_polygons[j]
-            hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/trunk_mass)
+            hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/total_mass)
             C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
             d1 = np.hstack([d1, knownTerm.T])  
                 
@@ -209,7 +209,7 @@ class Constraints:
 
         comWF = params.getCoMPos()
         tau_lim = params.getTorqueLims()
-        trunk_mass = params.getTotalMass()
+        total_mass = params.getTotalMass()
         ng = params.getNumberOfFrictionConesEdges()
         friction_coeff = params.getFrictionCoefficient()
         normals = params.getNormals()
@@ -237,6 +237,7 @@ class Constraints:
                                                     np.transpose(foot_vel[:,2]))
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
+        print contactsNumber
         for j in range(0,contactsNumber):    
 
             if constraint_mode[j] == 'ONLY_FRICTION':
@@ -249,7 +250,7 @@ class Constraints:
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
-                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, stanceLegs, stanceIndex, swingIndex, tau_lim, trunk_mass)
+                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, stanceLegs, stanceIndex, swingIndex, tau_lim, total_mass)
                 #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
                     d_cone = d_cone.reshape(6) 
@@ -258,7 +259,7 @@ class Constraints:
                     d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
-                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, stanceLegs, stanceIndex, swingIndex, tau_lim, trunk_mass)                           
+                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, stanceLegs, stanceIndex, swingIndex, tau_lim, total_mass)                           
                 C2, d2 = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
                 #            print C1, C2
                 if isIKoutOfWorkSpace is False:
