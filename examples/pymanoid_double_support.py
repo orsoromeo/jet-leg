@@ -20,7 +20,7 @@
 
 import IPython
 
-from numpy import array, ones
+from numpy import array, dot, hstack, ones, vstack
 
 import pymanoid
 
@@ -28,9 +28,11 @@ from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
 from pymanoid.gui import draw_point, draw_polygon
 from pymanoid.misc import norm
+from pypoman import compute_polytope_halfspaces
+from pypoman import compute_polytope_vertices
 
 from pymanoid_common import CoMPolygonDrawer
-from pymanoid_common import compute_actuation_dependent_polygon
+from pymanoid_common import compute_local_actuation_dependent_polygon
 from pymanoid_common import shrink_polygon
 
 
@@ -90,7 +92,7 @@ class ActuationDependentPolygonDrawer(CoMPolygonDrawer):
     def update_polygon(self):
         self.handle = None
         try:
-            vertices = compute_actuation_dependent_polygon(
+            vertices = compute_local_actuation_dependent_polygon(
                 self.robot, self.stance)
             self.handle = draw_polygon(
                 [(x[0], x[1], self.height) for x in vertices],
@@ -170,10 +172,33 @@ if __name__ == "__main__":
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 
-    for vertex in working_polygon:
-        com_above = array([vertex[0], vertex[1], polygon_height])
+    n = len(working_polygon)
+    ada_polygons = []
+    for i_cur, p_cur in enumerate(working_polygon):
+        p_cur = array(p_cur)
+        A_voronoi, b_voronoi = [], []
+        for i_other, p_other in enumerate(working_polygon):
+            if i_other == i_cur:
+                continue
+            p_other = array(p_other)
+            p_mid = 0.5 * (p_other + p_cur)
+            a = p_other - p_cur
+            A_voronoi.append(a)
+            b_voronoi.append(dot(a, p_mid))
+        A_voronoi = vstack(A_voronoi)
+        b_voronoi = hstack(b_voronoi)
+
+        com_above = array([p_cur[0], p_cur[1], polygon_height])
         com_sync.com_above.set_pos(com_above)
-        raw_input()
+        proj_vertices = compute_local_actuation_dependent_polygon(
+            robot, stance, method="bretl")
+        A_proj, b_proj = compute_polytope_halfspaces(proj_vertices)
+        A = vstack([A_proj, A_voronoi])
+        b = hstack([b_proj, b_voronoi])
+        vertices = compute_polytope_vertices(A, b)
+        ada_polygons.append(draw_polygon(
+            [(v[0], v[1], polygon_height) for v in vertices],
+            normal=[0, 0, 1], combined='b-#'))
 
     if IPython.get_ipython() is None:
         IPython.embed()

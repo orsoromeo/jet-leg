@@ -82,7 +82,7 @@ class CoMPolygonDrawer(pymanoid.Process):
             print("CoMPolygonDrawer: {}".format(e))
 
 
-def compute_actuation_dependent_polygon(robot, contacts):
+def compute_local_actuation_dependent_polygon(robot, contacts, method="bretl"):
     """
     Compute constraint matrices of the problem:
 
@@ -94,6 +94,15 @@ def compute_actuation_dependent_polygon(robot, contacts):
         [x_com y_com]  =  E * w_all + f
 
     where w_all is the stacked vector of external contact wrenches.
+
+    Parameters
+    ----------
+    robot : pymanoid.Robot
+        Robot model.
+    contacts : pymanoid.ContactSet
+        Contacts with the environment.
+    method : string, optional
+        Choice between 'bretl' and 'cdd'.
 
     Returns
     -------
@@ -139,7 +148,7 @@ def compute_actuation_dependent_polygon(robot, contacts):
     b = hstack([b_fric, b_act])
     return project_polytope(
         ineq=(A, b), eq=(C, d), proj=(E, f),
-        method="bretl", max_iter=100, init_angle=0)
+        method=method, max_iter=100, init_angle=0)
 
 
 def generate_point_grid(xlim, ylim, zlim, xres, yres):
