@@ -32,6 +32,7 @@ from pymanoid.gui import StaticEquilibriumWrenchDrawer
 from pymanoid.gui import draw_point, draw_polygon, draw_polytope
 from pymanoid.misc import norm
 from pymanoid.sim import gravity_const
+from pypoman import convex_hull
 from pypoman import project_polytope
 
 
@@ -222,6 +223,7 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
             xres=4, yres=6)
         for (height, points) in grid:
             self.stance.com.set_z(height)
+            feasible_points = []
             for point in points:
                 self.stance.com.set_x(init_com[0] + point[0])
                 self.stance.com.set_y(init_com[1] + point[1])
@@ -231,8 +233,15 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
                 # self.draw_polytope_slice()
                 # self.draw_polygon()
                 if pylab.norm(self.robot.com - self.stance.com.p) < 0.02:
-                    self.handle.append(draw_point(robot.com))
+                    self.handle.append(draw_point(robot.com, pointsize=5e-4))
+                    feasible_points.append(robot.com)
                 # self.handle.append(draw_point(self.stance.com.p))
+            feasible_2d = [array([p[0], p[1]]) for p in feasible_points]
+            vertices_2d = convex_hull(feasible_2d)
+            z_avg = pylab.mean([p[2] for p in feasible_points])
+            vertices = [array([v[0], v[1], z_avg]) for v in vertices_2d]
+            self.handle.extend([draw_point(v) for v in vertices])
+            break
         self.stance.com.set_pos(init_com)
         self.stance.com.show()
         self.robot.set_dof_values(q_init)
@@ -308,8 +317,8 @@ if __name__ == "__main__":
     robot.ik.verbosity = 0
     robot.ik.solve(impr_stop=1e-3)
 
-    polygon_drawer = CoMPolygonDrawer(stance)
-    polytope_drawer = ActuationDependentPolytopeDrawer(robot, stance)
+    uncons_drawer = CoMPolygonDrawer(stance)
+    act_drawer = ActuationDependentPolytopeDrawer(robot, stance)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
     sim.schedule(robot.ik)
