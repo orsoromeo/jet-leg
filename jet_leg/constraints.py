@@ -36,10 +36,7 @@ class Constraints:
                 
             C1 = np.zeros((0,0))
             d1 = np.zeros((1,0))
-            contactsNumber = np.sum(stanceLegs)
-#                actuation_polygons = np.array([act_LF,act_RF,act_LH,act_RH])
-#            for j in range (0,contactsNumber):
-#                print 'second iter', j, actuation_polygons[j]
+
             hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/total_mass)
             C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
             d1 = np.hstack([d1, knownTerm.T])  

@@ -80,7 +80,7 @@ class PathIterativeProjection:
 #        print 'act pol ',lp
 #        print 'a', actuation_polygons, trunk_mass, isIKoutOfWorkSpace
         
-        return lp, actuation_polygons/params.getTrunkMass(), isIKoutOfWorkSpace
+        return lp, actuation_polygons/params.getTotalMass(), isIKoutOfWorkSpace
 
     def optimize_direction_variable_constraint(self, lp, vdir, solver=GLPK_IF_AVAILABLE):
         #print 'I am hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
@@ -166,7 +166,7 @@ class PathIterativeProjection:
             Output polygon.
         """
     
-        trunk_mass = params.getTrunkMass()
+        total_mass = params.getTotalMass()
 #        mu = params.getFrictionCoeffcient()
 
 #        axisZ= array([[0.0], [0.0], [1.0]])

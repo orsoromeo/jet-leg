@@ -163,7 +163,7 @@ RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
 params = IterativeProjectionParameters()
-params.setContactsPos(contacts)
+params.setContactsPosBF(contacts)
 params.setCoMPos(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
@@ -171,7 +171,7 @@ params.setConstraintModes(constraint_mode)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
+params.setTotalMass(trunk_mass)
 
 lowel_lim = -30
 upper_lim = 40
@@ -187,7 +187,14 @@ for com_x in range(lowel_lim, upper_lim, 10):
 #    print comWF, comToStack
     comToStackX = np.hstack([comToStackX, comWF[0]])
     comToStackY = np.hstack([comToStackY, comWF[1]])
-    params.setCoMPos(comWF)
+
+#    params.setCoMPos(comWF)
+    LF_foot_tmp = LF_foot - comWF
+    RF_foot_tmp = RF_foot - comWF
+    LH_foot_tmp = LH_foot - comWF
+    RH_foot_tmp = RH_foot - comWF
+    contactsBF = np.vstack((LF_foot_tmp, RF_foot_tmp, LH_foot_tmp, RH_foot_tmp))
+    params.setContactsPosBF(contactsBF)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
 #    print idx, scale
@@ -228,7 +235,8 @@ path = mpath.Path(np.column_stack([comToStackX, comToStackY]))
 verts = path.interpolated(steps=3).vertices
 x, y = verts[:, 0], verts[:, 1]
 z = np.linspace(0, 1, len(x))
-colorline(x, y, z, cmap=plt.get_cmap('seismic'), linewidth=5)
+#print x, y, z
+#colorline(x, y, z, cmap=plt.get_cmap('seismic'), linewidth=5)
 
 #print comToStack
 ''' Add 2D figure '''

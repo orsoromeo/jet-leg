@@ -35,7 +35,7 @@ constraint_mode = ['FRICTION_AND_ACTUATION',
                    'FRICTION_AND_ACTUATION',
                    'FRICTION_AND_ACTUATION']
 useVariableJacobian = True
-trunk_mass = 100
+total_mass = 100
 mu = 0.8
 
 comTrajectoriesToStack = np.zeros((0,3))
@@ -99,7 +99,7 @@ torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 tolerance = 0.005
 
 params = IterativeProjectionParameters()
-params.setContactsPos(contacts)
+params.setContactsPosBF(contacts)
 params.setCoMPos(startingPoint)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
@@ -107,7 +107,7 @@ params.setConstraintModes(constraint_mode)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
+params.setTotalMass(total_mass)
     
 for angle in np.arange(0.0, 0.5, 0.25):
     print '===============> new search angle: ', angle

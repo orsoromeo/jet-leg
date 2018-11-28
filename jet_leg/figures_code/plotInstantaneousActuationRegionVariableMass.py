@@ -184,7 +184,7 @@ constraint_mode = ['ONLY_ACTUATION',
                    'ONLY_ACTUATION',
                    'ONLY_ACTUATION']
 
-params.setContactsPos(contacts)
+params.setContactsPosBF(contacts)
 params.setCoMPos(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
@@ -195,7 +195,7 @@ params.setNumberOfFrictionConesEdges(ng)
 
 
 for total_mass in range(140, 40, -10):
-    params.setTrunkMass(total_mass)
+    params.setTotalMass(total_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
     colorVal = scalarMap.to_rgba(scale[idx])

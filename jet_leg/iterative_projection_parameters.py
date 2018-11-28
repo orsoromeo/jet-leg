@@ -13,7 +13,7 @@ class IterativeProjectionParameters:
         self.comPositionBF = [0., 0., 0.]
         self.footPosLF = [0.3, 0.25, -.5]
         self.footPosRF = [-0.3, 0.25, -.5]
-        self.footPosLH = [0.4, -0.25, -.5]
+        self.footPosLH = [0.3, -0.25, -.5]
         self.footPosRH = [-0.3, -0.25, -.5]
 
         self.roll = 0.0
@@ -81,7 +81,7 @@ class IterativeProjectionParameters:
         self.numberOfGenerators = ng
         
     def setTotalMass(self, mass):
-        self.trunkMass = mass
+        self.robotMass = mass
         
     def getContactsPosBF(self):
         return self.contactsBF
