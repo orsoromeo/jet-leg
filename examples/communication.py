@@ -130,16 +130,17 @@ def talker():
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         params.getFutureStanceFeet(p.hyq_rcf_debug)
 #        params.getCurrentStanceFeet(p.hyq_rcf_debug)
-        total_mass = 85.
-        mu = 0.8
+#        total_mass = 85.
+#        mu = 0.8
+        #friction cone edges 
         ng = 4
-        axisZ= np.array([[0.0], [0.0], [1.0]])
+#        axisZ= np.array([[0.0], [0.0], [1.0]])
         ''' normals '''    
-        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        normals = np.vstack([n1, n2, n3, n4])
+#        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#        normals = np.vstack([n1, n2, n3, n4])
 
         """ contact points """
         nc = params.numberOfContacts
@@ -152,21 +153,21 @@ def talker():
         #params.setContactNormals(normals)
         #params.setFrictionCoefficient(mu)
         params.setNumberOfFrictionConesEdges(ng)
-        params.setTotalMass(total_mass)
+        #params.setTotalMass(total_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
         IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
         num_actuation_vertices = np.size(IAR, 0)
         
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z =  -0.55
+        point.z =  0.0 #is the centroidal frame
         vertices1 = [point]
         
         for i in range(0, num_actuation_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = -0.55
+            point.z = 0.0 #is the centroidal frame
             vertices1 = np.hstack([vertices1, point])
 
         poly = [actPolygon]
@@ -201,20 +202,21 @@ def talker():
         num_support_vertices = np.size(IAR, 0)
         point.x = IAR[0][0]
         point.y = IAR[0][1]
-        point.z =  -0.55
+        point.z =  0.0
         vertices2 = [point]
         for i in range(0, num_support_vertices):
             point = Point()
             point.x = IAR[i][0]
             point.y = IAR[i][1]
-            point.z = -0.55
+            point.z = 0.0
             vertices2 = np.hstack([vertices2, point])
             
 #        print'vertices', vertices2        
         p.send_support_region(name, vertices2)
         
         
-        time.sleep(1.0/25.0)
+
+        time.sleep(0.2)
         i+=1
         
     print 'de registering...'

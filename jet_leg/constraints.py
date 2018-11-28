@@ -213,6 +213,7 @@ class Constraints:
         ng = params.getNumberOfFrictionConesEdges()
         friction_coeff = params.getFrictionCoefficient()
         normals = params.getNormals()
+       
         
         actuation_polygons = np.zeros((1,1))
         C = np.zeros((0,0))
@@ -237,6 +238,7 @@ class Constraints:
                                                     np.transpose(foot_vel[:,2]))
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
+        
         for j in range(0,contactsNumber):    
 
             if constraint_mode[j] == 'ONLY_FRICTION':
@@ -245,6 +247,7 @@ class Constraints:
                 isIKoutOfWorkSpace = False
 
                 n = self.math.normalize(normals[j,:])
+               
                 rotationMatrix = self.math.rotation_matrix_from_normal(n)
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
@@ -275,5 +278,7 @@ class Constraints:
             C = block_diag(C, Ctemp)
             d = np.hstack([d, d_cone])
         
+        if contactsNumber == 0:
+            print 'contactsNumber is zero, there are no stance legs set!'
         return C, d, isIKoutOfWorkSpace, actuation_polygons
     

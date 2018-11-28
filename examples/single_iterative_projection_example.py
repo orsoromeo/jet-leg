@@ -109,7 +109,7 @@ params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
+params.setTotalMass(trunk_mass)
 
 ''' compute iterative projection '''
 IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
