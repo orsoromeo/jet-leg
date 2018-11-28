@@ -22,7 +22,7 @@ import IPython
 # import numpy
 import pylab
 
-from numpy import array, ones
+from numpy import array
 from scipy.spatial import ConvexHull
 
 import pymanoid
@@ -33,8 +33,9 @@ from pymanoid.gui import draw_point, draw_polygon, draw_polytope
 from pymanoid.misc import norm
 
 from pymanoid_common import CoMPolygonDrawer
-from pymanoid_common import compute_actuation_dependent_polygon
+from pymanoid_common import compute_local_actuation_dependent_polygon
 from pymanoid_common import generate_point_grid
+from pymanoid_common import set_torque_limits
 
 
 class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
@@ -64,7 +65,7 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         super(ActuationDependentPolytopeDrawer, self).on_tick(sim)
 
     def draw_polytope_slice(self):
-        vertices_2d = compute_actuation_dependent_polygon(
+        vertices_2d = compute_local_actuation_dependent_polygon(
             self.robot, self.stance)
         vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
         if self.last_vertices is not None:
@@ -73,7 +74,7 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         self.last_vertices = vertices
 
     def draw_polygon(self):
-        vertices_2d = compute_actuation_dependent_polygon(
+        vertices_2d = compute_local_actuation_dependent_polygon(
             self.robot, self.stance)
         vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
         self.handle.append(draw_polygon(
@@ -117,39 +118,6 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
         self.__com_target = None
 
 
-def set_torque_limits(robot):
-    robot.tau_max = 5. * ones(robot.nb_dofs)
-    robot.tau_max[robot.R_HIP_Y] = 100.
-    robot.tau_max[robot.R_HIP_R] = 50.
-    robot.tau_max[robot.R_HIP_P] = 100.
-    robot.tau_max[robot.R_KNEE_P] = 50.
-    robot.tau_max[robot.R_ANKLE_P] = 100.
-    robot.tau_max[robot.R_ANKLE_R] = 100.
-    robot.tau_max[robot.L_HIP_Y] = 100.
-    robot.tau_max[robot.L_HIP_R] = 50.
-    robot.tau_max[robot.L_HIP_P] = 100.
-    robot.tau_max[robot.L_KNEE_P] = 50.
-    robot.tau_max[robot.L_ANKLE_P] = 100.
-    robot.tau_max[robot.L_ANKLE_R] = 100.
-    robot.tau_max[robot.CHEST_P] = 100.
-    robot.tau_max[robot.CHEST_Y] = 100.
-    # robot.tau_max[robot.WAIST_R] = 100.
-    robot.tau_max[robot.R_SHOULDER_P] = 50.
-    robot.tau_max[robot.R_SHOULDER_R] = 50.
-    robot.tau_max[robot.R_SHOULDER_Y] = 50.
-    robot.tau_max[robot.R_ELBOW_P] = 50.
-    robot.tau_max[robot.L_SHOULDER_P] = 50.
-    robot.tau_max[robot.L_SHOULDER_R] = 50.
-    robot.tau_max[robot.L_SHOULDER_Y] = 50.
-    robot.tau_max[robot.L_ELBOW_P] = 50.
-    robot.tau_max[robot.TRANS_X] = 1000
-    robot.tau_max[robot.TRANS_Y] = 1000
-    robot.tau_max[robot.TRANS_Z] = 1000
-    robot.tau_max[robot.ROT_R] = 1000
-    robot.tau_max[robot.ROT_P] = 1000
-    robot.tau_max[robot.ROT_Y] = 1000
-
-
 if __name__ == "__main__":
     sim = pymanoid.Simulation(dt=0.03)
     robot = pymanoid.robots.JVRC1()
@@ -179,7 +147,7 @@ if __name__ == "__main__":
         [0.,  0., 0.,  1.]]))
     robot.set_transparency(0.25)
 
-    stance = Stance.from_json('jvrc1_ladder.json')
+    stance = Stance.from_json('jvrc1_ladder_climbing.json')
     stance.bind(robot)
     # stance.com.hide()
     robot.ik.maximize_margins = True

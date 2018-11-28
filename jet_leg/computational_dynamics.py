@@ -122,7 +122,7 @@ class ComputationalDynamics():
 #                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
 #            
 #            if constraint_mode[j] == 'ONLY_ACTUATION':
-#                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, iterative_projection_params.getContactsPos(),  stanceLegs, stanceIndex, swingIndex, torque_limits, trunk_mass)
+#                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.constr.compute_actuation_constraints(j, iterative_projection_params.getContactsPos(),  stanceLegs, stanceIndex, swingIndex, torque_limits, total_mass)
 #                #            print d.shape[0]            
 #                if isIKoutOfWorkSpace is False:
 #                    d_cone = d_cone.reshape(6) 
@@ -179,18 +179,18 @@ class ComputationalDynamics():
         return compressed_hull, actuation_polygons, computation_time
         
         
-    def instantaneous_actuation_region_bretl(self, stanceLegs, contacts, normals, trunk_mass, comWF = np.array([0.0,0.0,0.0])):
+    def instantaneous_actuation_region_bretl(self, stanceLegs, contacts, normals, total_mass, comWF = np.array([0.0,0.0,0.0])):
         constraint_mode = 'ONLY_ACTUATION'
         number_of_generators = 4
         mu = 1.0
-        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, stanceLegs, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
+        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, stanceLegs, contacts, normals, total_mass, number_of_generators, mu, comWF)
         IP_points = self.geom.clockwise_sort(np.array(IP_points))
         
         return IP_points, actuation_polygons, computation_time
 
-    def support_region_bretl(self, stanceLegs, contacts, normals, trunk_mass, number_of_generators = 4, mu = 1.0, comWF = np.array([0.0,0.0,0.0])):
+    def support_region_bretl(self, stanceLegs, contacts, normals, total_mass, number_of_generators = 4, mu = 1.0, comWF = np.array([0.0,0.0,0.0])):
         constraint_mode = 'ONLY_FRICTION'
-        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, stanceLegs, contacts, normals, trunk_mass, number_of_generators, mu, comWF)
+        IP_points, actuation_polygons, computation_time = self.iterative_projection_bretl(constraint_mode, stanceLegs, contacts, normals, total_mass, number_of_generators, mu, comWF)
         IP_points = self.geom.clockwise_sort(np.array(IP_points))
         
         return IP_points, actuation_polygons, computation_time                

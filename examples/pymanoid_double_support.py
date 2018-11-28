@@ -20,7 +20,7 @@
 
 import IPython
 
-from numpy import ones
+from numpy import sqrt
 
 import pymanoid
 
@@ -29,8 +29,17 @@ from pymanoid.gui import StaticEquilibriumWrenchDrawer
 from pymanoid.gui import draw_point, draw_polygon
 from pymanoid.misc import norm
 
+from pymanoid_common import ActuationDependentArea
 from pymanoid_common import CoMPolygonDrawer
-from pymanoid_common import compute_actuation_dependent_polygon
+from pymanoid_common import compute_local_actuation_dependent_polygon
+from pymanoid_common import grid_polygon
+from pymanoid_common import sample_points_from_polygon
+from pymanoid_common import set_torque_limits
+from pymanoid_common import shrink_polygon
+
+
+WS_NB_POINTS = 10
+WS_TYPE = "sample"
 
 
 class COMSync(pymanoid.Process):
@@ -48,6 +57,7 @@ class COMSync(pymanoid.Process):
 
     def __init__(self, robot, stance, com_above):
         super(COMSync, self).__init__()
+        com_above.set_transparency(0.2)
         self.com_above = com_above
         self.stance = stance
         self.robot_com = None
@@ -88,46 +98,13 @@ class ActuationDependentPolygonDrawer(CoMPolygonDrawer):
     def update_polygon(self):
         self.handle = None
         try:
-            vertices = compute_actuation_dependent_polygon(
+            vertices = compute_local_actuation_dependent_polygon(
                 self.robot, self.stance)
             self.handle = draw_polygon(
                 [(x[0], x[1], self.height) for x in vertices],
-                normal=[0, 0, 1])
+                normal=[0, 0, 1], color='m')
         except Exception as e:
             print("ActuationDependentPolygonDrawer: {}".format(e))
-
-
-def set_torque_limits(robot):
-    robot.tau_max = 5. * ones(robot.nb_dofs)
-    robot.tau_max[robot.R_HIP_Y] = 100.
-    robot.tau_max[robot.R_HIP_R] = 50.
-    robot.tau_max[robot.R_HIP_P] = 100.
-    robot.tau_max[robot.R_KNEE_P] = 50.
-    robot.tau_max[robot.R_ANKLE_P] = 100.
-    robot.tau_max[robot.R_ANKLE_R] = 100.
-    robot.tau_max[robot.L_HIP_Y] = 100.
-    robot.tau_max[robot.L_HIP_R] = 50.
-    robot.tau_max[robot.L_HIP_P] = 100.
-    robot.tau_max[robot.L_KNEE_P] = 50.
-    robot.tau_max[robot.L_ANKLE_P] = 100.
-    robot.tau_max[robot.L_ANKLE_R] = 100.
-    robot.tau_max[robot.CHEST_P] = 100.
-    robot.tau_max[robot.CHEST_Y] = 100.
-    robot.tau_max[robot.WAIST_R] = 100.
-    robot.tau_max[robot.R_SHOULDER_P] = 50.
-    robot.tau_max[robot.R_SHOULDER_R] = 50.
-    robot.tau_max[robot.R_SHOULDER_Y] = 50.
-    robot.tau_max[robot.R_ELBOW_P] = 50.
-    robot.tau_max[robot.L_SHOULDER_P] = 50.
-    robot.tau_max[robot.L_SHOULDER_R] = 50.
-    robot.tau_max[robot.L_SHOULDER_Y] = 50.
-    robot.tau_max[robot.L_ELBOW_P] = 50.
-    robot.tau_max[robot.TRANS_X] = 1000
-    robot.tau_max[robot.TRANS_Y] = 1000
-    robot.tau_max[robot.TRANS_Z] = 1000
-    robot.tau_max[robot.ROT_R] = 1000
-    robot.tau_max[robot.ROT_P] = 1000
-    robot.tau_max[robot.ROT_Y] = 1000
 
 
 if __name__ == "__main__":
@@ -147,21 +124,40 @@ if __name__ == "__main__":
     robot.ik.solve()
 
     com_sync = COMSync(robot, stance, com_above)
-    uncons_polygon_drawer = CoMPolygonDrawer(
-        stance, polygon_height)
     act_polygon_drawer = ActuationDependentPolygonDrawer(
         robot, stance, polygon_height)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
-    feasible_coms = []
-    feasible_coms.append(draw_point(com_above.p, pointsize=0.01))
+    uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
+    uncons_polygon_drawer.update()
+    # working_set = shrink_polygon(
+    #     uncons_polygon_drawer.vertices, shrink_ratio=0.5, res=50)
+    uncons_vertices = uncons_polygon_drawer.vertices
+    if WS_TYPE == "shrink":
+        working_set = shrink_polygon(
+            uncons_vertices, shrink_ratio=0.5, res=WS_NB_POINTS)
+    elif WS_TYPE == "sample":
+        working_set = sample_points_from_polygon(uncons_vertices, WS_NB_POINTS)
+    else:  # WS_TYPE == "grid"
+        res = int(sqrt(WS_NB_POINTS))
+        working_set = grid_polygon(uncons_vertices, res=res)
+
+    # h1 = draw_polygon(
+    #     [(v[0], v[1], polygon_height) for v in working_set],
+    #     normal=[0, 0, 1], combined='m-#')
+    h2 = [draw_point(
+        [v[0], v[1], polygon_height], color='m', pointsize=1e-3)
+        for v in working_set]
 
     sim.schedule(robot.ik)
-    sim.schedule_extra(com_sync)
-    sim.schedule_extra(uncons_polygon_drawer)
+    # sim.schedule_extra(com_sync)
+    # sim.schedule_extra(uncons_polygon_drawer)
     sim.schedule_extra(act_polygon_drawer)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
+
+    ada = ActuationDependentArea(robot, stance, polygon_height)
+    ada.compute(working_set)
 
     if IPython.get_ipython() is None:
         IPython.embed()
