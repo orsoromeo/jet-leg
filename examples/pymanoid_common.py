@@ -18,14 +18,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with jet-leg. If not, see <http://www.gnu.org/licenses/>.
 
-from numpy import arange, array, hstack, vstack, zeros
+from numpy import arange, array, hstack, ones, vstack, zeros
 from numpy import cos, dot, sin, pi
 from numpy import linspace, random
 from scipy.linalg import block_diag
 
 import pymanoid
+import pypoman
 
-from pymanoid.gui import draw_polygon
+from pymanoid.gui import draw_point, draw_polygon
 from pymanoid.misc import norm
 from pymanoid.sim import gravity_const
 from pypoman import compute_chebyshev_center
@@ -240,3 +241,90 @@ def grid_polygon(vertices, res=None, xres=None, yres=None):
             if (dot(A, p) <= b).all():
                 points.append(p)
     return points
+
+
+def set_torque_limits(robot):
+    robot.tau_max = 5. * ones(robot.nb_dofs)
+    robot.tau_max[robot.R_HIP_Y] = 100.
+    robot.tau_max[robot.R_HIP_R] = 50.
+    robot.tau_max[robot.R_HIP_P] = 100.
+    robot.tau_max[robot.R_KNEE_P] = 50.
+    robot.tau_max[robot.R_ANKLE_P] = 100.
+    robot.tau_max[robot.R_ANKLE_R] = 100.
+    robot.tau_max[robot.L_HIP_Y] = 100.
+    robot.tau_max[robot.L_HIP_R] = 50.
+    robot.tau_max[robot.L_HIP_P] = 100.
+    robot.tau_max[robot.L_KNEE_P] = 50.
+    robot.tau_max[robot.L_ANKLE_P] = 100.
+    robot.tau_max[robot.L_ANKLE_R] = 100.
+    robot.tau_max[robot.CHEST_P] = 100.
+    robot.tau_max[robot.CHEST_Y] = 100.
+    robot.tau_max[robot.WAIST_R] = 100.
+    robot.tau_max[robot.R_SHOULDER_P] = 50.
+    robot.tau_max[robot.R_SHOULDER_R] = 50.
+    robot.tau_max[robot.R_SHOULDER_Y] = 50.
+    robot.tau_max[robot.R_ELBOW_P] = 50.
+    robot.tau_max[robot.L_SHOULDER_P] = 50.
+    robot.tau_max[robot.L_SHOULDER_R] = 50.
+    robot.tau_max[robot.L_SHOULDER_Y] = 50.
+    robot.tau_max[robot.L_ELBOW_P] = 50.
+    robot.tau_max[robot.TRANS_X] = 1000
+    robot.tau_max[robot.TRANS_Y] = 1000
+    robot.tau_max[robot.TRANS_Z] = 1000
+    robot.tau_max[robot.ROT_R] = 1000
+    robot.tau_max[robot.ROT_P] = 1000
+    robot.tau_max[robot.ROT_Y] = 1000
+
+
+class ActuationDependentArea(object):
+
+    def __init__(self, robot, stance, draw_height):
+        self.all_vertices = []
+        self.draw_height = draw_height
+        self.polygons = []
+        self.robot = robot
+        self.sample_handles = []
+        self.stance = stance
+
+    def compute(self, working_set):
+        for i_cur, p_cur in enumerate(working_set):
+            p_cur = array(p_cur)
+            A_voronoi, b_voronoi = [], []
+            for i_other, p_other in enumerate(working_set):
+                if i_other == i_cur:
+                    continue
+                p_other = array(p_other)
+                p_mid = 0.5 * (p_other + p_cur)
+                a = p_other - p_cur
+                A_voronoi.append(a)
+                b_voronoi.append(dot(a, p_mid))
+            A_voronoi = vstack(A_voronoi)
+            b_voronoi = hstack(b_voronoi)
+
+            self.stance.com.set_x(p_cur[0])
+            self.stance.com.set_y(p_cur[1])
+            self.robot.ik.solve(warm_start=True)
+            proj_vertices = compute_local_actuation_dependent_polygon(
+                self.robot, self.stance, method="bretl")
+            A_proj, b_proj = compute_polytope_halfspaces(proj_vertices)
+            A = vstack([A_proj, A_voronoi])
+            b = hstack([b_proj, b_voronoi])
+            if (dot(A, p_cur) > b).any():
+                self.sample_handles.append(draw_point(
+                    [p_cur[0], p_cur[1], self.draw_height], color='r',
+                    pointsize=5e-3))
+                continue
+            else:
+                self.sample_handles.append(draw_point(
+                    [p_cur[0], p_cur[1], self.draw_height], color='g',
+                    pointsize=5e-3))
+            vertices = pypoman.compute_polytope_vertices(A, b)
+            self.polygons.append(draw_polygon(
+                [(v[0], v[1], self.draw_height) for v in vertices],
+                normal=[0, 0, 1], combined='b-#'))
+            self.all_vertices.extend(vertices)
+
+    def draw_convex_hull(self):
+        self.hull = draw_polygon(
+            [(v[0], v[1], self.draw_height) for v in self.all_vertices],
+            normal=[0, 0, 1], combined='r-', linewidth=10)
