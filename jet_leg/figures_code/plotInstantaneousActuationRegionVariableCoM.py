@@ -213,6 +213,7 @@ constraint_mode = ['ONLY_FRICTION',
                    'ONLY_FRICTION',
                    'ONLY_FRICTION']
 params.setConstraintModes(constraint_mode)
+params.setContactsPosBF(contacts)
 IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
 point = np.vstack([IP_points])
 x = np.hstack([point[:,0], point[0,0]])

@@ -10,6 +10,9 @@ import time
 from numpy import array
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import matplotlib.cm as cmx
+
 from jet_leg.plotting_tools import Plotter
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
@@ -18,7 +21,6 @@ from jet_leg.height_map import HeightMap
 from jet_leg.path_sequential_iterative_projection import PathIterativeProjection
 from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
         
-    
 ''' MAIN '''
 start_t_IPVC = time.time()
 
@@ -34,7 +36,7 @@ constraint_mode = ['FRICTION_AND_ACTUATION',
                    'FRICTION_AND_ACTUATION',
                    'FRICTION_AND_ACTUATION']
 useVariableJacobian = True
-trunk_mass = 100
+total_mass = 100
 mu = 0.8
 
 terrain = HeightMap()
@@ -85,7 +87,7 @@ ng = 4
 tolerance = 0.01
 
 params = IterativeProjectionParameters()
-params.setContactsPos(contacts)
+params.setContactsPosBF(contacts)
 params.setCoMPos(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
@@ -93,11 +95,15 @@ params.setConstraintModes(constraint_mode)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
-newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(params, desired_direction,tolerance)
-
+params.setTotalMass(total_mass)
+CoMlist, stackedErrors, stacked_polygons = pathIP.find_vertex_along_path(params, desired_direction, tolerance)
+newLimitPoint = CoMlist[-1]
 print 'Errors convergence: ', stackedErrors
-
+print 'first', stacked_polygons[0]
+first = stacked_polygons.pop(0)
+print 'first', first
+first = stacked_polygons.pop(0)
+print 'second', first
 print("Path Sequential Iterative Projection: --- %s seconds ---" % (time.time() - start_t_IPVC))
 
 
@@ -125,6 +131,28 @@ segment = np.vstack([comWF,newLimitPoint])
 plt.plot(segment[:,0], segment[:,1], 'b-', linewidth=2, label= 'Search direction')
 plt.plot(contacts[0:number_of_contacts,0],contacts[0:number_of_contacts,1],'ko',markersize=15, label='Stance feet')
 
+''' instantaneous plot actuation regions'''
+lower_lim = -10
+upper_lim = 10
+scale = np.linspace(lower_lim, upper_lim, 10)
+jet = cm = plt.get_cmap('seismic') 
+cNorm  = colors.Normalize(vmin=lower_lim, vmax=upper_lim)
+scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+index = 0
+err = np.hstack(stackedErrors)
+   
+ 
+for polygon in stacked_polygons:
+    point = np.vstack([polygon])
+    x = np.hstack([point[:,0], point[0,0]])
+    y = np.hstack([point[:,1], point[0,1]])
+    colorVal = scalarMap.to_rgba(scale[index])
+#    print index
+    plt.plot(x,y, color = colorVal,  linewidth=5., label = 'error: '+str(stackedErrors[index,0]))
+    plt.plot(CoMlist[index,0], CoMlist[index,1], color = colorVal, marker='o', markersize=15)
+    index+=1
+    
+    
 plt.xlim(-0.9, 0.5)
 plt.ylim(-0.7, 0.7)
 plt.legend()

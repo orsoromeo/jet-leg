@@ -42,14 +42,14 @@ n = nc*6
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 85.
+total_mass = 85.
 mu = 0.8
     
 axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
 
-number_of_tests = 100
+number_of_tests = 1000
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
 
@@ -107,7 +107,7 @@ for iter in range(0,number_of_tests):
     #    print 'Swing leg', randomSwingLeg
     stanceLegs[randomSwingLeg] = 0
     
-    params.setContactsPos(contacts)
+    params.setContactsPosBF(contacts)
     params.setCoMPos(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
@@ -115,7 +115,7 @@ for iter in range(0,number_of_tests):
     params.setContactNormals(normals)
     params.setFrictionCoefficient(mu)
     params.setNumberOfFrictionConesEdges(ng)
-    params.setTrunkMass(trunk_mass)
+    params.setTotalMass(total_mass)
     #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     comp_time = comp_time * 1000.0
@@ -183,7 +183,7 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    params.setContactsPos(contacts)
+    params.setContactsPosBF(contacts)
     params.setCoMPos(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
@@ -191,7 +191,7 @@ for iter in range(0,number_of_tests):
     params.setContactNormals(normals)
     params.setFrictionCoefficient(mu)
     params.setNumberOfFrictionConesEdges(ng)
-    params.setTrunkMass(trunk_mass)
+    params.setTotalMass(total_mass)
     #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
 #    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)

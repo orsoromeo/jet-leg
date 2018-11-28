@@ -297,19 +297,27 @@ class PathIterativeProjection:
         final_points = np.zeros((0,2))
         newCoM = params.getCoMPos()
         comWF = params.getCoMPos()
+        contactsBF = params.getContactsPosBF()
         comToStack = np.zeros((0,3))
         stackedIncrements = np.zeros((0,3))
         increment = np.array([100.0, 100.0, 0.0])
         while_iter = 0
-        print increment, tolerance
+        polygon_to_stack = []
+        
         while (np.amax(np.abs(increment))>tolerance) and (while_iter<max_iteration_number):
             comToStack = np.vstack([comToStack, newCoM])
             params.setCoMPos(newCoM)
+            contactsBF_tmp = contactsBF - newCoM
+            params.setContactsPosBF(contactsBF_tmp)
             polygon = self.compute_polygon_variable_constraint(params)
+            
             if polygon:
                 polygon.sort_vertices()
                 vertices_list = polygon.export_vertices()
                 vertices1 = [array([v.x, v.y]) for v in vertices_list]
+                polygon_to_stack.append(vertices1)
+                print while_iter
+#                print 'poly',vertices1
                 new_p, all_points = self.find_intersection(vertices1, desired_direction, comWF)
                 if np.size(new_p, 0)==0:
                     while_iter+= max_iteration_number
@@ -322,5 +330,6 @@ class PathIterativeProjection:
             else:
                 print "foot position is out of workspace!"
                 while_iter += max_iteration_number
-            
-        return comToStack[-1], stackedIncrements
+        
+        print polygon_to_stack
+        return comToStack, stackedIncrements, polygon_to_stack
