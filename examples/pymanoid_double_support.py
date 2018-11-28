@@ -38,8 +38,8 @@ from pymanoid_common import set_torque_limits
 from pymanoid_common import shrink_polygon
 
 
-WS_NB_POINTS = 10
-WS_TYPE = "sample"
+WS_NB_POINTS = 50
+WS_TYPE = "grid"
 
 
 class COMSync(pymanoid.Process):
@@ -71,7 +71,7 @@ class COMSync(pymanoid.Process):
             color='m')
 
 
-class ActuationDependentPolygonDrawer(CoMPolygonDrawer):
+class LocalActuationDependentPolygonDrawer(CoMPolygonDrawer):
 
     """
     Draw the static-equilibrium polygon of a contact set.
@@ -86,14 +86,14 @@ class ActuationDependentPolygonDrawer(CoMPolygonDrawer):
         self.last_com = robot.com
         self.robot = robot
         # parent constructor is called after
-        super(ActuationDependentPolygonDrawer, self).__init__(
+        super(LocalActuationDependentPolygonDrawer, self).__init__(
             stance, height)
 
     def on_tick(self, sim):
         if norm(self.robot.com - self.last_com) > 1e-2:
             self.last_com = self.robot.com
             self.update_polygon()
-        super(ActuationDependentPolygonDrawer, self).on_tick(sim)
+        super(LocalActuationDependentPolygonDrawer, self).on_tick(sim)
 
     def update_polygon(self):
         self.handle = None
@@ -124,14 +124,12 @@ if __name__ == "__main__":
     robot.ik.solve()
 
     com_sync = COMSync(robot, stance, com_above)
-    act_polygon_drawer = ActuationDependentPolygonDrawer(
+    local_polygon_drawer = LocalActuationDependentPolygonDrawer(
         robot, stance, polygon_height)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
     uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
     uncons_polygon_drawer.update()
-    # working_set = shrink_polygon(
-    #     uncons_polygon_drawer.vertices, shrink_ratio=0.5, res=50)
     uncons_vertices = uncons_polygon_drawer.vertices
     if WS_TYPE == "shrink":
         working_set = shrink_polygon(
@@ -142,17 +140,10 @@ if __name__ == "__main__":
         res = int(sqrt(WS_NB_POINTS))
         working_set = grid_polygon(uncons_vertices, res=res)
 
-    # h1 = draw_polygon(
-    #     [(v[0], v[1], polygon_height) for v in working_set],
-    #     normal=[0, 0, 1], combined='m-#')
-    h2 = [draw_point(
-        [v[0], v[1], polygon_height], color='m', pointsize=1e-3)
-        for v in working_set]
-
     sim.schedule(robot.ik)
-    # sim.schedule_extra(com_sync)
+    sim.schedule_extra(com_sync)
     # sim.schedule_extra(uncons_polygon_drawer)
-    sim.schedule_extra(act_polygon_drawer)
+    sim.schedule_extra(local_polygon_drawer)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 

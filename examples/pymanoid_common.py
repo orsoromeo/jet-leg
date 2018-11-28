@@ -18,10 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with jet-leg. If not, see <http://www.gnu.org/licenses/>.
 
+import pylab
+
 from numpy import arange, array, hstack, ones, vstack, zeros
 from numpy import cos, dot, sin, pi
 from numpy import linspace, random
 from scipy.linalg import block_diag
+from scipy.spatial import ConvexHull
 
 import pymanoid
 import pypoman
@@ -45,11 +48,12 @@ class CoMPolygonDrawer(pymanoid.Process):
         Contacts and COM position of the robot.
     """
 
-    def __init__(self, stance, height=1.5):
+    def __init__(self, stance, height=1.5, method="cdd"):
         super(CoMPolygonDrawer, self).__init__()
         self.contact_poses = {}
         self.handle = None
         self.height = height
+        self.method = method
         self.stance = stance
         self.vertices = None
         #
@@ -76,7 +80,7 @@ class CoMPolygonDrawer(pymanoid.Process):
         self.handle = None
         try:
             self.vertices = self.stance.compute_static_equilibrium_polygon(
-                method="cdd")
+                method=self.method)
             self.handle = draw_polygon(
                 [(x[0], x[1], self.height) for x in self.vertices],
                 normal=[0, 0, 1], color='g')
@@ -153,7 +157,28 @@ def compute_local_actuation_dependent_polygon(robot, contacts, method="bretl"):
         method=method, max_iter=100)
 
 
-def generate_point_grid(xlim, ylim, zlim, xres, yres):
+def generate_2d_grid(xlim, ylim, xres, yres):
+    assert xres % 2 == 0 and yres % 2 == 0
+    p = zeros(2)
+    dx = (xlim[1] - xlim[0]) / xres
+    dy = (ylim[1] - ylim[0]) / yres
+    x_avg = (xlim[1] + xlim[0]) / 2.
+    y_avg = (ylim[1] + ylim[0]) / 2.
+    dy_sign = +1
+    points = []
+    p[0] = x_avg - dx * (1 + xres / 2)
+    p[1] = y_avg - dy * dy_sign * (1 + yres / 2)
+    for _ in xrange(xres + 1):
+        p[0] += dx
+        for _ in xrange(yres + 1):
+            p[1] += dy * dy_sign
+            points.append(array([p[0], p[1]]))
+        p[1] += dy * dy_sign
+        dy_sign *= -1.
+    return points
+
+
+def generate_3d_grid(xlim, ylim, zlim, xres, yres):
     assert xres % 2 == 0 and yres % 2 == 0
     p = zeros(2)
     dx = (xlim[1] - xlim[0]) / xres
@@ -328,3 +353,29 @@ class ActuationDependentArea(object):
         self.hull = draw_polygon(
             [(v[0], v[1], self.draw_height) for v in self.all_vertices],
             normal=[0, 0, 1], combined='r-', linewidth=10)
+
+
+def compute_geom_reachable_polygon(robot, stance, height, xlim, ylim):
+    init_com = stance.com.p
+    stance.com.set_z(height)
+    feasible_points = []
+    handles = []
+    points = generate_2d_grid(xlim, ylim, xres=4, yres=6)
+    for point in points:
+        stance.com.set_x(init_com[0] + point[0])
+        stance.com.set_y(init_com[1] + point[1])
+        robot.ik.solve(warm_start=True)
+        # self.draw_polytope_slice()
+        # draw_polygon()
+        if norm(robot.com - stance.com.p) < 0.02:
+            handles.append(draw_point(robot.com, pointsize=5e-3))
+            feasible_points.append(robot.com)
+        # handle.append(draw_point(stance.com.p))
+    feasible_2d = [array([p[0], p[1]]) for p in feasible_points]
+    hull = ConvexHull(feasible_2d)
+    vertices_2d = [feasible_2d[i] for i in hull.vertices]
+    z_avg = pylab.mean([p[2] for p in feasible_points])
+    vertices = [array([v[0], v[1], z_avg]) for v in vertices_2d]
+    handles.extend([draw_point(v) for v in vertices])
+    stance.com.set_pos(init_com)
+    return handles

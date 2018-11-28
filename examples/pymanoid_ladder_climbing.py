@@ -19,22 +19,20 @@
 # along with jet-leg. If not, see <http://www.gnu.org/licenses/>.
 
 import IPython
-# import numpy
-import pylab
 
 from numpy import array
-from scipy.spatial import ConvexHull
 
 import pymanoid
 
 from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
-from pymanoid.gui import draw_point, draw_polygon, draw_polytope
+from pymanoid.gui import draw_polygon, draw_polytope
 from pymanoid.misc import norm
 
+from pymanoid_common import ActuationDependentArea
 from pymanoid_common import CoMPolygonDrawer
+from pymanoid_common import compute_geom_reachable_polygon
 from pymanoid_common import compute_local_actuation_dependent_polygon
-from pymanoid_common import generate_point_grid
 from pymanoid_common import set_torque_limits
 
 
@@ -83,39 +81,6 @@ class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
     def update_handle(self):
         self.handle = []
         self.last_vertices = None
-        robot.show_com()
-        init_com = self.stance.com.p
-        q_init = self.robot.q
-        self.stance.com.hide()
-        grid = generate_point_grid(
-            xlim=(0.0, 0.2), ylim=(-0.2, 0.2), zlim=(0.7, 0.85),
-            xres=4, yres=6)
-        for (height, points) in grid:
-            self.stance.com.set_z(height)
-            feasible_points = []
-            for point in points:
-                self.stance.com.set_x(init_com[0] + point[0])
-                self.stance.com.set_y(init_com[1] + point[1])
-                self.__com_target = draw_point(
-                    self.stance.com.p, pointsize=0.01, color='m')
-                self.robot.ik.solve(warm_start=True)
-                # self.draw_polytope_slice()
-                # self.draw_polygon()
-                if pylab.norm(self.robot.com - self.stance.com.p) < 0.02:
-                    self.handle.append(draw_point(robot.com, pointsize=5e-4))
-                    feasible_points.append(robot.com)
-                # self.handle.append(draw_point(self.stance.com.p))
-            feasible_2d = [array([p[0], p[1]]) for p in feasible_points]
-            hull = ConvexHull(feasible_2d)
-            vertices_2d = [feasible_2d[i] for i in hull.vertices]
-            z_avg = pylab.mean([p[2] for p in feasible_points])
-            vertices = [array([v[0], v[1], z_avg]) for v in vertices_2d]
-            self.handle.extend([draw_point(v) for v in vertices])
-            break
-        self.stance.com.set_pos(init_com)
-        self.stance.com.show()
-        self.robot.set_dof_values(q_init)
-        self.__com_target = None
 
 
 if __name__ == "__main__":
@@ -139,7 +104,6 @@ if __name__ == "__main__":
          robot.R_UINDEX, robot.R_ULITTLE])
 
     sim.set_viewer()
-    # sim.set_camera_left(x=0.2, y=4)
     sim.set_camera_transform(array([
         [-0.75318301, -0.33670976,  0.56510344, -1.27825475],
         [-0.65389426,  0.28962469, -0.69895625,  1.3535881],
@@ -149,20 +113,37 @@ if __name__ == "__main__":
 
     stance = Stance.from_json('jvrc1_ladder_climbing.json')
     stance.bind(robot)
-    # stance.com.hide()
+
     robot.ik.maximize_margins = True
     robot.ik.verbosity = 0
     robot.ik.solve(impr_stop=1e-3)
 
-    uncons_drawer = CoMPolygonDrawer(stance)
-    act_drawer = ActuationDependentPolytopeDrawer(robot, stance)
+    del robot.ik.tasks['left_hand_palm']
+    del robot.ik.tasks['right_hand_palm']
+    from pymanoid.tasks import AngleAxisContactTask
+    lh_task = AngleAxisContactTask(
+        robot, robot.left_hand, stance.left_hand, weight=1, gain=0.8)
+    rh_task = AngleAxisContactTask(
+        robot, robot.right_hand, stance.right_hand, weight=1, gain=0.8)
+    lh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
+    rh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
+    robot.ik.add(lh_task)
+    robot.ik.add(rh_task)
+
+    polygon_height = 1.5
+    uncons_drawer = CoMPolygonDrawer(stance, polygon_height, method="bretl")
+    # act_drawer = ActuationDependentPolytopeDrawer(robot, stance)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
+    geom_polygon = compute_geom_reachable_polygon(
+        robot, stance, stance.com.z, xlim=(0.0, 0.2), ylim=(-0.2, 0.2),)
+
     sim.schedule(robot.ik)
-    # sim.schedule_extra(polygon_drawer)
-    # sim.schedule_extra(polytope_drawer)
-    sim.schedule_extra(wrench_drawer)
+    # sim.schedule_extra(wrench_drawer)
     sim.start()
+
+    ada = ActuationDependentArea(robot, stance, polygon_height)
+    # ada.compute(working_set)
 
     if IPython.get_ipython() is None:
         IPython.embed()
