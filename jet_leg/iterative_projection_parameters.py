@@ -49,7 +49,7 @@ class IterativeProjectionParameters:
                                'FRICTION_AND_ACTUATION']
                                
         self.friction = 0.8
-        self.trunkMass = 85 #Kg
+        self.robotMass = 85 #Kg
         self.numberOfGenerators = 4
         
         
@@ -96,6 +96,7 @@ class IterativeProjectionParameters:
         return self.stanceFeet
         
     def getNormals(self):
+
         return self.normals
         
     def getConstraintModes(self):
@@ -108,7 +109,7 @@ class IterativeProjectionParameters:
         return self.numberOfGenerators
         
     def getTotalMass(self):
-        return self.trunkMass
+        return self.robotMass
         
     def getParamsFromRosDebugTopic(self, received_data):
         
@@ -191,44 +192,47 @@ class IterativeProjectionParameters:
                 
 
             if str(received_data.name[j]) == str("normalLFx"):
-                self.normal[0,0] = int(received_data.data[j])  
+                self.normals[0,0] = received_data.data[j]  
             if str(received_data.name[j]) == str("normalLFy"):
-                self.normal[0,1] = int(received_data.data[j])  
+                self.normals[0,1] = received_data.data[j] 
             if str(received_data.name[j]) == str("normalLFz"):
-                self.normal[0,2] = int(received_data.data[j])                  
+                self.normals[0,2] = received_data.data[j]                  
                                                  
             if str(received_data.name[j]) == str("normalRFx"):
-                self.normal[1,0] = int(received_data.data[j])  
+                self.normals[1,0] = received_data.data[j]
             if str(received_data.name[j]) == str("normalRFy"):
-                self.normal[1,1] = int(received_data.data[j])  
+                self.normals[1,1] = received_data.data[j] 
             if str(received_data.name[j]) == str("normalRFz"):
-                self.normal[1,2] = int(received_data.data[j])                  
+                self.normals[1,2] = received_data.data[j]                 
                                                  
             if str(received_data.name[j]) == str("normalLHx"):
-                self.normal[2,0] = int(received_data.data[j])  
+                self.normals[2,0] = received_data.data[j] 
             if str(received_data.name[j]) == str("normalLHy"):
-                self.normal[2,1] = int(received_data.data[j])  
+                self.normals[2,1] = received_data.data[j] 
             if str(received_data.name[j]) == str("normalLHz"):
-                self.normal[2,2] = int(received_data.data[j])                  
+                self.normals[2,2] = received_data.data[j]                
                                                  
             if str(received_data.name[j]) == str("normalRHx"):
-                self.normal[3,0] = int(received_data.data[j])  
+                self.normals[3,0] = received_data.data[j]  
             if str(received_data.name[j]) == str("normalRHy"):
-                self.normal[3,1] = int(received_data.data[j])  
+                self.normals[3,1] = received_data.data[j]  
             if str(received_data.name[j]) == str("normalRHz"):
-                self.normal[3,2] = int(received_data.data[j])                  
+                self.normals[3,2] = received_data.data[j]                  
                 
-            if str(received_data.name[j]) == str("trunkmass"):
-                self.trunkmass = int(received_data.data[j])  
+    
+            if str(received_data.name[j]) == str("robotMass"):
+                self.robotMass = received_data.data[j] 
            
             if str(received_data.name[j]) == str("muEstimate"):
-                self.friction = int(received_data.data[j]) 
+                self.friction = received_data.data[j]
 
             if str(received_data.name[j]) == str("roll"):
-                self.roll = int(received_data.data[j])              
+                self.roll = received_data.data[j]             
             if str(received_data.name[j]) == str("pitch"):
-                self.pitch = int(received_data.data[j])                 
-
+                self.pitch = received_data.data[j]               
+                
+          
+            
     def getFutureStanceFeet(self, received_data):
 
         num_of_elements = np.size(received_data.data)         
