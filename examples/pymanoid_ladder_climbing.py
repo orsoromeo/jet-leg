@@ -22,6 +22,7 @@ import IPython
 
 from numpy import array
 
+import numpy
 import pymanoid
 
 from pymanoid import Stance
@@ -172,9 +173,29 @@ if __name__ == "__main__":
     sim.start()
 
     ada = ActuationDependentArea(robot, stance)
-    working_set = sample_working_set(geom_polygon, "sample", 20)
-    actdep_area = ada.compute(working_set)
-    h3 = draw_polygon_at_height(actdep_area, polygon_height, color='b')
+    working_set = sample_working_set(geom_polygon, "sample", 5)
+
+    VARY_HEIGHTS = True
+    if not VARY_HEIGHTS:
+        actdep_area = ada.compute(working_set)
+        h3 = draw_polygon_at_height(actdep_area, polygon_height, color='b')
+    else:
+        all_points = []
+        dh = 0.02  # [m]
+        h3 = []
+        last_area = None
+        max_height = 0.88  # [m]
+        min_height = 0.7  # [m]
+        for height in numpy.arange(min_height, max_height, dh):
+            stance.com.set_z(height)
+            cur_area = ada.compute(working_set)
+            points = [[p[0], p[1], height] for p in cur_area]
+            all_points.extend(points)
+            if last_area is not None:
+                last_points = [[p[0], p[1], height - dh] for p in last_area]
+                h3.append(draw_polytope(points + last_points, color='b'))
+            last_area = cur_area
+        h3 = draw_polytope(all_points, color='b')  # we know it's convex
 
     if IPython.get_ipython() is None:
         IPython.embed()
