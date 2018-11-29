@@ -34,6 +34,7 @@ from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_geom_reachable_polygon
 from pymanoid_common import compute_local_actuation_dependent_polygon
 from pymanoid_common import draw_polygon_at_height
+from pymanoid_common import sample_working_set
 from pymanoid_common import set_torque_limits
 
 
@@ -88,6 +89,13 @@ if __name__ == "__main__":
     sim = pymanoid.Simulation(dt=0.03)
     robot = pymanoid.robots.JVRC1()
     set_torque_limits(robot)
+    robot.tau_max *= 0.7
+    robot.show_com()
+
+    __shape = (0.01, 0.2)
+    rungs = [
+        pymanoid.Contact(shape=__shape, pos=[0.2, 0., z], rpy=[0., -0.6, 0.])
+        for z in [0., 0.3, 0.6, 0.9, 1.2, 1.5, 1.8]]
 
     q_max = robot.q_max.copy()
     q_max[robot.CHEST_P] = 0
@@ -119,17 +127,29 @@ if __name__ == "__main__":
     robot.ik.verbosity = 0
     robot.ik.solve(impr_stop=1e-3)
 
-    del robot.ik.tasks['left_hand_palm']
-    del robot.ik.tasks['right_hand_palm']
     from pymanoid.tasks import AxisAngleContactTask
-    lh_task = AxisAngleContactTask(
-        robot, robot.left_hand, stance.left_hand, weight=1, gain=0.8)
-    rh_task = AxisAngleContactTask(
-        robot, robot.right_hand, stance.right_hand, weight=1, gain=0.8)
-    lh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
-    rh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
-    robot.ik.add(lh_task)
-    robot.ik.add(rh_task)
+    if False:
+        del robot.ik.tasks['left_hand_palm']
+        del robot.ik.tasks['right_hand_palm']
+        lh_task = AxisAngleContactTask(
+            robot, robot.left_hand, stance.left_hand, weight=1, gain=0.8)
+        rh_task = AxisAngleContactTask(
+            robot, robot.right_hand, stance.right_hand, weight=1, gain=0.8)
+        lh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
+        rh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
+        robot.ik.add(lh_task)
+        robot.ik.add(rh_task)
+    if False:
+        del robot.ik.tasks['left_foot_base']
+        del robot.ik.tasks['right_foot_base']
+        lf_task = AxisAngleContactTask(
+            robot, robot.left_foot, stance.left_foot, weight=1, gain=0.8)
+        rf_task = AxisAngleContactTask(
+            robot, robot.right_foot, stance.right_foot, weight=1, gain=0.8)
+        lf_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
+        rf_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
+        robot.ik.add(lf_task)
+        robot.ik.add(rf_task)
 
     uncons_polygon = stance.compute_static_equilibrium_polygon(method="bretl")
 
@@ -138,8 +158,8 @@ if __name__ == "__main__":
         geom_polygon = compute_geom_reachable_polygon(
             robot, stance, xlim=(0.0, 0.2), ylim=(-0.2, 0.2),)
     else:
-        x_min, x_max = -0.15, 0.00
-        y_min, y_max = -0.17, 0.17
+        x_min, x_max = -0.2, -0.15
+        y_min, y_max = -0.15, 0.15
         geom_polygon = [
             (x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)]
 
@@ -152,7 +172,7 @@ if __name__ == "__main__":
     sim.start()
 
     ada = ActuationDependentArea(robot, stance)
-    working_set = geom_polygon
+    working_set = sample_working_set(geom_polygon, "sample", 20)
     actdep_area = ada.compute(working_set)
     h3 = draw_polygon_at_height(actdep_area, polygon_height, color='b')
 

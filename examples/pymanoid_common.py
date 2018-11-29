@@ -312,8 +312,6 @@ class ActuationDependentArea(object):
 
     def compute(self, working_set, draw_height=None):
         assert len(working_set) > 0 and len(working_set[0]) == 2
-        if draw_height is None:
-            draw_height = self.stance.com.z
         for i_cur, p_cur in enumerate(working_set):
             p_cur = array(p_cur)
             A_voronoi, b_voronoi = [], []
@@ -346,9 +344,10 @@ class ActuationDependentArea(object):
                     [p_cur[0], p_cur[1], self.stance.com.z], color='g',
                     pointsize=5e-3))
             vertices = pypoman.compute_polytope_vertices(A, b)
-            self.polygons.append(draw_polygon(
-                [(v[0], v[1], draw_height) for v in vertices],
-                normal=[0, 0, 1], combined='b-#'))
+            if draw_height is not None:
+                self.polygons.append(draw_polygon(
+                    [(v[0], v[1], draw_height) for v in vertices],
+                    normal=[0, 0, 1], combined='b-#'))
             self.all_vertices.extend(vertices)
         return self.all_vertices
 
