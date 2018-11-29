@@ -21,7 +21,7 @@
 import pylab
 
 from numpy import arange, array, hstack, ones, vstack, zeros
-from numpy import cos, dot, sin, pi
+from numpy import cos, dot, sin, pi, sqrt
 from numpy import linspace, random
 from scipy.linalg import block_diag
 from scipy.spatial import ConvexHull
@@ -303,15 +303,17 @@ def set_torque_limits(robot):
 
 class ActuationDependentArea(object):
 
-    def __init__(self, robot, stance, draw_height):
+    def __init__(self, robot, stance):
         self.all_vertices = []
-        self.draw_height = draw_height
         self.polygons = []
         self.robot = robot
         self.sample_handles = []
         self.stance = stance
 
-    def compute(self, working_set):
+    def compute(self, working_set, draw_height=None):
+        assert len(working_set) > 0 and len(working_set[0]) == 2
+        if draw_height is None:
+            draw_height = self.stance.com.z
         for i_cur, p_cur in enumerate(working_set):
             p_cur = array(p_cur)
             A_voronoi, b_voronoi = [], []
@@ -336,28 +338,23 @@ class ActuationDependentArea(object):
             b = hstack([b_proj, b_voronoi])
             if (dot(A, p_cur) > b).any():
                 self.sample_handles.append(draw_point(
-                    [p_cur[0], p_cur[1], self.draw_height], color='r',
+                    [p_cur[0], p_cur[1], self.stance.com.z], color='r',
                     pointsize=5e-3))
                 continue
             else:
                 self.sample_handles.append(draw_point(
-                    [p_cur[0], p_cur[1], self.draw_height], color='g',
+                    [p_cur[0], p_cur[1], self.stance.com.z], color='g',
                     pointsize=5e-3))
             vertices = pypoman.compute_polytope_vertices(A, b)
             self.polygons.append(draw_polygon(
-                [(v[0], v[1], self.draw_height) for v in vertices],
+                [(v[0], v[1], draw_height) for v in vertices],
                 normal=[0, 0, 1], combined='b-#'))
             self.all_vertices.extend(vertices)
-
-    def draw_convex_hull(self):
-        self.hull = draw_polygon(
-            [(v[0], v[1], self.draw_height) for v in self.all_vertices],
-            normal=[0, 0, 1], combined='r-', linewidth=10)
+        return self.all_vertices
 
 
-def compute_geom_reachable_polygon(robot, stance, height, xlim, ylim):
+def compute_geom_reachable_polygon(robot, stance, xlim, ylim, draw=True):
     init_com = stance.com.p
-    stance.com.set_z(height)
     feasible_points = []
     handles = []
     points = generate_2d_grid(xlim, ylim, xres=4, yres=6)
@@ -368,14 +365,34 @@ def compute_geom_reachable_polygon(robot, stance, height, xlim, ylim):
         # self.draw_polytope_slice()
         # draw_polygon()
         if norm(robot.com - stance.com.p) < 0.02:
-            handles.append(draw_point(robot.com, pointsize=5e-3))
             feasible_points.append(robot.com)
+            if draw:
+                handles.append(draw_point(robot.com, pointsize=5e-3))
         # handle.append(draw_point(stance.com.p))
-    feasible_2d = [array([p[0], p[1]]) for p in feasible_points]
-    hull = ConvexHull(feasible_2d)
-    vertices_2d = [feasible_2d[i] for i in hull.vertices]
-    z_avg = pylab.mean([p[2] for p in feasible_points])
-    vertices = [array([v[0], v[1], z_avg]) for v in vertices_2d]
-    handles.extend([draw_point(v) for v in vertices])
+    feasible = [array([p[0], p[1]]) for p in feasible_points]
+    hull = ConvexHull(feasible)
+    vertices = [feasible[i] for i in hull.vertices]
+    if draw:
+        z_avg = pylab.mean([p[2] for p in feasible_points])
+        vertices_3d = [array([v[0], v[1], z_avg]) for v in vertices]
+        handles.extend([draw_point(v) for v in vertices_3d])
     stance.com.set_pos(init_com)
-    return handles
+    return vertices
+
+
+def draw_polygon_at_height(polygon, height, color='g'):
+    return draw_polygon(
+        [(v[0], v[1], height) for v in polygon],
+        normal=[0, 0, 1], combined='b-#', color=color)
+
+
+def sample_working_set(polygon, ws_type, nb_points):
+    if ws_type == "shrink":
+        working_set = shrink_polygon(
+            polygon, shrink_ratio=0.5, res=nb_points)
+    elif ws_type == "sample":
+        working_set = sample_points_from_polygon(polygon, nb_points)
+    else:  # WS_TYPE == "grid"
+        res = int(sqrt(nb_points))
+        working_set = grid_polygon(polygon, res=res)
+    return working_set

@@ -20,8 +20,6 @@
 
 import IPython
 
-from numpy import sqrt
-
 import pymanoid
 
 from pymanoid import Stance
@@ -32,14 +30,9 @@ from pymanoid.misc import norm
 from pymanoid_common import ActuationDependentArea
 from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_local_actuation_dependent_polygon
-from pymanoid_common import grid_polygon
-from pymanoid_common import sample_points_from_polygon
+from pymanoid_common import draw_polygon_at_height
+from pymanoid_common import sample_working_set
 from pymanoid_common import set_torque_limits
-from pymanoid_common import shrink_polygon
-
-
-WS_NB_POINTS = 50
-WS_TYPE = "grid"
 
 
 class COMSync(pymanoid.Process):
@@ -128,17 +121,10 @@ if __name__ == "__main__":
         robot, stance, polygon_height)
     wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
-    uncons_polygon_drawer = CoMPolygonDrawer(stance, polygon_height)
-    uncons_polygon_drawer.update()
-    uncons_vertices = uncons_polygon_drawer.vertices
-    if WS_TYPE == "shrink":
-        working_set = shrink_polygon(
-            uncons_vertices, shrink_ratio=0.5, res=WS_NB_POINTS)
-    elif WS_TYPE == "sample":
-        working_set = sample_points_from_polygon(uncons_vertices, WS_NB_POINTS)
-    else:  # WS_TYPE == "grid"
-        res = int(sqrt(WS_NB_POINTS))
-        working_set = grid_polygon(uncons_vertices, res=res)
+    uncons_polygon = stance.compute_static_equilibrium_polygon(method="cdd")
+    working_set = sample_working_set(uncons_polygon, "sample", 20)
+
+    h1 = draw_polygon_at_height(uncons_polygon, polygon_height, color='g')
 
     sim.schedule(robot.ik)
     sim.schedule_extra(com_sync)
@@ -147,8 +133,8 @@ if __name__ == "__main__":
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 
-    ada = ActuationDependentArea(robot, stance, polygon_height)
-    ada.compute(working_set)
+    ada = ActuationDependentArea(robot, stance)
+    actdep_area = ada.compute(working_set, draw_height=polygon_height)
 
     if IPython.get_ipython() is None:
         IPython.embed()

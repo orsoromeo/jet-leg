@@ -25,7 +25,7 @@ from numpy import array
 import pymanoid
 
 from pymanoid import Stance
-from pymanoid.gui import StaticEquilibriumWrenchDrawer
+# from pymanoid.gui import StaticEquilibriumWrenchDrawer
 from pymanoid.gui import draw_polygon, draw_polytope
 from pymanoid.misc import norm
 
@@ -33,6 +33,7 @@ from pymanoid_common import ActuationDependentArea
 from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_geom_reachable_polygon
 from pymanoid_common import compute_local_actuation_dependent_polygon
+from pymanoid_common import draw_polygon_at_height
 from pymanoid_common import set_torque_limits
 
 
@@ -130,20 +131,30 @@ if __name__ == "__main__":
     robot.ik.add(lh_task)
     robot.ik.add(rh_task)
 
-    polygon_height = 1.5
-    uncons_drawer = CoMPolygonDrawer(stance, polygon_height, method="bretl")
-    # act_drawer = ActuationDependentPolytopeDrawer(robot, stance)
-    wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
+    uncons_polygon = stance.compute_static_equilibrium_polygon(method="bretl")
 
-    geom_polygon = compute_geom_reachable_polygon(
-        robot, stance, stance.com.z, xlim=(0.0, 0.2), ylim=(-0.2, 0.2),)
+    CHECK_FULL_GEOM = False
+    if CHECK_FULL_GEOM:
+        geom_polygon = compute_geom_reachable_polygon(
+            robot, stance, xlim=(0.0, 0.2), ylim=(-0.2, 0.2),)
+    else:
+        x_min, x_max = -0.15, 0.00
+        y_min, y_max = -0.17, 0.17
+        geom_polygon = [
+            (x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)]
+
+    polygon_height = stance.com.z
+    h1 = draw_polygon_at_height(uncons_polygon, polygon_height, color='g')
+    h2 = draw_polygon_at_height(geom_polygon, polygon_height, color='m')
 
     sim.schedule(robot.ik)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 
-    ada = ActuationDependentArea(robot, stance, polygon_height)
-    # ada.compute(working_set)
+    ada = ActuationDependentArea(robot, stance)
+    working_set = geom_polygon
+    actdep_area = ada.compute(working_set)
+    h3 = draw_polygon_at_height(actdep_area, polygon_height, color='b')
 
     if IPython.get_ipython() is None:
         IPython.embed()
