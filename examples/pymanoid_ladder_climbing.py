@@ -120,10 +120,10 @@ if __name__ == "__main__":
 
     del robot.ik.tasks['left_hand_palm']
     del robot.ik.tasks['right_hand_palm']
-    from pymanoid.tasks import AngleAxisContactTask
-    lh_task = AngleAxisContactTask(
+    from pymanoid.tasks import AxisAngleContactTask
+    lh_task = AxisAngleContactTask(
         robot, robot.left_hand, stance.left_hand, weight=1, gain=0.8)
-    rh_task = AngleAxisContactTask(
+    rh_task = AxisAngleContactTask(
         robot, robot.right_hand, stance.right_hand, weight=1, gain=0.8)
     lh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
     rh_task.doc_mask = array([1., 1., 1., 1., 0.1, 1.])
