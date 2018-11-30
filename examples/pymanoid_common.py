@@ -29,7 +29,8 @@ from scipy.spatial import ConvexHull
 import pymanoid
 import pypoman
 
-from pymanoid.gui import draw_point, draw_polygon
+from pymanoid.gui import draw_horizontal_polygon
+from pymanoid.gui import draw_point, draw_polygon, draw_polytope
 from pymanoid.misc import norm
 from pymanoid.sim import gravity_const
 from pypoman import compute_chebyshev_center
@@ -309,13 +310,25 @@ class ActuationDependentArea(object):
         self.robot = robot
         self.sample_handles = []
         self.stance = stance
+        self.working_set = None
 
-    def compute(self, working_set, draw_height=None):
-        assert len(working_set) > 0 and len(working_set[0]) == 2
-        for i_cur, p_cur in enumerate(working_set):
+    def sample_working_set(self, polygon, ws_type, nb_points):
+        if ws_type == "shrink":
+            self.working_set = shrink_polygon(
+                polygon, shrink_ratio=0.5, res=nb_points)
+        elif ws_type == "sample":
+            self.working_set = sample_points_from_polygon(polygon, nb_points)
+        else:  # WS_TYPE == "grid"
+            res = int(sqrt(nb_points))
+            self.working_set = grid_polygon(polygon, res=res)
+
+    def compute(self, draw_height=None):
+        assert len(self.working_set) > 0 and len(self.working_set[0]) == 2
+        self.all_vertices = []
+        for i_cur, p_cur in enumerate(self.working_set):
             p_cur = array(p_cur)
             A_voronoi, b_voronoi = [], []
-            for i_other, p_other in enumerate(working_set):
+            for i_other, p_other in enumerate(self.working_set):
                 if i_other == i_cur:
                     continue
                 p_other = array(p_other)
@@ -351,6 +364,47 @@ class ActuationDependentArea(object):
             self.all_vertices.extend(vertices)
         return self.all_vertices
 
+    def draw_at_height(self, height):
+        """
+        Draw actuation-dependent CoM area.
+        """
+        if len(self.all_vertices):
+            self.compute(self.working_set)
+        return draw_horizontal_polygon(self.all_vertices, height, color='b')
+
+    def draw_volume(self, min_height, max_height, dh, hull=False):
+        """
+        Draw actuation-dependent CoM volume.
+
+        Parameters
+        ----------
+        min_height : scalar
+            Minimum CoM height in [m].
+        max_height : scalar
+            Maximum CoM height in [m].
+        dh : scalar, optional
+            Height step in [m].
+        hull : bool, optional
+            Return convex hull of all actuation-dependent areas.
+        """
+        all_points = []
+        handles = []
+        last_area = None
+        max_height = 0.88  # [m]
+        min_height = 0.7  # [m]
+        for height in arange(min_height, max_height, dh):
+            self.stance.com.set_z(height)
+            cur_area = self.compute()
+            points = [[p[0], p[1], height] for p in cur_area]
+            all_points.extend(points)
+            if last_area is not None:
+                last_points = [[p[0], p[1], height - dh] for p in last_area]
+                handles.append(draw_polytope(points + last_points, color='b'))
+            last_area = cur_area
+        if hull:
+            return draw_polytope(all_points, color='b')  # we know it's convex
+        return handles
+
 
 def compute_geom_reachable_polygon(robot, stance, xlim, ylim, draw=True):
     init_com = stance.com.p
@@ -377,21 +431,3 @@ def compute_geom_reachable_polygon(robot, stance, xlim, ylim, draw=True):
         handles.extend([draw_point(v) for v in vertices_3d])
     stance.com.set_pos(init_com)
     return vertices
-
-
-def draw_polygon_at_height(polygon, height, color='g'):
-    return draw_polygon(
-        [(v[0], v[1], height) for v in polygon],
-        normal=[0, 0, 1], combined='b-#', color=color)
-
-
-def sample_working_set(polygon, ws_type, nb_points):
-    if ws_type == "shrink":
-        working_set = shrink_polygon(
-            polygon, shrink_ratio=0.5, res=nb_points)
-    elif ws_type == "sample":
-        working_set = sample_points_from_polygon(polygon, nb_points)
-    else:  # WS_TYPE == "grid"
-        res = int(sqrt(nb_points))
-        working_set = grid_polygon(polygon, res=res)
-    return working_set

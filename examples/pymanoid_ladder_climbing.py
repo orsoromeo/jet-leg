@@ -22,11 +22,10 @@ import IPython
 
 from numpy import array
 
-import numpy
 import pymanoid
 
 from pymanoid import Stance
-# from pymanoid.gui import StaticEquilibriumWrenchDrawer
+from pymanoid.gui import draw_horizontal_polygon
 from pymanoid.gui import draw_polygon, draw_polytope
 from pymanoid.misc import norm
 
@@ -34,8 +33,6 @@ from pymanoid_common import ActuationDependentArea
 from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_geom_reachable_polygon
 from pymanoid_common import compute_local_actuation_dependent_polygon
-from pymanoid_common import draw_polygon_at_height
-from pymanoid_common import sample_working_set
 from pymanoid_common import set_torque_limits
 
 
@@ -165,37 +162,22 @@ if __name__ == "__main__":
             (x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)]
 
     polygon_height = stance.com.z
-    h1 = draw_polygon_at_height(uncons_polygon, polygon_height, color='g')
-    h2 = draw_polygon_at_height(geom_polygon, polygon_height, color='m')
+    h1 = draw_horizontal_polygon(uncons_polygon, polygon_height, color='g')
+    h2 = draw_horizontal_polygon(geom_polygon, polygon_height, color='m')
 
     sim.schedule(robot.ik)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 
     ada = ActuationDependentArea(robot, stance)
-    working_set = sample_working_set(geom_polygon, "sample", 5)
+    ada.sample_working_set(geom_polygon, "sample", 5)
 
     VARY_HEIGHTS = True
     if not VARY_HEIGHTS:
-        actdep_area = ada.compute(working_set)
-        h3 = draw_polygon_at_height(actdep_area, polygon_height, color='b')
-    else:
-        all_points = []
-        dh = 0.02  # [m]
-        h3 = []
-        last_area = None
-        max_height = 0.88  # [m]
-        min_height = 0.7  # [m]
-        for height in numpy.arange(min_height, max_height, dh):
-            stance.com.set_z(height)
-            cur_area = ada.compute(working_set)
-            points = [[p[0], p[1], height] for p in cur_area]
-            all_points.extend(points)
-            if last_area is not None:
-                last_points = [[p[0], p[1], height - dh] for p in last_area]
-                h3.append(draw_polytope(points + last_points, color='b'))
-            last_area = cur_area
-        h3 = draw_polytope(all_points, color='b')  # we know it's convex
+        h3 = ada.draw_at_height(polygon_height)
+    else:  # VARY_HEIGHTS
+        h3 = ada.draw_volume(
+            min_height=0.7, max_height=0.88, dh=0.02, hull=True)
 
     if IPython.get_ipython() is None:
         IPython.embed()
