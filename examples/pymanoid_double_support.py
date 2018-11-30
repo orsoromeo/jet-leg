@@ -20,11 +20,11 @@
 
 import IPython
 
+import numpy
 import pymanoid
 
 from pymanoid import Stance
 from pymanoid.gui import StaticEquilibriumWrenchDrawer
-from pymanoid.gui import draw_point
 
 from pymanoid_common import ActuationDependentArea
 from pymanoid_common import LocalActuationDependentPolygonDrawer
@@ -32,51 +32,25 @@ from pymanoid_common import draw_horizontal_polygon
 from pymanoid_common import set_torque_limits
 
 
-class COMSync(pymanoid.Process):
-
-    """
-    Update stance CoM from the GUI handle in polygon above the robot.
-
-    Parameters
-    ----------
-    stance : pymanoid.Stance
-        Contacts and COM position of the robot.
-    com_above : pymanoid.Cube
-        CoM handle in static-equilibrium polygon.
-    """
-
-    def __init__(self, robot, stance, com_above):
-        super(COMSync, self).__init__()
-        com_above.set_transparency(0.2)
-        self.com_above = com_above
-        self.stance = stance
-        self.robot_com = None
-        self.robot = robot
-
-    def on_tick(self, sim):
-        self.stance.com.set_x(self.com_above.x)
-        self.stance.com.set_y(self.com_above.y)
-        self.robot_com = draw_point(
-            [self.robot.com[0], self.robot.com[1], self.com_above.z],
-            color='m')
-
-
 if __name__ == "__main__":
     sim = pymanoid.Simulation(dt=0.03)
     robot = pymanoid.robots.JVRC1()
     set_torque_limits(robot)
-    sim.set_viewer()
-    sim.set_camera_top(x=0., y=0., z=2.8)
-    robot.set_transparency(0.25)
+    robot.show_com()
 
-    polygon_height = 2.  # [m]
-    com_above = pymanoid.Cube(0.02, [0.05, 0.04, polygon_height])
+    sim.set_viewer()
+    sim.set_camera_transform(numpy.array([
+        [-0.75166831, -0.47792323, 0.45451529, -0.99502754],
+        [-0.65817994, 0.49930137, -0.563469, 1.14903212],
+        [0.04235481, -0.72269463, -0.68986849, 2.35493684],
+        [0.,  0.,  0.,  1.]]))
+    robot.set_transparency(0.25)
 
     stance = Stance.from_json('jvrc1_double_support.json')
     stance.bind(robot)
-    stance.com.hide()
     robot.ik.solve()
 
+    polygon_height = stance.com.z  # [m]
     uncons_polygon = stance.compute_static_equilibrium_polygon(method="cdd")
     h1 = draw_horizontal_polygon(uncons_polygon, polygon_height, color='g')
 
@@ -85,17 +59,21 @@ if __name__ == "__main__":
 
     ada = ActuationDependentArea(robot, stance)
     ada.sample_working_set(uncons_polygon, "sample", 10)
-    h2 = ada.draw_at_height(polygon_height)
 
-    PLAY_WITH_LOCAL_POLYGONS = True
+    PLAY_WITH_LOCAL_POLYGONS = False
     if PLAY_WITH_LOCAL_POLYGONS:
-        com_sync = COMSync(robot, stance, com_above)
         local_polygon_drawer = LocalActuationDependentPolygonDrawer(
             robot, stance, polygon_height)
         wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
-        sim.schedule_extra(com_sync)
         sim.schedule_extra(local_polygon_drawer)
         sim.schedule_extra(wrench_drawer)
+
+    DRAW_VOLUME = True
+    if DRAW_VOLUME:
+        h2 = ada.draw_volume(
+            min_height=0.6, max_height=1.0, dh=0.03, hull=True)
+    else:  # not DRAW_VOLUME
+        h2 = ada.draw_at_height(polygon_height)
 
     if IPython.get_ipython() is None:
         IPython.embed()

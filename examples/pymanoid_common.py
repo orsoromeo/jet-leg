@@ -371,6 +371,11 @@ class ActuationDependentArea(object):
     def draw_at_height(self, height):
         """
         Draw actuation-dependent CoM area.
+
+        Parameters
+        ----------
+        height : scalar
+            Drawing height.
         """
         if len(self.all_vertices) < 1:
             self.compute(height)
@@ -394,8 +399,6 @@ class ActuationDependentArea(object):
         all_points = []
         handles = []
         last_area = None
-        max_height = 0.88  # [m]
-        min_height = 0.7  # [m]
         for height in arange(min_height, max_height, dh):
             self.stance.com.set_z(height)
             cur_area = self.compute()

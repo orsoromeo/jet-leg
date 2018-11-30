@@ -121,12 +121,12 @@ if __name__ == "__main__":
     ada = ActuationDependentArea(robot, stance)
     ada.sample_working_set(geom_polygon, "sample", 5)
 
-    VARY_HEIGHTS = True
-    if not VARY_HEIGHTS:
-        h3 = ada.draw_at_height(polygon_height)
-    else:  # VARY_HEIGHTS
+    DRAW_VOLUME = True
+    if DRAW_VOLUME:
         h3 = ada.draw_volume(
             min_height=0.7, max_height=0.88, dh=0.02, hull=True)
+    else:  # not DRAW_VOLUME
+        h3 = ada.draw_at_height(polygon_height)
 
     if IPython.get_ipython() is None:
         IPython.embed()
