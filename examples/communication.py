@@ -144,23 +144,9 @@ def talker():
 
     while not ros.is_shutdown():
 
-#        poly = []
-#        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         params.getFutureStanceFeet(p.hyq_rcf_debug)
-#        params.getCurrentStanceFeet(p.hyq_rcf_debug)
-#        total_mass = 85.
-#        mu = 0.8
-        #friction cone edges 
-        ng = 4
-#        axisZ= np.array([[0.0], [0.0], [1.0]])
-        ''' normals '''    
-#        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        normals = np.vstack([n1, n2, n3, n4])
 
         """ contact points """
         nc = params.numberOfContacts
@@ -170,11 +156,9 @@ def talker():
                            constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP])
-        #params.setContactNormals(normals)
-        #params.setFrictionCoefficient(mu)
+        ng = 4
         params.setNumberOfFrictionConesEdges(ng)
-        #params.setTotalMass(total_mass)
-        #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+
         IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
 
         p.send_actuation_polygons(name, p.fillPolygon(IAR), footHoldPlanning.option_index, footHoldPlanning.ack_optimization_done)
@@ -194,7 +178,7 @@ def talker():
                 vertices = np.hstack([vertices, vx])       
             forcePolygons = np.hstack([forcePolygons, vertices])      
             
-        p.send_force_polygons(name, forcePolygons)
+#        p.send_force_polygons(name, forcePolygons)
 
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'ONLY_FRICTION'
