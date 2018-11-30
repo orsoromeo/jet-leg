@@ -71,3 +71,20 @@ class ComputationalGeometry:
         h_rep6 = np.hstack([normal, known_term])
  
         return h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6
+        
+    def computePolygonArea(self, v_rep):
+        v_rep = np.transpose(v_rep)        
+#        print 'v rep ', v_rep
+        # Initialze area
+        area = 0.0;
+        num_of_vertices = np.size(v_rep,1)
+#        print num_of_vertices
+        #Calculate value of shoelace formula
+        j = num_of_vertices - 1;
+        for i in range(0, num_of_vertices):
+            area += (v_rep[0,j] + v_rep[0,i]) * (v_rep[1,j] - v_rep[1,i]); 
+            j = i;   #j is previous vertex to i
+    
+        # Return absolute value
+        return np.abs(area / 2.0)
+        

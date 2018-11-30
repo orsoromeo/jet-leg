@@ -31,6 +31,7 @@ from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.math_tools import Math
 from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 
+from jet_leg.foothold_planning import FootHoldPlanning
 
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
@@ -96,10 +97,12 @@ class HyQSim(threading.Thread):
         output.vertices = vertices
         self.pub_support_region.publish(output) 
         
-    def send_actuation_polygons(self, name, vertices):
+    def send_actuation_polygons(self, name, vertices, option_index, ack_optimization_done):
         output = Polygon3D()
 #        output.names = name
         output.vertices = vertices
+        output.option_index = option_index        
+        output.ack_optimization_done = ack_optimization_done
         self.pub_polygon.publish(output)    
     
     def send_simple_array(self, name, data):
@@ -107,9 +110,27 @@ class HyQSim(threading.Thread):
 #        output.name = name
         output.data = data
         self.pub_rcf_params.publish(output)
+    
+    def fillPolygon(self, polygon):
+        
+        num_actuation_vertices = np.size(polygon, 0)
+        point = Point()
+        point.x = polygon[0][0]
+        point.y = polygon[0][1]
+        point.z =  0.0 #is the centroidal frame
+        vertices1 = [point]
+        
+        for i in range(0, num_actuation_vertices):
+            point = Point()
+            point.x = polygon[i][0]
+            point.y = polygon[i][1]
+            point.z = 0.0 #is the centroidal frame
+            vertices1 = np.hstack([vertices1, point])
+        return vertices1
 
 def talker():
     compDyn = ComputationalDynamics()
+    footHoldPlanning = FootHoldPlanning()
     math = Math()
     p=HyQSim()
     p.start()
@@ -122,8 +143,7 @@ def talker():
     i = 0
 
     while not ros.is_shutdown():
-#        vertices1 = [point]
-#        actPolygons = [polygonVertex]
+
 #        poly = []
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
@@ -156,21 +176,8 @@ def talker():
         #params.setTotalMass(total_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
         IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
-        num_actuation_vertices = np.size(IAR, 0)
-        
-        point.x = IAR[0][0]
-        point.y = IAR[0][1]
-        point.z =  0.0 #is the centroidal frame
-        vertices1 = [point]
-        
-        for i in range(0, num_actuation_vertices):
-            point = Point()
-            point.x = IAR[i][0]
-            point.y = IAR[i][1]
-            point.z = 0.0 #is the centroidal frame
-            vertices1 = np.hstack([vertices1, point])
 
-        p.send_actuation_polygons(name, vertices1)
+        p.send_actuation_polygons(name, p.fillPolygon(IAR), footHoldPlanning.option_index, footHoldPlanning.ack_optimization_done)
     
         point.x = actuation_polygons_array[0][0][0]
         point.y = actuation_polygons_array[0][1][0]
@@ -188,7 +195,6 @@ def talker():
             forcePolygons = np.hstack([forcePolygons, vertices])      
             
         p.send_force_polygons(name, forcePolygons)
-    
 
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'ONLY_FRICTION'
@@ -202,22 +208,16 @@ def talker():
 #        params.setTrunkMass(trunk_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
         IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
-        num_support_vertices = np.size(IAR, 0)
-        point.x = IAR[0][0]
-        point.y = IAR[0][1]
-        point.z =  0.0
-        vertices2 = [point]
-        for i in range(0, num_support_vertices):
-            point = Point()
-            point.x = IAR[i][0]
-            point.y = IAR[i][1]
-            point.z = 0.0
-            vertices2 = np.hstack([vertices2, point])
-            
-#        print'vertices', vertices2        
-        p.send_support_region(name, vertices2)
         
+#        p.send_support_region(name, p.fillPolygon(IAR))
+        print 'opt started?', params.optimization_started
+        print 'ack opt done', footHoldPlanning.ack_optimization_done
+        if (params.optimization_started == False):
+            footHoldPlanning.ack_optimization_done = False
         
+        if params.optimization_started and not footHoldPlanning.ack_optimization_done :
+            footHoldPlanning.option_index = footHoldPlanning.optimizeFootHold(params)
+            footHoldPlanning.ack_optimization_done = True    
 
         time.sleep(0.2)
         i+=1

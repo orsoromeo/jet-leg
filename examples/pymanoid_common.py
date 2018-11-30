@@ -18,10 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with jet-leg. If not, see <http://www.gnu.org/licenses/>.
 
+import pylab
+
 from numpy import arange, array, hstack, ones, vstack, zeros
-from numpy import cos, dot, sin, pi
+from numpy import cos, dot, sin, pi, sqrt
 from numpy import linspace, random
 from scipy.linalg import block_diag
+from scipy.spatial import ConvexHull
 
 import pymanoid
 import pypoman
@@ -45,11 +48,12 @@ class CoMPolygonDrawer(pymanoid.Process):
         Contacts and COM position of the robot.
     """
 
-    def __init__(self, stance, height=1.5):
+    def __init__(self, stance, height=1.5, method="cdd"):
         super(CoMPolygonDrawer, self).__init__()
         self.contact_poses = {}
         self.handle = None
         self.height = height
+        self.method = method
         self.stance = stance
         self.vertices = None
         #
@@ -76,7 +80,7 @@ class CoMPolygonDrawer(pymanoid.Process):
         self.handle = None
         try:
             self.vertices = self.stance.compute_static_equilibrium_polygon(
-                method="cdd")
+                method=self.method)
             self.handle = draw_polygon(
                 [(x[0], x[1], self.height) for x in self.vertices],
                 normal=[0, 0, 1], color='g')
@@ -153,7 +157,28 @@ def compute_local_actuation_dependent_polygon(robot, contacts, method="bretl"):
         method=method, max_iter=100)
 
 
-def generate_point_grid(xlim, ylim, zlim, xres, yres):
+def generate_2d_grid(xlim, ylim, xres, yres):
+    assert xres % 2 == 0 and yres % 2 == 0
+    p = zeros(2)
+    dx = (xlim[1] - xlim[0]) / xres
+    dy = (ylim[1] - ylim[0]) / yres
+    x_avg = (xlim[1] + xlim[0]) / 2.
+    y_avg = (ylim[1] + ylim[0]) / 2.
+    dy_sign = +1
+    points = []
+    p[0] = x_avg - dx * (1 + xres / 2)
+    p[1] = y_avg - dy * dy_sign * (1 + yres / 2)
+    for _ in xrange(xres + 1):
+        p[0] += dx
+        for _ in xrange(yres + 1):
+            p[1] += dy * dy_sign
+            points.append(array([p[0], p[1]]))
+        p[1] += dy * dy_sign
+        dy_sign *= -1.
+    return points
+
+
+def generate_3d_grid(xlim, ylim, zlim, xres, yres):
     assert xres % 2 == 0 and yres % 2 == 0
     p = zeros(2)
     dx = (xlim[1] - xlim[0]) / xres
@@ -278,15 +303,15 @@ def set_torque_limits(robot):
 
 class ActuationDependentArea(object):
 
-    def __init__(self, robot, stance, draw_height):
+    def __init__(self, robot, stance):
         self.all_vertices = []
-        self.draw_height = draw_height
         self.polygons = []
         self.robot = robot
         self.sample_handles = []
         self.stance = stance
 
-    def compute(self, working_set):
+    def compute(self, working_set, draw_height=None):
+        assert len(working_set) > 0 and len(working_set[0]) == 2
         for i_cur, p_cur in enumerate(working_set):
             p_cur = array(p_cur)
             A_voronoi, b_voronoi = [], []
@@ -311,20 +336,62 @@ class ActuationDependentArea(object):
             b = hstack([b_proj, b_voronoi])
             if (dot(A, p_cur) > b).any():
                 self.sample_handles.append(draw_point(
-                    [p_cur[0], p_cur[1], self.draw_height], color='r',
+                    [p_cur[0], p_cur[1], self.stance.com.z], color='r',
                     pointsize=5e-3))
                 continue
             else:
                 self.sample_handles.append(draw_point(
-                    [p_cur[0], p_cur[1], self.draw_height], color='g',
+                    [p_cur[0], p_cur[1], self.stance.com.z], color='g',
                     pointsize=5e-3))
             vertices = pypoman.compute_polytope_vertices(A, b)
-            self.polygons.append(draw_polygon(
-                [(v[0], v[1], self.draw_height) for v in vertices],
-                normal=[0, 0, 1], combined='b-#'))
+            if draw_height is not None:
+                self.polygons.append(draw_polygon(
+                    [(v[0], v[1], draw_height) for v in vertices],
+                    normal=[0, 0, 1], combined='b-#'))
             self.all_vertices.extend(vertices)
+        return self.all_vertices
 
-    def draw_convex_hull(self):
-        self.hull = draw_polygon(
-            [(v[0], v[1], self.draw_height) for v in self.all_vertices],
-            normal=[0, 0, 1], combined='r-', linewidth=10)
+
+def compute_geom_reachable_polygon(robot, stance, xlim, ylim, draw=True):
+    init_com = stance.com.p
+    feasible_points = []
+    handles = []
+    points = generate_2d_grid(xlim, ylim, xres=4, yres=6)
+    for point in points:
+        stance.com.set_x(init_com[0] + point[0])
+        stance.com.set_y(init_com[1] + point[1])
+        robot.ik.solve(warm_start=True)
+        # self.draw_polytope_slice()
+        # draw_polygon()
+        if norm(robot.com - stance.com.p) < 0.02:
+            feasible_points.append(robot.com)
+            if draw:
+                handles.append(draw_point(robot.com, pointsize=5e-3))
+        # handle.append(draw_point(stance.com.p))
+    feasible = [array([p[0], p[1]]) for p in feasible_points]
+    hull = ConvexHull(feasible)
+    vertices = [feasible[i] for i in hull.vertices]
+    if draw:
+        z_avg = pylab.mean([p[2] for p in feasible_points])
+        vertices_3d = [array([v[0], v[1], z_avg]) for v in vertices]
+        handles.extend([draw_point(v) for v in vertices_3d])
+    stance.com.set_pos(init_com)
+    return vertices
+
+
+def draw_polygon_at_height(polygon, height, color='g'):
+    return draw_polygon(
+        [(v[0], v[1], height) for v in polygon],
+        normal=[0, 0, 1], combined='b-#', color=color)
+
+
+def sample_working_set(polygon, ws_type, nb_points):
+    if ws_type == "shrink":
+        working_set = shrink_polygon(
+            polygon, shrink_ratio=0.5, res=nb_points)
+    elif ws_type == "sample":
+        working_set = sample_points_from_polygon(polygon, nb_points)
+    else:  # WS_TYPE == "grid"
+        res = int(sqrt(nb_points))
+        working_set = grid_polygon(polygon, res=res)
+    return working_set

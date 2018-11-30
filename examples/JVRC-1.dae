@@ -4259,7 +4259,7 @@
 				<technique profile="OpenRAVE">
 					<frame_origin link="kmodel1/link0"/>
 					<frame_tip link="kmodel1/link6">
-						<translate>0 0 -0.10</translate>
+						<translate>0.071 0 -0.10</translate>
 						<rotate>1 0 0 0</rotate>
 					</frame_tip>
 				</technique>
@@ -4276,7 +4276,7 @@
 			<extra name="left_foot_tip" type="manipulator">
 				<technique profile="OpenRAVE">
 					<frame_origin link="kmodel1/link0"/>
-					<frame_tip link="kmodel1/link11">
+					<frame_tip link="kmodel1/link12">
 						<translate>0.1 0 -0.105</translate>
 						<rotate>1 0 0 0</rotate>
 					</frame_tip>
@@ -4286,7 +4286,7 @@
 				<technique profile="OpenRAVE">
 					<frame_origin link="kmodel1/link0"/>
 					<frame_tip link="kmodel1/link12">
-						<translate>0 0 -0.10</translate>
+						<translate>0.071 0 -0.10</translate>
 						<rotate>1 0 0 0</rotate>
 					</frame_tip>
 				</technique>
@@ -4294,7 +4294,7 @@
 			<extra name="left_foot_heel" type="manipulator">
 				<technique profile="OpenRAVE">
 					<frame_origin link="kmodel1/link0"/>
-					<frame_tip link="kmodel1/link11">
+					<frame_tip link="kmodel1/link12">
 						<translate>-0.08 0 -0.105</translate>
 						<rotate>1 0 0 0</rotate>
 					</frame_tip>
