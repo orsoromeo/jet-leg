@@ -87,19 +87,19 @@ class HyQSim(threading.Thread):
 
     def send_force_polygons(self, name, polygons):
         output = LegsPolygons()
-        output.names = name
+#        output.names = name
         output.polygons = polygons
         self.pub_force_polygons.publish(output) 
         
     def send_support_region(self, name, vertices):
         output = Polygon3D()
-        output.names = name
+#        output.names = name
         output.vertices = vertices
         self.pub_support_region.publish(output) 
         
     def send_actuation_polygons(self, name, vertices, option_index, ack_optimization_done):
         output = Polygon3D()
-        output.names = name
+#        output.names = name
         output.vertices = vertices
         output.option_index = option_index        
         output.ack_optimization_done = ack_optimization_done
@@ -107,7 +107,7 @@ class HyQSim(threading.Thread):
     
     def send_simple_array(self, name, data):
         output = SimpleDoubleArray()
-        output.name = name
+#        output.name = name
         output.data = data
         self.pub_rcf_params.publish(output)
     
@@ -138,29 +138,15 @@ def talker():
     name = "Actuation_region"
     point = Point()
     polygonVertex = Point()
-    actPolygon = Polygon3D()
+    polygon = Polygon3D()
     params = IterativeProjectionParameters()
     i = 0
 
     while not ros.is_shutdown():
 
-#        poly = []
-#        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         params.getFutureStanceFeet(p.hyq_rcf_debug)
-#        params.getCurrentStanceFeet(p.hyq_rcf_debug)
-#        total_mass = 85.
-#        mu = 0.8
-        #friction cone edges 
-        ng = 4
-#        axisZ= np.array([[0.0], [0.0], [1.0]])
-        ''' normals '''    
-#        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-#        normals = np.vstack([n1, n2, n3, n4])
 
         """ contact points """
         nc = params.numberOfContacts
@@ -170,32 +156,29 @@ def talker():
                            constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP])
-        #params.setContactNormals(normals)
-        #params.setFrictionCoefficient(mu)
+        ng = 4
         params.setNumberOfFrictionConesEdges(ng)
-        #params.setTotalMass(total_mass)
-        #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+
         IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
-        
+
         p.send_actuation_polygons(name, p.fillPolygon(IAR), footHoldPlanning.option_index, footHoldPlanning.ack_optimization_done)
-
-           
-
-#FORCE POLYGON  
-#        actPolygons = [polygonVertex]  
-#        poly = [actPolygon]
-#        for i in range(0, nc):
-#            actPolygons = [polygonVertex]            
-#            for j in range(0,7):
-#                vx = Point()
-##                print 'act', actuation_polygons_array[i][0][j]
-#                vx.x = actuation_polygons_array[i][0][j]
-#                vx.y = actuation_polygons_array[i][1][j]
-#                vx.z = actuation_polygons_array[i][2][j]
-##                print vx
-#                actPolygons = np.hstack([actPolygons, vx])          
-#            poly = np.hstack([poly, actPolygons])  
-#        p.send_force_polygons(name, poly)
+    
+        point.x = actuation_polygons_array[0][0][0]
+        point.y = actuation_polygons_array[0][1][0]
+        point.z = actuation_polygons_array[0][2][0]
+        
+        forcePolygons = [polygon]
+        for i in range(0,nc):
+            vertices = [point]
+            for j in range(0,7):                
+                vx = Point()
+                vx.x = actuation_polygons_array[i][0][j]
+                vx.y = actuation_polygons_array[i][1][j]
+                vx.z = actuation_polygons_array[i][2][j]
+                vertices = np.hstack([vertices, vx])       
+            forcePolygons = np.hstack([forcePolygons, vertices])      
+            
+#        p.send_force_polygons(name, forcePolygons)
 
 
 
