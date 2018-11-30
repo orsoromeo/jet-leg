@@ -26,61 +26,10 @@ import pymanoid
 
 from pymanoid import Stance
 from pymanoid.gui import draw_horizontal_polygon
-from pymanoid.gui import draw_polygon, draw_polytope
-from pymanoid.misc import norm
 
 from pymanoid_common import ActuationDependentArea
-from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_geom_reachable_polygon
-from pymanoid_common import compute_local_actuation_dependent_polygon
 from pymanoid_common import set_torque_limits
-
-
-class ActuationDependentPolytopeDrawer(CoMPolygonDrawer):
-
-    """
-    Draw the static-equilibrium polygon of a contact set under instantaneous
-    actuation constraints.
-
-    Parameters
-    ----------
-    stance : Stance
-        Contacts and COM position of the robot.
-    """
-
-    def __init__(self, robot, stance):
-        self.last_com = robot.com
-        self.robot = robot
-        self.last_vertices = None
-        # parent constructor is called after
-        super(ActuationDependentPolytopeDrawer, self).__init__(
-            stance)
-
-    def on_tick(self, sim):
-        if norm(self.robot.com - self.last_com) > 1e-2:
-            self.last_com = self.robot.com
-            self.update_handle()
-        super(ActuationDependentPolytopeDrawer, self).on_tick(sim)
-
-    def draw_polytope_slice(self):
-        vertices_2d = compute_local_actuation_dependent_polygon(
-            self.robot, self.stance)
-        vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
-        if self.last_vertices is not None:
-            self.handle.append(draw_polytope(
-                self.last_vertices + vertices, color=[0.3, 0.6, 0.6, 0.6]))
-        self.last_vertices = vertices
-
-    def draw_polygon(self):
-        vertices_2d = compute_local_actuation_dependent_polygon(
-            self.robot, self.stance)
-        vertices = [(x[0], x[1], robot.com[2]) for x in vertices_2d]
-        self.handle.append(draw_polygon(
-            vertices, normal=[0, 0, 1], color=[0.3, 0.3, 0.6, 0.5]))
-
-    def update_handle(self):
-        self.handle = []
-        self.last_vertices = None
 
 
 if __name__ == "__main__":

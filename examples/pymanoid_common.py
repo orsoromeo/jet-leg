@@ -318,7 +318,7 @@ class ActuationDependentArea(object):
                 polygon, shrink_ratio=0.5, res=nb_points)
         elif ws_type == "sample":
             self.working_set = sample_points_from_polygon(polygon, nb_points)
-        else:  # WS_TYPE == "grid"
+        elif ws_type == "grid":
             res = int(sqrt(nb_points))
             self.working_set = grid_polygon(polygon, res=res)
 
@@ -347,20 +347,19 @@ class ActuationDependentArea(object):
             A_proj, b_proj = compute_polytope_halfspaces(proj_vertices)
             A = vstack([A_proj, A_voronoi])
             b = hstack([b_proj, b_voronoi])
-            if (dot(A, p_cur) > b).any():
+            if draw_height is not None and (dot(A, p_cur) > b).any():
                 self.sample_handles.append(draw_point(
-                    [p_cur[0], p_cur[1], self.stance.com.z], color='r',
+                    [p_cur[0], p_cur[1], draw_height], color='r',
                     pointsize=5e-3))
                 continue
-            else:
+            elif draw_height is not None:
                 self.sample_handles.append(draw_point(
-                    [p_cur[0], p_cur[1], self.stance.com.z], color='g',
+                    [p_cur[0], p_cur[1], draw_height], color='g',
                     pointsize=5e-3))
             vertices = pypoman.compute_polytope_vertices(A, b)
             if draw_height is not None:
-                self.polygons.append(draw_polygon(
-                    [(v[0], v[1], draw_height) for v in vertices],
-                    normal=[0, 0, 1], combined='b-#'))
+                self.polygons.append(draw_horizontal_polygon(
+                    vertices, draw_height, combined='b-#'))
             self.all_vertices.extend(vertices)
         return self.all_vertices
 
@@ -368,8 +367,8 @@ class ActuationDependentArea(object):
         """
         Draw actuation-dependent CoM area.
         """
-        if len(self.all_vertices):
-            self.compute(self.working_set)
+        if len(self.all_vertices) < 1:
+            self.compute(height)
         return draw_horizontal_polygon(self.all_vertices, height, color='b')
 
     def draw_volume(self, min_height, max_height, dh, hull=False):

@@ -23,15 +23,14 @@ import IPython
 import pymanoid
 
 from pymanoid import Stance
-from pymanoid.gui import StaticEquilibriumWrenchDrawer
+# from pymanoid.gui import StaticEquilibriumWrenchDrawer
 from pymanoid.gui import draw_point, draw_polygon
 from pymanoid.misc import norm
 
 from pymanoid_common import ActuationDependentArea
 from pymanoid_common import CoMPolygonDrawer
 from pymanoid_common import compute_local_actuation_dependent_polygon
-from pymanoid_common import draw_polygon_at_height
-from pymanoid_common import sample_working_set
+from pymanoid_common import draw_horizontal_polygon
 from pymanoid_common import set_torque_limits
 
 
@@ -116,25 +115,23 @@ if __name__ == "__main__":
     stance.com.hide()
     robot.ik.solve()
 
-    com_sync = COMSync(robot, stance, com_above)
+    # com_sync = COMSync(robot, stance, com_above)
     local_polygon_drawer = LocalActuationDependentPolygonDrawer(
         robot, stance, polygon_height)
-    wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
+    # wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
 
     uncons_polygon = stance.compute_static_equilibrium_polygon(method="cdd")
-    working_set = sample_working_set(uncons_polygon, "sample", 20)
-
-    h1 = draw_polygon_at_height(uncons_polygon, polygon_height, color='g')
+    h1 = draw_horizontal_polygon(uncons_polygon, polygon_height, color='g')
 
     sim.schedule(robot.ik)
-    sim.schedule_extra(com_sync)
-    # sim.schedule_extra(uncons_polygon_drawer)
+    # sim.schedule_extra(com_sync)
     sim.schedule_extra(local_polygon_drawer)
     # sim.schedule_extra(wrench_drawer)
     sim.start()
 
     ada = ActuationDependentArea(robot, stance)
-    actdep_area = ada.compute(working_set, draw_height=polygon_height)
+    ada.sample_working_set(uncons_polygon, "sample", 20)
+    h2 = ada.draw_at_height(polygon_height)
 
     if IPython.get_ipython() is None:
         IPython.embed()
