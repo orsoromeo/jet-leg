@@ -38,57 +38,6 @@ from pypoman import compute_polytope_halfspaces
 from pypoman import project_polytope
 
 
-class CoMPolygonDrawer(pymanoid.Process):
-
-    """
-    Draw the static-equilibrium polygon of a contact set.
-
-    Parameters
-    ----------
-    stance : Stance
-        Contacts and COM position of the robot.
-    """
-
-    def __init__(self, stance, height=1.5, method="cdd"):
-        super(CoMPolygonDrawer, self).__init__()
-        self.contact_poses = {}
-        self.handle = None
-        self.height = height
-        self.method = method
-        self.stance = stance
-        self.vertices = None
-        #
-        self.update_contact_poses()
-        self.update_handle()
-
-    def on_tick(self, sim):
-        if self.handle is None:
-            self.update_handle()
-        for contact in self.stance.contacts:
-            if norm(contact.pose - self.contact_poses[contact.name]) > 1e-10:
-                self.update()
-                break
-
-    def update(self):
-        self.update_contact_poses()
-        self.update_handle()
-
-    def update_contact_poses(self):
-        for contact in self.stance.contacts:
-            self.contact_poses[contact.name] = contact.pose
-
-    def update_handle(self):
-        self.handle = None
-        try:
-            self.vertices = self.stance.compute_static_equilibrium_polygon(
-                method=self.method)
-            self.handle = draw_polygon(
-                [(x[0], x[1], self.height) for x in self.vertices],
-                normal=[0, 0, 1], color='g')
-        except Exception as e:
-            print("CoMPolygonDrawer: {}".format(e))
-
-
 def compute_local_actuation_dependent_polygon(robot, contacts, method="bretl"):
     """
     Compute constraint matrices of the problem:
@@ -253,7 +202,7 @@ def sample_points_from_polygon(vertices, nb_points):
     return points
 
 
-def grid_polygon(vertices, res=None, xres=None, yres=None):
+def sample_grid_from_polygon(vertices, res=None, xres=None, yres=None):
     xres = res if xres is None else xres
     yres = res if yres is None else yres
     A, b = compute_polytope_halfspaces(vertices)
@@ -302,6 +251,62 @@ def set_torque_limits(robot):
     robot.tau_max[robot.ROT_Y] = 1000
 
 
+class LocalActuationDependentPolygonDrawer(pymanoid.Process):
+
+    """
+    Draw the static-equilibrium polygon of a contact set.
+
+    Parameters
+    ----------
+    stance : Stance
+        Contacts and COM position of the robot.
+    """
+
+    def __init__(self, robot, stance, height, method="bretl"):
+        super(LocalActuationDependentPolygonDrawer, self).__init__()
+        self.handle = None
+        self.height = height
+        self.last_com = robot.com
+        self.method = method
+        self.robot = robot
+        self.stance = stance
+        self.vertices = None
+        #
+        self.update_handle()
+
+    def on_tick(self, sim):
+        if norm(self.robot.com - self.last_com) > 1e-2:
+            self.last_com = self.robot.com
+            self.update_polygon()
+        if self.handle is None:
+            self.update_handle()
+
+    def update(self):
+        self.update_handle()
+
+    def update_polygon(self):
+        self.handle = None
+        try:
+            vertices = compute_local_actuation_dependent_polygon(
+                self.robot, self.stance)
+            self.handle = draw_polygon(
+                [(x[0], x[1], self.height) for x in vertices],
+                normal=[0, 0, 1], color='m')
+        except Exception as e:
+            print("ActuationDependentPolygonDrawer: {}".format(e))
+
+    def update_handle(self):
+        self.handle = None
+        try:
+            self.vertices = self.stance.compute_static_equilibrium_polygon(
+                method=self.method)
+            self.handle = draw_polygon(
+                [(x[0], x[1], self.height) for x in self.vertices],
+                normal=[0, 0, 1], color='g')
+        except Exception as e:
+            print("CoMPolygonDrawer: {}".format(e))
+
+
 class ActuationDependentArea(object):
 
     def __init__(self, robot, stance):
@@ -320,7 +325,7 @@ class ActuationDependentArea(object):
             self.working_set = sample_points_from_polygon(polygon, nb_points)
         elif ws_type == "grid":
             res = int(sqrt(nb_points))
-            self.working_set = grid_polygon(polygon, res=res)
+            self.working_set = sample_grid_from_polygon(polygon, res=res)
 
     def compute(self, draw_height=None):
         assert len(self.working_set) > 0 and len(self.working_set[0]) == 2

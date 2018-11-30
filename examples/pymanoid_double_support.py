@@ -23,13 +23,11 @@ import IPython
 import pymanoid
 
 from pymanoid import Stance
-# from pymanoid.gui import StaticEquilibriumWrenchDrawer
-from pymanoid.gui import draw_point, draw_polygon
-from pymanoid.misc import norm
+from pymanoid.gui import StaticEquilibriumWrenchDrawer
+from pymanoid.gui import draw_point
 
 from pymanoid_common import ActuationDependentArea
-from pymanoid_common import CoMPolygonDrawer
-from pymanoid_common import compute_local_actuation_dependent_polygon
+from pymanoid_common import LocalActuationDependentPolygonDrawer
 from pymanoid_common import draw_horizontal_polygon
 from pymanoid_common import set_torque_limits
 
@@ -63,42 +61,6 @@ class COMSync(pymanoid.Process):
             color='m')
 
 
-class LocalActuationDependentPolygonDrawer(CoMPolygonDrawer):
-
-    """
-    Draw the static-equilibrium polygon of a contact set.
-
-    Parameters
-    ----------
-    stance : Stance
-        Contacts and COM position of the robot.
-    """
-
-    def __init__(self, robot, stance, height):
-        self.last_com = robot.com
-        self.robot = robot
-        # parent constructor is called after
-        super(LocalActuationDependentPolygonDrawer, self).__init__(
-            stance, height)
-
-    def on_tick(self, sim):
-        if norm(self.robot.com - self.last_com) > 1e-2:
-            self.last_com = self.robot.com
-            self.update_polygon()
-        super(LocalActuationDependentPolygonDrawer, self).on_tick(sim)
-
-    def update_polygon(self):
-        self.handle = None
-        try:
-            vertices = compute_local_actuation_dependent_polygon(
-                self.robot, self.stance)
-            self.handle = draw_polygon(
-                [(x[0], x[1], self.height) for x in vertices],
-                normal=[0, 0, 1], color='m')
-        except Exception as e:
-            print("ActuationDependentPolygonDrawer: {}".format(e))
-
-
 if __name__ == "__main__":
     sim = pymanoid.Simulation(dt=0.03)
     robot = pymanoid.robots.JVRC1()
@@ -115,23 +77,25 @@ if __name__ == "__main__":
     stance.com.hide()
     robot.ik.solve()
 
-    # com_sync = COMSync(robot, stance, com_above)
-    local_polygon_drawer = LocalActuationDependentPolygonDrawer(
-        robot, stance, polygon_height)
-    # wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
-
     uncons_polygon = stance.compute_static_equilibrium_polygon(method="cdd")
     h1 = draw_horizontal_polygon(uncons_polygon, polygon_height, color='g')
 
     sim.schedule(robot.ik)
-    # sim.schedule_extra(com_sync)
-    sim.schedule_extra(local_polygon_drawer)
-    # sim.schedule_extra(wrench_drawer)
     sim.start()
 
     ada = ActuationDependentArea(robot, stance)
-    ada.sample_working_set(uncons_polygon, "sample", 20)
+    ada.sample_working_set(uncons_polygon, "sample", 10)
     h2 = ada.draw_at_height(polygon_height)
+
+    PLAY_WITH_LOCAL_POLYGONS = True
+    if PLAY_WITH_LOCAL_POLYGONS:
+        com_sync = COMSync(robot, stance, com_above)
+        local_polygon_drawer = LocalActuationDependentPolygonDrawer(
+            robot, stance, polygon_height)
+        wrench_drawer = StaticEquilibriumWrenchDrawer(stance)
+        sim.schedule_extra(com_sync)
+        sim.schedule_extra(local_polygon_drawer)
+        sim.schedule_extra(wrench_drawer)
 
     if IPython.get_ipython() is None:
         IPython.embed()
