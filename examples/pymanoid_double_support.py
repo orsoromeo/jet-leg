@@ -58,7 +58,7 @@ if __name__ == "__main__":
     sim.start()
 
     ada = ActuationDependentArea(robot, stance)
-    ada.sample_working_set(uncons_polygon, "sample", 10)
+    ada.sample_working_set(uncons_polygon, "sample", 20)
 
     PLAY_WITH_LOCAL_POLYGONS = False
     if PLAY_WITH_LOCAL_POLYGONS:
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     DRAW_VOLUME = True
     if DRAW_VOLUME:
         h2 = ada.draw_volume(
-            min_height=0.6, max_height=1.0, dh=0.03, hull=True)
+            min_height=0.5, max_height=1.0, dh=0.05, hull=True)
     else:  # not DRAW_VOLUME
         h2 = ada.draw_at_height(polygon_height)
 
