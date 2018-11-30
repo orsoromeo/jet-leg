@@ -86,25 +86,25 @@ class HyQSim(threading.Thread):
 
     def send_force_polygons(self, name, polygons):
         output = LegsPolygons()
-        output.names = name
+#        output.names = name
         output.polygons = polygons
         self.pub_force_polygons.publish(output) 
         
     def send_support_region(self, name, vertices):
         output = Polygon3D()
-        output.names = name
+#        output.names = name
         output.vertices = vertices
         self.pub_support_region.publish(output) 
         
     def send_actuation_polygons(self, name, vertices):
         output = Polygon3D()
-        output.names = name
+#        output.names = name
         output.vertices = vertices
         self.pub_polygon.publish(output)    
     
     def send_simple_array(self, name, data):
         output = SimpleDoubleArray()
-        output.name = name
+#        output.name = name
         output.data = data
         self.pub_rcf_params.publish(output)
 
@@ -117,13 +117,13 @@ def talker():
     name = "Actuation_region"
     point = Point()
     polygonVertex = Point()
-    actPolygon = Polygon3D()
+    polygon = Polygon3D()
     params = IterativeProjectionParameters()
     i = 0
 
     while not ros.is_shutdown():
-        vertices1 = [point]
-        actPolygons = [polygonVertex]
+#        vertices1 = [point]
+#        actPolygons = [polygonVertex]
 #        poly = []
 #        print("Time: " + str(i*0.004) + "s and Simulation time: " + str(p.get_sim_time()/60))
         p.get_sim_wbs()
@@ -170,22 +170,25 @@ def talker():
             point.z = 0.0 #is the centroidal frame
             vertices1 = np.hstack([vertices1, point])
 
-        poly = [actPolygon]
-        for i in range(0, nc):
-            actPolygons = [polygonVertex]            
-            for j in range(0,7):
+        p.send_actuation_polygons(name, vertices1)
+    
+        point.x = actuation_polygons_array[0][0][0]
+        point.y = actuation_polygons_array[0][1][0]
+        point.z = actuation_polygons_array[0][2][0]
+        
+        forcePolygons = [polygon]
+        for i in range(0,nc):
+            vertices = [point]
+            for j in range(0,7):                
                 vx = Point()
-#                print 'act', actuation_polygons_array[i][0][j]
                 vx.x = actuation_polygons_array[i][0][j]
                 vx.y = actuation_polygons_array[i][1][j]
                 vx.z = actuation_polygons_array[i][2][j]
-#                print vx
-                actPolygons = np.hstack([actPolygons, vx])          
-            poly = np.hstack([poly, actPolygons])  
+                vertices = np.hstack([vertices, vx])       
+            forcePolygons = np.hstack([forcePolygons, vertices])      
             
-        p.send_actuation_polygons(name, vertices1)
-        
-#        p.send_force_polygons(name, poly)
+        p.send_force_polygons(name, forcePolygons)
+    
 
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'ONLY_FRICTION'

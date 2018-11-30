@@ -39,10 +39,10 @@ ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 
-constraint_mode_IP = ['ONLY_ACTUATION',
-                      'ONLY_ACTUATION',
-                      'ONLY_ACTUATION',
-                      'ONLY_ACTUATION']
+constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION']
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
