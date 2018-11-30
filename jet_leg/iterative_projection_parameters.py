@@ -79,7 +79,7 @@ class IterativeProjectionParameters:
         
     def setActiveContacts(self, activeContacts):
         self.stanceFeet = activeContacts
-        print self.stanceFeet
+        #print self.stanceFeet
         
     def setContactNormals(self, normals):
         self.normals = normals
@@ -201,7 +201,7 @@ class IterativeProjectionParameters:
                                         [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)), np.subtract(self.footPosLH, self.comPositionBF))],
                                             [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)),np.subtract(self.footPosRH, self.comPositionBF))]])
 
-            self.contactsBF = np.array([ self.footPosRF,self.footPosLF,self.footPosLH, self.footPosRH]) 
+            self.contactsBF = np.array([ self.footPosLF,self.footPosRF,self.footPosLH, self.footPosRH]) 
                 
 
             if str(received_data.name[j]) == str("normalLFx"):
@@ -307,8 +307,7 @@ class IterativeProjectionParameters:
                 self.stanceFeet[2] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RH"):
                 self.stanceFeet[3] = int(received_data.data[j])  
-                
-        self.setActiveContacts(self.stanceFeet)
+              
         self.numberOfContacts = np.sum(self.stanceFeet)
         
     def getCurrentStanceFeet(self, received_data):
@@ -344,6 +343,6 @@ class IterativeProjectionParameters:
             else:
                 self.stanceFeet[3] = 0
             
-        self.setActiveContacts(self.stanceFeet)
+ 
         self.numberOfContacts = np.sum(self.stanceFeet)
 

@@ -53,13 +53,13 @@ class ComputationalDynamics():
     def setup_iterative_projection(self, iterative_projection_params, saturate_normal_force):
         
         stanceLegs = iterative_projection_params.getStanceFeet()
+   
         contacts = iterative_projection_params.getContactsPosBF()
         constraint_mode = iterative_projection_params.getConstraintModes()
         
         ''' parameters to be tuned'''
         g = 9.81
         contactsNumber = np.sum(stanceLegs)
-        print 'num',contactsNumber
         
         # Unprojected state is:
         #
@@ -77,10 +77,13 @@ class ComputationalDynamics():
                 stanceIndex = np.hstack([stanceIndex, iter])
             else:
                 swingIndex = iter
-                
+        
+        
+        
         for j in range(0,contactsNumber):
-#            print 'iter',j, int(stanceIndex[j])
+           
             r = contacts[int(stanceIndex[j]),:]
+           
             graspMatrix = self.getGraspMatrix(r)[:,0:3]
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])

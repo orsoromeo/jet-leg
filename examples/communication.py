@@ -197,6 +197,9 @@ def talker():
 #            poly = np.hstack([poly, actPolygons])  
 #        p.send_force_polygons(name, poly)
 
+
+
+        #SUPPORT REGION
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'ONLY_FRICTION'
         params.setConstraintModes([constraint_mode_IP,
@@ -208,9 +211,11 @@ def talker():
         params.setNumberOfFrictionConesEdges(ng)
 #        params.setTrunkMass(trunk_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
-        
-#        p.send_support_region(name, p.fillPolygon(IAR))
+        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)       
+        p.send_support_region(name, p.fillPolygon(IAR))
+
+
+        #FOOTHOLD PLANNING
         print 'opt started?', params.optimization_started
         print 'ack opt done', footHoldPlanning.ack_optimization_done
         if (params.optimization_started == False):
@@ -220,7 +225,7 @@ def talker():
             footHoldPlanning.option_index = footHoldPlanning.optimizeFootHold(params)
             footHoldPlanning.ack_optimization_done = True    
 
-        time.sleep(0.2)
+        time.sleep(0.05)
         i+=1
         
     print 'de registering...'
