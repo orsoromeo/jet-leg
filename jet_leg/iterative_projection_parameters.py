@@ -12,6 +12,7 @@ class IterativeProjectionParameters:
         self.math = Math()
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
         self.comPositionWF = [0., 0., 0.]
+        self.com_position_to_validateW = [0., 0., 0.] #used only for foothold planning
         self.footPosWLF = [0.3, 0.25, -.5]
         self.footPosWRF = [-0.3, 0.25, -.5]
         self.footPosWLH = [0.3, -0.25, -.5]
@@ -36,7 +37,7 @@ class IterativeProjectionParameters:
 #        self.contactsHF = np.zeros((4,3))
         self.contactsBF = np.zeros((4,3))
         self.contactsWF = np.zeros((4,3))
-        
+        self.sample_contacts = np.zeros((4,3))
 
         self.math = Math()        
         axisZ= np.array([[0.0], [0.0], [1.0]])
@@ -267,6 +268,13 @@ class IterativeProjectionParameters:
                 self.yaw = received_data.data[j]   
                 
             #foothold planning
+            if str(received_data.name[j]) == str("com_position_to_validateWx"):
+                self.com_position_to_validateW[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("com_position_to_validateWy"):
+                self.com_position_to_validateW[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("com_position_to_validateWz"):
+                self.com_position_to_validateW[2] = received_data.data[j]                
+                
                 
             if str(received_data.name[j]) == str("foothold_option0x"):  
                 self.footOption0[0] = received_data.data[j]

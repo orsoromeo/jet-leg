@@ -50,33 +50,48 @@ class FootHoldPlanning:
         #foothold planning
         #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
         print 'foothold options',params.footOptions
-        params.contactsBF[params.actual_swing] = params.footOptions[0]
+                    
+        params.sample_contacts = params.contactsWF 
+        params.setCoMPosWF(params.com_position_to_validateW)
+        
+        print "AAA" , params.com_position_to_validateW
+        print "BBB" , params.sample_contacts
+        #overwrite the future swing foot
+        params.contactsWF[params.actual_swing] = params.footOptions[0]
+        params.setContactsPosWF(params.contactsWF)
         IAR0, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
         self.area[0] = self.compGeo.computePolygonArea(IAR0)
         
-        #foothold planning
-        #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
-        params.contactsBF[params.actual_swing] = params.footOptions[1]   
+        ######################################à
+        params.contactsWF = params.sample_contacts  
+        #overwrite the future swing foot
+        params.contactsWF[params.actual_swing] = params.footOptions[1]
+        params.setContactsPosWF(params.contactsWF)
+        
         IAR1, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
         self.area[1] = self.compGeo.computePolygonArea(IAR1)
         
-        
-        #foothold planning
-        #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
-        params.contactsBF[params.actual_swing] = params.footOptions[2]
+        ##########################################
+        params.contactsWF = params.sample_contacts 
+        #overwrite the future swing foot
+        params.contactsWF[params.actual_swing] = params.footOptions[2]
+        params.setContactsPosWF(params.contactsWF)
         IAR2, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
         self.area[2] = self.compGeo.computePolygonArea(IAR2)
         
-        
-        #foothold planning
-        #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
-        params.contactsBF[params.actual_swing] = params.footOptions[3]
+        ##########################################
+        params.contactsWF = params.sample_contacts 
+        #overwrite the future swing foot
+        params.contactsWF[params.actual_swing] = params.footOptions[3]
+        params.setContactsPosWF(params.contactsWF)
         IAR3, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
         self.area[3] = self.compGeo.computePolygonArea(IAR3)
         
-                #foothold planning
-        #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
-        params.contactsBF[params.actual_swing] = params.footOptions[4]
+        ##########################################
+        params.contactsWF = params.sample_contacts 
+        #overwrite the future swing foot
+        params.contactsWF[params.actual_swing] = params.footOptions[4]
+        params.setContactsPosWF(params.contactsWF)
         IAR4, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
         self.area[4] = self.compGeo.computePolygonArea(IAR4)
         
