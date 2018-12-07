@@ -10,14 +10,16 @@ from math_tools import Math
 class IterativeProjectionParameters:
     def __init__(self):
         self.math = Math()
-        self.comPositionBF = [0., 0., 0.]
-        self.footPosLF = [0.3, 0.25, -.5]
-        self.footPosRF = [-0.3, 0.25, -.5]
-        self.footPosLH = [0.3, -0.25, -.5]
-        self.footPosRH = [-0.3, -0.25, -.5]
+        self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
+        self.comPositionWF = [0., 0., 0.]
+        self.footPosWLF = [0.3, 0.25, -.5]
+        self.footPosWRF = [-0.3, 0.25, -.5]
+        self.footPosWLH = [0.3, -0.25, -.5]
+        self.footPosWRH = [-0.3, -0.25, -.5]
 
         self.roll = 0.0
-        self.pitch= 0.0
+        self.pitch = 0.0
+        self.yaw = 0.0
     
         self.LF_tau_lim = [50.0, 50.0, 50.0]
         self.RF_tau_lim = [50.0, 50.0, 50.0]
@@ -31,9 +33,10 @@ class IterativeProjectionParameters:
         self.state_machineRH = True
         self.stanceFeet = [0, 0, 0, 0]
         self.numberOfContacts = 0
-        self.contactsHF = np.zeros((4,3))
+#        self.contactsHF = np.zeros((4,3))
         self.contactsBF = np.zeros((4,3))
-
+        self.contactsWF = np.zeros((4,3))
+        
 
         self.math = Math()        
         axisZ= np.array([[0.0], [0.0], [1.0]])
@@ -71,8 +74,11 @@ class IterativeProjectionParameters:
     def setContactsPosBF(self, contactsBF):
         self.contactsBF = contactsBF
 
-    def setCoMPos(self, comWF):
-        self.comPositionBF = comWF
+    def setContactsPosWF(self, contactsWF):
+        self.contactsWF = contactsWF
+        
+    def setCoMPosWF(self, comWF):
+        self.comPositionWF = comWF
     
     def setTorqueLims(self, torqueLims):
         self.torque_limits = torqueLims
@@ -96,11 +102,18 @@ class IterativeProjectionParameters:
     def setTotalMass(self, mass):
         self.robotMass = mass
         
-    def getContactsPosBF(self):
+        
+    def getContactsPosWF(self):
+        return self.contactsWF     
+        
+    def getContactsPosBF(self):# used only for IK inside constraints.py
         return self.contactsBF
         
-    def getCoMPos(self):
-        return self.comPositionBF
+    def getCoMPosWF(self):
+        return self.comPositionWF
+        
+    def getCoMPosBF(self):
+        return self.comPositionBF        
         
     def getTorqueLims(self):
         return self.torque_limits
@@ -109,8 +122,10 @@ class IterativeProjectionParameters:
         return self.stanceFeet
         
     def getNormals(self):
-
         return self.normals
+
+    def getOrientation(self):
+        return self.roll, self.pitch, self.yaw
         
     def getConstraintModes(self):
         return self.constraintMode
@@ -161,32 +176,41 @@ class IterativeProjectionParameters:
                                            self.RH_tau_lim, ])
                                                                                     
 #            print 'torque lims',self.torque_limits
+ 
+# the inputs are all in the WF this way we can compute generic regions for generic contact sets and generic com position 
             
-            if str(received_data.name[j]) == str("footPosLFx"):
-                self.footPosLF[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLFy"):
-                self.footPosLF[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLFz"):
-                self.footPosLF[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRFx"):
-                self.footPosRF[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRFy"):
-                self.footPosRF[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRFz"):
-                self.footPosRF[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLHx"):
-                self.footPosLH[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLHy"):
-                self.footPosLH[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosLHz"):
-                self.footPosLH[2] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRHx"):
-                self.footPosRH[0] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRHy"):
-                self.footPosRH[1] = int(received_data.data[j]*100.0)/100.0
-            if str(received_data.name[j]) == str("footPosRHz"):
-                self.footPosRH[2] = int(received_data.data[j]*100.0)/100.0
+            if str(received_data.name[j]) == str("contact_setWLFx"):
+                self.footPosWLF[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWLFy"):
+                self.footPosWLF[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWLFz"):
+                self.footPosWLF[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWRFx"):
+                self.footPosWRF[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWRFy"):
+                self.footPosWRF[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWRFz"):
+                self.footPosWRF[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWLHx"):
+                self.footPosWLH[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWLHy"):
+                self.footPosWLH[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWLHz"):
+                self.footPosWLH[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWRHx"):
+                self.footPosWRH[0] =received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWRHy"):
+                self.footPosWRH[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("contact_setWRHz"):
+                self.footPosWRH[2] = received_data.data[j]
 
+            if str(received_data.name[j]) == str("actual_CoMX"):
+                self.comPositionWF[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("actual_CoMY"):
+                self.comPositionWF[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("actual_CoMZ"):
+                self.comPositionWF[2] = received_data.data[j]
+                
             if str(received_data.name[j]) == str("offCoMX"):
                 self.comPositionBF[0] = received_data.data[j]
             if str(received_data.name[j]) == str("offCoMY"):
@@ -195,15 +219,11 @@ class IterativeProjectionParameters:
                 self.comPositionBF[2] = received_data.data[j]        
                 
                 
-#            define feet in centroidal frame
-            self.contactsHF = np.array([[np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)), np.subtract(self.footPosLF, self.comPositionBF))],
-                                       [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)), np.subtract(self.footPosRF, self.comPositionBF))],
-                                        [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)), np.subtract(self.footPosLH, self.comPositionBF))],
-                                            [np.dot( np.transpose(self.math.rpyToRot(self.roll,self.pitch,0.0)),np.subtract(self.footPosRH, self.comPositionBF))]])
 
-            self.contactsBF = np.array([ self.footPosLF,self.footPosRF,self.footPosLH, self.footPosRH]) 
-                
-
+            self.contactsWF = np.array([ self.footPosWLF,self.footPosWRF,self.footPosWLH, self.footPosWRH]) 
+               
+          
+            #they are in WF
             if str(received_data.name[j]) == str("normalLFx"):
                 self.normals[0,0] = received_data.data[j]  
             if str(received_data.name[j]) == str("normalLFy"):
@@ -243,6 +263,8 @@ class IterativeProjectionParameters:
                 self.roll = received_data.data[j]             
             if str(received_data.name[j]) == str("pitch"):
                 self.pitch = received_data.data[j]    
+            if str(received_data.name[j]) == str("yaw"):
+                self.yaw = received_data.data[j]   
                 
             #foothold planning
                 

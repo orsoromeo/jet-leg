@@ -150,55 +150,58 @@ def talker():
 
         """ contact points """
         nc = params.numberOfContacts
+        ng = 4
+        
+        #1 - INSTANTANEOUS ACTUATION REGION    
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'FRICTION_AND_ACTUATION'
         params.setConstraintModes([constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP])
-        ng = 4
         params.setNumberOfFrictionConesEdges(ng)
 
         IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
-
         p.send_actuation_polygons(name, p.fillPolygon(IAR), footHoldPlanning.option_index, footHoldPlanning.ack_optimization_done)
-    
-        point.x = actuation_polygons_array[0][0][0]
-        point.y = actuation_polygons_array[0][1][0]
-        point.z = actuation_polygons_array[0][2][0]
-        
-        forcePolygons = [polygon]
-        for i in range(0,nc):
-            vertices = [point]
-            for j in range(0,7):                
-                vx = Point()
-                vx.x = actuation_polygons_array[i][0][j]
-                vx.y = actuation_polygons_array[i][1][j]
-                vx.z = actuation_polygons_array[i][2][j]
-                vertices = np.hstack([vertices, vx])       
-            forcePolygons = np.hstack([forcePolygons, vertices])      
-            
+           
+        #2 - FORCE POLYGONS
+#        point.x = actuation_polygons_array[0][0][0]
+#        point.y = actuation_polygons_array[0][1][0]
+#        point.z = actuation_polygons_array[0][2][0]
+#        
+#        forcePolygons = [polygon]
+#        for i in range(0,nc):
+#            vertices = [point]
+#            for j in range(0,7):                
+#                vx = Point()
+#                vx.x = actuation_polygons_array[i][0][j]
+#                vx.y = actuation_polygons_array[i][1][j]
+#                vx.z = actuation_polygons_array[i][2][j]
+#                vertices = np.hstack([vertices, vx])       
+#            forcePolygons = np.hstack([forcePolygons, vertices])                  
 #        p.send_force_polygons(name, forcePolygons)
 
 
 
-        #SUPPORT REGION
+        #3 - FRICTION REGION
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         constraint_mode_IP = 'ONLY_FRICTION'
         params.setConstraintModes([constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP,
                            constraint_mode_IP])
-        #params.setContactNormals(normals)
-        #params.setFrictionCoefficient(mu)
         params.setNumberOfFrictionConesEdges(ng)
-#        params.setTrunkMass(trunk_mass)
+        
+        #uncomment this if you dont want to use the vars read in iterative_proJ_params                       
+        #params.setContactNormals(normals)
+        #params.setFrictionCoefficient(mu)      
+        #params.setTrunkMass(trunk_mass)
         #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
         IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)       
         p.send_support_region(name, p.fillPolygon(IAR))
 
-
-        #FOOTHOLD PLANNING
+      
+        #4 - FOOTHOLD PLANNING
         print 'opt started?', params.optimization_started
         print 'ack opt done', footHoldPlanning.ack_optimization_done
         if (params.optimization_started == False):

@@ -201,10 +201,22 @@ class Constraints:
         
         stanceLegs = params.getStanceFeet()
         contactsNumber = np.sum(stanceLegs)
-        contactsBF = params.getContactsPosBF()
+        contactsWF = params.getContactsPosWF()
+        comPositionWF = params.getCoMPosWF()
+        comPositionBF = params.getCoMPosBF()
+        rpy = params.getOrientation()
+        #compute the contacs in the base frame for the inv kineamtics
+        contactsBF = np.zeros((4,3))
+      
+        contactsBF[0,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[0,:] - comPositionWF)), comPositionBF)
+        contactsBF[1,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[1,:] - comPositionWF)), comPositionBF)
+        contactsBF[2,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[2,:] - comPositionWF)), comPositionBF)
+        contactsBF[3,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[3,:] - comPositionWF)), comPositionBF)
+  
+        
+        
         constraint_mode = params.getConstraintModes()
 
-        comWF = params.getCoMPos()
         tau_lim = params.getTorqueLims()
         total_mass = params.getTotalMass()
         ng = params.getNumberOfFrictionConesEdges()
@@ -223,7 +235,7 @@ class Constraints:
                 stanceIndex = np.hstack([stanceIndex, iter])
             else:
                 swingIndex = iter
-        
+        #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         
         q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),

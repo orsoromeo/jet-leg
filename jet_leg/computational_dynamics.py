@@ -54,7 +54,7 @@ class ComputationalDynamics():
         
         stanceLegs = iterative_projection_params.getStanceFeet()
    
-        contacts = iterative_projection_params.getContactsPosBF()
+        contacts = iterative_projection_params.getContactsPosWF()
         constraint_mode = iterative_projection_params.getConstraintModes()
         
         ''' parameters to be tuned'''

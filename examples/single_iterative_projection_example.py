@@ -101,8 +101,8 @@ for j in range(0,nc):
 
 comp_dyn = ComputationalDynamics()
 params = IterativeProjectionParameters()
-params.setContactsPosBF(contacts)
-params.setCoMPos(comWF)
+params.setContactsPosWF(contacts)
+params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
