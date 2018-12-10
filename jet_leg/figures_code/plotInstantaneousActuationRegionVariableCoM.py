@@ -163,8 +163,8 @@ RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
 params = IterativeProjectionParameters()
-params.setContactsPosBF(contacts)
-params.setCoMPos(comWF)
+params.setContactsPosWF(contacts)
+params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
 params.setConstraintModes(constraint_mode)
@@ -194,7 +194,7 @@ for com_x in range(lowel_lim, upper_lim, 10):
     LH_foot_tmp = LH_foot - comWF
     RH_foot_tmp = RH_foot - comWF
     contactsBF = np.vstack((LF_foot_tmp, RF_foot_tmp, LH_foot_tmp, RH_foot_tmp))
-    params.setContactsPosBF(contactsBF)
+    params.setContactsPosWF(contactsBF)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
 #    print idx, scale
@@ -213,7 +213,7 @@ constraint_mode = ['ONLY_FRICTION',
                    'ONLY_FRICTION',
                    'ONLY_FRICTION']
 params.setConstraintModes(constraint_mode)
-params.setContactsPosBF(contacts)
+params.setContactsPosWF(contacts)
 IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
 point = np.vstack([IP_points])
 x = np.hstack([point[:,0], point[0,0]])
@@ -227,7 +227,7 @@ for com_x in range(lowel_lim, upper_lim, 10):
     idx += 1
     comWF = np.array([com_x/100.0, 0.0, 0.0])
     print idx, com_x
-    if idx <=1 or idx >= 7:
+    if idx <=2 or idx >= 6:
         h2 = plt.plot(comWF[0], comWF[1], color = colorVal, marker='s', markersize=15)
     else:
         h2 = plt.plot(comWF[0], comWF[1], color = colorVal, marker='^', markersize=15)

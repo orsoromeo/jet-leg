@@ -124,8 +124,8 @@ scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
 
 params = IterativeProjectionParameters()
-params.setContactsPosBF(contacts)
-params.setCoMPos(comWF)
+params.setContactsPosWF(contacts)
+params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
 params.setConstraintModes(constraint_mode)
@@ -184,8 +184,8 @@ constraint_mode = ['ONLY_ACTUATION',
                    'ONLY_ACTUATION',
                    'ONLY_ACTUATION']
 
-params.setContactsPosBF(contacts)
-params.setCoMPos(comWF)
+params.setContactsPosWF(contacts)
+params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
 params.setConstraintModes(constraint_mode)

@@ -113,8 +113,8 @@ for iter in range(0,number_of_tests):
     #    print 'Swing leg', randomSwingLeg
     stanceLegs[randomSwingLeg] = 0
     
-    params.setContactsPosBF(contacts)
-    params.setCoMPos(comWF)
+    params.setContactsPosWF(contacts)
+    params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
@@ -183,8 +183,8 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    params.setContactsPosBF(contacts)
-    params.setCoMPos(comWF)
+    params.setContactsPosWF(contacts)
+    params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
@@ -258,8 +258,8 @@ for iter in range(0,number_of_tests):
     #    print 'Swing leg', randomSwingLeg
     stanceLegs[randomSwingLeg] = 0
     
-    params.setContactsPosBF(contacts)
-    params.setCoMPos(comWF)
+    params.setContactsPosWF(contacts)
+    params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
@@ -329,8 +329,8 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    params.setContactsPosBF(contacts)
-    params.setCoMPos(comWF)
+    params.setContactsPosWF(contacts)
+    params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
@@ -406,8 +406,8 @@ for iter in range(0,number_of_tests):
     #    print 'Swing leg', randomSwingLeg
     stanceLegs[randomSwingLeg] = 0
     
-    params.setContactsPosBF(contacts)
-    params.setCoMPos(comWF)
+    params.setContactsPosWF(contacts)
+    params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
@@ -477,8 +477,8 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    params.setContactsPosBF(contacts)
-    params.setCoMPos(comWF)
+    params.setContactsPosWF(contacts)
+    params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
