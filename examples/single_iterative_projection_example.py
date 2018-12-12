@@ -85,6 +85,7 @@ RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
 comWF = np.array([0.0,0.0,0.0])
+extForceW = np.array([0.0,0.0, -200.0])
 #
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -110,6 +111,7 @@ params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(trunk_mass)
+params.externalForceWF = extForceW
 
 ''' compute iterative projection '''
 IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)

@@ -13,10 +13,11 @@ class IterativeProjectionParameters:
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
         self.comPositionWF = [0., 0., 0.]
         self.com_position_to_validateW = [0., 0., 0.] #used only for foothold planning
-        self.footPosWLF = [0.3, 0.25, -.5]
-        self.footPosWRF = [-0.3, 0.25, -.5]
-        self.footPosWLH = [0.3, -0.25, -.5]
-        self.footPosWRH = [-0.3, -0.25, -.5]
+        self.footPosWLF = [0.3, 0.2, -.0]
+        self.footPosWRF = [0.3, -0.2, -.0]
+        self.footPosWLH = [-0.3, 0.2, -.0]
+        self.footPosWRH = [-0.3, -0.2, -.0]
+        self.externalForceWF = [0., 0., 0.]
 
         self.roll = 0.0
         self.pitch = 0.0
@@ -56,7 +57,18 @@ class IterativeProjectionParameters:
         self.robotMass = 85 #Kg
         self.numberOfGenerators = 4
             
-    
+        #foothold planning 
+        self.orientation0 = [0., 0., 0.]
+        self.orientation1 = [0., 0., 0.]
+        self.orientation2 = [0., 0., 0.]
+        self.orientation3 = [0., 0., 0.]
+        self.orientation4 = [0., 0., 0.]
+        self.orientationOptions = np.array([self.orientation0,
+                                     self.orientation1,
+                                     self.orientation2,
+                                     self.orientation3,
+                                     self.orientation4])
+                                     
         #foothold planning 
         self.footOption0 = [0., 0., 0.]
         self.footOption1 = [0., 0., 0.]
@@ -222,7 +234,7 @@ class IterativeProjectionParameters:
                 
 
             self.contactsWF = np.array([ self.footPosWLF,self.footPosWRF,self.footPosWLH, self.footPosWRH]) 
-               
+#            print self.contactsWF
           
             #they are in WF
             if str(received_data.name[j]) == str("normalLFx"):
@@ -330,6 +342,7 @@ class IterativeProjectionParameters:
         num_of_elements = np.size(received_data.data)         
         for j in range(0,num_of_elements):
             if str(received_data.name[j]) == str("future_stance_LF"):
+#                print 'future lf',received_data.data[j]
                 self.stanceFeet[0] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RF"):
                 self.stanceFeet[1] = int(received_data.data[j])

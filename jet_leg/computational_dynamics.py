@@ -56,6 +56,8 @@ class ComputationalDynamics():
    
         contacts = iterative_projection_params.getContactsPosWF()
         constraint_mode = iterative_projection_params.getConstraintModes()
+        extForceWF = iterative_projection_params.externalForceWF
+        robotMass = iterative_projection_params.robotMass
         
         ''' parameters to be tuned'''
         g = 9.81
@@ -102,7 +104,8 @@ class ComputationalDynamics():
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
 #        print A
-        t = hstack([0, 0, g, 0])
+        t = hstack([extForceWF[0]/robotMass, extForceWF[1]/robotMass, g + extForceWF[2]/robotMass, 0])
+        print t
 #        print A,t
         eq = (A, t)  # A * x == t
         
@@ -125,6 +128,7 @@ class ComputationalDynamics():
 #        print 'hull ', hull.vertices
         compressed_hull = compressed_vertices[hull.vertices]
         compressed_hull = self.geom.clockwise_sort(compressed_hull)
+        compressed_hull = compressed_hull
 #        print compressed_hull
         #vertices_WF = vertices_BF + np.transpose(comWF[0:2])
         computation_time = (time.time() - start_t_IP)
