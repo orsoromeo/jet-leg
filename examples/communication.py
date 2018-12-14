@@ -60,7 +60,7 @@ class HyQSim(threading.Thread):
         self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_name, Polygon3D, queue_size=1)
         self.pub_support_region = ros.Publisher(self.support_region_topic_name, Polygon3D, queue_size=1)
-        self.pub_force_polygons = ros.Publisher(self.force_polygons_topic_name, Polygon3D, queue_size=1)
+        self.pub_force_polygons = ros.Publisher(self.force_polygons_topic_name, LegsPolygons, queue_size=1)
 
     def _reg_sim_time(self, time):
         self.sim_time = time.clock.secs + time.clock.nsecs/1000000000.0
@@ -85,10 +85,10 @@ class HyQSim(threading.Thread):
     def get_sim_wbs(self):
         return self.hyq_wbs
 
-    def send_force_polygons(self, name, polygons):
-        output = Polygon3D()
+    def send_force_polytopes(self, name, polygons):
+        output = LegsPolygons()
 #        output.polytopeName = name
-        output.vertices = polygons
+        output.polygons = polygons
         self.pub_force_polygons.publish(output) 
         
     def send_support_region(self, name, vertices):
@@ -175,22 +175,25 @@ def talker():
 #        point.z = actuation_polygons_array[0][2][0]/1000.0
         
         print 'SEND FORCE POLYGONS'
-        forcePolygons = [polygon]
-        print actuation_polygons_array[0]
+        
 #        for i in range(0,nc):
 #        point = Point()
-        vertices = []
-#            print 'polygon',vertices
-        for j in range(0,8):    
-            print j            
-            vx = Point()
-            vx.x = actuation_polygons_array[0][0][j]/1000.0
-            vx.y = actuation_polygons_array[0][1][j]/1000.0
-            vx.z = actuation_polygons_array[0][2][j]/1000.0
-            vertices = np.hstack([vertices, vx])       
-        forcePolygons = np.hstack([forcePolygons, vertices])                  
-        print 'FORCE POLYGON',forcePolygons
-        p.send_force_polygons(force_polytopes_name, vertices)
+        
+        forcePolygons = []
+        for i in range(0,4):
+            singlePolygon = Polygon3D()
+            print actuation_polygons_array[i]
+            vertices = []
+            for j in range(0,8):    
+                vx = Point()
+                vx.x = actuation_polygons_array[i][0][j]/1000.0
+                vx.y = actuation_polygons_array[i][1][j]/1000.0
+                vx.z = actuation_polygons_array[i][2][j]/1000.0
+                vertices = np.hstack([vertices, vx])       
+            singlePolygon.vertices = vertices      
+            forcePolygons = np.hstack([forcePolygons, singlePolygon])
+            print 'FORCE POLYGON',forcePolygons
+        p.send_force_polytopes(force_polytopes_name, forcePolygons)
 
 
 

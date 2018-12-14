@@ -118,6 +118,7 @@ params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(trunk_mass)
+params.com_position_to_validateW = [0.1, 0.1, 0]
 
 footOption0 = [0., 0., 0.] + LF_foot
 footOption1 = [0.05, 0.05, 0.] + LF_foot
@@ -132,7 +133,7 @@ params.footOptions = np.array([footOption0,
 
 ''' compute iterative projection '''
 footHoldPlanning = FootHoldPlanning()
-foot_option = footHoldPlanning.optimizeFootHold(params)
+foot_option, actuationRegion = footHoldPlanning.optimizeFootHold(params)
 #IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
 print 'foot option ',foot_option
 
