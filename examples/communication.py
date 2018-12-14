@@ -60,7 +60,7 @@ class HyQSim(threading.Thread):
         self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray, callback=self._reg_sim_rcf_debug, queue_size=1)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_name, Polygon3D, queue_size=1)
         self.pub_support_region = ros.Publisher(self.support_region_topic_name, Polygon3D, queue_size=1)
-        self.pub_force_polygons = ros.Publisher(self.force_polygons_topic_name, LegsPolygons, queue_size=1)
+        self.pub_force_polygons = ros.Publisher(self.force_polygons_topic_name, Polygon3D, queue_size=1)
 
     def _reg_sim_time(self, time):
         self.sim_time = time.clock.secs + time.clock.nsecs/1000000000.0
@@ -86,9 +86,9 @@ class HyQSim(threading.Thread):
         return self.hyq_wbs
 
     def send_force_polygons(self, name, polygons):
-        output = LegsPolygons()
-#        output.names = name
-        output.polygons = polygons
+        output = Polygon3D()
+#        output.polytopeName = name
+        output.vertices = polygons
         self.pub_force_polygons.publish(output) 
         
     def send_support_region(self, name, vertices):
@@ -136,6 +136,7 @@ def talker():
     p.start()
     p.register_node()
     name = "Actuation_region"
+    force_polytopes_name = "force_polytopes"
     point = Point()
     polygonVertex = Point()
     polygon = Polygon3D()
@@ -143,10 +144,14 @@ def talker():
     i = 0
 
     while not ros.is_shutdown():
-
+        point = Point()
+        polygonVertex = Point()
+        polygon = Polygon3D()
         p.get_sim_wbs()
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-        params.getFutureStanceFeet(p.hyq_rcf_debug)
+#        params.getFutureStanceFeet(p.hyq_rcf_debug)
+        params.getCurrentStanceFeet(p.hyq_rcf_debug) 
+       
 
         """ contact points """
         nc = params.numberOfContacts
@@ -165,21 +170,27 @@ def talker():
         p.send_actuation_polygons(name, p.fillPolygon(IAR), footHoldPlanning.option_index, footHoldPlanning.ack_optimization_done)
            
         #2 - FORCE POLYGONS
-#        point.x = actuation_polygons_array[0][0][0]
-#        point.y = actuation_polygons_array[0][1][0]
-#        point.z = actuation_polygons_array[0][2][0]
-#        
-#        forcePolygons = [polygon]
+#        point.x = actuation_polygons_array[0][0][0]/1000.0
+#        point.y = actuation_polygons_array[0][1][0]/1000.0
+#        point.z = actuation_polygons_array[0][2][0]/1000.0
+        
+        print 'SEND FORCE POLYGONS'
+        forcePolygons = [polygon]
+        print actuation_polygons_array[0]
 #        for i in range(0,nc):
-#            vertices = [point]
-#            for j in range(0,7):                
-#                vx = Point()
-#                vx.x = actuation_polygons_array[i][0][j]
-#                vx.y = actuation_polygons_array[i][1][j]
-#                vx.z = actuation_polygons_array[i][2][j]
-#                vertices = np.hstack([vertices, vx])       
-#            forcePolygons = np.hstack([forcePolygons, vertices])                  
-#        p.send_force_polygons(name, forcePolygons)
+#        point = Point()
+        vertices = []
+#            print 'polygon',vertices
+        for j in range(0,8):    
+            print j            
+            vx = Point()
+            vx.x = actuation_polygons_array[0][0][j]/1000.0
+            vx.y = actuation_polygons_array[0][1][j]/1000.0
+            vx.z = actuation_polygons_array[0][2][j]/1000.0
+            vertices = np.hstack([vertices, vx])       
+        forcePolygons = np.hstack([forcePolygons, vertices])                  
+        print 'FORCE POLYGON',forcePolygons
+        p.send_force_polygons(force_polytopes_name, vertices)
 
 
 

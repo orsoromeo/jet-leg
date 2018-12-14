@@ -59,46 +59,46 @@ class FootHoldPlanning:
         
         numberOfFeetOptions = np.size(params.footOptions,0)
         print numberOfFeetOptions
+        actuation_regions = []
         for i in range(0, numberOfFeetOptions):
             #overwrite the future swing foot
             params.contactsWF[params.actual_swing] = params.footOptions[i]
+            print params.footOptions[i]
             params.setContactsPosWF(params.contactsWF)
-            IAR0, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-            self.area[i] = self.compGeo.computePolygonArea(IAR0)
+            IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
+#            actuation_regions = np.vstack([actuation_regions, IAR])
+            self.area[i] = self.compGeo.computePolygonArea(IAR)
         
-        ######################################à
-#        params.contactsWF = params.sample_contacts  
-#        #overwrite the future swing foot
-#        params.contactsWF[params.actual_swing] = params.footOptions[1]
-#        params.setContactsPosWF(params.contactsWF)
-#        
-#        IAR1, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-#        self.area[1] = self.compGeo.computePolygonArea(IAR1)
-#        
-#        ##########################################
-#        params.contactsWF = params.sample_contacts 
-#        #overwrite the future swing foot
-#        params.contactsWF[params.actual_swing] = params.footOptions[2]
-#        params.setContactsPosWF(params.contactsWF)
-#        IAR2, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-#        self.area[2] = self.compGeo.computePolygonArea(IAR2)
-#        
-#        ##########################################
-#        params.contactsWF = params.sample_contacts 
-#        #overwrite the future swing foot
-#        params.contactsWF[params.actual_swing] = params.footOptions[3]
-#        params.setContactsPosWF(params.contactsWF)
-#        IAR3, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-#        self.area[3] = self.compGeo.computePolygonArea(IAR3)
-#        
-#        ##########################################
-#        params.contactsWF = params.sample_contacts 
-#        #overwrite the future swing foot
-#        params.contactsWF[params.actual_swing] = params.footOptions[4]
-#        params.setContactsPosWF(params.contactsWF)
-#        IAR4, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-#        self.area[4] = self.compGeo.computePolygonArea(IAR4)
+        print 'area ',self.area
+        print 'max arg ',np.argmax(self.area, axis=0)
+        return np.argmax(self.area, axis=0)
         
+    def optimizeFootHoldAndBaseOrient(self, params):        
+
+        #foothold planning
+        #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
+        print 'foothold options',params.footOptions
+                    
+        params.sample_contacts = params.contactsWF 
+        params.setCoMPosWF(params.com_position_to_validateW)
+        
+        print "AAA" , params.com_position_to_validateW
+        print "BBB" , params.sample_contacts
+        
+        numberOfFeetOptions = np.size(params.footOptions,0)
+        numberOfBaseOrientationOptions = np.size(params.orientationOptions,0)
+        
+        print numberOfFeetOptions
+        for i in range(0, numberOfFeetOptions):
+            for j in range(0, numberOfBaseOrientationOptions):
+                #overwrite the future swing foot
+                params.contactsWF[params.actual_swing] = params.footOptions[i]
+                params.roll = params.orientationOptions[j][0]
+                print params.roll
+                params.setContactsPosWF(params.contactsWF)
+                IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
+                self.area[i] = self.compGeo.computePolygonArea(IAR)
+                
         print 'area ',self.area
         print 'max arg ',np.argmax(self.area, axis=0)
         return np.argmax(self.area, axis=0)

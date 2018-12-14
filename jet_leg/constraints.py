@@ -16,11 +16,9 @@ class Constraints:
         self.kin = HyQKinematics()
         self.math = Math()
     
-
-    def compute_actuation_constraints(self, contactIterator, stanceLegs, stanceIndex, swingIndex, torque_limits, total_mass):
+    def compute_actuation_constraints(self, contactIterator, stanceLegs, stanceIndex, swingIndex, torque_limits, totalMass):
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
-
 
         if isOutOfWorkspace:
             C1 = np.zeros((0,0))
@@ -37,7 +35,7 @@ class Constraints:
             C1 = np.zeros((0,0))
             d1 = np.zeros((1,0))
 
-            hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/total_mass)
+            hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/totalMass)
             C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
             d1 = np.hstack([d1, knownTerm.T])  
                 
@@ -176,9 +174,13 @@ class Constraints:
         dx = tau_lim[0]
         dy = tau_lim[1]
         dz = tau_lim[2]
+#        vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
+#                         [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
+#                         [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+                         
         vertices = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
-                         [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
-                         [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
+                         [-dy, dy, dy, -dy, -dy, dy, dy, -dy],
+                         [-dz, -dz, -dz, -dz, dz, dz, dz, dz]])
                          
         if (np.size(leg_jacobian,0)==2):          
             torque_lims_xz = np.vstack([vertices[0,:],vertices[2,:]])
@@ -200,6 +202,8 @@ class Constraints:
     def getInequalities(self, params, saturate_normal_force = False):
         
         stanceLegs = params.getStanceFeet()
+        
+        print 'stance legs', stanceLegs
         contactsNumber = np.sum(stanceLegs)
         contactsWF = params.getContactsPosWF()
         comPositionWF = params.getCoMPosWF()
@@ -212,8 +216,9 @@ class Constraints:
         contactsBF[1,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[1,:] - comPositionWF)), comPositionBF)
         contactsBF[2,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[2,:] - comPositionWF)), comPositionBF)
         contactsBF[3,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[3,:] - comPositionWF)), comPositionBF)
-  
-        
+#        print 'WF ',contactsWF
+#        print contactsBF 
+#        print 'stance legs ', stanceLegs
         
         constraint_mode = params.getConstraintModes()
 
@@ -243,7 +248,7 @@ class Constraints:
                                                     np.transpose(contactsBF[:,1]),
                                                     np.transpose(foot_vel[:,1]),
                                                     np.transpose(contactsBF[:,2]),
-                                                    np.transpose(foot_vel[:,2]))
+                                                    np.transpose(foot_vel[:,2]), True)
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
         for j in range(0,contactsNumber):    

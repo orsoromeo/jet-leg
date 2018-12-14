@@ -46,14 +46,14 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([0.0, 0.0, 0.0])
+comWF = np.array([1.0, 0.0, 0.0])
 # contact positions
 """ contact points """
 
-LF_foot = np.array([0.3, 0.2, -0.5])
-RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.3, 0.2, -0.5])
-RH_foot = np.array([-0.3, -0.2, -0.5])
+LF_foot = np.array([1.3, 0.2, -0.5])
+RF_foot = np.array([1.3, -0.2, -0.5])
+LH_foot = np.array([0.7, 0.2, -0.5])
+RH_foot = np.array([0.7, -0.2, -0.5])
 
 contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 
@@ -84,8 +84,7 @@ LH_tau_lim = [50.0, 100.0, 100.0]
 RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
-comWF = np.array([0.0,0.0,0.0])
-extForceW = np.array([0.0,0.0, -200.0])
+extForceW = np.array([0.0,0.0, 700.0])
 #
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -110,12 +109,13 @@ params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTotalMass(trunk_mass)
+params.setTotalMass(trunk_mass + extForceW[2]/9.81)
 params.externalForceWF = extForceW
 
 ''' compute iterative projection '''
 IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
 
+#print 'actuation polygons', actuation_polygons
 #print IP_points
 ''' plotting Iterative Projection points '''
 plotter = Plotter()
