@@ -10,6 +10,7 @@ from math_tools import Math
 class IterativeProjectionParameters:
     def __init__(self):
         self.math = Math()
+        self.q = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.] 
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
         self.comPositionWF = [0., 0., 0.]
         self.com_position_to_validateW = [0., 0., 0.] #used only for foothold planning
@@ -229,41 +230,75 @@ class IterativeProjectionParameters:
             if str(received_data.name[j]) == str("offCoMY"):
                 self.comPositionBF[1] = received_data.data[j]                       
             if str(received_data.name[j]) == str("offCoMZ"):
-                self.comPositionBF[2] = received_data.data[j]        
+                self.comPositionBF[2] = received_data.data[j]       
                 
+            # external wrench
+            if str(received_data.name[j]) == str("extPerturbForceX"):
+                self.externalForceWF[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("extPerturbForceY"):
+                self.externalForceWF[1] = received_data.data[j]                       
+            if str(received_data.name[j]) == str("extPerturbForceZ"):
+                self.externalForceWF[2] = received_data.data[j]   
+             
+#            print 'ext force ',self.externalForceWF
                 
 
             self.contactsWF = np.array([ self.footPosWLF,self.footPosWRF,self.footPosWLH, self.footPosWRH]) 
 #            print self.contactsWF
           
+            if str(received_data.name[j]) == str("LF_HAA_th"):
+                self.q[0] = received_data.data[j]  
+            if str(received_data.name[j]) == str("LF_HFE_th"):
+                self.q[1] = received_data.data[j] 
+            if str(received_data.name[j]) == str("LF_KFE_th"):
+                self.q[2] = received_data.data[j]  
+            if str(received_data.name[j]) == str("RF_HAA_th"):
+                self.q[3] = received_data.data[j]  
+            if str(received_data.name[j]) == str("RF_HFE_th"):
+                self.q[4] = received_data.data[j] 
+            if str(received_data.name[j]) == str("RF_KFE_th"):
+                self.q[5] = received_data.data[j]  
+            if str(received_data.name[j]) == str("LH_HAA_th"):
+                self.q[6] = received_data.data[j]  
+            if str(received_data.name[j]) == str("LH_HFE_th"):
+                self.q[7] = received_data.data[j] 
+            if str(received_data.name[j]) == str("LH_KFE_th"):
+                self.q[8] = received_data.data[j]  
+            if str(received_data.name[j]) == str("RH_HAA_th"):
+                self.q[9] = received_data.data[j]  
+            if str(received_data.name[j]) == str("RH_HFE_th"):
+                self.q[10] = received_data.data[j] 
+            if str(received_data.name[j]) == str("RH_KFE_th"):
+                self.q[11] = received_data.data[j]  
+                
             #they are in WF
-            if str(received_data.name[j]) == str("normalLFx"):
-                self.normals[0,0] = received_data.data[j]  
-            if str(received_data.name[j]) == str("normalLFy"):
-                self.normals[0,1] = received_data.data[j] 
-            if str(received_data.name[j]) == str("normalLFz"):
-                self.normals[0,2] = received_data.data[j]                  
-                                                 
-            if str(received_data.name[j]) == str("normalRFx"):
-                self.normals[1,0] = received_data.data[j]
-            if str(received_data.name[j]) == str("normalRFy"):
-                self.normals[1,1] = received_data.data[j] 
-            if str(received_data.name[j]) == str("normalRFz"):
-                self.normals[1,2] = received_data.data[j]                 
-                                                 
-            if str(received_data.name[j]) == str("normalLHx"):
-                self.normals[2,0] = received_data.data[j] 
-            if str(received_data.name[j]) == str("normalLHy"):
-                self.normals[2,1] = received_data.data[j] 
-            if str(received_data.name[j]) == str("normalLHz"):
-                self.normals[2,2] = received_data.data[j]                
-                                                 
-            if str(received_data.name[j]) == str("normalRHx"):
-                self.normals[3,0] = received_data.data[j]  
-            if str(received_data.name[j]) == str("normalRHy"):
-                self.normals[3,1] = received_data.data[j]  
-            if str(received_data.name[j]) == str("normalRHz"):
-                self.normals[3,2] = received_data.data[j]                  
+#            if str(received_data.name[j]) == str("normalLFx"):
+#                self.normals[0,0] = received_data.data[j]  
+#            if str(received_data.name[j]) == str("normalLFy"):
+#                self.normals[0,1] = received_data.data[j] 
+#            if str(received_data.name[j]) == str("normalLFz"):
+#                self.normals[0,2] = received_data.data[j]                  
+#                                                 
+#            if str(received_data.name[j]) == str("normalRFx"):
+#                self.normals[1,0] = received_data.data[j]
+#            if str(received_data.name[j]) == str("normalRFy"):
+#                self.normals[1,1] = received_data.data[j] 
+#            if str(received_data.name[j]) == str("normalRFz"):
+#                self.normals[1,2] = received_data.data[j]                 
+#                                                 
+#            if str(received_data.name[j]) == str("normalLHx"):
+#                self.normals[2,0] = received_data.data[j] 
+#            if str(received_data.name[j]) == str("normalLHy"):
+#                self.normals[2,1] = received_data.data[j] 
+#            if str(received_data.name[j]) == str("normalLHz"):
+#                self.normals[2,2] = received_data.data[j]                
+#                                                 
+#            if str(received_data.name[j]) == str("normalRHx"):
+#                self.normals[3,0] = received_data.data[j]  
+#            if str(received_data.name[j]) == str("normalRHy"):
+#                self.normals[3,1] = received_data.data[j]  
+#            if str(received_data.name[j]) == str("normalRHz"):
+#                self.normals[3,2] = received_data.data[j]                  
                 
     
             if str(received_data.name[j]) == str("robotMass"):
@@ -335,6 +370,8 @@ class IterativeProjectionParameters:
                 
             if str(received_data.name[j]) == str("optimization_started"):  
                 self.optimization_started = bool(received_data.data[j])
+                
+        self.robotMass -= self.externalForceWF[2]/9.81
                                    
           
     def getFutureStanceFeet(self, received_data):
@@ -358,13 +395,13 @@ class IterativeProjectionParameters:
         num_of_elements = np.size(received_data.data)
         for j in range(0,num_of_elements):
             if str(received_data.name[j]) == str("state_machineLF"):
-                self.stanceFeet[0] = int(received_data.data[j])
+                self.state_machineLF = int(received_data.data[j])
             if str(received_data.name[j]) == str("state_machineRF"):
-                self.stanceFeet[1] = int(received_data.data[j])
+                self.state_machineRF = int(received_data.data[j])
             if str(received_data.name[j]) == str("state_machineLH"):
-                self.stanceFeet[2] = int(received_data.data[j])
+                self.state_machineLH = int(received_data.data[j])
             if str(received_data.name[j]) == str("state_machineRH"):
-                self.stanceFeet[3] = int(received_data.data[j]) 
+                self.state_machineRH = int(received_data.data[j]) 
                 
             if self.state_machineLF < 4.0:
                 self.stanceFeet[0] = 1
@@ -385,7 +422,7 @@ class IterativeProjectionParameters:
                 self.stanceFeet[3] = 1                
             else:
                 self.stanceFeet[3] = 0
-            
+        
  
         self.numberOfContacts = np.sum(self.stanceFeet)
-
+        print 'stance feet ', self.stanceFeet
