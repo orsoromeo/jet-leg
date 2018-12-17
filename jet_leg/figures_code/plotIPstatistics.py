@@ -76,7 +76,11 @@ for iter in range(0,number_of_tests):
     randPitch = np.random.normal(0.0, 0.2)
     randYaw = np.random.normal(0.0, 0.2)
     n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3])
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n4 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    normals = np.vstack([n1, n2, n3, n4])
     
     """ contact points """
     sigma = 0.05 # mean and standard deviation

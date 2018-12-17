@@ -31,7 +31,7 @@ class Constraints:
             print 'Out of workspace IK!!!'
         else:
             jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
-            print 'Jacobians',jacobianMatrices
+#            print 'Jacobians',jacobianMatrices
             actuation_polygons = self.computeActuationPolygons(stanceLegs, stanceIndex, swingIndex, jacobianMatrices, torque_limits)
 #                print 'actuation polygon ',actuation_polygons 
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
@@ -253,12 +253,12 @@ class Constraints:
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
         for j in stanceIndex:    
-            print 'leg index',j
+#            print 'leg index',j
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
                 constraints_local_frame, d_cone = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
                 isIKoutOfWorkSpace = False
-
+#                print normals
                 n = self.math.normalize(normals[j,:])
                 rotationMatrix = self.math.rotation_matrix_from_normal(n)
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)

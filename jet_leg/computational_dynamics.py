@@ -105,8 +105,8 @@ class ComputationalDynamics():
         A = dot(A_f_and_tauz, G)
 #        print A
         t = hstack([0.0, 0.0, g, 0])
-        print extForceWF, t
-        print 'mass ', robotMass
+#        print extForceWF, t
+#        print 'mass ', robotMass
 #        print A,t
         eq = (A, t)  # A * x == t
         
@@ -119,10 +119,10 @@ class ComputationalDynamics():
         outputPolytopeY = np.zeros((1,8))
         outputPolytopeZ = np.zeros((1,8))
         outputPolytope = np.array([[outputPolytopeX], [outputPolytopeY], [outputPolytopeZ]])
-        print 'out poly',outputPolytope[1]
-        print 'out poly X',outputPolytopeX
+#        print 'out poly',outputPolytope[1]
+#        print 'out poly X',outputPolytopeX
         for i in range(0,8):
-            print i
+#            print i
             if(actPolytope[0][i]>0) and (actPolytope[1][i]<0) and (actPolytope[2][i]<0):
                 outputPolytopeX[0][0] = actPolytope[0][i]
                 outputPolytopeY[0][0] = actPolytope[1][i]
@@ -158,8 +158,8 @@ class ComputationalDynamics():
 #        outputPolytope = actPolytope
         
         outputPolytope = np.array([[outputPolytopeX], [outputPolytopeY], [outputPolytopeZ]])
-        print 'out poly',outputPolytope
-        print 'input ', actPolytope
+#        print 'out poly',outputPolytope
+#        print 'input ', actPolytope
 #        print 'out poly X',outputPolytopeX
 #        print 'out poly Y',outputPolytopeY
 #        print 'out poly Z',outputPolytopeZ
@@ -186,10 +186,10 @@ class ComputationalDynamics():
         computation_time = (time.time() - start_t_IP)
         print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
 
-        print np.size(actuation_polygons,0), np.size(actuation_polygons,1), actuation_polygons
+#        print np.size(actuation_polygons,0), np.size(actuation_polygons,1), actuation_polygons
         if np.size(actuation_polygons,0) is 4:
             if np.size(actuation_polygons,1) is 3:
-                print actuation_polygons
+#                print actuation_polygons
                 p = self.reorganizeActuationPolytopes(actuation_polygons[1])
 
         return compressed_hull, actuation_polygons, computation_time

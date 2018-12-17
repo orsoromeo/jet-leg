@@ -64,13 +64,13 @@ ng = 4
 tolerance = 0.005
 
 params = IterativeProjectionParameters()
-params.setCoMPos(comWF)
+params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setConstraintModes(constraint_mode)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
+params.setTotalMass(trunk_mass)
 
 
 for LH_x in np.arange(-0.7,-0.2, 0.1):
@@ -100,9 +100,9 @@ for LH_x in np.arange(-0.7,-0.2, 0.1):
         print 'new search angle: ', angle
         desired_direction = np.array([np.cos(angle), np.sin(angle), 0.0])
 
-        params.setContactsPos(contacts)
+        params.setContactsPosWF(contacts)
         params.setActiveContacts(stanceLegs)
-        newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(params, desired_direction,tolerance)
+        newLimitPoint, stackedErrors, stackedPolygons = pathIP.find_vertex_along_path(params, desired_direction,tolerance)
         comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, newLimitPoint])
         optimizedVariablesToStack = np.vstack([optimizedVariablesToStack, np.array([LH_x, LH_y, angle])])
 
@@ -126,7 +126,7 @@ segment = np.vstack([comWF,newLimitPoint])
 plt.plot(contacts[0:number_of_contacts,0],contacts[0:number_of_contacts,1],'ko',markersize=15, label='Stance feet')
 plt.plot(comTrajectoriesToStack[max_motin_index,0], comTrajectoriesToStack[max_motin_index,1], 'y^', markersize=25, label= 'furthest vertex along the given search direction')
 plt.plot(optimizedVariablesToStack[:,0], optimizedVariablesToStack[:,1], 'bo', markersize = 15, label = 'tested stance feet')
-plt.plot(optimizedVariablesToStack[max_motin_index,0], optimizedVariablesToStack[max_motin_index,1], 'yo', markersize=20, label='selected foothold')
+#plt.plot(optimizedVariablesToStack[max_motin_index,0], optimizedVariablesToStack[max_motin_index,1], 'yo', markersize=20, label='selected foothold')
 
 plt.xlim(-0.9, 0.5)
 plt.ylim(-0.7, 0.7)

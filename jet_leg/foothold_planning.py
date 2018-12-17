@@ -54,24 +54,26 @@ class FootHoldPlanning:
         params.sample_contacts = params.contactsWF 
         params.setCoMPosWF(params.com_position_to_validateW)
         
-        print "AAA" , params.com_position_to_validateW
-        print "BBB" , params.sample_contacts
+        print "com pos to validate" , params.com_position_to_validateW
+        print "sample contacts" , params.sample_contacts
         
         numberOfFeetOptions = np.size(params.footOptions,0)
         print numberOfFeetOptions
-        actuation_regions = []
+        feasible_regions = []
         for i in range(0, numberOfFeetOptions):
             #overwrite the future swing foot
             params.contactsWF[params.actual_swing] = params.footOptions[i]
             print params.footOptions[i]
             params.setContactsPosWF(params.contactsWF)
             IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-#            actuation_regions = np.vstack([actuation_regions, IAR])
+#            print 'IAR', IAR
+            feasible_regions.append(IAR)
+#            print 'FR', feasible_regions
             self.area[i] = self.compGeo.computePolygonArea(IAR)
         
         print 'area ',self.area
         print 'max arg ',np.argmax(self.area, axis=0)
-        return np.argmax(self.area, axis=0)
+        return np.argmax(self.area, axis=0), feasible_regions
         
     def optimizeFootHoldAndBaseOrient(self, params):        
 

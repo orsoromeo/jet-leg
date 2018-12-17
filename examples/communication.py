@@ -15,16 +15,10 @@ import sys
 import time
 import threading
 
-from gazebo_msgs.srv import ApplyBodyWrench
-from geometry_msgs.msg import Vector3, Wrench
+
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
 from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
-from dwl_msgs.msg import WholeBodyState, WholeBodyTrajectory, JointState, ContactState, BaseState
-from sensor_msgs.msg import JointState
-from std_msgs.msg import Float32, Header
-from std_srvs.srv import Empty
-from termcolor import colored
 
 from context import jet_leg 
 from jet_leg.computational_dynamics import ComputationalDynamics
@@ -173,16 +167,11 @@ def talker():
 #        point.x = actuation_polygons_array[0][0][0]/1000.0
 #        point.y = actuation_polygons_array[0][1][0]/1000.0
 #        point.z = actuation_polygons_array[0][2][0]/1000.0
-        
-        print 'SEND FORCE POLYGONS'
-        
-#        for i in range(0,nc):
-#        point = Point()
-        
+                
         forcePolygons = []
         for i in range(0,4):
             singlePolygon = Polygon3D()
-            print actuation_polygons_array[i]
+#            print actuation_polygons_array[i]
             vertices = []
             for j in range(0,8):    
                 vx = Point()
@@ -192,7 +181,6 @@ def talker():
                 vertices = np.hstack([vertices, vx])       
             singlePolygon.vertices = vertices      
             forcePolygons = np.hstack([forcePolygons, singlePolygon])
-            print 'FORCE POLYGON',forcePolygons
         p.send_force_polytopes(force_polytopes_name, forcePolygons)
 
 

@@ -847,11 +847,11 @@ class HyQKinematics:
         haaYOffset_sign_flip[self.dog.RF] = -1.0;
         haaYOffset_sign_flip[self.dog.RH] = -1.0;
  
-        print 'foot pos ', footPositionBF
+#        print 'foot pos ', footPositionBF
         q_leg = [np.nan, np.nan, np.nan]
         foot_haa_frame = footPositionBF - [self.BASE2HAA_offset_x*haaXOffset_sign_flip[legID], self.BASE2HAA_offset_y*haaYOffset_sign_flip[legID], 0.0]
-        print self.BASE2HAA_offset_x, self.BASE2HAA_offset_y, self.BASE2HAA_offset_z
-        print foot_haa_frame
+#        print self.BASE2HAA_offset_x, self.BASE2HAA_offset_y, self.BASE2HAA_offset_z
+#        print foot_haa_frame
         
         
         
