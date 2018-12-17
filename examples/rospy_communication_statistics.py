@@ -17,7 +17,7 @@ import time
 import threading
 
 
-from gazebo_msgs.srv import ApplyBodyWrench
+#from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
@@ -30,6 +30,7 @@ from termcolor import colored
 
 from context import jet_leg 
 from jet_leg.computational_dynamics import ComputationalDynamics
+from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 from jet_leg.math_tools import Math
 
 
@@ -97,7 +98,7 @@ class HyQSim(threading.Thread):
     def send_polygons(self, name, vertices):
 #        self.output = dict()
         output = Polygon3D()
-        output.names = name
+#        output.names = name
         output.vertices = vertices
         self.pub_polygon.publish(output)    
     
@@ -166,9 +167,37 @@ def talker():
         """ contact points """
         nc = actuationParams.numberOfContacts
         contacts = actuationParams.contacts[0:nc+1, :]
+        LF_tau_lim = [50.0, 100.0, 100.0]
+        RF_tau_lim = [50.0, 100.0, 100.0]
+        LH_tau_lim = [50.0, 100.0, 100.0]
+        RH_tau_lim = [50.0, 100.0, 100.0]
+        torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+        comWF = np.array([0.0, 0.0, 0.0])
+        extForceW = np.array([0.0,0.0, 0.0])
+        constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION']
+        mu = 0.8
+        ng = 4
 #        print 'contacts: ',contacts
 #        print contacts, actuationParams.stanceFeet
-        IAR, actuation_polygons, computation_time = compDyn.instantaneous_actuation_region_bretl(actuationParams.stanceFeet, contacts, normals, trunk_mass)
+        params = IterativeProjectionParameters()
+        stanceFeet = [1,1,1,1]
+        params.setContactsPosWF(contacts)
+        params.setCoMPosWF(comWF)
+        params.setTorqueLims(torque_limits)
+        params.setActiveContacts(stanceFeet)
+        params.setConstraintModes(constraint_mode_IP)
+        params.setContactNormals(normals)
+        params.setFrictionCoefficient(mu)
+        params.setNumberOfFrictionConesEdges(ng)
+        params.setTotalMass(trunk_mass + extForceW[2]/9.81)
+        params.externalForceWF = extForceW
+        ''' compute iterative projection '''
+        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
+        
+
         number_of_vertices = np.size(IAR, 0)
 #        number_of_vertices = 10
 #        print IAR
