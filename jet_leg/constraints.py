@@ -10,11 +10,15 @@ from math_tools import Math
 from hyq_kinematics import HyQKinematics
 from cvxopt import matrix
 from scipy.linalg import block_diag
+from dog_interface import DogInterface
+from rigid_body_dynamics import RigidBodyDynamics
 
 class Constraints:    
     def __init__(self):
         self.kin = HyQKinematics()
         self.math = Math()
+        self.dog = DogInterface()
+        self.rbd = RigidBodyDynamics()
     
     def compute_actuation_constraints(self, contactIterator, stanceLegs, stanceIndex, swingIndex, torque_limits, totalMass):
 
@@ -27,6 +31,7 @@ class Constraints:
             print 'Out of workspace IK!!!'
         else:
             jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
+            print 'Jacobians',jacobianMatrices
             actuation_polygons = self.computeActuationPolygons(stanceLegs, stanceIndex, swingIndex, jacobianMatrices, torque_limits)
 #                print 'actuation polygon ',actuation_polygons 
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
@@ -148,18 +153,18 @@ class Constraints:
 
     def computeActuationPolygons(self, stanceFeet, stanceIndex, swingIndex, legsJacobians, torque_limits):
 
-        if np.sum(stanceFeet) == 4:
+#        if np.sum(stanceFeet) == 4:
 #            print 'test', torque_limits[0]
-            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[0], torque_limits[0]),
+        actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[0], torque_limits[0]),
                                        self.computeLegActuationPolygon(legsJacobians[1], torque_limits[1]),
                                        self.computeLegActuationPolygon(legsJacobians[2], torque_limits[2]), 
                                         self.computeLegActuationPolygon(legsJacobians[3], torque_limits[3])])
-        if np.sum(stanceFeet) == 3:
-#            print 'test', torque_limits, stanceIndex
-            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])], torque_limits[int(stanceIndex[0])]),
-                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])], torque_limits[int(stanceIndex[1])]),
-                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])], torque_limits[int(stanceIndex[2])]), 
-                                        self.computeLegActuationPolygon(legsJacobians[int(swingIndex)], torque_limits[int(swingIndex)])])       
+#        if np.sum(stanceFeet) == 3:
+##            print 'test', torque_limits, stanceIndex
+#            actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[0])], torque_limits[int(stanceIndex[0])]),
+#                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[1])], torque_limits[int(stanceIndex[1])]),
+#                                       self.computeLegActuationPolygon(legsJacobians[int(stanceIndex[2])], torque_limits[int(stanceIndex[2])]), 
+#                                        self.computeLegActuationPolygon(legsJacobians[int(swingIndex)], torque_limits[int(swingIndex)])])       
 
         return actuation_polygons
         
@@ -237,22 +242,18 @@ class Constraints:
         for iter in range(0, 4):
             if stanceLegs[iter] == 1:
                 #               print 'new poly', stanceIndex, iter
-                stanceIndex = np.hstack([stanceIndex, iter])
+#                stanceIndex = np.hstack([stanceIndex, int(iter)])
+                stanceIndex.append(int(iter))
             else:
-                swingIndex = iter
+                swingIndex = int(iter)
         #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         
-        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.inverse_kin(np.transpose(contactsBF[:,0]),
-                                                  np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsBF[:,1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsBF[:,2]),
-                                                    np.transpose(foot_vel[:,2]), True)
+        q = self.kin.inverse_kin(contactsBF, foot_vel)        
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
-        for j in range(0,contactsNumber):    
-
+        for j in stanceIndex:    
+            print 'leg index',j
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
                 constraints_local_frame, d_cone = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)

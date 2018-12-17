@@ -6,15 +6,22 @@ Created on Mon Jul  2 05:34:42 2018
 """
 import numpy as np
 
+from dog_interface import DogInterface
+from rigid_body_dynamics import RigidBodyDynamics
+
 class HyQKinematics:
     def __init__(self):
-
+        
+        self.dog = DogInterface()
+        self.rbd = RigidBodyDynamics()
+        
         self.upperLegLength = 0.35;
-        self.lowerLegLength = 0.346;
+        self.lowerLegLength = 0.341;
 
         self.BASE2HAA_offset_x = 0.3735;
+        self.BASE2HAA_offset_y = 0.207;
         self.BASE2HAA_offset_z = 0.08;
-        self.BASE2HAA_offset_y = 0.208;
+        self.HAA2HFE = 0.08;
 
         self.isOutOfWorkSpace = False
         
@@ -799,114 +806,132 @@ class HyQKinematics:
         
         return contacts
         
-    def inverse_kin(self, x_pos, x_dot, y_pos, y_dot, z_pos, z_dot, verbose = False):
-        ''' 
-        This function computes the joint positions given the feet positions and velocities.
-        Only the X Y feet coordinates are considered inthis version.
-        Besides the joint positions, this function also returns the 2D jacobians referred to the
-        HFE and KFE joints of the HyQ robot.
-        '''
-        self.isOutOfWorkSpace = False
-        footPosDes_xz = np.vstack([x_pos,z_pos])
-        BASE2HAA_offsets_xz = np.array([[self.BASE2HAA_offset_x,self.BASE2HAA_offset_x,-self.BASE2HAA_offset_x,-self.BASE2HAA_offset_x],
-                                 [-self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z, -self.BASE2HAA_offset_z]]);
-#        print footPosDes_xz, BASE2HAA_offsets_xz
-        footPosHAA = np.subtract(footPosDes_xz, BASE2HAA_offsets_xz)
-#        print footPosHAA
-        y = np.array([y_pos - self.BASE2HAA_offset_y,
-                      y_pos + self.BASE2HAA_offset_y,
-                      y_pos - self.BASE2HAA_offset_y,
-                      y_pos + self.BASE2HAA_offset_y])
-#        y[0] = y_pos - self.BASE2HAA_offset_y
-#        y[1] = y_pos + self.BASE2HAA_offset_y
-#        y[2] = y_pos - self.BASE2HAA_offset_y
-#        y[3] = y_pos + self.BASE2HAA_offset_y
+    def leg_inverse_kin(self, legID, footPositionBF, footVelocityBF):
+#        BASE2HAAX = 0.3735;  //!< x component of LF_HAA origin, in base frame
+#        BASE2HAAY = 0.207;   //!< y component of LF_HAA origin, in base frame
+#        HAA2HFE  = 0.08;  //!< distance between HFE to HAA, in the xz plane of the HAA frame
+#1        HFE2KFEZ = -0.35;  //!< distance of HFE to KFE in z direction  [is this used? is this at HFE=0rad?]
+#        
+#        self.upperLegLength = 0.35;
+#        self.lowerLegLength = 0.341;
+
+#        self.BASE2HAA_offset_x = 0.3735;
+#        self.BASE2HAA_offset_y = 0.207;
+#        self.BASE2HAA_offset_z = 0.08;
         
-#        haa2hfeLength = 0.045;
-        haa2hfeLength = 0.0;
-        M_PI = np.pi;
+        M_PI = np.pi
 
-        sz = np.size(x_pos,0)
-        # 1 -> LF
-        # 2 -> RF
-        # 3 -> LH
-        # 4 -> RH
-        q = np.zeros((12,1))
-        q_dot = np.zeros((12,1))
-    
-        # remove the haa2hfe offset and rotate in the sagittal plane of the leg
-        hfe2foot = np.sqrt(np.square(footPosHAA[0]) + np.square(footPosHAA[1])) - haa2hfeLength;
-        # add the x component
-        # hfe2foot = sqrt(hfe2foot * hfe2foot);
-        # HAA joints
-        #        print 'y', y[0] 
-        #        print 'foot', footPosHAA
-        q[0] = -np.arctan2(footPosHAA[0,0],-footPosHAA[1,0]); # LF HAA
-        q[6] = -np.arctan2(footPosHAA[0,1],-footPosHAA[1,1]); # LH HAA
-        q[3] = -np.arctan2(footPosHAA[0,2],-footPosHAA[1,2]);# RF HAA
-        q[9] = -np.arctan2(footPosHAA[0,3],-footPosHAA[1,3]);# RH HAA
+#    double getHAA_x() { return BASE2HAAX; }
+#    double getHAA_y() { return BASE2HAAY; }
+#    double getHAA_z() { return 0; }
+#
+#    double getDist_HAA_HFE() { return HAA2HFE; }
+#    double getDist_HFE_KFE() { return upleg_length; }
+#    double getFoot_x() { return pGetter.getValue_foot_x(); }
 
-        #q[0] = -np.arctan2(footPosHAA[0,0],-footPosHAA[1,0]); # LF HAA
-        #q[6] = -np.arctan2(footPosHAA[0,1],-footPosHAA[1,1]); # LH HAA
-        #q[3] = -np.arctan2(-footPosHAA[0,2],-footPosHAA[1,2]);# RF HAA
-        #q[9] = -np.arctan2(-footPosHAA[0,3],-footPosHAA[1,3]);# RH HAA
-    
-        # HFE and KFE joints (use cosine law)
-        cos_arg = (self.upperLegLength * self.upperLegLength + self.lowerLegLength * self.lowerLegLength - hfe2foot * hfe2foot) / (2 * self.upperLegLength * self.lowerLegLength);
-        q[2] = - M_PI + np.arccos(cos_arg[0]); # LF KFE
-        q[5] = - M_PI + np.arccos(cos_arg[0]); # RF KFE
-        cos_arg = (np.square(self.upperLegLength) + np.square(hfe2foot) - np.square(self.lowerLegLength)) / (2 * self.upperLegLength * hfe2foot);
-        sin_arg = footPosHAA[0] / hfe2foot; #it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)	
-        q[1] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# LF HFE
-        if (np.isnan(q[1])):
-            self.isOutOfWorkSpace = True
-            if verbose:
-                print 'Warning! point is out of workspace!'
-        q[4] = -np.arcsin(sin_arg[0]) + np.arccos(cos_arg[0]);# RF HFE
-        if (np.isnan(q[4])):
-            self.isOutOfWorkSpace = True
-            if verbose:
-                print 'Warning! point is out of workspace!'    
-        cos_arg = (self.upperLegLength * self.upperLegLength + self.lowerLegLength * self.lowerLegLength - hfe2foot * hfe2foot)/ (2 * self.upperLegLength * self.lowerLegLength);
-        q[8]= + M_PI- np.arccos(cos_arg[0]); # LH KFE
-        q[11] = + M_PI - np.arccos(cos_arg[0]); # RH KFE
-        cos_arg = (self.upperLegLength * self.upperLegLength + hfe2foot * hfe2foot- self.lowerLegLength * self.lowerLegLength) / (2 * self.upperLegLength * hfe2foot);
-        sin_arg = footPosHAA[0,2] / hfe2foot; # it should be footPosHFE(rbd::X)/hfe2foot but footPosHFE(rbd::X) = footPosHAA(rbd::X)
-        q[7] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# LH HFE
-        if (np.isnan(q[7])):
-            self.isOutOfWorkSpace = True
-            if verbose:
-                print 'Warning! point is out of workspace!'
-        q[10] = -np.arcsin(sin_arg[0])- np.arccos(cos_arg[0]);# RH HFE
-        if (np.isnan(q[10])):
-            self.isOutOfWorkSpace = True
-            if verbose:
-                print 'Warning! point is out of workspace!'    
+#        upleg_length  = 0.35;    #//!< length of upper leg
+#        upleg_length_sqr  = upleg_length*upleg_length;
+#
+        haa_sign_flip = [1.0, 1.0, 1.0, 1.0]
+        kfe_sign_flip = [1.0, 1.0, 1.0, 1.0]
+        haaXOffset_sign_flip = [1.0, 1.0, 1.0, 1.0]
+        haaYOffset_sign_flip = [1.0, 1.0, 1.0, 1.0]
 
-        """ compute joint velocities updating the 2D jacobians with the computed position """
-        l1 = self.upperLegLength;
-        l2 = self.lowerLegLength;
-        Jac_LF_2D = np.array([[np.asscalar(-l1*np.cos([q[1]]) - l2 * np.cos([q[1] + q[2]])),np.asscalar( - l2 * np.cos([q[1] + q[2]]))],
-                            [np.asscalar(l1*np.sin([q[1]]) + l2 * np.sin([q[1] + q[2]])),np.asscalar(   l2 * np.sin([q[1] + q[2]]))]])
+        haa_sign_flip[self.dog.RF] = -1.0 
+        haa_sign_flip[self.dog.RH] = -1.0
+        kfe_sign_flip[self.dog.LH] = -1.0
+        kfe_sign_flip[self.dog.RH] = -1.0
         
-        Jac_RF_2D = np.array([[np.asscalar(l1*np.cos(q[4]) + l2 * np.cos(q[4]+q[5])), np.asscalar( l2 * np.cos(q[4] + q[4]))],
-                            [np.asscalar(l1*np.sin(q[4]) + l2 * np.sin(q[4]+q[5])), np.asscalar( l2 * np.sin(q[4] + q[4]))]])
-                            
-        Jac_LH_2D = np.array([[np.asscalar(-l1*np.cos(q[7]) - l2 * np.cos(q[7]+q[8])), np.asscalar( -l2 * np.cos(q[7] + q[8]))],
-                            [np.asscalar(l1*np.sin(q[7]) + l2 * np.sin(q[7]+q[8])), np.asscalar(  l2 * np.sin(q[7] + q[8]))]])
-                            
-        Jac_RH_2D = np.array([[np.asscalar(l1*np.cos(q[10]) + l2 * np.cos(q[10]+q[11])), np.asscalar( l2 * np.cos(q[10] + q[11]))],
-                           [np.asscalar(l1*np.sin(q[10]) + l2 * np.sin(q[10]+q[11])), np.asscalar( l2 * np.sin(q[10] + q[11]))]])     
+        haaXOffset_sign_flip[self.dog.LH] = -1.0; 
+        haaXOffset_sign_flip[self.dog.RH] = -1.0;
+        haaYOffset_sign_flip[self.dog.RF] = -1.0;
+        haaYOffset_sign_flip[self.dog.RH] = -1.0;
+ 
+        print 'foot pos ', footPositionBF
+        q_leg = [np.nan, np.nan, np.nan]
+        foot_haa_frame = footPositionBF - [self.BASE2HAA_offset_x*haaXOffset_sign_flip[legID], self.BASE2HAA_offset_y*haaYOffset_sign_flip[legID], 0.0]
+        print self.BASE2HAA_offset_x, self.BASE2HAA_offset_y, self.BASE2HAA_offset_z
+        print foot_haa_frame
+        
+        
+        
+        haa2foot_yz = np.sqrt(np.square(foot_haa_frame[self.rbd.LY]) + np.square(foot_haa_frame[self.rbd.LZ])) 
+        hfe2foot_yz = 0.0
+        fe_plane_line = [0.0, foot_haa_frame[self.rbd.LY], foot_haa_frame[self.rbd.LZ]]
+        upleg_length_sqr = self.upperLegLength*self.upperLegLength
+        lowleg_length_sqr = self.lowerLegLength*self.lowerLegLength
+        
+        if foot_haa_frame[self.rbd.LZ] > 0:
+#            The damn foot is above the HAA origin. Just invert the vector to go
+#            back to the negative half-plane. That would not change the HAA angle
+            fe_plane_line = - fe_plane_line;
+#            In addition, the HFE-to-foot distance has to be computed like this
+            hfe2foot_yz = haa2foot_yz + self.HAA2HFE;
+        else:
+            hfe2foot_yz = haa2foot_yz - self.HAA2HFE;
+            
+            
+#            // HFE-to-foot distance, squared and plain
+        hfe2foot_sqr = hfe2foot_yz * hfe2foot_yz + foot_haa_frame[self.rbd.LX] * foot_haa_frame[self.rbd.LX];
+        hfe2foot = np.sqrt( hfe2foot_sqr );
 
-        #footVelDes = np.vstack([x_dot, z_dot]); 
-        #        print q*180.0/np.pi
     
-        #q_dot[1:2] = np.linalg.inv(Jac_LF)*footVelDes;
-        #q_dot[4:5] = np.linalg.inv(Jac_RF)*footVelDes;
-        #q_dot[7:8] = np.linalg.inv(Jac_LH)*footVelDes;
-        #q_dot[10:11] = np.linalg.inv(Jac_RH)*footVelDes;   
-        return q, q_dot, Jac_LF_2D, Jac_RF_2D, Jac_LH_2D, Jac_RH_2D, self.isOutOfWorkSpace
+        ''' HAA '''
+        
+        q_leg[self.dog.HAA] = - np.arctan2(fe_plane_line[self.rbd.LY], -fe_plane_line[self.rbd.LZ])  * haa_sign_flip[legID];
+            
+        ''' HFE '''
+            
+        temp = (upleg_length_sqr + hfe2foot_sqr - lowleg_length_sqr) / (2 * self.upperLegLength * hfe2foot);
+#    temp = (temp > 1 ? 1 : (temp < -1 ? -1 : temp));    
+        if temp > 1:
+            temp = 1
+        else:
+            if temp < -1:
+                temp = -1
 
+#    // Foot X coordinate in the HAA frame; swap the sign if necessary to map it
+#    //  to the LF_HAA frame, so that we can use the equations that work with the
+#    //  geometry of the LF leg only
+        foot_x = foot_haa_frame[self.rbd.LX] * kfe_sign_flip[legID];
 
-
-
+#    // Distinguish whether the foot is above or below the HFE line in the FE
+#    //  plane (the line passing through HFE at an angle of PI/2 in HFE conventions)
+        if(haa2foot_yz < self.HAA2HFE):
+            q_leg[self.dog.HFE] = - M_PI + np.arcsin( foot_x / hfe2foot ) + np.arccos( temp )
+        else:
+            q_leg[self.dog.HFE] = - np.arcsin( foot_x / hfe2foot ) + np.arccos( temp )
+    
+#    // Now swap the sign again to account for the actual leg
+        q_leg[self.dog.HFE] = q_leg[self.dog.HFE]  * kfe_sign_flip[legID]; # // not an errors, use the same sign_flip of KFE
+        
+        ''' KFE '''
+        
+        twiceUpperLower = 2 * self.upperLegLength * self.lowerLegLength;
+#    // Compute the argument of the arc cosine; because of numerical errors, it
+#    //  might be slightly outside [-1,1], therefore I cap it.
+        temp = (upleg_length_sqr + lowleg_length_sqr - hfe2foot_sqr) / twiceUpperLower;
+#        temp = (temp > 1 ? 1 : (temp < -1 ? -1 : temp));
+        if temp > 1:
+            temp = 1
+        else:
+            if temp < -1:
+                temp = -1
+                
+        q_leg[self.dog.KFE] = (-M_PI + np.arccos(temp)) * kfe_sign_flip[legID];
+        
+#       //Check if the outputs are inf or nan
+        for joint in self.dog.legJoints:
+            if not np.isfinite(q_leg[joint]):
+                print "Position of joint ",joint," and leg ", 0," is not finite !!!" 
+#            return false;
+            
+        return q_leg
+    
+    def inverse_kin(self, contactsBF, foot_vel):
+        q = []                         
+        for legID in self.dog.legs:                        
+            q_leg = self.leg_inverse_kin(legID, contactsBF[legID,:], foot_vel[legID,:])   
+            q = np.hstack([q, q_leg]) 
+        return q
+        
