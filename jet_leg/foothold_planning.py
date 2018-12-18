@@ -41,7 +41,7 @@ class FootHoldPlanning:
     def __init__(self):      
         self.compGeo = ComputationalGeometry()
         self.compDyn = ComputationalDynamics()
-        self.area = [0.0,0.0,0.0,0.0,0.0]
+        self.area = []
         self.option_index = 0
         self.ack_optimization_done = False
         
@@ -69,7 +69,7 @@ class FootHoldPlanning:
 #            print 'IAR', IAR
             feasible_regions.append(IAR)
 #            print 'FR', feasible_regions
-            self.area[i] = self.compGeo.computePolygonArea(IAR)
+            self.area.append(self.compGeo.computePolygonArea(IAR))
         
         print 'area ',self.area
         print 'max arg ',np.argmax(self.area, axis=0)
