@@ -173,7 +173,7 @@ class ComputationalDynamics():
 #        print 'hereee'  
 #        points = np.random.rand(30, 2)   # 30 random points in 2-D
 #        print points
-        vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl', max_iter=1000)
+        vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl', max_iter=1000, init_angle=0.0)
 #        print vertices_WF
         compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
         hull = ConvexHull(compressed_vertices)
