@@ -85,10 +85,11 @@ n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
 normals = np.vstack([n1, n2, n3, n4])
 ng = 4
 tolerance = 0.01
+max_iter = 10
 
 params = IterativeProjectionParameters()
-params.setContactsPosBF(contacts)
-params.setCoMPos(comWF)
+params.setContactsPosWF(contacts)
+params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
 params.setConstraintModes(constraint_mode)
@@ -96,7 +97,7 @@ params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(total_mass)
-CoMlist, stackedErrors, stacked_polygons = pathIP.find_vertex_along_path(params, desired_direction, tolerance)
+CoMlist, stackedErrors, stacked_polygons = pathIP.find_vertex_along_path(params, desired_direction, tolerance, max_iter)
 newLimitPoint = CoMlist[-1]
 print 'Errors convergence: ', stackedErrors
 print 'first', stacked_polygons[0]
@@ -111,13 +112,20 @@ print("Path Sequential Iterative Projection: --- %s seconds ---" % (time.time() 
 plt.close('all')
 plotter = Plotter()
 
+print stackedErrors
+#dx = stackedErrors[:,0]
+#dy = stackedErrors[:,1]
+#d = np.linalg.norm(stackedErrors, axis=1)
+
 plt.figure()
 plt.grid()
-plt.ylabel("Absolute error [cm]")
+plt.ylabel("Absolute error [m]")
 plt.xlabel("Iterations number")
-plt.plot(np.abs(stackedErrors[:,0]), 'b', linewidth=2, label = 'X direction')
-plt.plot(np.abs(stackedErrors[:,1]), 'r', linewidth=2, label = 'Y direction')
+#plt.plot(np.abs(stackedErrors[:,0]), 'b', linewidth=5, label = 'X direction')
+#plt.plot(np.abs(stackedErrors[:,1]), 'r', linewidth=2, label = 'Y direction')
+plt.plot(np.abs(d), 'g', linewidth=2, label = 'd')
 plt.legend()
+
 
 '''Plotting Fig 2'''
 plt.figure()
@@ -140,7 +148,7 @@ cNorm  = colors.Normalize(vmin=lower_lim, vmax=upper_lim)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 index = 0
 err = np.hstack(stackedErrors)
-   
+  
  
 for polygon in stacked_polygons:
     point = np.vstack([polygon])
@@ -148,7 +156,7 @@ for polygon in stacked_polygons:
     y = np.hstack([point[:,1], point[0,1]])
     colorVal = scalarMap.to_rgba(scale[index])
 #    print index
-    plt.plot(x,y, color = colorVal,  linewidth=5., label = 'error: '+str(stackedErrors[index,0]))
+    plt.plot(x,y, color = colorVal,  linewidth=5., label = 'error: '+str(round(d[index], 2)))
     plt.plot(CoMlist[index,0], CoMlist[index,1], color = colorVal, marker='o', markersize=15)
     index+=1
     

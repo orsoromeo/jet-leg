@@ -250,6 +250,7 @@ class Constraints:
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         
         q = self.kin.inverse_kin(contactsBF, foot_vel)        
+        self.kin.update_homogeneous(q)
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
         for j in stanceIndex:    

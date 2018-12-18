@@ -709,12 +709,12 @@ class HyQKinematics:
         self.fr_RH_upperleg_Xh_fr_RH_lowerleg[1,1] =  self.c__q_RH_KFE;
 
     def update_jacobians(self, q):
-        self.s__q_LF_HAA = np.sin(q[1-1]);
-        self.s__q_LF_HFE = np.sin(q[2-1]);
-        self.s__q_LF_KFE = np.sin(q[3-1]);
-        self.c__q_LF_HAA = np.cos(q[1-1]);
-        self.c__q_LF_HFE = np.cos(q[2-1]);
-        self.c__q_LF_KFE = np.cos(q[3-1]);
+#        self.s__q_LF_HAA = np.sin(q[1-1]);
+#        self.s__q_LF_HFE = np.sin(q[2-1]);
+#        self.s__q_LF_KFE = np.sin(q[3-1]);
+#        self.c__q_LF_HAA = np.cos(q[1-1]);
+#        self.c__q_LF_HFE = np.cos(q[2-1]);
+#        self.c__q_LF_KFE = np.cos(q[3-1]);
 
         self.fr_trunk_J_LF_foot[2-1,2-1] =  self.c__q_LF_HAA;
         self.fr_trunk_J_LF_foot[2-1,3-1] =  self.c__q_LF_HAA;

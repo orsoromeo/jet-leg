@@ -99,8 +99,8 @@ torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 tolerance = 0.005
 
 params = IterativeProjectionParameters()
-params.setContactsPosBF(contacts)
-params.setCoMPos(startingPoint)
+params.setContactsPosWF(contacts)
+params.setCoMPosWF(startingPoint)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceLegs)
 params.setConstraintModes(constraint_mode)
@@ -113,9 +113,9 @@ for angle in np.arange(0.0, 0.5, 0.25):
     print '===============> new search angle: ', angle
     startingPoint = np.array([startingPointX/float(number_of_contacts) + np.random.normal(0.0, 0.05), 
                               startingPointY/float(number_of_contacts) + np.random.normal(0.0, 0.05), 0.0])
-    params.setCoMPos(startingPoint)
+    params.setCoMPosWF(startingPoint)
     desired_direction = np.array([np.cos(angle), np.sin(angle), 0.0])
-    newLimitPoint, stackedErrors = pathIP.find_vertex_along_path(params, desired_direction, tolerance)
+    newLimitPoint, stackedErrors, stackedPolygons = pathIP.find_vertex_along_path(params, desired_direction, tolerance)
     comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, newLimitPoint])
 
 
