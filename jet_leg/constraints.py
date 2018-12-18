@@ -253,6 +253,38 @@ class Constraints:
         self.kin.update_homogeneous(q)
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
         
+        
+#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_LF), J_LF), full_matrices=True)
+#        eigval = np.linalg.cond(J_LF)
+#
+#       
+#        print 'min arg LF',np.min(s, axis=0)
+#        
+#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_RF), J_RF), full_matrices=True)
+#        eigval = np.linalg.cond(J_RF)
+#        #print 'eig RF',s         
+#        print 'min arg RF',np.min(s, axis=0)
+#        
+#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_LH), J_LH), full_matrices=True)
+#        eigval = np.linalg.cond(J_LH)
+#        print 'min arg LH',np.min(s, axis=0)
+#        
+#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_RH), J_RH), full_matrices=True)
+#        eigval= np.linalg.cond(J_RH)        
+#        print 'min arg RH',np.min(s, axis=0)
+        
+#        m =   np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_LF,  np.transpose(J_LF))) ,    np.array([1,0,0]) ))  
+#        print 'm LF ', m  
+#        
+#        m = np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_RF,  np.transpose(J_RF)) ),    np.array([1,0,0]) )) 
+#        print 'm RF ', m  
+#        
+#        m = np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_LH,  np.transpose(J_LH)) ),    np.array([1,0,0]) ) )
+#        print 'm LH ', m  
+#        
+#        m = np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_RH,  np.transpose(J_RH)) ),    np.array([1,0,0]) ) )
+#        print 'm RH ', m  
+        
         for j in stanceIndex:    
 #            print 'leg index',j
             if constraint_mode[j] == 'ONLY_FRICTION':

@@ -15,6 +15,8 @@ import sys
 import time
 import threading
 
+from copy import deepcopy
+
 from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
 from rosgraph_msgs.msg import Clock
@@ -41,7 +43,6 @@ class FootHoldPlanning:
     def __init__(self):      
         self.compGeo = ComputationalGeometry()
         self.compDyn = ComputationalDynamics()
-        self.area = []
         self.option_index = 0
         self.ack_optimization_done = False
         
@@ -51,7 +52,7 @@ class FootHoldPlanning:
         #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
         print 'foothold options',params.footOptions
                     
-        params.sample_contacts = params.contactsWF 
+        params.sample_contacts = deepcopy(params.contactsWF )
         params.setCoMPosWF(params.com_position_to_validateW)
         
         print "com pos to validate" , params.com_position_to_validateW
@@ -60,20 +61,24 @@ class FootHoldPlanning:
         numberOfFeetOptions = np.size(params.footOptions,0)
         print numberOfFeetOptions
         feasible_regions = []
+        area = []
         for i in range(0, numberOfFeetOptions):
+            params.contactsWF  =  deepcopy(params.sample_contacts)
+            
+            
             #overwrite the future swing foot
             params.contactsWF[params.actual_swing] = params.footOptions[i]
-            print params.footOptions[i]
-            params.setContactsPosWF(params.contactsWF)
+            #print params.footOptions[i]
+ 
             IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-#            print 'IAR', IAR
+            print 'IAR', IAR
             feasible_regions.append(IAR)
 #            print 'FR', feasible_regions
-            self.area.append(self.compGeo.computePolygonArea(IAR))
+            area.append( self.compGeo.computePolygonArea(IAR))
         
-        print 'area ',self.area
-        print 'max arg ',np.argmax(self.area, axis=0)
-        return np.argmax(self.area, axis=0), feasible_regions
+        print 'area ', area
+        print 'max arg ',np.argmax(np.array(area), axis=0)
+        return np.argmax(np.array(area), axis=0), feasible_regions
         
     def optimizeFootHoldAndBaseOrient(self, params):        
 
@@ -93,11 +98,12 @@ class FootHoldPlanning:
         print numberOfFeetOptions
         for i in range(0, numberOfFeetOptions):
             for j in range(0, numberOfBaseOrientationOptions):
+                params.contactsWF  =  deepcopy(params.sample_contacts)
                 #overwrite the future swing foot
                 params.contactsWF[params.actual_swing] = params.footOptions[i]
                 params.roll = params.orientationOptions[j][0]
                 print params.roll
-                params.setContactsPosWF(params.contactsWF)
+            
                 IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
                 self.area[i] = self.compGeo.computePolygonArea(IAR)
                 

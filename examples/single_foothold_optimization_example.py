@@ -57,7 +57,6 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([0.0, 0.0, 0.0])
 # contact positions
 """ contact points """
 
@@ -67,17 +66,17 @@ LH_foot = np.array([-0.3, 0.2, -0.5])
 RH_foot = np.array([-0.3, -0.2, -0.5])
 
 feetPos = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = deepcopy(feetPos)
+contacts =deepcopy(feetPos)
 
 #contacts = contactsToStack[0:nc+1, :]
 #print contacts
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 85.
+trunk_mass = 95.
 mu = 0.9
 
-stanceFeet = [1,1,1,1]
+stanceFeet = [1,1,1,0]
 randomSwingLeg = random.randint(0,3)
 print 'Swing leg', randomSwingLeg
 print 'stanceLegs ' ,stanceFeet
@@ -96,14 +95,13 @@ LH_tau_lim = [50.0, 100.0, 100.0]
 RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
-comWF = np.array([0.0,0.0,0.0])
+
 
 nc = np.sum(stanceFeet)
 
 comp_dyn = ComputationalDynamics()
 params = IterativeProjectionParameters()
 params.setContactsPosWF(contacts)
-params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
@@ -111,17 +109,50 @@ params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(trunk_mass)
+
+#inputs for foothold planning
 params.com_position_to_validateW = [0.1, 0.1, 0]
 
-footOption0 = [0., 0., 0.] + LF_foot
-footOption1 = [0., 0.1, 0.] + LF_foot
-footOption2 = [0.1, 0., 0.] + LF_foot
-footOption3 = [0.1, 0.1, 0.] + LF_foot
-footOption4 = [-0.1, 0.1, 0.] + LF_foot
-footOption5 = [0.1, -0.1, 0.] + LF_foot
-footOption6 = [-0.1, -0.1, 0.] + LF_foot
-footOption7 = [0., -0.1, 0.] + LF_foot
-footOption8 = [-0.1, 0., 0.] + LF_foot
+
+res = 0.15
+bound = 0.2
+#square
+#predictedLF_foot = np.add(LF_foot,np.array([0.1,0.3,0.0]))
+#footOption0 = [0., 0., 0.] + predictedLF_foot
+#footOption1 = [0.,res, 0.] + predictedLF_foot
+#footOption2 = [res, 0., 0.] + predictedLF_foot
+#footOption3 = [res, res, 0.] + predictedLF_foot
+#footOption4 = [-res, res, 0.] + predictedLF_foot
+#footOption5 = [res, -res, 0.] + predictedLF_foot
+#footOption6 = [-res, -res, 0.] + predictedLF_foot
+#footOption7 = [0., -res, 0.] + predictedLF_foot
+#footOption8 = [-res, 0., 0.] + predictedLF_foot
+
+#y
+#predictedLF_foot = np.add(LF_foot,np.array([0.1,0.3,0.0]))
+#footOption4 = [0., 0., 0.] + predictedLF_foot
+#footOption3 = [0, -bound*1/4, 0.] + predictedLF_foot
+#footOption2 = [0, -bound*2/4, 0.] + predictedLF_foot
+#footOption1 = [0., -bound*3/4, 0.] + predictedLF_foot
+#footOption0 = [0, -bound*4/4., 0.] + predictedLF_foot
+#footOption5 = [0.,bound*1/4, 0.] + predictedLF_foot
+#footOption6 = [0, bound*2/4, 0.] + predictedLF_foot
+#footOption7 = [0, bound*3/4, 0.] + predictedLF_foot
+#footOption8 = [0, bound*4/4,  0.] + predictedLF_foot
+
+#x
+predictedLF_foot = np.add(LF_foot,np.array([0.2,0.0,0.0]))
+footOption4 = [0., 0., 0.] + predictedLF_foot
+footOption3 = [ -bound*1/4, 0., 0.] + predictedLF_foot
+footOption2 = [ -bound*2/4, 0., 0.] + predictedLF_foot
+footOption1 = [ -bound*3/4, 0., 0.] + predictedLF_foot
+footOption0 = [ -bound*4/4., 0., 0.] + predictedLF_foot
+footOption5 = [ bound*1/4, 0., 0.] + predictedLF_foot
+footOption6 = [ bound*2/4,  0.,0.] + predictedLF_foot
+footOption7 = [ bound*3/4,  0.,0.] + predictedLF_foot
+footOption8 = [ bound*4/4,  0., 0.] + predictedLF_foot
+
+
 params.footOptions = np.array([footOption0,
                                        footOption1,
                                        footOption2,
@@ -147,9 +178,10 @@ jet = cm = plt.get_cmap('seismic')
 cNorm  = colors.Normalize(vmin=-30, vmax=35)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
-print 'contacts', feetPos
+#print 'contacts', feetPos
 h0 = plt.plot(params.footOptions[chosen_foothold,0],params.footOptions[chosen_foothold,1],'^', color = 'r', markersize=20)
 h1 = plt.plot(feetPos[0:nc,0],feetPos[0:nc,1],'ks',markersize=15, label='feet')
+
 
 for polygon in actuationRegions:
     colorVal = scalarMap.to_rgba(scale[idx])
@@ -158,6 +190,7 @@ for polygon in actuationRegions:
     h = plt.plot(x,y, color = colorVal, linewidth=5.)
     h2 = plt.plot(params.footOptions[idx,0],params.footOptions[idx,1],'o', color = colorVal, markersize=15)
     idx += 1
+h3 = plt.plot(params.getCoMPosWF()[0],params.getCoMPosWF()[1],'or',markersize=25)
 
     
 plt.grid()
