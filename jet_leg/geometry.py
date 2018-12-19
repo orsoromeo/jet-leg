@@ -30,6 +30,7 @@ class Geometry:
 #            print j, index[0,j]
             sorted_vertices[j,:] = polygon[index[0,j],:]       
         
+        # adding an extra point to close the polytop (last point equal to the first)
         sorted_vertices = np.vstack([sorted_vertices, sorted_vertices[0,:]])
         
         return sorted_vertices

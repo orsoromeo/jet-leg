@@ -56,7 +56,7 @@ class IterativeProjectionParameters:
         self.numberOfGenerators = 4
                 
         self.actual_swing = 0
-        self.optimization_started = False
+
 
     def setContactsPosBF(self, contactsBF):
         self.contactsBF = contactsBF
@@ -287,62 +287,9 @@ class IterativeProjectionParameters:
             if str(received_data.name[j]) == str("yaw"):
                 self.yaw = received_data.data[j]   
                 
-            #foothold planning
-            if str(received_data.name[j]) == str("com_position_to_validateWx"):
-                self.com_position_to_validateW[0] = received_data.data[j]
-            if str(received_data.name[j]) == str("com_position_to_validateWy"):
-                self.com_position_to_validateW[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("com_position_to_validateWz"):
-                self.com_position_to_validateW[2] = received_data.data[j]                
-                
-                
-            if str(received_data.name[j]) == str("foothold_option0x"):  
-                self.footOption0[0] = received_data.data[j]
-            if str(received_data.name[j]) == str("foothold_option0y"):  
-                self.footOption0[1] = received_data.data[j]                   
-            if str(received_data.name[j]) == str("foothold_option0z"):  
-                self.footOption0[2] = received_data.data[j]    
-                
-            if str(received_data.name[j]) == str("foothold_option1x"):  
-                self.footOption1[0] = received_data.data[j]
-            if str(received_data.name[j]) == str("foothold_option1y"):  
-                self.footOption1[1] = received_data.data[j]                   
-            if str(received_data.name[j]) == str("foothold_option1z"):  
-                self.footOption1[2] = received_data.data[j]   
-
-            if str(received_data.name[j]) == str("foothold_option2x"):  
-                self.footOption2[0] = received_data.data[j]
-            if str(received_data.name[j]) == str("foothold_option2y"):  
-                self.footOption2[1] = received_data.data[j]                   
-            if str(received_data.name[j]) == str("foothold_option2z"):  
-                self.footOption2[2] = received_data.data[j]   
-
-            if str(received_data.name[j]) == str("foothold_option3x"):  
-                self.footOption3[0] = received_data.data[j]
-            if str(received_data.name[j]) == str("foothold_option3y"):  
-                self.footOption3[1] = received_data.data[j]                   
-            if str(received_data.name[j]) == str("foothold_option3z"):  
-                self.footOption3[2] = received_data.data[j]   
-
-            if str(received_data.name[j]) == str("foothold_option4x"):  
-                self.footOption4[0] = received_data.data[j]
-            if str(received_data.name[j]) == str("foothold_option4y"):  
-                self.footOption4[1] = received_data.data[j]                   
-            if str(received_data.name[j]) == str("foothold_option4z"):  
-                self.footOption4[2] = received_data.data[j]  
-                
-            self.footOptions = np.array([self.footOption0,
-                                     self.footOption1,
-                                     self.footOption2,
-                                     self.footOption3,
-                                     self.footOption4])
-#            print self.footOptions
-
             if str(received_data.name[j]) == str("actual_swing"):  
-                self.actual_swing = int(received_data.data[j])
-                
-            if str(received_data.name[j]) == str("optimization_started"):  
-                self.optimization_started = bool(received_data.data[j])
+                self.actual_swing = int(received_data.data[j])        
+            
                 
         self.robotMass -= self.externalForceWF[2]/9.81
                                    

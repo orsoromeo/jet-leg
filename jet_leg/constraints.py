@@ -208,7 +208,7 @@ class Constraints:
         
         stanceLegs = params.getStanceFeet()
         
-        print 'stance legs', stanceLegs
+        #print 'stance legs', stanceLegs
         contactsNumber = np.sum(stanceLegs)
         contactsWF = params.getContactsPosWF()
         comPositionWF = params.getCoMPosWF()

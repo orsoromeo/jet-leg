@@ -61,10 +61,10 @@ useVariableJacobian = False
 # contact positions
 """ contact points """
 
-LF_foot = np.array([0.3, 0.2, -0.5])
-RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.3, 0.2, -0.5])
-RH_foot = np.array([-0.3, -0.2, -0.5])
+LF_foot = np.array([0.3, 0.2, -0.0])
+RF_foot = np.array([0.3, -0.2, -0.0])
+LH_foot = np.array([-0.3, 0.2, -0.0])
+RH_foot = np.array([-0.3, -0.2, -0.0])
 
 feetPos = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
 contacts =deepcopy(feetPos)
@@ -74,7 +74,7 @@ contacts =deepcopy(feetPos)
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 100.
+trunk_mass = 95.
 mu = 0.9
 
 stanceFeet = [1,1,1,0]
@@ -112,12 +112,11 @@ params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(trunk_mass)
 
 #inputs for foothold planning
-footPlanningParams = FootholdPlanningInterface()
-footPlanningParams.com_position_to_validateW = [0.1, 0.1, 0]
+foothold_params = FootholdPlanningInterface()
+foothold_params.com_position_to_validateW = [0.05, 0.05, 0.55]
 
 
-gridResolution = 0.15
-bound = 0.2
+maxCorrection = 0.2
 #square
 #predictedLF_foot = np.add(LF_foot,np.array([0.1,0.3,0.0]))
 #footOption0 = [0., 0., 0.] + predictedLF_foot
@@ -143,51 +142,52 @@ bound = 0.2
 #footOption8 = [0, bound*4/4,  0.] + predictedLF_foot
 
 #x
-#predictedLF_foot = np.add(LF_foot,np.array([0.6,0.0,0.0]))
-#footPlanningParams.heuristicFoothold = predictedLF_foot
-#footOption4 = [0., 0., 0.] + predictedLF_foot
-#footOption3 = [ -bound*1/4, 0., 0.] + predictedLF_foot
-#footOption2 = [ -bound*2/4, 0., 0.] + predictedLF_foot
-#footOption1 = [ -bound*3/4, 0., 0.] + predictedLF_foot
-#footOption0 = [ -bound*4/4., 0., 0.] + predictedLF_foot
-#footOption5 = [ bound*1/4, 0., 0.] + predictedLF_foot
-#footOption6 = [ bound*2/4,  0.,0.] + predictedLF_foot
-#footOption7 = [ bound*3/4,  0.,0.] + predictedLF_foot
-#footOption8 = [ bound*4/4,  0., 0.] + predictedLF_foot
+predictedLF_foot = np.add(LF_foot,np.array([0.3,0.15,0.0]))
+footOption4 = [0., 0., 0.] + predictedLF_foot
+footOption3 = [ -maxCorrection*1/4, 0., 0.] + predictedLF_foot
+footOption2 = [ -maxCorrection*2/4, 0., 0.] + predictedLF_foot
+footOption1 = [ -maxCorrection*3/4, 0., 0.] + predictedLF_foot
+footOption0 = [ -maxCorrection*4/4., 0., 0.] + predictedLF_foot
+footOption5 = [ maxCorrection*1/4, 0., 0.] + predictedLF_foot
+footOption6 = [ maxCorrection*2/4,  0.,0.] + predictedLF_foot
+footOption7 = [ maxCorrection*3/4,  0.,0.] + predictedLF_foot
+footOption8 = [ maxCorrection*4/4,  0., 0.] + predictedLF_foot
+
+foothold_params.minRadius = 0.2
 
 
-#footPlanningParams.footOptions = np.array([footOption0,
-#                                       footOption1,
-#                                       footOption2,
-#                                       footOption3,
-#                                       footOption4,
-#                                       footOption5,
-#                                       footOption6,
-#                                       footOption7,
-#                                       footOption8])
+foothold_params.footOptions = np.array([footOption0,
+                                       footOption1,
+                                       footOption2,
+                                       footOption3,
+                                       footOption4,
+                                       footOption5,
+                                       footOption6,
+                                       footOption7,
+                                       footOption8])
 
 ''' compute iterative projection '''
 print 'contacts', feetPos
 footHoldPlanning = FootHoldPlanning()
 #chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(footPlanningParams, params)
-minRadius = 0.095
-stackedResidualRadius, actuationRegions, footOptions = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( footPlanningParams, params)
-footPlanningParams.footOptions = footOptions
+
+stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
 print 'residual radius ', stackedResidualRadius
-print 'feet options', footPlanningParams.footOptions
+print 'feet options', foothold_params.footOptions
+print 'final index', foothold_params.option_index
 #IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
 #print 'foot option ',chosen_foothold
 
 lowel_lim = -10
 upper_lim = 10
-footPlanningParams.numberOfFeetOptions = np.size(footPlanningParams.footOptions,0)
-scale = np.linspace(lowel_lim, upper_lim, footPlanningParams.numberOfFeetOptions)
+
+scale = np.linspace(lowel_lim, upper_lim, np.size(actuationRegions))
 jet = cm = plt.get_cmap('seismic') 
 cNorm  = colors.Normalize(vmin=-30, vmax=35)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
 #print 'contacts', feetPos
-#h0 = plt.plot(footPlanningParams.footOptions[chosen_foothold][0],footPlanningParams.footOptions[chosen_foothold][1],'^', color = 'r', markersize=20)
+h0 = plt.plot(foothold_params.footOptions[foothold_params.option_index][0],foothold_params.footOptions[foothold_params.option_index][1],'^', color = 'r', markersize=20)
 h1 = plt.plot(feetPos[0:nc,0],feetPos[0:nc,1],'ks',markersize=15, label='feet')
 
 for polygon in actuationRegions:
@@ -195,8 +195,8 @@ for polygon in actuationRegions:
     x = polygon[:,0]
     y = polygon[:,1]
     h = plt.plot(x,y, color = colorVal, linewidth=5.)
-    print footPlanningParams.footOptions[idx]
-    h2 = plt.plot(footPlanningParams.footOptions[idx][0],footPlanningParams.footOptions[idx][1],'o', color = colorVal, markersize=15)
+    print foothold_params.footOptions[idx]
+    h2 = plt.plot(foothold_params.footOptions[mapFootHoldIdxToPolygonIdx[idx]][0],foothold_params.footOptions[mapFootHoldIdxToPolygonIdx[idx]][1],'o', color = colorVal, markersize=15)
     idx += 1
 h3 = plt.plot(params.getCoMPosWF()[0],params.getCoMPosWF()[1],'or',markersize=25)
 

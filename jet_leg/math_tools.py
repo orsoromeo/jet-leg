@@ -99,6 +99,8 @@ class Math:
         # this function returns a positive distance if the point is on the right side of the segment. This will return 
         # a positive distance for a polygon queried in clockwise order and with a point_to_check which lies inside the polygon itself 
         numberOfVertices = np.size(polygon,0)
+#        print 'polygon', polygon
+        print 'number of vertices', numberOfVertices
         residual_radius = 1000000.0
         for i in range(0,numberOfVertices-1):
             s1 = polygon[i,:]
@@ -108,9 +110,7 @@ class Math:
             if d_temp < residual_radius:
                 residual_radius = d_temp
         
-        d_temp = self.find_point_to_line_signed_distance(polygon[-1,:], polygon[0,:], point_to_check)
-        if d_temp < residual_radius:
-            residual_radius = d_temp
+        # we dont need to compute for the last edge cause we added an extra point to close the polytop (last point equal to the first)
         
 #        print polygon[numberOfVertices-1,:], polygon[0,:], d_temp
         return residual_radius
@@ -156,15 +156,15 @@ class Math:
         return final_point, intersection_points
         
 
-p1 = [1,1.5]
-s1 = [0,0]
-s2 = [0,2]
-s3 = [2,2]
-s4 = [2,0]
-poly = np.vstack([s4,s3,s2,s1])
-math = Math()
-#d =  math.find_point_to_line_signed_distance(s4, s1, p1)
-#print d
+#p1 = [1,1.5]
+#s1 = [0,0]
+#s2 = [0,2]
+#s3 = [2,2]
+#s4 = [2,0]
+#poly = np.vstack([s1,s2,s3,s4])
 #math = Math()
-d = math.find_residual_radius(poly, p1)
-print d
+##d =  math.find_point_to_line_signed_distance(s4, s1, p1)
+##print d
+##math = Math()
+#d = math.find_residual_radius(poly, p1)
+#print d

@@ -184,7 +184,7 @@ class ComputationalDynamics():
 #        print compressed_hull
         #vertices_WF = vertices_BF + np.transpose(comWF[0:2])
         computation_time = (time.time() - start_t_IP)
-        print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
+        #print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
 
 #        print np.size(actuation_polygons,0), np.size(actuation_polygons,1), actuation_polygons
         if np.size(actuation_polygons,0) is 4:
