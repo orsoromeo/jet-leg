@@ -68,3 +68,4 @@ class FootholdPlanningInterface:
                                     
         self.numberOfFeetOptions = 0
         self.sample_contacts = np.zeros((4,3))
+        self.heuristicFoothold = [0., 0., 0.]

@@ -156,15 +156,15 @@ class Math:
         return final_point, intersection_points
         
 
-#p1 = [1,1]
-#s1 = [0,0]
-#s2 = [0,2]
-#s3 = [2,2]
-#s4 = [2,0]
-#poly = np.vstack([s1,s2,s3,s4])
-#math = Math()
+p1 = [1,1.5]
+s1 = [0,0]
+s2 = [0,2]
+s3 = [2,2]
+s4 = [2,0]
+poly = np.vstack([s4,s3,s2,s1])
+math = Math()
 #d =  math.find_point_to_line_signed_distance(s4, s1, p1)
 #print d
 #math = Math()
-#d = math.find_residual_radius(poly, p1)
-#print d
+d = math.find_residual_radius(poly, p1)
+print d

@@ -74,7 +74,7 @@ contacts =deepcopy(feetPos)
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 90.
+trunk_mass = 70.
 mu = 0.9
 
 stanceFeet = [1,1,1,0]
@@ -143,12 +143,13 @@ bound = 0.2
 #footOption8 = [0, bound*4/4,  0.] + predictedLF_foot
 
 #x
-predictedLF_foot = np.add(LF_foot,np.array([0.2,0.0,0.0]))
+predictedLF_foot = np.add(LF_foot,np.array([0.6,0.0,0.0]))
+footPlanningParams.heuristicFoothold = predictedLF_foot
 footOption4 = [0., 0., 0.] + predictedLF_foot
 footOption3 = [ -bound*1/4, 0., 0.] + predictedLF_foot
 footOption2 = [ -bound*2/4, 0., 0.] + predictedLF_foot
 footOption1 = [ -bound*3/4, 0., 0.] + predictedLF_foot
-footOption0 = [ -bound*4/4., 0., 0.] + predictedLF_foot
+footOpption0 = [ -bound*4/4., 0., 0.] + predictedLF_foot
 footOption5 = [ bound*1/4, 0., 0.] + predictedLF_foot
 footOption6 = [ bound*2/4,  0.,0.] + predictedLF_foot
 footOption7 = [ bound*3/4,  0.,0.] + predictedLF_foot
@@ -168,29 +169,34 @@ footPlanningParams.footOptions = np.array([footOption0,
 ''' compute iterative projection '''
 print 'contacts', feetPos
 footHoldPlanning = FootHoldPlanning()
-chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(footPlanningParams, params)
+#chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(footPlanningParams, params)
+minRadius = 0.095
+stackedResidualRadius, actuationRegions, footOptions = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius(minRadius, footPlanningParams, params)
+footPlanningParams.footOptions = footOptions
+print 'residual radius ', stackedResidualRadius
+print 'feet options', footPlanningParams.footOptions
 #IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
-print 'foot option ',chosen_foothold
+#print 'foot option ',chosen_foothold
 
 lowel_lim = -10
 upper_lim = 10
 footPlanningParams.numberOfFeetOptions = np.size(footPlanningParams.footOptions,0)
-scale = np.linspace(lowel_lim, upper_lim, numberOfOptions)
+scale = np.linspace(lowel_lim, upper_lim, footPlanningParams.numberOfFeetOptions)
 jet = cm = plt.get_cmap('seismic') 
 cNorm  = colors.Normalize(vmin=-30, vmax=35)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
 #print 'contacts', feetPos
-h0 = plt.plot(footPlanningParams.footOptions[chosen_foothold,0],footPlanningParams.footOptions[chosen_foothold,1],'^', color = 'r', markersize=20)
+#h0 = plt.plot(footPlanningParams.footOptions[chosen_foothold][0],footPlanningParams.footOptions[chosen_foothold][1],'^', color = 'r', markersize=20)
 h1 = plt.plot(feetPos[0:nc,0],feetPos[0:nc,1],'ks',markersize=15, label='feet')
-
 
 for polygon in actuationRegions:
     colorVal = scalarMap.to_rgba(scale[idx])
     x = polygon[:,0]
     y = polygon[:,1]
     h = plt.plot(x,y, color = colorVal, linewidth=5.)
-    h2 = plt.plot(footPlanningParams.footOptions[idx,0],footPlanningParams.footOptions[idx,1],'o', color = colorVal, markersize=15)
+    print footPlanningParams.footOptions[idx]
+    h2 = plt.plot(footPlanningParams.footOptions[idx][0],footPlanningParams.footOptions[idx][1],'o', color = colorVal, markersize=15)
     idx += 1
 h3 = plt.plot(params.getCoMPosWF()[0],params.getCoMPosWF()[1],'or',markersize=25)
 
@@ -198,5 +204,6 @@ h3 = plt.plot(params.getCoMPosWF()[0],params.getCoMPosWF()[1],'or',markersize=25
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
+plt.axis('equal')
 plt.legend()
 plt.show()# -*- coding: utf-8 -*-
