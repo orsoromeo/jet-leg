@@ -171,10 +171,11 @@ print 'contacts', feetPos
 footHoldPlanning = FootHoldPlanning()
 #chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(footPlanningParams, params)
 
-stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
+foothold_params.option_index, stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
 print 'residual radius ', stackedResidualRadius
 print 'feet options', foothold_params.footOptions
 print 'final index', foothold_params.option_index
+print 'list of indices', mapFootHoldIdxToPolygonIdx
 #IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
 #print 'foot option ',chosen_foothold
 
@@ -195,7 +196,7 @@ for polygon in actuationRegions:
     x = polygon[:,0]
     y = polygon[:,1]
     h = plt.plot(x,y, color = colorVal, linewidth=5.)
-    print foothold_params.footOptions[idx]
+#    print foothold_params.footOptions[idx]
     h2 = plt.plot(foothold_params.footOptions[mapFootHoldIdxToPolygonIdx[idx]][0],foothold_params.footOptions[mapFootHoldIdxToPolygonIdx[idx]][1],'o', color = colorVal, markersize=15)
     idx += 1
 h3 = plt.plot(params.getCoMPosWF()[0],params.getCoMPosWF()[1],'or',markersize=25)

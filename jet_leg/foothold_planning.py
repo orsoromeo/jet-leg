@@ -109,7 +109,7 @@ class FootHoldPlanning:
 #        print numberOfFeetOptions
         feasible_regions = []
         residualRadiusToStack = []
-        print 'empty res radii', residualRadiusToStack
+#        print 'empty res radii', residualRadiusToStack
 #        footOptions = []
         area = []
         mapFootHoldIdxToPolygonIdx = []
@@ -119,16 +119,16 @@ class FootHoldPlanning:
         
         #check the prediction point at the beginning
         foothold_index  = int((numberOfOptions -1)/2.0) #assumes numberOfOptions is odd
-      
+#        print 'initial foothold index', foothold_index
       
     
         
         #these two lines go together to overwrite the future swing foot
         params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index]
-        print 'contacts WF', params.contactsWF
-        print 'com pos WF', params.getCoMPosWF()
+#        print 'contacts WF', params.contactsWF
+#        print 'com pos WF', params.getCoMPosWF()
         IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-        print 'IAR', IAR
+#        print 'IAR', IAR
         residualRadius = deepcopy(self.math.find_residual_radius(IAR, footPlanningParams.com_position_to_validateW))
         area.append( self.compGeo.computePolygonArea(IAR))
         mapFootHoldIdxToPolygonIdx.append(foothold_index)
@@ -164,7 +164,7 @@ class FootHoldPlanning:
 #            footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
             feasible_regions.append(IAR2)
             residualRadiusToStack.append(newResidualRadius2)
-            print 'RADS', residualRadius, newResidualRadius1, newResidualRadius2
+#            print 'RADS', residualRadius, newResidualRadius1, newResidualRadius2
             if (newResidualRadius1 > (residualRadius+footPlanningParams.TOL)) and (newResidualRadius1 > (newResidualRadius2+footPlanningParams.TOL)) : 
                 searchDirection = searchDirection1
                 residualRadius = newResidualRadius1
@@ -172,7 +172,10 @@ class FootHoldPlanning:
                 searchDirection = searchDirection2
                 residualRadius = newResidualRadius2
             else: #you are already in the max
-                return residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
+                searchDirection = 0
+#                print 'final foothold index', foothold_index
+                print 'RETURN before entering while loop'
+                return foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
                             
                 
             
@@ -205,6 +208,6 @@ class FootHoldPlanning:
                 counter += 1
         print 'res radii', residualRadiusToStack
         print 'foothold index ', foothold_index
-        footPlanningParams.option_index = foothold_index
-        return residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
+#        footPlanningParams.option_index = foothold_index
+        return foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
         
