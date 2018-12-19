@@ -74,7 +74,7 @@ contacts =deepcopy(feetPos)
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 70.
+trunk_mass = 100.
 mu = 0.9
 
 stanceFeet = [1,1,1,0]
@@ -116,7 +116,7 @@ footPlanningParams = FootholdPlanningInterface()
 footPlanningParams.com_position_to_validateW = [0.1, 0.1, 0]
 
 
-res = 0.15
+gridResolution = 0.15
 bound = 0.2
 #square
 #predictedLF_foot = np.add(LF_foot,np.array([0.1,0.3,0.0]))
@@ -143,35 +143,35 @@ bound = 0.2
 #footOption8 = [0, bound*4/4,  0.] + predictedLF_foot
 
 #x
-predictedLF_foot = np.add(LF_foot,np.array([0.6,0.0,0.0]))
-footPlanningParams.heuristicFoothold = predictedLF_foot
-footOption4 = [0., 0., 0.] + predictedLF_foot
-footOption3 = [ -bound*1/4, 0., 0.] + predictedLF_foot
-footOption2 = [ -bound*2/4, 0., 0.] + predictedLF_foot
-footOption1 = [ -bound*3/4, 0., 0.] + predictedLF_foot
-footOpption0 = [ -bound*4/4., 0., 0.] + predictedLF_foot
-footOption5 = [ bound*1/4, 0., 0.] + predictedLF_foot
-footOption6 = [ bound*2/4,  0.,0.] + predictedLF_foot
-footOption7 = [ bound*3/4,  0.,0.] + predictedLF_foot
-footOption8 = [ bound*4/4,  0., 0.] + predictedLF_foot
+#predictedLF_foot = np.add(LF_foot,np.array([0.6,0.0,0.0]))
+#footPlanningParams.heuristicFoothold = predictedLF_foot
+#footOption4 = [0., 0., 0.] + predictedLF_foot
+#footOption3 = [ -bound*1/4, 0., 0.] + predictedLF_foot
+#footOption2 = [ -bound*2/4, 0., 0.] + predictedLF_foot
+#footOption1 = [ -bound*3/4, 0., 0.] + predictedLF_foot
+#footOption0 = [ -bound*4/4., 0., 0.] + predictedLF_foot
+#footOption5 = [ bound*1/4, 0., 0.] + predictedLF_foot
+#footOption6 = [ bound*2/4,  0.,0.] + predictedLF_foot
+#footOption7 = [ bound*3/4,  0.,0.] + predictedLF_foot
+#footOption8 = [ bound*4/4,  0., 0.] + predictedLF_foot
 
 
-footPlanningParams.footOptions = np.array([footOption0,
-                                       footOption1,
-                                       footOption2,
-                                       footOption3,
-                                       footOption4,
-                                       footOption5,
-                                       footOption6,
-                                       footOption7,
-                                       footOption8])
+#footPlanningParams.footOptions = np.array([footOption0,
+#                                       footOption1,
+#                                       footOption2,
+#                                       footOption3,
+#                                       footOption4,
+#                                       footOption5,
+#                                       footOption6,
+#                                       footOption7,
+#                                       footOption8])
 
 ''' compute iterative projection '''
 print 'contacts', feetPos
 footHoldPlanning = FootHoldPlanning()
 #chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(footPlanningParams, params)
 minRadius = 0.095
-stackedResidualRadius, actuationRegions, footOptions = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius(minRadius, footPlanningParams, params)
+stackedResidualRadius, actuationRegions, footOptions = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( footPlanningParams, params)
 footPlanningParams.footOptions = footOptions
 print 'residual radius ', stackedResidualRadius
 print 'feet options', footPlanningParams.footOptions
