@@ -13,7 +13,6 @@ class IterativeProjectionParameters:
         self.q = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.] 
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
         self.comPositionWF = [0., 0., 0.]
-        self.com_position_to_validateW = [0., 0., 0.] #used only for foothold planning
         self.footPosWLF = [0.3, 0.2, -.0]
         self.footPosWRF = [0.3, -0.2, -.0]
         self.footPosWLH = [-0.3, 0.2, -.0]
@@ -39,9 +38,7 @@ class IterativeProjectionParameters:
 #        self.contactsHF = np.zeros((4,3))
         self.contactsBF = np.zeros((4,3))
         self.contactsWF = np.zeros((4,3))
-        self.sample_contacts = np.zeros((4,3))
 
-        self.math = Math()        
         axisZ= np.array([[0.0], [0.0], [1.0]])
         n1 = np.transpose(np.transpose(self.math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
         n2 = np.transpose(np.transpose(self.math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
@@ -57,30 +54,6 @@ class IterativeProjectionParameters:
         self.friction = 0.8
         self.robotMass = 85 #Kg
         self.numberOfGenerators = 4
-            
-        #foothold planning 
-        self.orientation0 = [0., 0., 0.]
-        self.orientation1 = [0., 0., 0.]
-        self.orientation2 = [0., 0., 0.]
-        self.orientation3 = [0., 0., 0.]
-        self.orientation4 = [0., 0., 0.]
-        self.orientationOptions = np.array([self.orientation0,
-                                     self.orientation1,
-                                     self.orientation2,
-                                     self.orientation3,
-                                     self.orientation4])
-                                     
-        #foothold planning 
-        self.footOption0 = [0., 0., 0.]
-        self.footOption1 = [0., 0., 0.]
-        self.footOption2 = [0., 0., 0.]
-        self.footOption3 = [0., 0., 0.]
-        self.footOption4 = [0., 0., 0.]
-        self.footOptions = np.array([self.footOption0,
-                                     self.footOption1,
-                                     self.footOption2,
-                                     self.footOption3,
-                                     self.footOption4])
                 
         self.actual_swing = 0
         self.optimization_started = False

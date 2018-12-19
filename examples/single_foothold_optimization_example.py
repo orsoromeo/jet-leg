@@ -36,6 +36,7 @@ import random
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
+from jet_leg.foothold_planning_interface import FootholdPlanningInterface
 from jet_leg.foothold_planning import FootHoldPlanning
 
 import matplotlib.pyplot as plt
@@ -73,7 +74,7 @@ contacts =deepcopy(feetPos)
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 95.
+trunk_mass = 90.
 mu = 0.9
 
 stanceFeet = [1,1,1,0]
@@ -111,7 +112,8 @@ params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(trunk_mass)
 
 #inputs for foothold planning
-params.com_position_to_validateW = [0.1, 0.1, 0]
+footPlanningParams = FootholdPlanningInterface()
+footPlanningParams.com_position_to_validateW = [0.1, 0.1, 0]
 
 
 res = 0.15
@@ -153,7 +155,7 @@ footOption7 = [ bound*3/4,  0.,0.] + predictedLF_foot
 footOption8 = [ bound*4/4,  0., 0.] + predictedLF_foot
 
 
-params.footOptions = np.array([footOption0,
+footPlanningParams.footOptions = np.array([footOption0,
                                        footOption1,
                                        footOption2,
                                        footOption3,
@@ -166,20 +168,20 @@ params.footOptions = np.array([footOption0,
 ''' compute iterative projection '''
 print 'contacts', feetPos
 footHoldPlanning = FootHoldPlanning()
-chosen_foothold, actuationRegions = footHoldPlanning.optimizeFootHold(params)
+chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(footPlanningParams, params)
 #IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
 print 'foot option ',chosen_foothold
 
 lowel_lim = -10
 upper_lim = 10
-numberOfOptions = np.size(params.footOptions,0)
+footPlanningParams.numberOfFeetOptions = np.size(footPlanningParams.footOptions,0)
 scale = np.linspace(lowel_lim, upper_lim, numberOfOptions)
 jet = cm = plt.get_cmap('seismic') 
 cNorm  = colors.Normalize(vmin=-30, vmax=35)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 idx = 0
 #print 'contacts', feetPos
-h0 = plt.plot(params.footOptions[chosen_foothold,0],params.footOptions[chosen_foothold,1],'^', color = 'r', markersize=20)
+h0 = plt.plot(footPlanningParams.footOptions[chosen_foothold,0],footPlanningParams.footOptions[chosen_foothold,1],'^', color = 'r', markersize=20)
 h1 = plt.plot(feetPos[0:nc,0],feetPos[0:nc,1],'ks',markersize=15, label='feet')
 
 
@@ -188,7 +190,7 @@ for polygon in actuationRegions:
     x = polygon[:,0]
     y = polygon[:,1]
     h = plt.plot(x,y, color = colorVal, linewidth=5.)
-    h2 = plt.plot(params.footOptions[idx,0],params.footOptions[idx,1],'o', color = colorVal, markersize=15)
+    h2 = plt.plot(footPlanningParams.footOptions[idx,0],footPlanningParams.footOptions[idx,1],'o', color = colorVal, markersize=15)
     idx += 1
 h3 = plt.plot(params.getCoMPosWF()[0],params.getCoMPosWF()[1],'or',markersize=25)
 

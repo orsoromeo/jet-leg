@@ -28,10 +28,11 @@ from std_msgs.msg import Float32, Header
 from std_srvs.srv import Empty
 from termcolor import colored
 
-from context import jet_leg 
-from jet_leg.computational_dynamics import ComputationalDynamics
-from jet_leg.computational_geometry import ComputationalGeometry
-from jet_leg.math_tools import Math
+#from context import jet_leg 
+from computational_dynamics import ComputationalDynamics
+from computational_geometry import ComputationalGeometry
+from foothold_planning_interface import FootholdPlanningInterface
+from math_tools import Math
 
 
 stderr = sys.stderr
@@ -43,35 +44,39 @@ class FootHoldPlanning:
     def __init__(self):      
         self.compGeo = ComputationalGeometry()
         self.compDyn = ComputationalDynamics()
+        self.footPlanning = FootholdPlanningInterface()
         self.option_index = 0
         self.ack_optimization_done = False
+        self.math = Math()
         
-    def optimizeFootHold(self, params):        
+    def selectMaximumFeasibleArea(self, footPlanningParams, params):        
 
         #foothold planning
         #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
-        print 'foothold options',params.footOptions
+#        print 'foothold options',params.footOptions
                     
-        params.sample_contacts = deepcopy(params.contactsWF )
-        params.setCoMPosWF(params.com_position_to_validateW)
+        footPlanningParams.sample_contacts = deepcopy(params.contactsWF )
+        params.setCoMPosWF(footPlanningParams.com_position_to_validateW)
         
-        print "com pos to validate" , params.com_position_to_validateW
-        print "sample contacts" , params.sample_contacts
+#        print "com pos to validate" , params.com_position_to_validateW
+#        print "sample contacts" , params.sample_contacts
         
-        numberOfFeetOptions = np.size(params.footOptions,0)
-        print numberOfFeetOptions
+        footPlanningParams.numberOfFeetOptions = np.size(footPlanningParams.footOptions,0)
+#        print numberOfFeetOptions
         feasible_regions = []
         area = []
-        for i in range(0, numberOfFeetOptions):
-            params.contactsWF  =  deepcopy(params.sample_contacts)
+        for i in range(0, footPlanningParams.numberOfFeetOptions):
+            params.contactsWF  =  deepcopy(footPlanningParams.sample_contacts)
             
             
             #overwrite the future swing foot
-            params.contactsWF[params.actual_swing] = params.footOptions[i]
+            params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[i]
             #print params.footOptions[i]
  
             IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
-            print 'IAR', IAR
+#            print 'IAR', IAR
+            d = self.math.find_residual_radius(IAR, footPlanningParams.com_position_to_validateW)
+            print 'residual radius', d
             feasible_regions.append(IAR)
 #            print 'FR', feasible_regions
             area.append( self.compGeo.computePolygonArea(IAR))
