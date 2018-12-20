@@ -15,6 +15,11 @@ APT dependencies:
 - GLPK
 - Cython
 
+ROS dependencies:
+```
+sudo apt-get  install ros-kinetic-graph-msgs
+```
+
 Python dependencies:
 - Numpy
 - Scipy
@@ -41,7 +46,7 @@ sudo apt-get install ffmpeg
 - [unittest](https://docs.python.org/3/library/unittest.html) for testing of dependencies installation and for development
 
 
-## Installation
+<!--## Installation (no longer used)
 
 Finally, clone this repository and run its setup script:
 ```
@@ -50,6 +55,8 @@ cd jet-leg
 python setup.py build
 python setup.py install --user
 ```
+-->
+
 ## Testing the library
 Jet-Leg comes with a number of unit tests intended to check the proper installation of the packages and make sure that all the mandatory depedencies are properly found. For this purpose, after completing the installation navigate to the [unit_test_main.py](https://gitlab.advr.iit.it/rorsolino/jet-leg/blob/master/unit_tests/unit_test_main.py) and run it.
 
