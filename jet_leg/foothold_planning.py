@@ -181,7 +181,7 @@ class FootHoldPlanning:
                 return foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
                             
                 
-            print 'gradient before while', gradient
+#            print 'gradient before while', gradient
             foothold_index += searchDirection
             params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index] 
             
@@ -193,10 +193,13 @@ class FootHoldPlanning:
                 params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index+searchDirection]  
                 IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
                 residualRadius = self.math.find_residual_radius(IAR, footPlanningParams.com_position_to_validateW)
+                newArea = self.compGeo.computePolygonArea(IAR)
+                oldArea = area[-1]
                 oldResidualRadius = residualRadiusToStack[-1]
-                print 'old residual radius', oldResidualRadius
-                gradient = residualRadius - oldResidualRadius
-                print 'gradient ', gradient
+#                print 'old residual radius', oldResidualRadius
+#                gradient = residualRadius - oldResidualRadius
+                gradient = newArea - oldArea
+#                print 'area gradient ', gradient
 #                gradient = (residualRadius - newResidualRadius)/gridResolution
                 if gradient > 0:                
                     foothold_index += searchDirection                
@@ -205,8 +208,10 @@ class FootHoldPlanning:
                     feasible_regions.append(IAR)
 #                    print 'FR', feasible_regions
                     residualRadiusToStack.append(residualRadius)
+                    area.append(newArea)
                 
-        print 'res radii', residualRadiusToStack
+#        print 'res radii', residualRadiusToStack
+        print 'area ', area[-1]
 #        print 'foothold index ', foothold_index
 #        footPlanningParams.option_index = foothold_index
         return foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx

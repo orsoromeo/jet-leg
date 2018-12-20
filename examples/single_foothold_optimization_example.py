@@ -113,7 +113,7 @@ params.setTotalMass(trunk_mass)
 
 #inputs for foothold planning
 foothold_params = FootholdPlanningInterface()
-foothold_params.com_position_to_validateW = [0.05, 0.05, 0.55]
+foothold_params.com_position_to_validateW = [0.2, 0.05, 0.55]
 
 
 maxCorrection = 0.2
@@ -142,7 +142,7 @@ maxCorrection = 0.2
 #footOption8 = [0, bound*4/4,  0.] + predictedLF_foot
 
 #x
-predictedLF_foot = np.add(LF_foot,np.array([0.3,0.15,0.0]))
+predictedLF_foot = np.add(LF_foot,np.array([0.1,0.15,0.0]))
 footOption4 = [0., 0., 0.] + predictedLF_foot
 footOption3 = [ -maxCorrection*1/4, 0., 0.] + predictedLF_foot
 footOption2 = [ -maxCorrection*2/4, 0., 0.] + predictedLF_foot

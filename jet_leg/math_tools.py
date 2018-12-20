@@ -100,7 +100,7 @@ class Math:
         # a positive distance for a polygon queried in clockwise order and with a point_to_check which lies inside the polygon itself 
         numberOfVertices = np.size(polygon,0)
 #        print 'polygon', polygon
-        print 'number of vertices', numberOfVertices
+#        print 'number of vertices', numberOfVertices
         residual_radius = 1000000.0
         for i in range(0,numberOfVertices-1):
             s1 = polygon[i,:]
