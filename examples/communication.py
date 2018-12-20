@@ -221,10 +221,11 @@ def talker():
        
             #chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(foothold_params, params)
             
-            stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
+            foothold_params.option_index, stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
             print 'residual radius ', stackedResidualRadius
-            print 'feet options', foothold_params.footOptions
+#            print 'feet options', foothold_params.footOptions
             print 'final index', foothold_params.option_index
+            print 'index list', mapFootHoldIdxToPolygonIdx
             
             foothold_params.ack_optimization_done = True    
 
