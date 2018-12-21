@@ -198,7 +198,7 @@ class Constraints:
         elif (np.size(leg_jacobian,0)==3):
             torque_lims = vertices
             legs_gravity = np.ones((3,8))*0 # TODO: correct computation of the force acting on the legs due to gravity
-            actuation_polygon = np.matmul(np.linalg.inv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)        
+            actuation_polygon = np.matmul(np.linalg.pinv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)        
             
         # Only for debugging:                          
 #        actuation_polygon = vertices

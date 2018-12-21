@@ -140,6 +140,30 @@ def talker():
     foothold_params = FootholdPlanningInterface()
     i = 0
 
+
+    point = Point()
+    polygonVertex = Point()
+    polygon = Polygon3D()    
+    p.get_sim_wbs()
+    params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
+    foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
+    params.getFutureStanceFeet(p.hyq_rcf_debug)
+
+    """ contact points """
+    ng = 4
+
+    constraint_mode_IP = 'FRICTION_AND_ACTUATION'
+    params.setConstraintModes([constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP])
+    params.setNumberOfFrictionConesEdges(ng)    
+
+    IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
+    #print 'feasible region', IAR, 
+    p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
+         
+
     while not ros.is_shutdown():
         point = Point()
         polygonVertex = Point()
@@ -149,24 +173,29 @@ def talker():
         foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         params.getFutureStanceFeet(p.hyq_rcf_debug)
  
-       
+        #params.getCurrentStanceFeet(p.hyq_rcf_debug)
+        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
+        #print 'feasible region', IAR, 
+        p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
+   
 
-        """ contact points """
-        ng = 4
+
+        
+        #print "AA"
         
         #1 - INSTANTANEOUS FEASIBLE REGION    
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-        constraint_mode_IP = 'FRICTION_AND_ACTUATION'
-        params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
-        params.setNumberOfFrictionConesEdges(ng)
 
-#        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
+
+        #IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
         #print 'feasible region', IAR, 
-#        p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
-           
+        #p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
+         
+         
+         
+         
+         
+         
         #2 - FORCE POLYGONS
 #        point.x = actuation_polygons_array[0][0][0]/1000.0
 #        point.y = actuation_polygons_array[0][1][0]/1000.0
@@ -191,12 +220,12 @@ def talker():
 
         #3 - FRICTION REGION
         # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-        constraint_mode_IP = 'ONLY_FRICTION'
-        params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
-        params.setNumberOfFrictionConesEdges(ng)
+#        constraint_mode_IP = 'ONLY_FRICTION'
+#        params.setConstraintModes([constraint_mode_IP,
+#                           constraint_mode_IP,
+#                           constraint_mode_IP,
+#                           constraint_mode_IP])
+#        params.setNumberOfFrictionConesEdges(ng)
         
         #uncomment this if you dont want to use the vars read in iterative_proJ_params                       
         #params.setContactNormals(normals)
@@ -214,7 +243,8 @@ def talker():
         #print 'opt started?', foothold_params.optimization_started
         #print 'ack opt done', foothold_params.ack_optimization_done
 #        foothold_params.ack_optimization_done = True 
-        
+        actuationRegions = []
+#        print 'robot mass', params.robotMass
         if (foothold_params.optimization_started == False):
             foothold_params.ack_optimization_done = False
         
@@ -225,22 +255,24 @@ def talker():
             #chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(foothold_params, params)
 #            print 'current swing ',params.actual_swing
             foothold_params.option_index, stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
-#            print 'residual radius ', stackedResidualRadius
+
+            
+            print 'min radius ', foothold_params.minRadius, 'residual radius ', stackedResidualRadius
 #            print 'feet options', foothold_params.footOptions
-            print 'final index', foothold_params.option_index
-            print 'index list', mapFootHoldIdxToPolygonIdx
+            print 'final index', foothold_params.option_index, 'index list', mapFootHoldIdxToPolygonIdx
+             
    
             foothold_params.ack_optimization_done = True    
             
             # to compare the area without stepping strategy uncomment this that pverwrites the default choice
             # foothold_params.option_index = 4            
-            
-        p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[-1]), foothold_params.option_index, foothold_params.ack_optimization_done)
+        if np.size(actuationRegions,0)>0:
+            p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[-1]), foothold_params.option_index, foothold_params.ack_optimization_done)
         
         # to compare the area without stepping strategy uncomment this
 #        p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[0]), foothold_params.option_index, foothold_params.ack_optimization_done)
         
-        time.sleep(0.05)
+        time.sleep(0.1)
         i+=1
         
     print 'de registering...'
