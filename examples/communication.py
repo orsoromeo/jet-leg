@@ -152,11 +152,7 @@ def talker():
     """ contact points """
     ng = 4
 
-    constraint_mode_IP = 'FRICTION_AND_ACTUATION'
-    params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
+
     params.setNumberOfFrictionConesEdges(ng)    
 
     IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
@@ -174,6 +170,10 @@ def talker():
         params.getFutureStanceFeet(p.hyq_rcf_debug)
  
         #params.getCurrentStanceFeet(p.hyq_rcf_debug)
+        params.setConstraintModes(['FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION'])
         IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
         #print 'feasible region', IAR, 
         p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
@@ -218,22 +218,22 @@ def talker():
 
 
 
-        #3 - FRICTION REGION
-        # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-#        constraint_mode_IP = 'ONLY_FRICTION'
-#        params.setConstraintModes([constraint_mode_IP,
-#                           constraint_mode_IP,
-#                           constraint_mode_IP,
-#                           constraint_mode_IP])
-#        params.setNumberOfFrictionConesEdges(ng)
+#        3 - FRICTION REGION
+#         ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+        constraint_mode_IP = 'ONLY_FRICTION'
+        params.setConstraintModes([constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP,
+                           constraint_mode_IP])
+        params.setNumberOfFrictionConesEdges(ng)
         
-        #uncomment this if you dont want to use the vars read in iterative_proJ_params                       
-        #params.setContactNormals(normals)
-        #params.setFrictionCoefficient(mu)      
-        #params.setTrunkMass(trunk_mass)
-        #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-#        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)       
-#        p.send_support_region(name, p.fillPolygon(IAR))
+#        uncomment this if you dont want to use the vars read in iterative_proJ_params                       
+#        params.setContactNormals(normals)
+#        params.setFrictionCoefficient(mu)      
+#        params.setTrunkMass(trunk_mass)
+#        IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)       
+        p.send_support_region(name, p.fillPolygon(IAR))
 
 
       

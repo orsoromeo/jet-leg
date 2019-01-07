@@ -92,11 +92,11 @@ class FootHoldPlanning:
                         
        
         ng = 4
-        constraint_mode_IP = 'FRICTION_AND_ACTUATION'
-        params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
+
+        params.setConstraintModes(['FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION'])
         params.setNumberOfFrictionConesEdges(ng)
 
             
