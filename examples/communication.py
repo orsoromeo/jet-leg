@@ -165,18 +165,24 @@ def talker():
         polygonVertex = Point()
         polygon = Polygon3D()
         p.get_sim_wbs()
+
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         params.getFutureStanceFeet(p.hyq_rcf_debug)
- 
         #params.getCurrentStanceFeet(p.hyq_rcf_debug)
         params.setConstraintModes(['FRICTION_AND_ACTUATION',
                            'FRICTION_AND_ACTUATION',
                            'FRICTION_AND_ACTUATION',
                            'FRICTION_AND_ACTUATION'])
-        IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
-        #print 'feasible region', IAR, 
-        p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
+        IAR, actuation_polygons_array, computation_time = compDyn.try_iterative_projection_bretl(params)
+        # print 'feasible region', IAR
+        if IAR is not False:
+            p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
+            old_IAR = IAR
+        else:
+            print 'Could not compute the feasible region'
+            p.send_actuation_polygons(name, p.fillPolygon(old_IAR), foothold_params.option_index,
+                                      foothold_params.ack_optimization_done)
    
 
 
@@ -247,30 +253,31 @@ def talker():
 #        print 'robot mass', params.robotMass
         if (foothold_params.optimization_started == False):
             foothold_params.ack_optimization_done = False
-        
+        # print 'optimization done',foothold_params.ack_optimization_done, ' ... ', foothold_params.optimization_started
         if foothold_params.optimization_started and not foothold_params.ack_optimization_done :
 
-            
+            print foothold_params.footOptions
             
             #chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(foothold_params, params)
 #            print 'current swing ',params.actual_swing
             foothold_params.option_index, stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
 
-            
-            print 'min radius ', foothold_params.minRadius, 'residual radius ', stackedResidualRadius
-#            print 'feet options', foothold_params.footOptions
-            print 'final index', foothold_params.option_index, 'index list', mapFootHoldIdxToPolygonIdx
-             
-   
+            if actuationRegions is False:
+                foothold_params.option_index = 4
+            else:
+                print 'min radius ', foothold_params.minRadius, 'residual radius ', stackedResidualRadius
+                print 'feet options', foothold_params.footOptions
+                print 'final index', foothold_params.option_index, 'index list', mapFootHoldIdxToPolygonIdx
+                
             foothold_params.ack_optimization_done = True    
             
-            # to compare the area without stepping strategy uncomment this that pverwrites the default choice
-            # foothold_params.option_index = 4            
-        if np.size(actuationRegions,0)>0:
-            p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[-1]), foothold_params.option_index, foothold_params.ack_optimization_done)
+                # to compare the area without stepping strategy uncomment this that pverwrites the default choice
+                # foothold_params.option_index = 4            
+#            if actuationRegions is not False:
+#                p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[-1]), foothold_params.option_index, foothold_params.ack_optimization_done)
         
-        # to compare the area without stepping strategy uncomment this
-#        p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[0]), foothold_params.option_index, foothold_params.ack_optimization_done)
+            # to compare the area without stepping strategy uncomment this
+#            p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[0]), foothold_params.option_index, foothold_params.ack_optimization_done)
         
         time.sleep(0.1)
         i+=1

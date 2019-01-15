@@ -99,15 +99,17 @@ class Math:
         # this function returns a positive distance if the point is on the right side of the segment. This will return 
         # a positive distance for a polygon queried in clockwise order and with a point_to_check which lies inside the polygon itself 
         numberOfVertices = np.size(polygon,0)
-#        print 'polygon', polygon
-#        print 'number of vertices', numberOfVertices
+        # print 'polygon in residual radius computation', polygon
+        # print 'number of vertices', numberOfVertices
         residual_radius = 1000000.0
         for i in range(0,numberOfVertices-1):
             s1 = polygon[i,:]
             s2 = polygon[i+1,:]
             d_temp = self.find_point_to_line_signed_distance(s1, s2, point_to_check)
 #            print i, s1, s2, d_temp
-            if d_temp < residual_radius:
+            if d_temp < 0.0:
+                print 'Warning! found negative distance. Polygon might not be in clockwise order...'
+            elif d_temp < residual_radius:
                 residual_radius = d_temp
         
         # we dont need to compute for the last edge cause we added an extra point to close the polytop (last point equal to the first)
