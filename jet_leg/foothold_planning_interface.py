@@ -168,6 +168,9 @@ class FootholdPlanningInterface:
                 self.footOption8[1] = received_data.data[j]                   
             if str(received_data.name[j]) == str("foothold_option8z"):  
                 self.footOption8[2] = received_data.data[j]  
+
+            if str(received_data.name[j]) == str("numberOfFootholdOptions"):  
+                self.numberOfFeetOptions = received_data.data[j]  
                           
             self.footOptions = np.array([self.footOption0,
                                      self.footOption1,
