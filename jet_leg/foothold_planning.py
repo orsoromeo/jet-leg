@@ -141,7 +141,6 @@ class FootHoldPlanning:
                 if residualRadius < footPlanningParams.minRadius:
                     
                     #check the fist point after and before the heuristic one along the direction
-                    
                     #these two lines go together to overwrite the future swing foot
                     params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index+1]
                     print residualRadius, params.actual_swing, foothold_index, params.contactsWF
@@ -151,6 +150,7 @@ class FootHoldPlanning:
                     area.append( self.compGeo.computePolygonArea(IAR1))
                     #            footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
                     feasible_regions.append(IAR1)
+                    mapFootHoldIdxToPolygonIdx.append(foothold_index + 1)
                     residualRadiusToStack.append(newResidualRadius1)
                     #these two lines go together to overwrite the future swing foot
                     params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index-1] 
