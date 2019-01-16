@@ -79,9 +79,7 @@ class ComputationalDynamics():
                 stanceIndex = np.hstack([stanceIndex, iter])
             else:
                 swingIndex = iter
-        
-        
-        
+
         for j in range(0,contactsNumber):
            
             r = contacts[int(stanceIndex[j]),:]
@@ -164,7 +162,17 @@ class ComputationalDynamics():
 #        print 'out poly Y',outputPolytopeY
 #        print 'out poly Z',outputPolytopeZ
         return outputPolytope
-        
+
+    def try_iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
+        try:
+            compressed_hull, actuation_polygons, computation_time = self.iterative_projection_bretl(iterative_projection_params, False)
+            return compressed_hull, actuation_polygons, computation_time
+        except ValueError as err:
+            print 'Could not compute the feasible region'
+            print(err.args)
+            return False, False, False
+
+
     def iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
 
         start_t_IP = time.time()
@@ -173,17 +181,21 @@ class ComputationalDynamics():
 #        print 'hereee'  
 #        points = np.random.rand(30, 2)   # 30 random points in 2-D
 #        print points
-        vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl', max_iter=1000, init_angle=0.0)
-#        print vertices_WF
-        compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
-        hull = ConvexHull(compressed_vertices)
+        vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl', max_iter=500, init_angle=0.0)
+        if vertices_WF is False:
+            print 'Project polytope function is False'
+            return False, False, False
+
+        else:            
+            compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
+            hull = ConvexHull(compressed_vertices)
 #        print 'hull ', hull.vertices
-        compressed_hull = compressed_vertices[hull.vertices]
-        compressed_hull = self.geom.clockwise_sort(compressed_hull)
-        compressed_hull = compressed_hull
+            compressed_hull = compressed_vertices[hull.vertices]
+            compressed_hull = self.geom.clockwise_sort(compressed_hull)
+            compressed_hull = compressed_hull
 #        print compressed_hull
         #vertices_WF = vertices_BF + np.transpose(comWF[0:2])
-        computation_time = (time.time() - start_t_IP)
+            computation_time = (time.time() - start_t_IP)
         #print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
 
 #        print np.size(actuation_polygons,0), np.size(actuation_polygons,1), actuation_polygons
