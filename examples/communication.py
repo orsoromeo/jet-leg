@@ -145,45 +145,40 @@ def talker():
     polygonVertex = Point()
     polygon = Polygon3D()    
     p.get_sim_wbs()
-    params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-    foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-    params.getFutureStanceFeet(p.hyq_rcf_debug)
+   
 
     """ contact points """
     ng = 4
-
-
     params.setNumberOfFrictionConesEdges(ng)    
 
-    IAR, actuation_polygons_array, computation_time = compDyn.iterative_projection_bretl(params)
-    #print 'feasible region', IAR, 
-    p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
-         
+
+
 
     while not ros.is_shutdown():
-        point = Point()
-        polygonVertex = Point()
-        polygon = Polygon3D()
+
+
         p.get_sim_wbs()
 
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         params.getFutureStanceFeet(p.hyq_rcf_debug)
         #params.getCurrentStanceFeet(p.hyq_rcf_debug)
-        params.setConstraintModes(['FRICTION_AND_ACTUATION',
-                           'FRICTION_AND_ACTUATION',
-                           'FRICTION_AND_ACTUATION',
-                           'FRICTION_AND_ACTUATION'])
-        IAR, actuation_polygons_array, computation_time = compDyn.try_iterative_projection_bretl(params)
-        # print 'feasible region', IAR
-        if IAR is not False:
-            p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
-            old_IAR = IAR
-        else:
-            print 'Could not compute the feasible region'
-            p.send_actuation_polygons(name, p.fillPolygon(old_IAR), foothold_params.option_index,
-                                      foothold_params.ack_optimization_done)
-   
+        
+#        # USE THIS ONLY TO PLOT THE ACTUAL REGION FOR A VIDEO FOR THE PAPER DO NOT USE FOR COM PLANNING
+#        params.setConstraintModes(['FRICTION_AND_ACTUATION',
+#                           'FRICTION_AND_ACTUATION',
+#                           'FRICTION_AND_ACTUATION',
+#                           'FRICTION_AND_ACTUATION'])
+#        IAR, actuation_polygons_array, computation_time = compDyn.try_iterative_projection_bretl(params)
+#        # print 'feasible region', IAR
+#        if IAR is not False:
+#            p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
+#            old_IAR = IAR
+#        else:
+#            print 'Could not compute the feasible region'
+#            p.send_actuation_polygons(name, p.fillPolygon(old_IAR), foothold_params.option_index,
+#                                      foothold_params.ack_optimization_done)
+#   
 
 
         
@@ -203,6 +198,9 @@ def talker():
          
          
         #2 - FORCE POLYGONS
+         #point = Point()
+         #polygonVertex = Point()
+         #polygon = Polygon3D()
 #        point.x = actuation_polygons_array[0][0][0]/1000.0
 #        point.y = actuation_polygons_array[0][1][0]/1000.0
 #        point.z = actuation_polygons_array[0][2][0]/1000.0
@@ -238,11 +236,11 @@ def talker():
 #        params.setFrictionCoefficient(mu)      
 #        params.setTrunkMass(trunk_mass)
 #        IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-        IAR, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)       
-        p.send_support_region(name, p.fillPolygon(IAR))
+        frictionRegion, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)       
+        p.send_support_region(name, p.fillPolygon(frictionRegion))
 
 
-      
+           
         #4 - FOOTHOLD PLANNING
    
         
@@ -263,21 +261,20 @@ def talker():
             foothold_params.option_index, stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
 
             if actuationRegions is False:
-                foothold_params.option_index = 4
+                foothold_params.option_index = -1
             else:
                 print 'min radius ', foothold_params.minRadius, 'residual radius ', stackedResidualRadius
                 print 'feet options', foothold_params.footOptions
                 print 'final index', foothold_params.option_index, 'index list', mapFootHoldIdxToPolygonIdx
                 
             foothold_params.ack_optimization_done = True    
-            
-                # to compare the area without stepping strategy uncomment this that pverwrites the default choice
-                # foothold_params.option_index = 4            
-#            if actuationRegions is not False:
-#                p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[-1]), foothold_params.option_index, foothold_params.ack_optimization_done)
         
-            # to compare the area without stepping strategy uncomment this
-#            p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[0]), foothold_params.option_index, foothold_params.ack_optimization_done)
+            #this sends the data back to ros that contains the foot hold choice (used for stepping) and the corrspondent region (that will be used for com planning TODO update with the real footholds)
+            if (actuationRegions is not False) and (np.size(actuationRegions) is not 0):                
+                p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[-1]), foothold_params.option_index, foothold_params.ack_optimization_done)
+            else:
+                #if it cannot compute anything it will return the frictin region
+                p.send_actuation_polygons(name, p.fillPolygon(frictionRegion), foothold_params.option_index, foothold_params.ack_optimization_done)
         
         time.sleep(0.1)
         i+=1
