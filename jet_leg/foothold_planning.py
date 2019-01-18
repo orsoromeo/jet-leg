@@ -51,12 +51,7 @@ class FootHoldPlanning:
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
         
-    def selectMaximumFeasibleArea(self, footPlanningParams, params):        
-
-        #foothold planning
-        #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
-#        print 'foothold options',params.footOptions
-                    
+    def selectMaximumFeasibleArea(self, footPlanningParams, params):
    
         params.setCoMPosWF(footPlanningParams.com_position_to_validateW)
         
@@ -85,28 +80,16 @@ class FootHoldPlanning:
         print 'max arg ',np.argmax(np.array(area), axis=0)
         return np.argmax(np.array(area), axis=0), feasible_regions
         
-    def selectMinumumRequiredFeasibleAreaResidualRadius(self,  footPlanningParams, params):        
-
-        #foothold planning
-        #overwite the position for the actual swing, then the future polygon of stance will be evaluated with that point
-#        print 'foothold options',params.footOptions
-                        
-       
+    def selectMinumumRequiredFeasibleAreaResidualRadius(self,  footPlanningParams, params):
         ng = 4
-
         params.setConstraintModes(['FRICTION_AND_ACTUATION',
                            'FRICTION_AND_ACTUATION',
                            'FRICTION_AND_ACTUATION',
                            'FRICTION_AND_ACTUATION'])
         params.setNumberOfFrictionConesEdges(ng)
 
-            
         params.setCoMPosWF(footPlanningParams.com_position_to_validateW)
-    
-        
-#        print "com pos to validate" , params.com_position_to_validateW
-#        print "sample contacts" , params.sample_contacts
-        
+
 #        print numberOfFeetOptions
         feasible_regions = []
         residualRadiusToStack = []
@@ -139,55 +122,19 @@ class FootHoldPlanning:
                 feasible_regions.append(IAR)
                 residualRadiusToStack.append(residualRadius)
                 if residualRadius < footPlanningParams.minRadius:
-                    
-                    #check the fist point after and before the heuristic one along the direction
-                    #these two lines go together to overwrite the future swing foot
-                    params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index+1]
-                    print residualRadius, params.actual_swing, foothold_index, params.contactsWF
-                    IAR1, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
-                    newResidualRadius1 = deepcopy(self.math.find_residual_radius(IAR1, footPlanningParams.com_position_to_validateW))
-                    searchDirection1 = +1
-                    area.append( self.compGeo.computePolygonArea(IAR1))
-                    #            footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
-                    feasible_regions.append(IAR1)
-                    mapFootHoldIdxToPolygonIdx.append(foothold_index + 1)
-                    residualRadiusToStack.append(newResidualRadius1)
-                    #these two lines go together to overwrite the future swing foot
-                    params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index-1] 
-                    IAR2, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
-                    
-                    newResidualRadius2 = deepcopy(self.math.find_residual_radius(IAR2, footPlanningParams.com_position_to_validateW))
-                    searchDirection2 = -1
-                    
-                    area.append( self.compGeo.computePolygonArea(IAR2))
-                    mapFootHoldIdxToPolygonIdx.append(foothold_index-1)
-                    #                footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
-                    feasible_regions.append(IAR2)
-                    residualRadiusToStack.append(newResidualRadius2)
-                    #            print 'RADS', residualRadius, newResidualRadius1, newResidualRadius2
-                    if (newResidualRadius1 > (residualRadius+footPlanningParams.TOL)) and (newResidualRadius1 > (newResidualRadius2+footPlanningParams.TOL)) : 
-                        searchDirection = searchDirection1
-                        gradient = newResidualRadius1 - residualRadius                
-                        residualRadius = newResidualRadius1
-                        
-                    elif (newResidualRadius2 > (residualRadius+footPlanningParams.TOL))  and (newResidualRadius2 > (newResidualRadius1+footPlanningParams.TOL)) :
-                        searchDirection = searchDirection2
-                        gradient = newResidualRadius2 - residualRadius
-                        residualRadius = newResidualRadius2
-                    else: #you are already in the max
-                        searchDirection = 0
-                        #                    print 'final foothold index', foothold_index
-                        print 'RETURN before entering while loop'
-                        return foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
+                    gradient, searchDirection, residualRadius, foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx = self.compute_search_direciton(params, footPlanningParams, residualRadius, foothold_index, area,
+                                             feasible_regions, mapFootHoldIdxToPolygonIdx, residualRadiusToStack)
+                else:
+                    gradient = False
                             
-                
-#            print 'gradient before while', gradient
+                if gradient is not False:
+                   # print 'gradient before while', gradient
                     foothold_index += searchDirection
                     params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index] 
                 
             #            print 'number of option',numberOfOptions  
                 #move along the grid to find the feasible point 
-                    while ((gradient > 0.) and (residualRadius < footPlanningParams.minRadius) and (foothold_index > 0) and (foothold_index < numberOfOptions-1)):          
+                    while ((gradient > 0.0) and (residualRadius < footPlanningParams.minRadius) and (foothold_index > 0) and (foothold_index < numberOfOptions-1)):
                         
                         #these two lines go together to overwrite the future swing foot
                         params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index+searchDirection]  
@@ -206,14 +153,12 @@ class FootHoldPlanning:
                         #                   print 'area gradient ', gradient
                         #                   gradient = (residualRadius - newResidualRadius)/gridResolution
                         if gradient > 0:                
-                            foothold_index += searchDirection                
-                            area.append( self.compGeo.computePolygonArea(IAR))
+                            foothold_index += searchDirection
                             mapFootHoldIdxToPolygonIdx.append(foothold_index)
                             feasible_regions.append(IAR)
-                            #                       print 'FR', feasible_regions
                             residualRadiusToStack.append(residualRadius)
                             area.append(newArea)
-            print 'area ', area[-1]
+            print 'area ', area
             
         else:
             foothold_index = -1
@@ -225,4 +170,53 @@ class FootHoldPlanning:
 #            print 'foothold index ', foothold_index
 #            footPlanningParams.option_index = foothold_index
         return foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
-        
+
+    def compute_search_direciton(self, params, footPlanningParams, residualRadius, foothold_index, area, feasible_regions, mapFootHoldIdxToPolygonIdx, residualRadiusToStack):
+        # check the fist point after and before the heuristic one along the direction
+        # these two lines go together to overwrite the future swing foot
+        params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index + 1]
+        print residualRadius, params.actual_swing, foothold_index, params.contactsWF
+        IAR1, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+        newResidualRadius1 = deepcopy(
+            self.math.find_residual_radius(IAR1, footPlanningParams.com_position_to_validateW))
+        searchDirection1 = +1
+        area.append(self.compGeo.computePolygonArea(IAR1))
+        #            footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
+        feasible_regions.append(IAR1)
+        mapFootHoldIdxToPolygonIdx.append(foothold_index + 1)
+        residualRadiusToStack.append(newResidualRadius1)
+        # these two lines go together to overwrite the future swing foot
+        params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index - 1]
+        IAR2, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+        if IAR2 is not False:
+            newResidualRadius2 = deepcopy(
+                self.math.find_residual_radius(IAR2, footPlanningParams.com_position_to_validateW))
+            searchDirection2 = -1
+
+            area.append(self.compGeo.computePolygonArea(IAR2))
+            mapFootHoldIdxToPolygonIdx.append(foothold_index - 1)
+            #                footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
+            feasible_regions.append(IAR2)
+            residualRadiusToStack.append(newResidualRadius2)
+        else:
+            newResidualRadius2 = 0.0
+        #            print 'RADS', residualRadius, newResidualRadius1, newResidualRadius2
+        if (newResidualRadius1 > (residualRadius + footPlanningParams.TOL)) and (
+                newResidualRadius1 > (newResidualRadius2 + footPlanningParams.TOL)):
+            searchDirection = searchDirection1
+            gradient = newResidualRadius1 - residualRadius
+            residualRadius = newResidualRadius1
+
+        elif (newResidualRadius2 > (residualRadius + footPlanningParams.TOL)) and (
+                newResidualRadius2 > (newResidualRadius1 + footPlanningParams.TOL)):
+            searchDirection = searchDirection2
+            gradient = newResidualRadius2 - residualRadius
+            residualRadius = newResidualRadius2
+        else:  # you are already in the max
+            searchDirection = 0
+            #                    print 'final foothold index', foothold_index
+            print 'RETURN before entering while loop'
+            gradient = False
+            return gradient, searchDirection, residualRadius, foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
+
+        return gradient, searchDirection, residualRadius, foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
