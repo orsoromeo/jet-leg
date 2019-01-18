@@ -214,26 +214,6 @@ def talker():
 #        p.send_force_polytopes(force_polytopes_name, forcePolygons)
 
 
-
-#        3 - FRICTION REGION
-#         ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-        constraint_mode_IP = 'ONLY_FRICTION'
-        params.setConstraintModes([constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP,
-                           constraint_mode_IP])
-        params.setNumberOfFrictionConesEdges(ng)
-        
-#        uncomment this if you dont want to use the vars read in iterative_proJ_params                       
-#        params.setContactNormals(normals)
-#        params.setFrictionCoefficient(mu)      
-#        params.setTrunkMass(trunk_mass)
-#        IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-        frictionRegion, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)       
-        p.send_support_region(name, p.fillPolygon(frictionRegion))
-
-
-           
         #4 - FOOTHOLD PLANNING
    
         
@@ -261,7 +241,27 @@ def talker():
                 print 'final index', foothold_params.option_index, 'index list', mapFootHoldIdxToPolygonIdx
                 
             foothold_params.ack_optimization_done = 1
-        
+
+            #         ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+            #        3 - FRICTION REGION
+            constraint_mode_IP = 'ONLY_FRICTION'
+            params.setConstraintModes([constraint_mode_IP,
+                                       constraint_mode_IP,
+                                       constraint_mode_IP,
+                                       constraint_mode_IP])
+            params.setNumberOfFrictionConesEdges(ng)
+
+            params.contactsWF[params.actual_swing] = foothold_params.footOptions[foothold_params.option_index]
+
+            #        uncomment this if you dont want to use the vars read in iterative_proJ_params
+            #        params.setContactNormals(normals)
+            #        params.setFrictionCoefficient(mu)
+            #        params.setTrunkMass(trunk_mass)
+            #        IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+
+            frictionRegion, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
+            p.send_support_region(name, p.fillPolygon(frictionRegion))
+
             #this sends the data back to ros that contains the foot hold choice (used for stepping) and the corrspondent region (that will be used for com planning TODO update with the real footholds)
             if (actuationRegions is not False) and (np.size(actuationRegions) is not 0):
                 print 'sending actuation region'
@@ -270,7 +270,8 @@ def talker():
             else:
                 #if it cannot compute anything it will return the frictin region
                 p.send_actuation_polygons(name, p.fillPolygon(frictionRegion), foothold_params.option_index, foothold_params.ack_optimization_done)
-        
+
+
         time.sleep(0.1)
         i+=1
         

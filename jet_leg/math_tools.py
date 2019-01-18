@@ -98,6 +98,7 @@ class Math:
     def find_residual_radius(self, polygon, point_to_check):
         # this function returns a positive distance if the point is on the right side of the segment. This will return 
         # a positive distance for a polygon queried in clockwise order and with a point_to_check which lies inside the polygon itself 
+        # print 'poly',polygon
         numberOfVertices = np.size(polygon,0)
         # print 'polygon in residual radius computation', polygon
         # print 'number of vertices', numberOfVertices
@@ -105,6 +106,7 @@ class Math:
         for i in range(0,numberOfVertices-1):
             s1 = polygon[i,:]
             s2 = polygon[i+1,:]
+            # print s1, s2, point_to_check
             d_temp = self.find_point_to_line_signed_distance(s1, s2, point_to_check)
 #            print i, s1, s2, d_temp
             if d_temp < 0.0:
