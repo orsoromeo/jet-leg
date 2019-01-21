@@ -234,7 +234,7 @@ def talker():
             
             #chosen_foothold, actuationRegions = footHoldPlanning.selectMaximumFeasibleArea(foothold_params, params)
 #            print 'current swing ',params.actual_swing
-            foothold_params.option_index, stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMinumumRequiredFeasibleAreaResidualRadius( foothold_params, params)
+            foothold_params.option_index, stackedResidualRadius, actuationRegions, mapFootHoldIdxToPolygonIdx = footHoldPlanning.selectMaximumFeasibleArea( foothold_params, params)
 
             if actuationRegions is False:
                 foothold_params.option_index = -1

@@ -253,7 +253,7 @@ class FootHoldPlanning:
 
         # check the prediction point at the beginning
         if numberOfOptions > 0:
-            for footIndex in range(0, int(18)):
+            for footIndex in range(0, int(numberOfOptions)):
                 # these two lines go together to overwrite the future swing foot
                 params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[footIndex]
                 IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
