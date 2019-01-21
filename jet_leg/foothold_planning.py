@@ -227,3 +227,58 @@ class FootHoldPlanning:
             return gradient, searchDirection, residualRadius, foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
 
         return gradient, searchDirection, residualRadius, foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
+
+    def selectMaximumFeasibleArea(self, footPlanningParams, params):
+        ng = 4
+        params.setConstraintModes(['FRICTION_AND_ACTUATION',
+                                   'FRICTION_AND_ACTUATION',
+                                   'FRICTION_AND_ACTUATION',
+                                   'FRICTION_AND_ACTUATION'])
+        params.setNumberOfFrictionConesEdges(ng)
+
+        params.setCoMPosWF(footPlanningParams.com_position_to_validateW)
+
+        #        print numberOfFeetOptions
+        feasible_regions = []
+        residualRadiusToStack = []
+        #        print 'empty res radii', residualRadiusToStack
+        #        footOptions = []
+        area = []
+        mapFootHoldIdxToPolygonIdx = []
+
+        #        counter = 0
+        print 'number of feet options ', footPlanningParams.numberOfFeetOptions
+        numberOfOptions = footPlanningParams.numberOfFeetOptions
+        print footPlanningParams.footOptions
+
+        # check the prediction point at the beginning
+        if numberOfOptions > 0:
+            for footIndex in range(0, int(18)):
+                # these two lines go together to overwrite the future swing foot
+                params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[footIndex]
+                IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+                if IAR is False:
+                    residualRadius = 0.0
+                    newArea = 0.0
+                else:
+                    residualRadius = self.math.find_residual_radius(IAR,
+                                                                    footPlanningParams.com_position_to_validateW)
+                    newArea = self.compGeo.computePolygonArea(IAR)
+
+                    mapFootHoldIdxToPolygonIdx.append(footIndex)
+                    feasible_regions.append(IAR)
+                    residualRadiusToStack.append(residualRadius)
+                    area.append(newArea)
+            print 'area ', area
+            maxFootIndex = np.argmax(area)
+            print 'max foothold: ', maxFootIndex
+
+        else:
+            maxFootIndex = -1
+        #            feasible_regions = false
+
+        #        print 'res radii', residualRadiusToStack
+
+        #            print 'foothold index ', foothold_index
+        #            footPlanningParams.option_index = foothold_index
+        return maxFootIndex, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
