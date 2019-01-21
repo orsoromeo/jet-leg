@@ -226,6 +226,9 @@ def talker():
             foothold_params.ack_optimization_done = False
         # print 'optimization done',foothold_params.ack_optimization_done, ' ... ', foothold_params.optimization_started
         if foothold_params.optimization_started and not foothold_params.ack_optimization_done :
+            print '============================================================'
+            print 'current swing ', params.actual_swing            
+            print '============================================================'
 
             #print foothold_params.footOptions
             
@@ -250,7 +253,7 @@ def talker():
                                        constraint_mode_IP,
                                        constraint_mode_IP])
             params.setNumberOfFrictionConesEdges(ng)
-
+            
             params.contactsWF[params.actual_swing] = foothold_params.footOptions[foothold_params.option_index]
 
             #        uncomment this if you dont want to use the vars read in iterative_proJ_params
@@ -266,7 +269,7 @@ def talker():
             if (actuationRegions is not False) and (np.size(actuationRegions) is not 0):
                 print 'sending actuation region'
                 p.send_actuation_polygons(name, p.fillPolygon(actuationRegions[-1]), foothold_params.option_index, foothold_params.ack_optimization_done)
-                print actuationRegions[-1]
+                # print actuationRegions[-1]
             else:
                 #if it cannot compute anything it will return the frictin region
                 p.send_actuation_polygons(name, p.fillPolygon(frictionRegion), foothold_params.option_index, foothold_params.ack_optimization_done)

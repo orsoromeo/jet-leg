@@ -188,7 +188,14 @@ class ComputationalDynamics():
 
         else:            
             compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
-            hull = ConvexHull(compressed_vertices)
+            try:
+                hull = ConvexHull(compressed_vertices)
+            except Exception as err:
+                print("QHull type error: " + str(err))
+                print("matrix to compute qhull:",compressed_vertices)               
+                return False, False, False
+                
+                
 #        print 'hull ', hull.vertices
             compressed_hull = compressed_vertices[hull.vertices]
             compressed_hull = self.geom.clockwise_sort(compressed_hull)
