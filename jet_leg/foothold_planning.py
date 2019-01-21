@@ -174,30 +174,37 @@ class FootHoldPlanning:
     def compute_search_direciton(self, params, footPlanningParams, residualRadius, foothold_index, area, feasible_regions, mapFootHoldIdxToPolygonIdx, residualRadiusToStack):
         # check the fist point after and before the heuristic one along the direction
         # these two lines go together to overwrite the future swing foot
-        params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index + 1]
-        print residualRadius, params.actual_swing, foothold_index, params.contactsWF
-        IAR1, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
-        newResidualRadius1 = deepcopy(
-            self.math.find_residual_radius(IAR1, footPlanningParams.com_position_to_validateW))
-        searchDirection1 = +1
-        area.append(self.compGeo.computePolygonArea(IAR1))
-        #            footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
-        feasible_regions.append(IAR1)
-        mapFootHoldIdxToPolygonIdx.append(foothold_index + 1)
-        residualRadiusToStack.append(newResidualRadius1)
+        if foothold_index < footPlanningParams.numberOfFeetOptions:
+            params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index + 1]
+            #print "residualRadius, params.actual_swing, foothold_index, params.contactsWF", residualRadius, params.actual_swing, foothold_index, params.contactsWF
+            IAR1, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+            newResidualRadius1 = deepcopy(
+                self.math.find_residual_radius(IAR1, footPlanningParams.com_position_to_validateW))
+            searchDirection1 = +1
+            area.append(self.compGeo.computePolygonArea(IAR1))
+            #            footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
+            feasible_regions.append(IAR1)
+            mapFootHoldIdxToPolygonIdx.append(foothold_index + 1)
+            residualRadiusToStack.append(newResidualRadius1)
+        else:
+            newResidualRadius1 = 0.0
+            
         # these two lines go together to overwrite the future swing foot
         params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index - 1]
         IAR2, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
         if IAR2 is not False:
-            newResidualRadius2 = deepcopy(
-                self.math.find_residual_radius(IAR2, footPlanningParams.com_position_to_validateW))
-            searchDirection2 = -1
+            if foothold_index > 0:
+                newResidualRadius2 = deepcopy(
+                    self.math.find_residual_radius(IAR2, footPlanningParams.com_position_to_validateW))
+                searchDirection2 = -1
 
-            area.append(self.compGeo.computePolygonArea(IAR2))
-            mapFootHoldIdxToPolygonIdx.append(foothold_index - 1)
-            #                footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
-            feasible_regions.append(IAR2)
-            residualRadiusToStack.append(newResidualRadius2)
+                area.append(self.compGeo.computePolygonArea(IAR2))
+                mapFootHoldIdxToPolygonIdx.append(foothold_index - 1)
+                #                footOptions.append(deepcopy(params.contactsWF[params.actual_swing]))
+                feasible_regions.append(IAR2)
+                residualRadiusToStack.append(newResidualRadius2)
+            else:
+                newResidualRadius2 = 0.0
         else:
             newResidualRadius2 = 0.0
         #            print 'RADS', residualRadius, newResidualRadius1, newResidualRadius2
