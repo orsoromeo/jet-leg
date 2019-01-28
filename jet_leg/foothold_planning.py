@@ -270,7 +270,10 @@ class FootHoldPlanning:
                     residualRadiusToStack.append(residualRadius)
                     area.append(newArea)
             print 'area ', area
-            maxFootIndex = np.argmax(area)
+            if np.size(area, 0) > 0:
+                maxFootIndex = np.argmax(area)
+            else:
+                maxFootIndex = -1
             print 'max foothold: ', maxFootIndex
 
         else:
