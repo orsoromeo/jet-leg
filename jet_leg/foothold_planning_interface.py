@@ -20,7 +20,8 @@ from gazebo_msgs.srv import ApplyBodyWrench
 from geometry_msgs.msg import Vector3, Wrench
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
-from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
+from dls_msgs.msg import StringDoubleArray
+from feasible_region.msg import Polygon3D, LegsPolygons
 from dwl_msgs.msg import WholeBodyState, WholeBodyTrajectory, JointState, ContactState, BaseState
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32, Header

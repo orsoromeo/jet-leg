@@ -18,7 +18,9 @@ import threading
 
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
-from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
+from dls_msgs.msg import  StringDoubleArray
+from feasible_region.msg import  Polygon3D, LegsPolygons
+
 
 from context import jet_leg 
 from jet_leg.computational_dynamics import ComputationalDynamics
@@ -101,11 +103,11 @@ class HyQSim(threading.Thread):
         output.ack_optimization_done = ack_optimization_done
         self.pub_polygon.publish(output)
 
-    def send_simple_array(self, name, data):
-        output = SimpleDoubleArray()
-#        output.name = name
-        output.data = data
-        self.pub_rcf_params.publish(output)
+#     def send_simple_array(self, name, data):
+#         output = SimpleDoubleArray()
+# #        output.name = name
+#         output.data = data
+#         self.pub_rcf_params.publish(output)
 
     def fillPolygon(self, polygon):
 
