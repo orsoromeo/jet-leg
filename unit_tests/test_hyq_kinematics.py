@@ -19,39 +19,28 @@ class TestStringMethods(unittest.TestCase):
 
     assertPrecision = 3
 
-
-    def test_ikpy(self):
+    def test_leg_ikpy(self):
         epsilon = 1e-03
-        print "test IKPY"
-        my_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
 
-        target_vector = [0.3735, 0.207, -0.5]
-        target_frame = np.eye(4)
-        target_frame[:3, 3] = target_vector
-        print target_frame
-        q = my_chain.inverse_kinematics(target_frame)
-        q_LF_ikpy = q[1:4]
-        #print "ikpy: ",q, q_LF_ikpy
+        LF_foot = np.array([0.3735, 0.33, -0.5])
+        RF_foot = np.array([0.3735, -0.33, -0.5])
+        LH_foot = np.array([-0.3735, 0.33, -0.5])
+        RH_foot = np.array([-0.3735, -0.33, -0.5])
+        starting_contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
         hyqKin = HyQKinematics()
 
-        hyqKin.init_jacobians()
-        hyqKin.init_homogeneous()
-
         foot_vel = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        for legID in range(0,4):
+            q_leg_ikpy = hyqKin.leg_inverse_kin_ikpy(legID, starting_contacts)
+            hyqKin.init_jacobians()
+            hyqKin.init_homogeneous()
 
-        LF_foot = np.array(target_vector)
-        RF_foot = np.array([0.3735, -0.207, -0.5])
-        LH_foot = np.array([-0.3735, 0.207, -0.5])
-        RH_foot = np.array([-0.3735, -0.207, -0.5])
-        starting_contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-
-        q = hyqKin.inverse_kin(starting_contacts, foot_vel)
-        q_LF_hardcoded = q[0:3]
-        #print "hardcoded ik: ", q, q_LF_hardcoded
-        print q_LF_ikpy - q_LF_hardcoded, epsilon
-
-        self.assertTrue((q_LF_ikpy[0] - q_LF_hardcoded[0] < epsilon).all())
+            q = hyqKin.inverse_kin(starting_contacts, foot_vel)
+            q_leg_hardcoded = q[3*legID +0: 3*legID + 3]
+            self.assertTrue(q_leg_ikpy[0] - q_leg_hardcoded[0] < epsilon)
+            self.assertTrue(q_leg_ikpy[1] - q_leg_hardcoded[1] < epsilon)
+            self.assertTrue(q_leg_ikpy[2] - q_leg_hardcoded[2] < epsilon)
 
 
     def test_kinematic_loop_default_configuration(self):
