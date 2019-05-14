@@ -17,16 +17,15 @@ class HyQKinematics:
         self.rbd = RigidBodyDynamics()
 
         self.hyq_LF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
-        self.hyq_RF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
-        self.hyq_LH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
-        self.hyq_RH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
+        self.hyq_RF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_RF.urdf")
+        self.hyq_LH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LH.urdf")
+        self.hyq_RH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_RH.urdf")
 
-        self.hyqreal_LF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
-        self.hyqreal_RF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
-        self.hyqreal_LH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
-        self.hyqreal_RH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
+        self.hyqreal_LF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_LF.urdf")
+        self.hyqreal_RF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_RF.urdf")
+        self.hyqreal_LH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_LH.urdf")
+        self.hyqreal_RH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_RH.urdf")
 
-        
         self.upperLegLength = 0.35;
         self.lowerLegLength = 0.341;
 
@@ -819,13 +818,19 @@ class HyQKinematics:
         return contacts
 
     def leg_inverse_kin_ikpy(self, legID, footPositionBF):
-        target_vector = footPositionBF
+        target_vector = np.array(footPositionBF[legID])
         target_frame = np.eye(4)
         target_frame[:3, 3] = target_vector
-        if legID is 0: q = self.hyq_LF_chain.inverse_kinematics(target_frame)
-        if legID is 1: q = self.hyq_RF_chain.inverse_kinematics(target_frame)
-        if legID is 2: q = self.hyq_LH_chain.inverse_kinematics(target_frame)
-        if legID is 3: q = self.hyq_RH_chain.inverse_kinematics(target_frame)
+        if legID == 0:
+            q = self.hyq_LF_chain.inverse_kinematics(target_frame)
+        elif legID == 1:
+            q = self.hyq_RF_chain.inverse_kinematics(target_frame)
+        elif legID == 2:
+            q = self.hyq_LH_chain.inverse_kinematics(target_frame)
+        elif legID == 3:
+            q = self.hyq_RH_chain.inverse_kinematics(target_frame)
+        else:
+            print "warning: leg ID is wrong"
         q_leg = q[1:4]
         return q_leg
 

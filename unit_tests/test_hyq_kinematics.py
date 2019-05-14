@@ -21,16 +21,14 @@ class TestStringMethods(unittest.TestCase):
 
     def test_leg_ikpy(self):
         epsilon = 1e-03
-
         LF_foot = np.array([0.3735, 0.33, -0.5])
         RF_foot = np.array([0.3735, -0.33, -0.5])
         LH_foot = np.array([-0.3735, 0.33, -0.5])
         RH_foot = np.array([-0.3735, -0.33, -0.5])
         starting_contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-
         hyqKin = HyQKinematics()
-
         foot_vel = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
+
         for legID in range(0,4):
             q_leg_ikpy = hyqKin.leg_inverse_kin_ikpy(legID, starting_contacts)
             hyqKin.init_jacobians()
@@ -42,17 +40,13 @@ class TestStringMethods(unittest.TestCase):
             self.assertTrue(q_leg_ikpy[1] - q_leg_hardcoded[1] < epsilon)
             self.assertTrue(q_leg_ikpy[2] - q_leg_hardcoded[2] < epsilon)
 
-
     def test_kinematic_loop_default_configuration(self):
 
         random.seed(9001)
         hyqKin = HyQKinematics()
-
         hyqKin.init_jacobians()
         hyqKin.init_homogeneous()
-
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-
         LF_foot = np.array([0.3735, 0.207, -0.6])
         RF_foot = np.array([0.3735, -0.207, -0.6])
         LH_foot = np.array([-0.3735, 0.207, -0.6])
