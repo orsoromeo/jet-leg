@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="hyqreal">
+<link name="base_link">
+    <inertial>
+      <origin xyz="0.0149 -0.00186 -0.03465"/>
+      <mass value="56.5"/>
+      <inertia ixx="1.498728" ixy="-0.007369" ixz="-0.189135" iyy="9.492381" iyz="0.000185" izz="9.012359"/>
+    </inertial>
+  </link>
+
+  <!-- Links -->
+  <!-- Hip assembly link -->
+  <link name="lf_hipassembly">
+    <inertial>
+      <origin xyz="-0.010027 -0.010608 0.003644"/>
+      <mass value="4.973275"/>
+      <inertia ixx="0.011231" ixy="-0.000592" ixz="0.000225" iyy="0.015768" iyz="0.000224" izz="0.016863"/>
+    </inertial>
+  </link>
+
+  <!-- Upper leg link -->
+  <link name="lf_upperleg">
+    <inertial>
+      <origin xyz="0.107987 -0.011459 -0.002121"/>
+      <mass value="5.877927"/>
+      <inertia ixx="0.016432" ixy="0.001863" ixz="0.003897" iyy="0.075737" iyz="-0.00024" izz="0.079267"/>
+    </inertial>
+  </link>
+
+  <!-- Lower leg link -->
+  <link name="lf_lowerleg">
+    <inertial>
+      <origin xyz="0.149302 -0.003801 -0.000624"/>
+      <mass value="1.291954"/>
+      <inertia ixx="0.001088" ixy="-0.000572" ixz="0.000118" iyy="0.029215" iyz="0.00046" izz="0.029772"/>
+    </inertial>
+  </link>
+
+  <!-- Foot link -->
+  <link name="lf_foot">
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <sphere radius="0.032"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.032"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Joints -->
+  <!-- HAA joint -->
+  <joint name="lf_haa_joint" type="revolute">
+    <origin rpy="3.14159265359 1.57079632679 0" xyz="0.4435 0.139 0"/>
+    <parent link="base_link"/>
+    <child link="lf_hipassembly"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.1" friction="0"/>
+    <limit effort="173.0" lower="-0.733038285838" upper="0.401425727959" velocity="12.0"/>
+    <safety_controller k_position="50" k_velocity="10" soft_lower_limit="-0.733038285838" soft_upper_limit="0.401425727959"/>
+  </joint>
+
+  <!-- HFE joint -->
+  <joint name="lf_hfe_joint" type="revolute">
+    <origin rpy="1.57079632679 0 0" xyz="0 -0.117 0"/>
+    <parent link="lf_hipassembly"/>
+    <child link="lf_upperleg"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.1" friction="0"/>
+    <limit effort="208" lower="-2.35619449019" upper="2.35619449019" velocity="12.0"/>
+    <safety_controller k_position="50" k_velocity="10" soft_lower_limit="-2.35619449019" soft_upper_limit="2.35619449019"/>
+  </joint>
+
+  <!-- KFE joint -->
+  <joint name="lf_kfe_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0.36 0 0"/>
+    <parent link="lf_upperleg"/>
+    <child link="lf_lowerleg"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.1" friction="0"/>
+    <limit effort="249" lower="-2.77001205584" upper="-0.669857366915" velocity="12.0"/>
+    <safety_controller k_position="50.0" k_velocity="10.0" soft_lower_limit="-2.77001205584" soft_upper_limit="-0.669857366915"/>
+  </joint>
+
+  <!-- Foot joint -->
+  <joint name="lf_foot_joint" type="fixed">
+    <origin rpy="1.57079632679 0 -1.57079632679" xyz="0.38 0 0"/>
+    <parent link="lf_lowerleg"/>
+    <child link="lf_foot"/>
+  </joint>
+
+</robot>
+
