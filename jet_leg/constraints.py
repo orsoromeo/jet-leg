@@ -324,6 +324,6 @@ class Constraints:
             d = np.hstack([d, d_cone])
         
         if contactsNumber == 0:
-            print 'contactsNumber is zero, there are no stance legs set!'
+            print 'contactsNumber is zero, there are no stance legs set! This might be because Gazebo is in pause.'
         return C, d, isIKoutOfWorkSpace, actuation_polygons
     
