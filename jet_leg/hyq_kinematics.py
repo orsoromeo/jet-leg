@@ -8,13 +8,24 @@ import numpy as np
 
 from dog_interface import DogInterface
 from rigid_body_dynamics import RigidBodyDynamics
+import ikpy
 
 class HyQKinematics:
     def __init__(self):
         
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
-        
+
+        self.hyq_LF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
+        self.hyq_RF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_RF.urdf")
+        self.hyq_LH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_LH.urdf")
+        self.hyq_RH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyq/urdf/leg/hyq_leg_RH.urdf")
+
+        self.hyqreal_LF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_LF.urdf")
+        self.hyqreal_RF_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_RF.urdf")
+        self.hyqreal_LH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_LH.urdf")
+        self.hyqreal_RH_chain = ikpy.chain.Chain.from_urdf_file("../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_RH.urdf")
+
         self.upperLegLength = 0.35;
         self.lowerLegLength = 0.341;
 
@@ -805,7 +816,31 @@ class HyQKinematics:
         contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
         
         return contacts
-        
+
+    def leg_inverse_kin_ikpy(self, legID, footPositionBF):
+        target_vector = np.array(footPositionBF[legID])
+        target_frame = np.eye(4)
+        target_frame[:3, 3] = target_vector
+        if legID == 0:
+            q = self.hyq_LF_chain.inverse_kinematics(target_frame)
+        elif legID == 1:
+            q = self.hyq_RF_chain.inverse_kinematics(target_frame)
+        elif legID == 2:
+            q = self.hyq_LH_chain.inverse_kinematics(target_frame)
+        elif legID == 3:
+            q = self.hyq_RH_chain.inverse_kinematics(target_frame)
+        else:
+            print "warning: leg ID is wrong"
+        q_leg = q[1:4]
+        return q_leg
+
+    def inverse_kin_ikpy(self, contactsBF):
+        q = []
+        for legID in self.dog.legs:
+            q_leg = self.leg_inverse_kin_ikpy(legID, contactsBF[legID,:])
+            q = np.hstack([q, q_leg])
+        return q
+
     def leg_inverse_kin(self, legID, footPositionBF, footVelocityBF):
 #        BASE2HAAX = 0.3735;  //!< x component of LF_HAA origin, in base frame
 #        BASE2HAAY = 0.207;   //!< y component of LF_HAA origin, in base frame
