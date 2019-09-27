@@ -15,12 +15,12 @@ import sys
 import time
 import threading
 
+from context import jet_leg
 
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
-from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
+#from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
 
-from context import jet_leg 
 from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.math_tools import Math
 from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
@@ -149,7 +149,7 @@ def talker():
 
     while not ros.is_shutdown():
 
-
+        print 'CIAOOOOOOO'
         p.get_sim_wbs()
 
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
@@ -170,8 +170,8 @@ def talker():
 #        else:
 #            print 'Could not compute the feasible region'
 #            p.send_actuation_polygons(name, p.fillPolygon(old_IAR), foothold_params.option_index,
+#
 #                                      foothold_params.ack_optimization_done)
-#   
 
 
         
@@ -224,8 +224,10 @@ def talker():
 #        print 'robot mass', params.robotMass
         if (foothold_params.optimization_started == False):
             foothold_params.ack_optimization_done = False
-        # print 'optimization done',foothold_params.ack_optimization_done, ' ... ', foothold_params.optimization_started
-        if foothold_params.optimization_started and not foothold_params.ack_optimization_done :
+
+
+        print 'optimization done',foothold_params.ack_optimization_done, ' ... ', foothold_params.optimization_started
+        if foothold_params.optimization_started and not foothold_params.ack_optimization_done:
             print '============================================================'
             print 'current swing ', params.actual_swing            
             print '============================================================'
@@ -263,6 +265,9 @@ def talker():
             #        IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
 
             frictionRegion, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
+
+            print 'friction region is: ',frictionRegion
+
             p.send_support_region(name, p.fillPolygon(frictionRegion))
 
             #this sends the data back to ros that contains the foot hold choice (used for stepping) and the corrspondent region (that will be used for com planning TODO update with the real footholds)

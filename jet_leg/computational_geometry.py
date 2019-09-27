@@ -37,36 +37,48 @@ class ComputationalGeometry:
         edge1 = face1[:,2] - face1[:,1]
         edge2 = face1[:,0] - face1[:,1]
         normal = np.cross(edge1, edge2)
+        norm = np.linalg.norm(normal)
+        normal = normal/norm
         known_term = np.dot(normal, face1[:,0])
         h_rep1 = np.hstack([normal, known_term])
         
         edge1 = face2[:,2] - face2[:,1]
         edge2 = face2[:,0] - face2[:,1]
         normal = np.cross(edge1, edge2)
+        norm = np.linalg.norm(normal)
+        normal = normal/norm
         known_term = np.dot(normal, face2[:,0])
         h_rep2 = np.hstack([normal, known_term])
  
         edge1 = face3[:,2] - face3[:,1]
         edge2 = face3[:,0] - face3[:,1]
         normal = np.cross(edge1, edge2)
+        norm = np.linalg.norm(normal)
+        normal = normal/norm
         known_term = np.dot(normal, face3[:,0])
         h_rep3 = np.hstack([normal, known_term])
  
         edge1 = face4[:,2] - face4[:,1]
         edge2 = face4[:,0] - face4[:,1]
         normal = np.cross(edge1, edge2)
+        norm = np.linalg.norm(normal)
+        normal = normal/norm
         known_term = np.dot(normal, face4[:,0])
         h_rep4 = np.hstack([normal, known_term])
  
         edge1 = face5[:,2] - face5[:,1]
         edge2 = face5[:,0] - face5[:,1]
         normal = np.cross(edge1, edge2)
+        norm = np.linalg.norm(normal)
+        normal = normal/norm
         known_term = np.dot(normal, face5[:,0])
         h_rep5 = np.hstack([normal, known_term])
  
         edge1 = face6[:,2] - face6[:,1]
         edge2 = face6[:,0] - face6[:,1]
         normal = np.cross(edge1, edge2)
+        norm = np.linalg.norm(normal)
+        normal = normal/norm
         known_term = np.dot(normal, face6[:,0])
         h_rep6 = np.hstack([normal, known_term])
  

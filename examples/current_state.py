@@ -105,7 +105,7 @@ def talker():
     p.get_sim_wbs()
     params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
     foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-    params.getCurrentStanceFeet(p.hyq_rcf_debug)
+    params.getCurrentStanceFeetFlags(p.hyq_rcf_debug)
     params.getCurrentFeetPos(p.hyq_rcf_debug)
 
     """ contact points """
@@ -117,8 +117,8 @@ def talker():
         p.get_sim_wbs()
         params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
         foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-        params.getCurrentStanceFeet(p.hyq_rcf_debug)
-        params.getCurrentFeetPos(p.hyq_rcf_debug)
+        params.getCurrentStanceFeetFlags(p.hyq_rcf_debug)
+        # params.getCurrentFeetPosFlags(p.hyq_rcf_debug)
 
         #         ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
         #        3 - FRICTION REGION
@@ -129,9 +129,9 @@ def talker():
                                constraint_mode_IP])
         params.setNumberOfFrictionConesEdges(ng)
         
-        frictionRegion, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
-
-        p.send_support_region(name, p.fillPolygon(frictionRegion))
+        frictionRegionWF, actuation_polygons, computation_time = compDyn.try_iterative_projection_bretl(params)
+        print frictionRegionWF
+        p.send_support_region(name, p.fillPolygon(frictionRegionWF))
 
         time.sleep(0.05)
         i += 1

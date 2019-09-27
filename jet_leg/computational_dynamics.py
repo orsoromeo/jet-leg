@@ -29,6 +29,8 @@ class ComputationalDynamics():
         self.math = Math()
         self.constr = Constraints()
         self.kin = HyQKinematics()
+        self.ineq = ([],[])
+        self.eq = ([],[])
         
     def getGraspMatrix(self, r):
 
@@ -54,7 +56,7 @@ class ComputationalDynamics():
         
         stanceLegs = iterative_projection_params.getStanceFeet()
    
-        contacts = iterative_projection_params.getContactsPosWF()
+        contactsWF = iterative_projection_params.getContactsPosWF()
         constraint_mode = iterative_projection_params.getConstraintModes()
         extForceWF = iterative_projection_params.externalForceWF
         robotMass = iterative_projection_params.robotMass
@@ -82,7 +84,8 @@ class ComputationalDynamics():
 
         for j in range(0,contactsNumber):
            
-            r = contacts[int(stanceIndex[j]),:]
+            r = contactsWF[int(stanceIndex[j]),:]
+            print 'r is ', r
            
             graspMatrix = self.getGraspMatrix(r)[:,0:3]
             Ex = hstack([Ex, -graspMatrix[4]])
@@ -165,7 +168,7 @@ class ComputationalDynamics():
 
     def try_iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
         try:
-            compressed_hull, actuation_polygons, computation_time = self.iterative_projection_bretl(iterative_projection_params, False)
+            compressed_hull, actuation_polygons, computation_time = self.iterative_projection_bretl(iterative_projection_params, saturate_normal_force)
             return compressed_hull, actuation_polygons, computation_time
         except ValueError as err:
             print 'Could not compute the feasible region'
@@ -177,11 +180,12 @@ class ComputationalDynamics():
 
         start_t_IP = time.time()
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
-        proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)       
+        proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
+
 #        print 'hereee'  
 #        points = np.random.rand(30, 2)   # 30 random points in 2-D
 #        print points
-        vertices_WF = pypoman.project_polytope(proj, ineq, eq, method='bretl', max_iter=500, init_angle=0.0)
+        vertices_WF = pypoman.project_polytope(proj, self.ineq, self.eq, method='bretl', max_iter=500, init_angle=0.0)
         if vertices_WF is False:
             print 'Project polytope function is False'
             return False, False, False

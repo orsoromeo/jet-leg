@@ -33,7 +33,7 @@ class Constraints:
             jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
 #            print 'Jacobians',jacobianMatrices
             actuation_polygons = self.computeActuationPolygons(stanceLegs, stanceIndex, swingIndex, jacobianMatrices, torque_limits)
-#                print 'actuation polygon ',actuation_polygons 
+#                print 'actuation polygon ',actuation_polygons
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
             because the gravito inertial wrench is normalized'''
                 
@@ -42,8 +42,18 @@ class Constraints:
 
             hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/totalMass)
             C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
-            d1 = np.hstack([d1, knownTerm.T])  
-                
+            d1 = np.hstack([d1, knownTerm.T])
+
+            print "H description: ",C1, d1
+            print C1[0,0]
+            print "theta angles: "
+            for i in range(0,6):
+                theta = np.arctan(C1[i,2]/C1[i,0])
+                if (C1[i,2]<0):
+                    theta+=np.pi
+                print theta, "[rad] ", theta/np.pi*180, "[deg]"
+            print "V description: "
+            print actuation_polygons[contactIterator]
         return C1, d1, actuation_polygons, isOutOfWorkspace
         
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
@@ -201,7 +211,7 @@ class Constraints:
             actuation_polygon = np.matmul(np.linalg.pinv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)        
             
         # Only for debugging:                          
-#        actuation_polygon = vertices
+        # actuation_polygon = vertices
         return actuation_polygon
     
     def getInequalities(self, params, saturate_normal_force = False):

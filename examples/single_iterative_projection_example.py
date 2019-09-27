@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct 18 11:05:06 2018
-
-@author: rorsolino
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Tue Jun 12 10:54:31 2018
 
 @author: Romeo Orsolino
@@ -39,10 +32,10 @@ ng = 4
 
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 
-constraint_mode_IP = ['ONLY_FRICTION',
+constraint_mode_IP = ['ONLY_ACTUATION',
                       'ONLY_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION']
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION']
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
@@ -84,7 +77,7 @@ LH_tau_lim = [50.0, 100.0, 100.0]
 RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
-extForceW = np.array([0.0,0.0, 700.0])
+extForceW = np.array([0.0,0.0, 0.0])
 #
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -115,8 +108,11 @@ params.externalForceWF = extForceW
 ''' compute iterative projection '''
 IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
 
-#print 'actuation polygons', actuation_polygons
-#print IP_points
+print "Inequalities", comp_dyn.ineq
+
+print "actuation polygons"
+print actuation_polygons
+
 ''' plotting Iterative Projection points '''
 plotter = Plotter()
 scaling_factor = 2000

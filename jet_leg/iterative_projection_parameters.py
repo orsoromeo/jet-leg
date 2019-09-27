@@ -88,8 +88,7 @@ class IterativeProjectionParameters:
         
     def setTotalMass(self, mass):
         self.robotMass = mass
-        
-        
+
     def getContactsPosWF(self):
         return self.contactsWF     
         
@@ -125,11 +124,41 @@ class IterativeProjectionParameters:
         
     def getTotalMass(self):
         return self.robotMass
-        
+
+    def getCurrentFeetPos(self, received_data):
+        num_of_elements = np.size(received_data.data)
+        for j in range(0,num_of_elements):
+            if str(received_data.name[j]) == str("footPosDesLFx"):
+                self.footPosWLF[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesLFy"):
+                self.footPosWLF[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesLFz"):
+                self.footPosWLF[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesRFx"):
+                self.footPosWRF[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesRFy"):
+                self.footPosWRF[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesRFz"):
+                self.footPosWRF[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesLHx"):
+                self.footPosWLH[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesLHy"):
+                self.footPosWLH[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesLHz"):
+                self.footPosWLH[2] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesRHx"):
+                self.footPosWRH[0] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesRHy"):
+                self.footPosWRH[1] = received_data.data[j]
+            if str(received_data.name[j]) == str("footPosDesRHz"):
+                self.footPosWRH[2] = received_data.data[j]
+
+        self.contactsWF = np.array([self.footPosWLF, self.footPosWRF, self.footPosWLH, self.footPosWRH])
+
     def getParamsFromRosDebugTopic(self, received_data):
         
         num_of_elements = np.size(received_data.data)
-#        print 'number of elements: ', num_of_elements
+        # print 'number of elements: ', num_of_elements
         for j in range(0,num_of_elements):
 #            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
             if str(received_data.name[j]) == str("LF_HAAminVar"):
@@ -161,7 +190,6 @@ class IterativeProjectionParameters:
                                            self.RF_tau_lim, 
                                            self.LH_tau_lim, 
                                            self.RH_tau_lim, ])
-                                                                                    
 #            print 'torque lims',self.torque_limits
  
 # the inputs are all in the WF this way we can compute generic regions for generic contact sets and generic com position 
@@ -191,6 +219,9 @@ class IterativeProjectionParameters:
             if str(received_data.name[j]) == str("contact_setWRHz"):
                 self.footPosWRH[2] = received_data.data[j]
 
+            self.contactsWF = np.array([self.footPosWLF, self.footPosWRF, self.footPosWLH, self.footPosWRH])
+            #print self.contactsWF
+
             if str(received_data.name[j]) == str("actual_CoMX"):
                 self.comPositionWF[0] = received_data.data[j]
             if str(received_data.name[j]) == str("actual_CoMY"):
@@ -214,9 +245,7 @@ class IterativeProjectionParameters:
                 self.externalForceWF[2] = received_data.data[j]   
              
 #            print 'ext force ',self.externalForceWF
-                
 
-            self.contactsWF = np.array([ self.footPosWLF,self.footPosWRF,self.footPosWLH, self.footPosWRH]) 
 #            print self.contactsWF
           
             if str(received_data.name[j]) == str("LF_HAA_th"):
@@ -294,7 +323,7 @@ class IterativeProjectionParameters:
         self.robotMass -= self.externalForceWF[2]/9.81
                                    
           
-    def getFutureStanceFeet(self, received_data):
+    def getFutureStanceFeetFlags(self, received_data):
 
         num_of_elements = np.size(received_data.data)         
         for j in range(0,num_of_elements):
@@ -307,10 +336,10 @@ class IterativeProjectionParameters:
                 self.stanceFeet[2] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RH"):
                 self.stanceFeet[3] = int(received_data.data[j])  
-              
+        print 'stance feet ', self.stanceFeet
         self.numberOfContacts = np.sum(self.stanceFeet)
         
-    def getCurrentStanceFeet(self, received_data):
+    def getCurrentStanceFeetFlags(self, received_data):
         
         num_of_elements = np.size(received_data.data)
         for j in range(0,num_of_elements):
@@ -345,4 +374,4 @@ class IterativeProjectionParameters:
         
  
         self.numberOfContacts = np.sum(self.stanceFeet)
-        print 'stance feet ', self.stanceFeet
+        print 'STANCE feet ', self.stanceFeet

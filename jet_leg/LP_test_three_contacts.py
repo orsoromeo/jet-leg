@@ -8,7 +8,7 @@ import time
 import cvxopt
 from cvxopt import matrix, solvers
 import numpy as np
-from kinematics import Kinematics
+from hyq_kinematics import HyQKinematics
 from constraints import Constraints
 from math_tools import Math
 # for plotting
@@ -224,6 +224,7 @@ normals = np.hstack((LF_normal, RF_normal, LH_normal, RH_normal))
 #ax.set_zlabel('Z Label')
 #plt.draw()
 #plt.show()
+ng = 4
 cd = ComputationalDynamics()
-cd.LP_projection(constraint_mode, contacts, normals, mass, friction_coeff, ng, nc)
+#cd.LP_projection(constraint_mode, contacts, normals, mass, friction_coeff, ng, nc)
 print "bye bye" 
