@@ -161,36 +161,35 @@ class IterativeProjectionParameters:
         # print 'number of elements: ', num_of_elements
         for j in range(0,num_of_elements):
 #            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
-            if str(received_data.name[j]) == str("LF_HAAminVar"):
+            if str(received_data.name[j]) == str("LF_HAAmaxVar"):
                 self.LF_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("LF_HFEminVar"):
+            if str(received_data.name[j]) == str("LF_HFEmaxVar"):
                 self.LF_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("LF_KFEminVar"):
+            if str(received_data.name[j]) == str("LF_KFEmaxVar"):
                 self.LF_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("RF_HAAminVar"):
+            if str(received_data.name[j]) == str("RF_HAAmaxVar"):
                 self.RF_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("RF_HFEminVar"):
+            if str(received_data.name[j]) == str("RF_HFEmaxVar"):
                 self.RF_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("RF_KFEminVar"):
+            if str(received_data.name[j]) == str("RF_KFEmaxVar"):
                 self.RF_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("LH_HAAminVar"):
+            if str(received_data.name[j]) == str("LH_HAAmaxVar"):
                 self.LH_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("LH_HFEminVar"):
+            if str(received_data.name[j]) == str("LH_HFEmaxVar"):
                 self.LH_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("LH_KFEminVar"):
+            if str(received_data.name[j]) == str("LH_KFEmaxVar"):
                 self.LH_tau_lim[2] = received_data.data[j]
-            if str(received_data.name[j]) == str("RH_HAAminVar"):
+            if str(received_data.name[j]) == str("RH_HAAmaxVar"):
                 self.RH_tau_lim[0] = received_data.data[j]           
-            if str(received_data.name[j]) == str("RH_HFEminVar"):
+            if str(received_data.name[j]) == str("RH_HFEmaxVar"):
                 self.RH_tau_lim[1] = received_data.data[j]
-            if str(received_data.name[j]) == str("RH_KFEminVar"):
+            if str(received_data.name[j]) == str("RH_KFEmaxVar"):
                 self.RH_tau_lim[2] = received_data.data[j]
                 
             self.torque_limits = np.array([self.LF_tau_lim, 
                                            self.RF_tau_lim, 
                                            self.LH_tau_lim, 
                                            self.RH_tau_lim, ])
-#            print 'torque lims',self.torque_limits
  
 # the inputs are all in the WF this way we can compute generic regions for generic contact sets and generic com position 
             
@@ -274,34 +273,36 @@ class IterativeProjectionParameters:
                 self.q[11] = received_data.data[j]  
                 
             #they are in WF
-#            if str(received_data.name[j]) == str("normalLFx"):
-#                self.normals[0,0] = received_data.data[j]  
-#            if str(received_data.name[j]) == str("normalLFy"):
-#                self.normals[0,1] = received_data.data[j] 
-#            if str(received_data.name[j]) == str("normalLFz"):
-#                self.normals[0,2] = received_data.data[j]                  
-#                                                 
-#            if str(received_data.name[j]) == str("normalRFx"):
-#                self.normals[1,0] = received_data.data[j]
-#            if str(received_data.name[j]) == str("normalRFy"):
-#                self.normals[1,1] = received_data.data[j] 
-#            if str(received_data.name[j]) == str("normalRFz"):
-#                self.normals[1,2] = received_data.data[j]                 
-#                                                 
-#            if str(received_data.name[j]) == str("normalLHx"):
-#                self.normals[2,0] = received_data.data[j] 
-#            if str(received_data.name[j]) == str("normalLHy"):
-#                self.normals[2,1] = received_data.data[j] 
-#            if str(received_data.name[j]) == str("normalLHz"):
-#                self.normals[2,2] = received_data.data[j]                
-#                                                 
-#            if str(received_data.name[j]) == str("normalRHx"):
-#                self.normals[3,0] = received_data.data[j]  
-#            if str(received_data.name[j]) == str("normalRHy"):
-#                self.normals[3,1] = received_data.data[j]  
-#            if str(received_data.name[j]) == str("normalRHz"):
-#                self.normals[3,2] = received_data.data[j]                  
-                
+            if str(received_data.name[j]) == str("normalLFx"):
+                self.normals[0,0] = received_data.data[j]  
+            if str(received_data.name[j]) == str("normalLFy"):
+                self.normals[0,1] = received_data.data[j] 
+            if str(received_data.name[j]) == str("normalLFz"):
+                self.normals[0,2] = received_data.data[j]                  
+                                                 
+            if str(received_data.name[j]) == str("normalRFx"):
+                self.normals[1,0] = received_data.data[j]
+            if str(received_data.name[j]) == str("normalRFy"):
+                self.normals[1,1] = received_data.data[j] 
+            if str(received_data.name[j]) == str("normalRFz"):
+                self.normals[1,2] = received_data.data[j]                 
+                                                 
+            if str(received_data.name[j]) == str("normalLHx"):
+                self.normals[2,0] = received_data.data[j] 
+            if str(received_data.name[j]) == str("normalLHy"):
+                self.normals[2,1] = received_data.data[j] 
+            if str(received_data.name[j]) == str("normalLHz"):
+                self.normals[2,2] = received_data.data[j]                
+                                                 
+            if str(received_data.name[j]) == str("normalRHx"):
+                self.normals[3,0] = received_data.data[j]  
+            if str(received_data.name[j]) == str("normalRHy"):
+                self.normals[3,1] = received_data.data[j]  
+            if str(received_data.name[j]) == str("normalRHz"):
+                self.normals[3,2] = received_data.data[j]                  
+            
+            #print 'normals',self.normals
+ 
     
             if str(received_data.name[j]) == str("robotMass"):
                 self.robotMass = received_data.data[j] 
@@ -374,4 +375,6 @@ class IterativeProjectionParameters:
         
  
         self.numberOfContacts = np.sum(self.stanceFeet)
-        print 'STANCE feet ', self.stanceFeet
+
+        #print 'stance feet ', self.stanceFeet
+

@@ -19,7 +19,10 @@ from context import jet_leg
 
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
+
 #from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
+from dls_msgs.msg import  StringDoubleArray
+from feasible_region.msg import  Polygon3D, LegsPolygons
 
 from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.math_tools import Math
@@ -42,18 +45,18 @@ class HyQSim(threading.Thread):
         self.hyq_wbs_sub_name = "/hyq/robot_states"
         self.hyq_actuation_params_sub_name = "/hyq/debug"
         self.hyq_wbs = dict()
-        self.hyq_rcf_debug = StringDoubleArray()
-        self.actuation_polygon_topic_name = "/hyq/actuation_polygon"
-        self.support_region_topic_name = "/hyq/support_region"
-        self.force_polygons_topic_name = "/hyq/force_polygons"
-
+        self.hyq_debug_msg = StringDoubleArray()
+        self.actuation_polygon_topic_name = "/feasible_region/actuation_polygon"
+        self.support_region_topic_name = "/feasible_region/support_region"
+        self.force_polygons_topic_name = "/feasible_region/force_polygons"
+        print ros.get_namespace()
         self.sim_time  = 0.0
 
     def run(self):
         print "Run!"
         self.sub_clock = ros.Subscriber(self.clock_sub_name, Clock, callback=self._reg_sim_time, queue_size=1000)
         self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray,
-                                                   callback=self._reg_sim_rcf_debug, queue_size=1000)
+                                                   callback=self.callback_hyq_debug, queue_size=1000)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_name, Polygon3D, queue_size=10000)
         self.pub_support_region = ros.Publisher(self.support_region_topic_name, Polygon3D, queue_size=1000)
         self.pub_force_polygons = ros.Publisher(self.force_polygons_topic_name, LegsPolygons, queue_size=1000)
@@ -65,9 +68,9 @@ class HyQSim(threading.Thread):
     def _reg_sim_wbs(self, msg):
         self.hyq_wbs = copy.deepcopy(msg)
 
-    def _reg_sim_rcf_debug(self, msg):
+    def callback_hyq_debug(self, msg):
 #        print 'new data received'
-        self.hyq_rcf_debug = copy.deepcopy(msg)
+        self.hyq_debug_msg = copy.deepcopy(msg)
 
     def register_node(self):
         ros.init_node('sub_pub_node_python', anonymous=False)
@@ -83,29 +86,20 @@ class HyQSim(threading.Thread):
 
     def send_force_polytopes(self, name, polygons):
         output = LegsPolygons()
-#        output.polytopeName = name
         output.polygons = polygons
         self.pub_force_polygons.publish(output)
 
     def send_support_region(self, name, vertices):
         output = Polygon3D()
-#        output.names = name
         output.vertices = vertices
         self.pub_support_region.publish(output)
 
     def send_actuation_polygons(self, name, vertices, option_index, ack_optimization_done):
         output = Polygon3D()
-#        output.names = name
         output.vertices = vertices
         output.option_index = option_index
         output.ack_optimization_done = ack_optimization_done
         self.pub_polygon.publish(output)
-
-    def send_simple_array(self, name, data):
-        output = SimpleDoubleArray()
-#        output.name = name
-        output.data = data
-        self.pub_rcf_params.publish(output)
 
     def fillPolygon(self, polygon):
 
@@ -135,9 +129,9 @@ def talker():
     i = 0
 
     p.get_sim_wbs()
-    params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-    foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-    params.getFutureStanceFeet(p.hyq_rcf_debug)
+    params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
+    foothold_params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
+    params.getFutureStanceFeet(p.hyq_debug_msg)
    
 
     """ contact points """
@@ -152,18 +146,18 @@ def talker():
         print 'CIAOOOOOOO'
         p.get_sim_wbs()
 
-        params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-        foothold_params.getParamsFromRosDebugTopic(p.hyq_rcf_debug)
-        params.getFutureStanceFeet(p.hyq_rcf_debug)
-        #params.getCurrentStanceFeet(p.hyq_rcf_debug)
+        params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
+        foothold_params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
+        #params.getFutureStanceFeet(p.hyq_debug_msg)
+        params.getCurrentStanceFeet(p.hyq_debug_msg)
         
-#        # USE THIS ONLY TO PLOT THE ACTUAL REGION FOR A VIDEO FOR THE PAPER DO NOT USE FOR COM PLANNING
-#        params.setConstraintModes(['FRICTION_AND_ACTUATION',
-#                           'FRICTION_AND_ACTUATION',
-#                           'FRICTION_AND_ACTUATION',
-#                           'FRICTION_AND_ACTUATION'])
-#        IAR, actuation_polygons_array, computation_time = compDyn.try_iterative_projection_bretl(params)
-#        # print 'feasible region', IAR
+        # USE THIS ONLY TO PLOT THE ACTUAL REGION FOR A VIDEO FOR THE PAPER DO NOT USE FOR COM PLANNING
+        params.setConstraintModes(['FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION',
+                           'FRICTION_AND_ACTUATION'])
+        IAR, actuation_polygons_array, computation_time = compDyn.try_iterative_projection_bretl(params)
+        # print 'feasible region', IAR
 #        if IAR is not False:
 #            p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
 #            old_IAR = IAR
@@ -172,7 +166,27 @@ def talker():
 #            p.send_actuation_polygons(name, p.fillPolygon(old_IAR), foothold_params.option_index,
 #
 #                                      foothold_params.ack_optimization_done)
+##   
+        p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
+                                     
+        constraint_mode_IP = 'ONLY_FRICTION'
+        params.setConstraintModes([constraint_mode_IP,
+                                       constraint_mode_IP,
+                                       constraint_mode_IP,
+                                       constraint_mode_IP])
+        params.setNumberOfFrictionConesEdges(ng)
+            
+        params.contactsWF[params.actual_swing] = foothold_params.footOptions[foothold_params.option_index]
 
+            #        uncomment this if you dont want to use the vars read in iterative_proJ_params
+            #        params.setContactNormals(normals)
+            #        params.setFrictionCoefficient(mu)
+            #        params.setTrunkMass(trunk_mass)
+            #        IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+
+        frictionRegion, actuation_polygons, computation_time = compDyn.iterative_projection_bretl(params)
+        p.send_support_region(name, p.fillPolygon(frictionRegion))         
+       
 
         
         #print "AA"
@@ -185,8 +199,7 @@ def talker():
         #print 'feasible region', IAR, 
         #p.send_actuation_polygons(name, p.fillPolygon(IAR), foothold_params.option_index, foothold_params.ack_optimization_done)
          
-         
-         
+
          
          
          
