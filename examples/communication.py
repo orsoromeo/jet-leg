@@ -121,6 +121,7 @@ def talker():
     p=HyQSim()
     p.start()
     p.register_node()
+
     name = "Actuation_region"
     force_polytopes_name = "force_polytopes"
 
@@ -131,7 +132,7 @@ def talker():
     p.get_sim_wbs()
     params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
     foothold_params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
-    params.getFutureStanceFeet(p.hyq_debug_msg)
+    params.getFutureStanceFeetFlags(p.hyq_debug_msg)
    
 
     """ contact points """
@@ -149,7 +150,7 @@ def talker():
         params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
         foothold_params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
         #params.getFutureStanceFeet(p.hyq_debug_msg)
-        params.getCurrentStanceFeet(p.hyq_debug_msg)
+        params.getCurrentStanceFeetFlags(p.hyq_debug_msg)
         
         # USE THIS ONLY TO PLOT THE ACTUAL REGION FOR A VIDEO FOR THE PAPER DO NOT USE FOR COM PLANNING
         params.setConstraintModes(['FRICTION_AND_ACTUATION',
@@ -238,8 +239,13 @@ def talker():
         if (foothold_params.optimization_started == False):
             foothold_params.ack_optimization_done = False
 
-
-        print 'optimization done',foothold_params.ack_optimization_done, ' ... ', foothold_params.optimization_started
+        ''' The optimization-done-flag is set by the planner. It is needed to tell the controller whether the optimization 
+        is finished or not. When this flag is true the controller will read the result of the optimization that has read 
+        from the planner'''
+        print 'optimization done flag',foothold_params.ack_optimization_done
+        ''' The optimization-started-flag is set by the controller. It is needed to tell the planner that a new optimization should start.
+        When this flag is true the planner (in jetleg) will start a new computation of the feasible region.'''
+        print 'optimization started flag', foothold_params.optimization_started
         if foothold_params.optimization_started and not foothold_params.ack_optimization_done:
             print '============================================================'
             print 'current swing ', params.actual_swing            

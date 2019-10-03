@@ -16,7 +16,8 @@ import threading
 
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
-from dls_msgs.msg import StringDoubleArray, Polygon3D
+from dls_msgs.msg import StringDoubleArray
+from feasible_region.msg import Polygon3D
 from jet_leg.computational_dynamics import ComputationalDynamics
 from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
 from jet_leg.foothold_planning_interface import FootholdPlanningInterface

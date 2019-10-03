@@ -44,16 +44,16 @@ class Constraints:
             C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
             d1 = np.hstack([d1, knownTerm.T])
 
-            print "H description: ",C1, d1
-            print C1[0,0]
-            print "theta angles: "
+            #print "H description: ",C1, d1
+            #print C1[0,0]
+            #print "theta angles: "
             for i in range(0,6):
                 theta = np.arctan(C1[i,2]/C1[i,0])
                 if (C1[i,2]<0):
                     theta+=np.pi
-                print theta, "[rad] ", theta/np.pi*180, "[deg]"
-            print "V description: "
-            print actuation_polygons[contactIterator]
+                #print theta, "[rad] ", theta/np.pi*180, "[deg]"
+            #print "V description: "
+            #print actuation_polygons[contactIterator]
         return C1, d1, actuation_polygons, isOutOfWorkspace
         
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
