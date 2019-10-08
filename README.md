@@ -68,7 +68,8 @@ Jet-Leg comes with a number of unit tests intended to check the proper installat
 
 After that, navigate to the [examples folder](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/examples) to find more explanation on the usage of the package. Check for example:
 
-- [single_iterative_projection](https://github.com/orsoromeo/jet-leg/blob/master/examples/single_iterative_projection_example.py)
+- [single_iterative_projection](https://github.com/orsoromeo/jet-leg/blob/master/examples/single_iterative_projection_example.py) can be used to see how to set up an iterative projection problem in order to compute the friction/actuation/feasible region;
+- [single_LP_example](https://github.com/orsoromeo/jet-leg/blob/master/examples/single_LP_example.py) can be used to see how to solve a feasibility problem that checks whether the CoM projection belongs to the friction/actuation/feasible region or not
 
 ## Troubleshooting
 
