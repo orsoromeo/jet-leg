@@ -1,13 +1,19 @@
-# Python library for equilibrium of legged robots
+<img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/feasible_region.png" alt="hyqgreen" width="400"/>  <img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/foothold_planning.png" alt="planning" width="400"/>
 
-This library uses common operations over [convex
+
+# Feasible Region: an Actuation-Aware Extension of the Support Region
+This python library contains the code used for the motion planning formulation proposed in this [preprint](https://arxiv.org/abs/1903.07999#). In here you can also find the code used to generate the figures and plots of the manuscript. 
+
+<img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/3contacts_F%26A.png" alt="hyqgreen" width="200"/>  <img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/3contacts_onlyA.png" alt="planning" width="200"/>  <img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/4contacts_F%26A.png" alt="hyqgreen" width="200"/>  <img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/4contacts_onlyA.png" alt="planning" width="200"/>
+
+Jet-leg performs common operations over [convex
 polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions in order to assess the problem of stability and motion feasibility of legged robots.
 
-## What you can do with this package
-- find various example formulations of linear, convex or nonlinear optimization problems;
-- find examples of convex and nonlinear trajectory optimization problems for legged robots;
-- find implamentation of Iterative Projection algorithms for the solution of geometrical problems related to legged locomotion stability and feasibility analysis
-- generate animated plots
+## What you can do with Jet-leg
+- you will find an implamentation of Iterative Projection algorithms for the solution of geometrical problems related to legged locomotion stability and feasibility analysis. This includes the computation of the [Feasible Region](https://arxiv.org/abs/1903.07999#).
+- generate the same plots that can be found in the same preprint above;
+- test various formulations of linear, convex or nonlinear optimization problems;
+
 
 ## Dependencies
 APT dependencies:
@@ -27,7 +33,7 @@ Python dependencies:
 - Matplotlib
 - [Pypoman](https://github.com/stephane-caron/pypoman) for the manipulation of polyhedrical object
 
-Install dependencies by:
+The above dependencies can be installed with the following commands:
 ```
 sudo apt-get install cython libglpk-dev python python-dev python-pip python-scipy
 CVXOPT_BUILD_GLPK=1 pip install cvxopt --user
