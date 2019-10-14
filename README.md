@@ -11,7 +11,8 @@ Jet-leg performs common operations over [convex
 polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions in order to assess the problem of stability and motion feasibility of legged robots.
 
 ## What you can do with Jet-leg:
-- test an implamentation of Iterative Projection algorithms for the solution of geometrical problems related to legged locomotion stability and feasibility analysis. This includes the computation of the [Feasible Region](https://arxiv.org/abs/1903.07999#).
+- compute the Support region of legged robots as in [Bretl. et al. 2008](https://ieeexplore.ieee.org/abstract/document/4598894); 
+- compute the Feasible region of legged robots as in [Orsolino. et al. 2019](https://arxiv.org/abs/1903.07999#);
 - compute force polytopes of legged robots;
 - test various formulations of linear, convex or nonlinear optimization problems;
 
