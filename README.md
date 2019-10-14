@@ -1,4 +1,5 @@
-<img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/feasible_region.png" alt="hyqgreen" width="400"/>  <img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/foothold_planning.png" alt="planning" width="400"/>
+<img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/feasible_region.png" alt="hyqgreen" width="400"/>  <img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/four_stance.png" alt="planning" width="400"/>
+<img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/force_polygons.png" alt="hyqgreen" width="400"/>  <img src="https://github.com/orsoromeo/jet-leg/blob/master/figs/foothold_planning.png" alt="planning" width="400"/>
 
 
 # Feasible Region: an Actuation-Aware Extension of the Support Region
@@ -9,9 +10,9 @@ This python library contains the code used for the motion planning formulation p
 Jet-leg performs common operations over [convex
 polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions in order to assess the problem of stability and motion feasibility of legged robots.
 
-## What you can do with Jet-leg
-- you will find an implamentation of Iterative Projection algorithms for the solution of geometrical problems related to legged locomotion stability and feasibility analysis. This includes the computation of the [Feasible Region](https://arxiv.org/abs/1903.07999#).
-- generate the same plots that can be found in the same preprint above;
+## What you can do with Jet-leg:
+- test an implamentation of Iterative Projection algorithms for the solution of geometrical problems related to legged locomotion stability and feasibility analysis. This includes the computation of the [Feasible Region](https://arxiv.org/abs/1903.07999#).
+- compute force polytopes of legged robots;
 - test various formulations of linear, convex or nonlinear optimization problems;
 
 
