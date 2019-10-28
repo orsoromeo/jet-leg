@@ -67,12 +67,13 @@ python setup.py install --user
 -->
 
 ## Testing the library
-Jet-Leg comes with a number of unit tests intended to check the proper installation of the packages and make sure that all the mandatory depedencies are properly found. For this purpose, after completing the installation navigate to the [unit_test_main.py](https://gitlab.advr.iit.it/rorsolino/jet-leg/blob/master/unit_tests/unit_test_main.py) and run it.
+After completing the installation navigate to the [examples folder](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/examples):
 
-After that, navigate to the [examples folder](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/examples) to find more explanation on the usage of the package. Check for example:
+- [single_iterative_projection_example.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/single_iterative_projection_example.py) can be used to see how to set up an iterative projection problem in order to compute the friction/actuation/feasible region;
 
-- [single_iterative_projection](https://github.com/orsoromeo/jet-leg/blob/master/examples/single_iterative_projection_example.py) can be used to see how to set up an iterative projection problem in order to compute the friction/actuation/feasible region;
-- [single_LP_example](https://github.com/orsoromeo/jet-leg/blob/master/examples/single_LP_example.py) can be used to see how to solve a feasibility problem that checks whether the CoM projection belongs to the friction/actuation/feasible region or not
+Or to the [figures' code folder](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/figures_code):
+- [plotIPstatistics.py](https://github.com/orsoromeo/jet-leg/blob/master/figures_code/plotIPstatistics.py) can be used to generate some statistics about the computation time of the IP algorithm for random feet positions (see Fig. 6 of the [preprint](https://arxiv.org/abs/1903.07999#)) 
+- [plotInstantaneousActuationRegionVariableMass.py](https://github.com/orsoromeo/jet-leg/blob/master/figures_code/plotInstantaneousActuationRegionVariableMass.py) can be used to generate a plot that shows how the feasible regions can changes depending on the gravitational force acting on the robot's center of mass (see Fig. 8 of the [preprint](https://arxiv.org/abs/1903.07999#)) 
 
 ## Troubleshooting
 
