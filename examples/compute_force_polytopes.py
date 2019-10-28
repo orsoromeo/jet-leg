@@ -111,7 +111,21 @@ params.setTotalMass(trunk_mass + extForceW[2] / 9.81)
 params.externalForceWF = extForceW
 
 ''' compute iterative projection '''
-IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
+
+IP_points, force_polytopes, computation_time = comp_dyn.iterative_projection_bretl(params)
 
 print "Inequalities", comp_dyn.ineq
+
+''' plotting the force polytopes '''
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('X axis')
+ax.set_ylabel('Y axis')
+ax.set_zlabel('Z axis')
+
+plotter = Plotter()
+scaling_factor = 2000
+for j in range(0,4):
+    if (constraint_mode_IP[j] == 'ONLY_ACTUATION') or (constraint_mode_IP[j] == 'FRICTION_AND_ACTUATION'):
+        plotter.plot_actuation_polygon(ax, force_polytopes[j], contacts[j,:], scaling_factor)
 

@@ -44,7 +44,8 @@ class Plotter:
       facet_y = facet[1,:]
       facet_z = facet[2,:]
       surf = ax.plot_trisurf(facet_x, facet_y, facet_z,  linewidth=0., alpha = 0.3)
-      surf = ax.plot_wireframe(facet_x, facet_y, facet_z, linewidth=1.) 
+      z = np.array([facet_z, facet_z])
+      surf = ax.plot_wireframe(facet_x, facet_y, z, linewidth=1.)
   
   def plot_cube(self,ax,vertices):
       geom = ComputationalGeometry()

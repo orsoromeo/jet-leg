@@ -41,6 +41,7 @@ sudo apt-get install cython libglpk-dev python python-dev python-pip python-scip
 CVXOPT_BUILD_GLPK=1 pip install cvxopt --user
 pip install pycddlib --user
 pip install pypoman
+pip install ikpy
 ```
 You can remove all ``--user`` arguments to install these Python modules system-wide.
 

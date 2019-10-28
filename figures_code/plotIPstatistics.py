@@ -30,12 +30,6 @@ nc = 3
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
-# ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-constraint_mode_IP = ['ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION']
-
 useVariableJacobian = False
 # number of decision variables of the problem
 n = nc*6
@@ -49,6 +43,7 @@ axisZ= array([[0.0], [0.0], [1.0]])
 
 comp_dyn = ComputationalDynamics()
 
+'''Here you can set the number of tests that you want to perform for every scenario'''
 number_of_tests = 1000
 onlyFrictionTests3contacts = np.zeros((number_of_tests))
 onlyFrictionTests4contacts = np.zeros((number_of_tests))  
@@ -110,7 +105,13 @@ for iter in range(0,number_of_tests):
     RH_tau_lim = [80.0, 100.0, 100.0]
     torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
     comWF = np.array([0.0,0.0,0.0])
-    
+
+    # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+    constraint_mode_IP = ['ONLY_FRICTION',
+                          'ONLY_FRICTION',
+                          'ONLY_FRICTION',
+                          'ONLY_FRICTION']
+
     ''' compute iterative projection '''
     stanceLegs = [1 ,1, 1, 1]
     randomSwingLeg = random.randint(0,3)
@@ -130,7 +131,7 @@ for iter in range(0,number_of_tests):
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     comp_time = comp_time * 1000.0
     
-    print comp_time
+    print 'IP execution time is ',comp_time, 'ms'
     onlyFrictionTests3contacts[iter] = comp_time
 
 nc = 4
@@ -200,6 +201,7 @@ for iter in range(0,number_of_tests):
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
 #    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
     comp_time = comp_time * 1000.0
+    print 'IP execution time is ',comp_time, 'ms'
     onlyFrictionTests4contacts[iter] = comp_time
 
 '''ONLY ACTUATION'''
@@ -275,7 +277,7 @@ for iter in range(0,number_of_tests):
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     comp_time = comp_time * 1000.0
     
-    print comp_time
+    print 'IP execution time is ',comp_time, 'ms'
     onlyActuationTests3contacts[iter] = comp_time
 
 nc = 4
@@ -346,6 +348,7 @@ for iter in range(0,number_of_tests):
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
 #    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
     comp_time = comp_time * 1000.0
+    print 'IP execution time is ',comp_time, 'ms'
     onlyActuationTests4contacts[iter] = comp_time
     
     
@@ -423,7 +426,7 @@ for iter in range(0,number_of_tests):
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     comp_time = comp_time * 1000.0
     
-    print comp_time
+    print 'IP execution time is ',comp_time, 'ms'
     frictionAndActuation3contacts[iter] = comp_time
 
 nc = 4
@@ -494,9 +497,11 @@ for iter in range(0,number_of_tests):
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
 #    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
     comp_time = comp_time * 1000.0
+    print 'IP execution time is ',comp_time, 'ms'
     frictionAndActuation4contacts[iter] = comp_time
     
 ''' plotting Iterative Projection points '''
+print 'producing plot'
 plotter = Plotter()
 
 ''' 2D figure '''
@@ -504,22 +509,25 @@ fig = plt.figure()
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
-plt.legend()
 
 plt.plot([1,2,3])
 fig.suptitle('Computation times for ' + str(number_of_tests) + ' tests', fontsize=18)
 plt.subplot(321)
 #print tests
+plt.xticks(np.arange(0, 15, 2.5))
+plt.yticks(np.arange(0, 1000, 100))
 plt.grid()
-plt.hist(onlyFrictionTests3contacts, color = "salmon", bins=np.arange(0,25,0.25))
+plt.hist(onlyFrictionTests3contacts, color = "salmon", bins=np.arange(0,15,0.25))
 plt.title("3 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
 
 subpl2 = plt.subplot(322)
 #print tests
+plt.xticks(np.arange(0, 15, 2.5))
+plt.yticks(np.arange(0, 1000, 100))
 plt.grid()
-plt.hist(onlyFrictionTests4contacts, color = "salmon", bins=np.arange(0,25,0.25))
+plt.hist(onlyFrictionTests4contacts, color = "salmon", bins=np.arange(0,15,0.25))
 plt.title("4 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
@@ -527,16 +535,20 @@ subpl2.yaxis.set_label_position("right")
 
 plt.subplot(323)
 #print tests
+plt.xticks(np.arange(0, 15, 2.5))
+plt.yticks(np.arange(0, 250, 50))
 plt.grid()
-plt.hist(onlyActuationTests3contacts, color = "limegreen", bins=np.arange(0,25,0.25))
+plt.hist(onlyActuationTests3contacts, color = "limegreen", bins=np.arange(0,15,0.25))
 #plt.title("only friction, 3 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
 
 subpl4 = plt.subplot(324)
 #print tests
+plt.xticks(np.arange(0, 15, 2.5))
+plt.yticks(np.arange(0, 250, 50))
 plt.grid()
-plt.hist(onlyActuationTests4contacts, color = "limegreen", bins=np.arange(0,25,0.25))
+plt.hist(onlyActuationTests4contacts, color = "limegreen", bins=np.arange(0,15,0.25))
 #plt.title("only friction, 4 point contacts")
 plt.xlabel("times [ms]")
 plt.ylabel("count")
@@ -545,7 +557,9 @@ subpl4.yaxis.set_label_position("right")
 plt.subplot(325)
 #print tests
 plt.grid()
-plt.hist(frictionAndActuation3contacts, color = "skyblue", bins=np.arange(0,25,0.25))
+plt.xticks(np.arange(0, 15, 2.5))
+plt.yticks(np.arange(0, 250, 50))
+plt.hist(frictionAndActuation3contacts, color = "skyblue", bins=np.arange(0,15,0.25))
 #plt.title("only friction, 3 point contacts")
 plt.xlabel("time [ms]")
 plt.ylabel("count")
@@ -553,11 +567,15 @@ plt.ylabel("count")
 subpl6 = plt.subplot(326)
 #print tests
 plt.grid()
-plt.hist(frictionAndActuation4contacts, color = "skyblue", bins=np.arange(0,25,0.25))
+plt.hist(frictionAndActuation4contacts, color = "skyblue", bins=np.arange(0,15, 0.25))
 #plt.title("only friction, 4 point contacts")
 plt.xlabel("time [ms]")
 plt.ylabel("count")
+plt.xticks(np.arange(0, 15, 2.5))
+plt.yticks(np.arange(0, 250, 50))
 subpl6.yaxis.set_label_position("right")
-plt.show()
+#plt.legend()
+#plt.show()
 mpl.rcParams.update({'font.size': 14})
-#plt.savefig('../../figs/IP_bretl/statsIP.pdf')
+
+plt.savefig('../figs/IP_bretl/statsIP.pdf')

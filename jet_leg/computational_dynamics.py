@@ -5,23 +5,17 @@ Created on Tue Jun  5 15:57:17 2018
 @author: Romeo Orsolino
 """
 
-import pylab
 import pypoman
 import numpy as np
 from numpy import array, dot, eye, hstack, vstack, zeros
-from numpy.linalg import norm
-import scipy
-from scipy.linalg import block_diag
 from scipy.spatial import ConvexHull
-
 from constraints import Constraints
 from hyq_kinematics import HyQKinematics
 from math_tools import Math
 from geometry import Geometry
 from cvxopt import matrix, solvers
 import time
-import matplotlib.pyplot as plt
-from arrow3D import Arrow3D
+
 
 class ComputationalDynamics():
     def __init__(self):
@@ -70,17 +64,9 @@ class ComputationalDynamics():
         #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
         Ex = np.zeros((0)) 
         Ey = np.zeros((0))        
-        G = np.zeros((6,0))   
-        
-        stanceIndex = []
-        swingIndex = []
-#        print 'stance', stanceLegs
-        for iter in range(0, 4):
-            if stanceLegs[iter] == 1:
-#                print 'new poly', stanceIndex, iter
-                stanceIndex = np.hstack([stanceIndex, iter])
-            else:
-                swingIndex = iter
+        G = np.zeros((6,0))
+
+        stanceIndex = iterative_projection_params.getStanceIndex(stanceLegs)
 
         for j in range(0,contactsNumber):
            

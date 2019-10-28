@@ -125,6 +125,15 @@ class IterativeProjectionParameters:
     def getTotalMass(self):
         return self.robotMass
 
+    def getStanceIndex(self, stanceLegs):
+        stanceIdx = []
+        #        print 'stance', stanceLegs
+        for iter in range(0, 4):
+            if stanceLegs[iter] == 1:
+                #                print 'new poly', stanceIndex, iter
+                stanceIdx = np.hstack([stanceIdx, iter])
+        return stanceIdx
+
     def getCurrentFeetPos(self, received_data):
         num_of_elements = np.size(received_data.data)
         for j in range(0,num_of_elements):

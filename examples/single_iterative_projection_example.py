@@ -65,8 +65,10 @@ mu = 0.5
 stanceFeet = [1,1,1,1]
 
 randomSwingLeg = random.randint(0,3)
-print 'Swing leg', randomSwingLeg
-# stanceFeet[randomSwingLeg] = 0
+tripleStance = True # if you want you can define a swing leg using this variable
+if tripleStance:
+    print 'Swing leg', randomSwingLeg
+    stanceFeet[randomSwingLeg] = 0
 print 'stanceLegs ' ,stanceFeet
 
 ''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
@@ -91,21 +93,11 @@ torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
 extForceW = np.array([0.0,0.0, 0.0])
-#
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.set_xlabel('X axis')
-ax.set_ylabel('Y axis')
-ax.set_zlabel('Z axis')
-
-nc = np.sum(stanceFeet)
-plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
-for j in range(0,nc):
-    ax.scatter(contacts[j,0], contacts[j,1], contacts[j,2],c='b',s=100)
-    a = Arrow3D([contacts[j,0], contacts[j,0]+normals[j,0]/10], [contacts[j,1], contacts[j,1]+normals[j,1]/10],[contacts[j,2], contacts[j,2]+normals[j,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
-    ax.add_artist(a)
 
 comp_dyn = ComputationalDynamics()
+
+'''You now need to fill the 'params' object with all the relevant 
+    informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
 params.setContactsPosWF(contacts)
 params.setCoMPosWF(comWF)
@@ -115,8 +107,8 @@ params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTotalMass(trunk_mass + extForceW[2]/g) # here I am assuming that the external force is due to an extra load and I want everything in the same units (Kilos)
-params.externalForceWF = extForceW  # I don't think that params.externalForceWF is actually used anywhere at the moment
+params.setTotalMass(trunk_mass)
+params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
 
 ''' compute iterative projection 
 Outputs of "iterative_projection_bretl" are:
@@ -124,25 +116,46 @@ IP_points = resulting 2D vertices
 actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
 computation_time = how long it took to compute the iterative projection
 '''
-IP_points, actuation_polygons, computation_time = comp_dyn.iterative_projection_bretl(params)
+IP_points, force_polytopes, computation_time = comp_dyn.iterative_projection_bretl(params)
 
-print "Inequalities", comp_dyn.ineq
+#print "Inequalities", comp_dyn.ineq
+#print "actuation polygons"
+#print actuation_polygons
 
-print "actuation polygons"
-print actuation_polygons
+'''Plotting the contact points in the 3D figure'''
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('X axis')
+ax.set_ylabel('Y axis')
+ax.set_zlabel('Z axis')
+
+nc = np.sum(stanceFeet)
+stanceID = params.getStanceIndex(stanceFeet)
+#plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
+for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
+    idx = int(stanceID[j])
+    ax.scatter(contacts[idx,0], contacts[idx,1], contacts[idx,2],c='b',s=100)
+    ''' draw 3D arrows corresponding to contact normals'''
+    a = Arrow3D([contacts[idx,0], contacts[idx,0]+normals[idx,0]/10], [contacts[idx,1], contacts[idx,1]+normals[idx,1]/10],[contacts[idx,2], contacts[idx,2]+normals[idx,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
+    ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
+    ax.scatter(contacts[idx, 0], contacts[idx, 1], 0.0, c='k', s=100)
+    ax.add_artist(a)
 
 ''' plotting Iterative Projection points '''
 plotter = Plotter()
 scaling_factor = 2000
-for j in range(0,4):
+for j in range(0,nc): # this will only show the force polytopes of the feet that are defined to be in stance
+    idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
-    if (constraint_mode_IP[j] == 'ONLY_ACTUATION') or (constraint_mode_IP[j] == 'FRICTION_AND_ACTUATION'):
-#        print 'a',actuation_polygons[j], contacts[j,:]
-        plotter.plot_actuation_polygon(ax, actuation_polygons[j], contacts[j,:], scaling_factor)
+    if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
+        plotter.plot_actuation_polygon(ax, force_polytopes[idx], contacts[idx,:], scaling_factor)
 
 ''' 2D figure '''
 plt.figure()
-h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
+for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
+    idx = int(stanceID[j])
+    ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
+    h1 = plt.plot(contacts[idx,0],contacts[idx,1],'ko',markersize=15, label='feet')
 h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
     
 plt.grid()

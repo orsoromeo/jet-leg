@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov 23 16:11:46 2018
-
-@author: rorsolino
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 18 11:05:06 2018
-
-@author: rorsolino
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Tue Jun 12 10:54:31 2018
 
 @author: Romeo Orsolino
@@ -95,15 +81,15 @@ plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 comp_dyn = ComputationalDynamics()
 params = IterativeProjectionParameters()
 
-params.setContactsPos(contacts)
-params.setCoMPos(comWF)
+params.setContactsPosBF(contacts)
+params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTrunkMass(trunk_mass)
+params.setTotalMass(trunk_mass)
 
 ''' compute iterative projection '''
 feasible_points = np.zeros((0,3))
