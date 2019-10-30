@@ -226,14 +226,11 @@ class Constraints:
         rpy = params.getOrientation()
         #compute the contacs in the base frame for the inv kineamtics
         contactsBF = np.zeros((4,3))
-        stanceIdx = params.getStanceIndex(stanceLegs)
 
         for j in np.arange(0, 4):
             j = int(j)
             contactsBF[j,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[j,:] - comPositionWF)), comPositionBF)
-        #contactsBF[1,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[1,:] - comPositionWF)), comPositionBF)
-        #contactsBF[2,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[2,:] - comPositionWF)), comPositionBF)
-        #contactsBF[3,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[3,:] - comPositionWF)), comPositionBF)
+
 #        print 'WF ',contactsWF
 #        print contactsBF 
 #        print 'stance legs ', stanceLegs
@@ -250,9 +247,7 @@ class Constraints:
         C = np.zeros((0,0))
         d = np.zeros((0))
 
-        print 'stance legs',stanceLegs
         stanceIndex = params.getStanceIndex(stanceLegs)
-        print 'stanceIndex', stanceIndex
         #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         
@@ -262,7 +257,6 @@ class Constraints:
 
         for j in stanceIndex:
             j = int(j)
-            print j
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
                 constraints_local_frame, d_cone = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)

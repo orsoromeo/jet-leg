@@ -965,11 +965,7 @@ class HyQKinematics:
     
     def inverse_kin(self, contactsBF, foot_vel):
         q = []
-        print contactsBF
         for legID in self.dog.legs:
-            print legID
-            print contactsBF[legID,:]
-            print foot_vel[legID,:]
             q_leg = self.leg_inverse_kin(legID, contactsBF[legID,:], foot_vel[legID,:])
             q = np.hstack([q, q_leg]) 
         return q

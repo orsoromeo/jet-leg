@@ -221,7 +221,6 @@ class ComputationalDynamics():
 
         p, G, h, A, b, isIKoutOfWorkSpace, LP_actuation_polygons = self.setup_lp(LPparams)
 
-        print A, b
         if isIKoutOfWorkSpace:
             #unfeasible_points = np.vstack([unfeasible_points, com_WF])
             print 'something is wrong in the inequalities or the point is out of workspace'
@@ -322,8 +321,6 @@ class ComputationalDynamics():
 
         contactsPosWF = LPparams.getContactsPosWF()
         contactsBF = np.zeros((4,3)) # this is just for initialization
-        print 'contacts', contactsPosWF
-        constraint_mode = LPparams.getConstraintModes()
         comWorldFrame = LPparams.getCoMPosWF()
 
         torque = -np.cross(comWorldFrame, np.transpose(grav))
@@ -335,23 +332,19 @@ class ComputationalDynamics():
             A = matrix(A)
             b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
 
-        print 'contacts beforee IK', contactsPosWF
         for j in range(0, 4):
             contactsBF[j, :] = contactsPosWF[j, :] - comWorldFrame
 
         foot_vel = np.vstack([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
         q = self.kin.inverse_kin(contactsBF, foot_vel)
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
-        print 'contacts after IK', LPparams.getContactsPosWF()
+
+
         if (not isOutOfWorkspace):
-            print 'computing inequalities'
-            #kin.update_jacobians(q)
-            #J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
-            #print J_LF
             G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)
             G = matrix(G)
             h = matrix(h)
-            print 'isIKoutOfWorkSpace', isIKoutOfWorkSpace
+
         else:
             print 'contact is out of workspace'
             LP_actuation_polygons = [None]
