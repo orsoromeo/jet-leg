@@ -326,12 +326,16 @@ class ComputationalDynamics():
 
         torque = -np.cross(comWorldFrame, np.transpose(grav))
         A = np.zeros((6,0))
-        for j in range(0,nc):
+        stanceIndex = LPparams.getStanceIndex(stanceLegs)
+        print 'stanceIndex',stanceIndex
+        for j in stanceIndex:
+            j = int(j)
+            print 'index in lp ',j
             r = contactsPosWF[j,:]
             GraspMat = self.getGraspMatrix(r)
             A = np.hstack((A, GraspMat[:,0:3]))
             A = matrix(A)
-            b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
+            b = matrix(np.vstack([-totForce, np.transpose(torque)]).reshape((6)))
 
         for j in range(0, 4):
             contactsBF[j, :] = contactsPosWF[j, :] - comWorldFrame
