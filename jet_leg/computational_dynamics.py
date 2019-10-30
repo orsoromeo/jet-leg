@@ -79,7 +79,7 @@ class ComputationalDynamics():
             G = hstack([G, graspMatrix])            
             
 #        print 'grasp matrix',G
-        E = vstack((Ex, Ey)) / (g)
+        E = vstack((Ex, Ey)) / (g*robotMass)
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
         
@@ -91,7 +91,7 @@ class ComputationalDynamics():
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
 #        print A
-        t = hstack([0.0, 0.0, g, 0])
+        t = hstack([0.0, 0.0, g*robotMass, 0])
 #        print extForceWF, t
 #        print 'mass ', robotMass
 #        print A,t
@@ -314,8 +314,9 @@ class ComputationalDynamics():
 
         #        trunk_mass = LPparams.getTrunkMass()
         stanceLegs = LPparams.getStanceFeet()
+        totMass = LPparams.robotMass
         nc = np.sum(stanceLegs)
-        grav = np.array([[0.], [0.], [-g]])
+        grav = np.array([[0.], [0.], [-g*totMass]])
 
         p = matrix(np.zeros((3*nc,1)))
 

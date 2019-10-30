@@ -40,7 +40,7 @@ class Constraints:
             C1 = np.zeros((0,0))
             d1 = np.zeros((1,0))
 
-            hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator]/totalMass)
+            hexahedronHalfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contactIterator])
             C1 = block_diag(C1, hexahedronHalfSpaceConstraints)
             d1 = np.hstack([d1, knownTerm.T])
 
