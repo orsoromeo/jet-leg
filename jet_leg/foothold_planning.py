@@ -235,6 +235,7 @@ class FootHoldPlanning:
                                    'FRICTION_AND_ACTUATION',
                                    'FRICTION_AND_ACTUATION',
                                    'FRICTION_AND_ACTUATION'])
+        
         params.setNumberOfFrictionConesEdges(ng)
 
         params.setCoMPosWF(footPlanningParams.com_position_to_validateW)

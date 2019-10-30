@@ -43,7 +43,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 useVariableJacobian = False
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([1.0, 0.0, 0.0])
+comWF = np.array([1.15, 0.0, 0.0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([1.3, 0.2, -0.6])
@@ -122,6 +122,9 @@ IP_points, force_polytopes, computation_time = comp_dyn.iterative_projection_bre
 #print "actuation polygons"
 #print actuation_polygons
 
+'''I now check whether the given CoM configuration is stable or not'''
+isConfigurationStable, x, force_polytopes = comp_dyn.check_equilibrium(params)
+
 '''Plotting the contact points in the 3D figure'''
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -131,10 +134,16 @@ ax.set_zlabel('Z axis')
 
 nc = np.sum(stanceFeet)
 stanceID = params.getStanceIndex(stanceFeet)
+
 #plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ax.scatter(contacts[idx,0], contacts[idx,1], contacts[idx,2],c='b',s=100)
+    '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
+    if isConfigurationStable:
+        ax.scatter(comWF[0], comWF[1], comWF[2],c='g',s=100)
+    else:
+        ax.scatter(comWF[0], comWF[1], comWF[2],c='r',s=100)
     ''' draw 3D arrows corresponding to contact normals'''
     a = Arrow3D([contacts[idx,0], contacts[idx,0]+normals[idx,0]/10], [contacts[idx,1], contacts[idx,1]+normals[idx,1]/10],[contacts[idx,2], contacts[idx,2]+normals[idx,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
@@ -157,6 +166,12 @@ for j in range(0,nc): # this will only show the contact positions and normals of
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
     h1 = plt.plot(contacts[idx,0],contacts[idx,1],'ko',markersize=15, label='feet')
 h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
+
+'''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
+if isConfigurationStable:
+    plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM')
+else:
+    plt.plot(comWF[0],comWF[1],'ro',markersize=15, label='CoM')
     
 plt.grid()
 plt.xlabel("X [m]")

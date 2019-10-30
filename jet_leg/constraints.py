@@ -20,7 +20,7 @@ class Constraints:
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
     
-    def compute_actuation_constraints(self, contactIterator, stanceLegs, stanceIndex, swingIndex, torque_limits, totalMass):
+    def compute_actuation_constraints(self, contactIterator, torque_limits, totalMass):
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
 
@@ -32,7 +32,7 @@ class Constraints:
         else:
             jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
 #            print 'Jacobians',jacobianMatrices
-            actuation_polygons = self.computeActuationPolygons(stanceLegs, stanceIndex, swingIndex, jacobianMatrices, torque_limits)
+            actuation_polygons = self.computeActuationPolygons(jacobianMatrices, torque_limits)
 #                print 'actuation polygon ',actuation_polygons
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
             because the gravito inertial wrench is normalized'''
@@ -161,7 +161,7 @@ class Constraints:
         #print constraint, known_term
         return constraint, known_term
 
-    def computeActuationPolygons(self, stanceFeet, stanceIndex, swingIndex, legsJacobians, torque_limits):
+    def computeActuationPolygons(self, legsJacobians, torque_limits):
 
 #        if np.sum(stanceFeet) == 4:
 #            print 'test', torque_limits[0]
@@ -226,11 +226,14 @@ class Constraints:
         rpy = params.getOrientation()
         #compute the contacs in the base frame for the inv kineamtics
         contactsBF = np.zeros((4,3))
-      
-        contactsBF[0,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[0,:] - comPositionWF)), comPositionBF)
-        contactsBF[1,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[1,:] - comPositionWF)), comPositionBF)
-        contactsBF[2,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[2,:] - comPositionWF)), comPositionBF)
-        contactsBF[3,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[3,:] - comPositionWF)), comPositionBF)
+        stanceIdx = params.getStanceIndex(stanceLegs)
+
+        for j in np.arange(0, 4):
+            j = int(j)
+            contactsBF[j,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[j,:] - comPositionWF)), comPositionBF)
+        #contactsBF[1,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[1,:] - comPositionWF)), comPositionBF)
+        #contactsBF[2,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[2,:] - comPositionWF)), comPositionBF)
+        #contactsBF[3,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[3,:] - comPositionWF)), comPositionBF)
 #        print 'WF ',contactsWF
 #        print contactsBF 
 #        print 'stance legs ', stanceLegs
@@ -246,57 +249,20 @@ class Constraints:
         actuation_polygons = np.zeros((1,1))
         C = np.zeros((0,0))
         d = np.zeros((0))
-        stanceIndex = []
-        swingIndex = []
-#        print 'stance', stanceLegs
-        for iter in range(0, 4):
-            if stanceLegs[iter] == 1:
-                #               print 'new poly', stanceIndex, iter
-#                stanceIndex = np.hstack([stanceIndex, int(iter)])
-                stanceIndex.append(int(iter))
-            else:
-                swingIndex = int(iter)
+
+        print 'stance legs',stanceLegs
+        stanceIndex = params.getStanceIndex(stanceLegs)
+        print 'stanceIndex', stanceIndex
         #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         
-        q = self.kin.inverse_kin(contactsBF, foot_vel)        
+        q = self.kin.inverse_kin(contactsBF, foot_vel)
         self.kin.update_homogeneous(q)
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
-        
-        
-#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_LF), J_LF), full_matrices=True)
-#        eigval = np.linalg.cond(J_LF)
-#
-#       
-#        print 'min arg LF',np.min(s, axis=0)
-#        
-#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_RF), J_RF), full_matrices=True)
-#        eigval = np.linalg.cond(J_RF)
-#        #print 'eig RF',s         
-#        print 'min arg RF',np.min(s, axis=0)
-#        
-#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_LH), J_LH), full_matrices=True)
-#        eigval = np.linalg.cond(J_LH)
-#        print 'min arg LH',np.min(s, axis=0)
-#        
-#        U, s, VT = np.linalg.svd(np.dot(np.transpose(J_RH), J_RH), full_matrices=True)
-#        eigval= np.linalg.cond(J_RH)        
-#        print 'min arg RH',np.min(s, axis=0)
-        
-#        m =   np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_LF,  np.transpose(J_LF))) ,    np.array([1,0,0]) ))  
-#        print 'm LF ', m  
-#        
-#        m = np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_RF,  np.transpose(J_RF)) ),    np.array([1,0,0]) )) 
-#        print 'm RF ', m  
-#        
-#        m = np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_LH,  np.transpose(J_LH)) ),    np.array([1,0,0]) ) )
-#        print 'm LH ', m  
-#        
-#        m = np.sqrt(np.dot(   np.dot( np.array([1,0,0]),  np.dot(J_RH,  np.transpose(J_RH)) ),    np.array([1,0,0]) ) )
-#        print 'm RH ', m  
-        
-        for j in stanceIndex:    
-#            print 'leg index',j
+
+        for j in stanceIndex:
+            j = int(j)
+            print j
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
                 constraints_local_frame, d_cone = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
@@ -307,7 +273,7 @@ class Constraints:
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
-                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, stanceLegs, stanceIndex, swingIndex, tau_lim, total_mass)
+                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim, total_mass)
                 #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
                     d_cone = d_cone.reshape(6) 
@@ -316,7 +282,7 @@ class Constraints:
                     d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
-                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, stanceLegs, stanceIndex, swingIndex, tau_lim, total_mass)                           
+                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim, total_mass)
                 C2, d2 = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
                 #            print C1, C2
                 if isIKoutOfWorkSpace is False:

@@ -44,7 +44,7 @@ axisZ= array([[0.0], [0.0], [1.0]])
 comp_dyn = ComputationalDynamics()
 
 '''Here you can set the number of tests that you want to perform for every scenario'''
-number_of_tests = 1000
+number_of_tests = 100
 onlyFrictionTests3contacts = np.zeros((number_of_tests))
 onlyFrictionTests4contacts = np.zeros((number_of_tests))  
 onlyActuationTests3contacts = np.zeros((number_of_tests))
@@ -575,7 +575,7 @@ plt.xticks(np.arange(0, 15, 2.5))
 plt.yticks(np.arange(0, 250, 50))
 subpl6.yaxis.set_label_position("right")
 #plt.legend()
-#plt.show()
+plt.show()
 mpl.rcParams.update({'font.size': 14})
 
-plt.savefig('../figs/IP_bretl/statsIP.pdf')
+#plt.savefig('../figs/IP_bretl/statsIP.pdf')
