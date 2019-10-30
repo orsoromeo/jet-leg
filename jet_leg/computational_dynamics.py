@@ -66,6 +66,7 @@ class ComputationalDynamics():
         Ey = np.zeros((0))        
         G = np.zeros((6,0))
 
+        extForce = iterative_projection_params.externalForceWF
         stanceIndex = iterative_projection_params.getStanceIndex(stanceLegs)
 
         for j in range(0,contactsNumber):
@@ -79,7 +80,7 @@ class ComputationalDynamics():
             G = hstack([G, graspMatrix])            
             
 #        print 'grasp matrix',G
-        E = vstack((Ex, Ey)) / (g*robotMass)
+        E = vstack((Ex, Ey)) / (g*robotMass - extForce[2] )
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
         
@@ -91,7 +92,7 @@ class ComputationalDynamics():
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
 #        print A
-        t = hstack([0.0, 0.0, g*robotMass, 0])
+        t = hstack([- extForce[0], - extForce[1], g*robotMass - extForce[2], 0])
 #        print extForceWF, t
 #        print 'mass ', robotMass
 #        print A,t
@@ -323,8 +324,14 @@ class ComputationalDynamics():
         contactsPosWF = LPparams.getContactsPosWF()
         contactsBF = np.zeros((4,3)) # this is just for initialization
         comWorldFrame = LPparams.getCoMPosWF()
+        extForce = LPparams.externalForceWF
+        totForce = grav
+        totForce[0] += extForce[0]
+        totForce[1] += extForce[1]
+        totForce[2] += extForce[2]
+        print grav, extForce, totForce
 
-        torque = -np.cross(comWorldFrame, np.transpose(grav))
+        torque = -np.cross(comWorldFrame, np.transpose(totForce))
         A = np.zeros((6,0))
         stanceIndex = LPparams.getStanceIndex(stanceLegs)
         print 'stanceIndex',stanceIndex
