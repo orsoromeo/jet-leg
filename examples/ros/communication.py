@@ -15,8 +15,6 @@ import sys
 import time
 import threading
 
-from context import jet_leg
-
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
 
@@ -24,12 +22,12 @@ from geometry_msgs.msg import Point
 from dls_msgs.msg import  StringDoubleArray
 from feasible_region.msg import  Polygon3D, LegsPolygons
 
-from jet_leg.computational_dynamics import ComputationalDynamics
-from jet_leg.math_tools import Math
-from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
-from jet_leg.foothold_planning_interface import FootholdPlanningInterface
+from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.maths.math_tools import Math
+from jet_leg.maths.iterative_projection_parameters import IterativeProjectionParameters
+from jet_leg.optimization.foothold_planning_interface import FootholdPlanningInterface
 
-from jet_leg.foothold_planning import FootHoldPlanning
+from jet_leg.optimization.foothold_planning import FootHoldPlanning
 
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
