@@ -8,12 +8,11 @@ Created on Thu Jun  7 22:14:22 2018
 
 import time
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.spatial
 from math_tools import Math
 from constraints import Constraints
-#from kinematics import Kinematics
 from hyq_kinematics import HyQKinematics
+
 
 class VertexBasedProjection():
     def minksum(self, a,b):
@@ -85,15 +84,16 @@ class VertexBasedProjection():
     
     
     
-    def project(self, constraint_mode, contacts, normals, mass, ng, mu):
+    def project(self, params):
         start_t = time.time()
+        contacts = params.getContactsPosWF()
         contactsNumber = np.size(contacts,0)
         r1 = contacts[0,:]
         r2 = contacts[1,:]
         r3 = contacts[2,:]        
         g = 9.81
-        mg = mass*g
-        
+        mg = params.getTotalMass()*g
+        normals = params.setContactNormals()
         n1 = normals[0,:]
         n2 = normals[1,:]
         n3 = normals[2,:]
