@@ -51,8 +51,6 @@ class ComputationalDynamics():
         stanceLegs = iterative_projection_params.getStanceFeet()
    
         contactsWF = iterative_projection_params.getContactsPosWF()
-        constraint_mode = iterative_projection_params.getConstraintModes()
-        extForceWF = iterative_projection_params.externalForceWF
         robotMass = iterative_projection_params.robotMass
         
         ''' parameters to be tuned'''
@@ -348,8 +346,8 @@ class ComputationalDynamics():
             contactsBF[j, :] = contactsPosWF[j, :] - comWorldFrame
 
         foot_vel = np.vstack([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
-        q = self.kin.inverse_kin(contactsBF, foot_vel)
-        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
+        q = self.kin.inverse_kin(contactsBF, foot_vel, LPparams.robotName)
+        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians(LPparams.robotName)
 
 
         if (not isOutOfWorkspace):

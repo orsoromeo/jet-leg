@@ -8,7 +8,6 @@ import numpy as np
 from jet_leg.maths.computational_geometry import ComputationalGeometry
 from jet_leg.maths.math_tools import Math
 from jet_leg.robot.hyq_kinematics import HyQKinematics
-from cvxopt import matrix
 from scipy.linalg import block_diag
 from jet_leg.robot.dog_interface import DogInterface
 from jet_leg.robot.rigid_body_dynamics import RigidBodyDynamics
@@ -19,10 +18,11 @@ class Constraints:
         self.math = Math()
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
+        self.robotName = 'hyq'
     
-    def compute_actuation_constraints(self, contactIterator, torque_limits, totalMass):
+    def compute_actuation_constraints(self, contactIterator, torque_limits, robot_name):
 
-        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
+        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians(robot_name)
 
         if isOutOfWorkspace:
             C1 = np.zeros((0,0))
@@ -208,14 +208,15 @@ class Constraints:
         elif (np.size(leg_jacobian,0)==3):
             torque_lims = vertices
             legs_gravity = np.ones((3,8))*0 # TODO: correct computation of the force acting on the legs due to gravity
-            actuation_polygon = np.matmul(np.linalg.pinv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)        
+            actuation_polygon = np.matmul(np.linalg.pinv(np.transpose(leg_jacobian)),legs_gravity - torque_lims)
             
         # Only for debugging:                          
         # actuation_polygon = vertices
         return actuation_polygon
     
     def getInequalities(self, params, saturate_normal_force = False):
-        
+
+
         stanceLegs = params.getStanceFeet()
         
         #print 'stance legs', stanceLegs
@@ -250,8 +251,7 @@ class Constraints:
         stanceIndex = params.getStanceIndex(stanceLegs)
         #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-        
-        q = self.kin.inverse_kin(contactsBF, foot_vel)
+        q = self.kin.inverse_kin(contactsBF, foot_vel, params.getRobotName())
         self.kin.update_homogeneous(q)
         J_LF, J_RF, J_LH, J_RH = self.kin.update_jacobians(q)
 
@@ -267,7 +267,7 @@ class Constraints:
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
-                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim, total_mass)
+                Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim, params.getRobotName())
                 #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
                     d_cone = d_cone.reshape(6) 
@@ -276,7 +276,7 @@ class Constraints:
                     d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
-                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim, total_mass)
+                C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim, params.getRobotName())
                 C2, d2 = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
                 #            print C1, C2
                 if isIKoutOfWorkSpace is False:

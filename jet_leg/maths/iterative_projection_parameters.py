@@ -57,6 +57,8 @@ class IterativeProjectionParameters:
                 
         self.actual_swing = 0
 
+        self.robotName = 'anymal' # or 'hyq'
+
 
     def setContactsPosBF(self, contactsBF):
         self.contactsBF = contactsBF
@@ -88,6 +90,12 @@ class IterativeProjectionParameters:
         
     def setTotalMass(self, mass):
         self.robotMass = mass
+
+    def setRobotName(self, robotName):
+        self.robotName = robotName
+
+    def getRobotName(self):
+        return self.robotName
 
     def getContactsPosWF(self):
         return self.contactsWF     

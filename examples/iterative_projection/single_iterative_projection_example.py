@@ -36,29 +36,29 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([1.0, -0.10, 0.0])
+comWF = np.array([.0, 0.0, 0.0])
 
 """ contact points in the World Frame"""
-LF_foot = np.array([1.3, 0.2, -0.5])
-RF_foot = np.array([1.3, -0.2, -0.5])
-LH_foot = np.array([0.7, 0.2, -0.5])
-RH_foot = np.array([0.7, -0.2, -0.5])
+LF_foot = np.array([0.3, 0.2, -0.5])
+RF_foot = np.array([0.3, -0.2, -0.5])
+LH_foot = np.array([-0.3, 0.2, -0.5])
+RH_foot = np.array([-0.3, -0.2, -0.5])
 
-contacts = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
 #contacts = contactsToStack[0:nc+1, :]
 #print contacts
 
 ''' parameters to be tuned'''
 g = 9.81
-trunk_mass = 85.
+trunk_mass = 35.
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
 stanceFeet = [1,1,1,1]
 
 randomSwingLeg = random.randint(0,3)
-tripleStance = True # if you want you can define a swing leg using this variable
+tripleStance = False # if you want you can define a swing leg using this variable
 if tripleStance:
     print 'Swing leg', randomSwingLeg
     stanceFeet[randomSwingLeg] = 0
@@ -92,6 +92,7 @@ comp_dyn = ComputationalDynamics()
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
+params.setRobotName('anymal')
 params.setContactsPosWF(contacts)
 params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)

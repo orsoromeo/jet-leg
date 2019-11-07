@@ -8,23 +8,16 @@ import numpy as np
 
 from dog_interface import DogInterface
 from rigid_body_dynamics import RigidBodyDynamics
-import ikpy
+from anymal_kinematics import anymalKinematics
 
 class HyQKinematics:
     def __init__(self):
         
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
+        self.anymalKin = anymalKinematics()
 
-        self.hyq_LF_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyq/urdf/leg/hyq_leg_LF.urdf")
-        self.hyq_RF_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyq/urdf/leg/hyq_leg_RF.urdf")
-        self.hyq_LH_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyq/urdf/leg/hyq_leg_LH.urdf")
-        self.hyq_RH_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyq/urdf/leg/hyq_leg_RH.urdf")
-
-        self.hyqreal_LF_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_LF.urdf")
-        self.hyqreal_RF_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_RF.urdf")
-        self.hyqreal_LH_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_LH.urdf")
-        self.hyqreal_RH_chain = ikpy.chain.Chain.from_urdf_file("../../resources/urdfs/hyqreal/urdf/leg/hyqreal_leg_RH.urdf")
+        self.robotName = 'hyq'
 
         self.upperLegLength = 0.35;
         self.lowerLegLength = 0.341;
@@ -804,8 +797,12 @@ class HyQKinematics:
 #        print self.fr_trunk_J_LF_foot, self.fr_trunk_J_RF_foot, self.fr_trunk_J_LH_foot, self.fr_trunk_J_RH_foot
         return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:]
 
-    def get_jacobians(self):
-        return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace
+    def get_jacobians(self, robot_name):
+        self.robotName = robot_name
+        if self.robotName == 'hyq':
+            return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace
+        elif self.robotName == 'anymal':
+            return self.anymalKin.getLegJacobians()
 
     def forward_kin(self, q):
         LF_foot = self.fr_trunk_Xh_LF_foot[0:3,3]
@@ -963,10 +960,15 @@ class HyQKinematics:
             
         return q_leg
     
-    def inverse_kin(self, contactsBF, foot_vel):
+    def inverse_kin(self, contactsBF, foot_vel, robot_name):
+        self.robotName = robot_name
         q = []
-        for legID in self.dog.legs:
-            q_leg = self.leg_inverse_kin(legID, contactsBF[legID,:], foot_vel[legID,:])
-            q = np.hstack([q, q_leg]) 
-        return q
+        if self.robotName == 'hyq':
+            for legID in self.dog.legs:
+                q_leg = self.leg_inverse_kin(legID, contactsBF[legID,:], foot_vel[legID,:])
+                q = np.hstack([q, q_leg])
+            return q
+        elif self.robotName == 'anymal':
+            q, jac = self.anymalKin.anymalFixedBaseInverseKinematics(contactsBF)
+            return q
         

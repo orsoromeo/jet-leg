@@ -69,11 +69,11 @@ class ComputationalGeometry:
         edge1 = face5[:,2] - face5[:,1]
         edge2 = face5[:,0] - face5[:,1]
         normal = np.cross(edge1, edge2)
-        print edge1, edge2, normal
+        #print edge1, edge2, normal
         norm = np.linalg.norm(normal)
-        print "norms ", norm, normal
+        #print "norms ", norm, normal
         normal = normal/norm
-        print normal
+        #print normal
         known_term = np.dot(normal, face5[:,0])
         h_rep5 = np.hstack([normal, known_term])
  
