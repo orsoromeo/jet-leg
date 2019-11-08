@@ -94,7 +94,7 @@ comp_dyn = ComputationalDynamics(robot_name)
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
-params.setRobotName(robot_name)
+
 params.setContactsPosWF(contacts)
 params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)

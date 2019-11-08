@@ -347,8 +347,8 @@ class ComputationalDynamics:
             contactsBF[j, :] = contactsPosWF[j, :] - comWorldFrame
 
         foot_vel = np.vstack([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
-        q = self.kin.inverse_kin(contactsBF, foot_vel, LPparams.robotName)
-        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians(LPparams.robotName)
+        q = self.kin.inverse_kin(contactsBF, foot_vel, self.robotName)
+        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians(self.robotName)
 
 
         if (not isOutOfWorkspace):

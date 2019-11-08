@@ -116,7 +116,6 @@ for iter in range(0,number_of_tests):
     #    print 'Swing leg', randomSwingLeg
     #stanceLegs[randomSwingLeg] = 0
 
-    params.setRobotName(robot_name)
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
@@ -139,6 +138,12 @@ nc = 4
 comWF = np.array([0.0, 0.0, 0.0])
 
 for iter in range(0,number_of_tests):
+
+    # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+    constraint_mode_IP = ['ONLY_FRICTION',
+                          'ONLY_FRICTION',
+                          'ONLY_FRICTION',
+                          'ONLY_FRICTION']
     
     ''' random normals '''    
     randRoll = np.random.normal(0.0, 0.2)
@@ -189,7 +194,6 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    params.setRobotName(robot_name)
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
@@ -266,7 +270,6 @@ for iter in range(0,number_of_tests):
     #    print 'Swing leg', randomSwingLeg
     stanceLegs[randomSwingLeg] = 0
 
-    params.setRobotName(robot_name)
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
@@ -338,7 +341,6 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    params.setRobotName(robot_name)
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
@@ -417,7 +419,6 @@ for iter in range(0,number_of_tests):
     #    print 'Swing leg', randomSwingLeg
     stanceLegs[randomSwingLeg] = 0
 
-    params.setRobotName(robot_name)
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
@@ -489,7 +490,6 @@ for iter in range(0,number_of_tests):
     stanceLegs = [1 ,1, 1, 1]
 
     ''' compute iterative projection '''
-    params.setRobotName(robot_name)
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
     params.setTorqueLims(torque_limits)
