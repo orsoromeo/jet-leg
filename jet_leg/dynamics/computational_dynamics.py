@@ -17,15 +17,16 @@ from cvxopt import matrix, solvers
 import time
 
 
-class ComputationalDynamics():
-    def __init__(self):
+class ComputationalDynamics:
+    def __init__(self, robot_name):
+        self.robotName = robot_name
         self.geom = Geometry()
         self.math = Math()
-        self.constr = Constraints()
-        self.kin = HyQKinematics()
+        self.constr = Constraints(self.robotName)
+        self.kin = HyQKinematics(self.robotName)
         self.ineq = ([],[])
         self.eq = ([],[])
-        
+
     def getGraspMatrix(self, r):
 
         G = np.vstack([np.hstack([eye(3), zeros((3, 3))]),np.hstack([self.math.skew(r), eye(3)])])

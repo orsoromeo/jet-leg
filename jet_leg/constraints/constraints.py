@@ -13,13 +13,13 @@ from jet_leg.robot.dog_interface import DogInterface
 from jet_leg.robot.rigid_body_dynamics import RigidBodyDynamics
 
 class Constraints:    
-    def __init__(self):
-        self.kin = HyQKinematics()
+    def __init__(self, robot_name):
+        self.robotName = robot_name
+        self.kin = HyQKinematics(self.robotName)
         self.math = Math()
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
-        self.robotName = 'hyq'
-    
+
     def compute_actuation_constraints(self, contactIterator, torque_limits, robot_name):
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians(robot_name)

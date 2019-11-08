@@ -28,58 +28,57 @@ class anymalKinematics():
         return idx
 
     def footInverseKinematicsFixedBase(self, foot_pos_des, frame_name):
-        print(frame_name, foot_pos_des)
         frame_id = self.model.getFrameId(frame_name)
         blockIdx = self.getBlockIndex(frame_name)
-        print('block id is', blockIdx)
         anymal_q0 = np.vstack([-0.1, 0.7, -1., -0.1, -0.7, 1., 0.1, 0.7,-1., 0.1,-0.7, 1.])
         q = anymal_q0
-        print(q)
-        eps = 0.001
-        IT_MAX = 1000
+        eps = 0.005
+        IT_MAX = 200
         DT = 1e-1
         err = np.zeros((3, 1))
+        e = np.zeros((3, 1))
 
         i = 0
         while True:
             pinocchio.forwardKinematics(self.model, self.data, q)
             pinocchio.framesForwardKinematics(self.model, self.data, q)
             foot_pos = self.data.oMf[frame_id].translation
-            err = np.hstack([err, (foot_pos - foot_pos_des)])
-            e = err[:,-1]
-            print('error', e)
-            print('error norm', np.linalg.norm(e))
+            #err = np.hstack([err, (foot_pos - foot_pos_des)])
+            #e = err[:,-1]
+            #print foot_pos_des[0], foot_pos[[0]], foot_pos[[0]] - foot_pos_des[0]
+            #e = foot_pos - foot_pos_des
+            e[0] = foot_pos[[0]] - foot_pos_des[0]
+            e[1] = foot_pos[[1]] - foot_pos_des[1]
+            e[2] = foot_pos[[2]] - foot_pos_des[2]
             if np.linalg.norm(e) < eps:
-                print("Convergence achieved!")
+                #print("IK Convergence achieved!")
                 break
             if i >= IT_MAX:
                 print("\n Warning: the iterative algorithm has not reached convergence to the desired precision. Error is: ", np.linalg.norm(e))
                 break
             J = pinocchio.frameJacobian(self.model, self.data, q, frame_id)
             J_lin = J[:3, :]
+            #print J_lin
             v = - np.linalg.pinv(J_lin) * e
             q = pinocchio.integrate(self.model, q, v * DT)
-
-            if not i % 20:
-                print('error = %s' % e.T)
-                print('foot pos from FK', foot_pos)
             i += 1
+            #print i
 
         q_leg = q[blockIdx:blockIdx+3]
         J_leg = J_lin[:,blockIdx:blockIdx+3]
         return q_leg, J_leg, err
 
     def anymalFixedBaseInverseKinematics(self, feetPosDes):
-        f_p_des = np.matrix(feetPosDes[0,:]).T
+        f_p_des = np.array(feetPosDes[0,:]).T
         q_LF, self.LF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'LF_FOOT')
 
-        f_p_des = np.matrix(feetPosDes[2, :]).T
+        f_p_des = np.array(feetPosDes[2, :]).T
         q_LH, self.LH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'LH_FOOT')
 
-        f_p_des = np.matrix(feetPosDes[1, :]).T
+        f_p_des = np.array(feetPosDes[1, :]).T
         q_RF, self.RF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'RF_FOOT')
 
-        f_p_des = np.matrix(feetPosDes[3, :]).T
+        f_p_des = np.array(feetPosDes[3, :]).T
         q_RH, self.RH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'RH_FOOT')
 
         q = np.vstack([q_LF, q_LH, q_RF, q_RH])

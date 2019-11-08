@@ -20,6 +20,9 @@ from jet_leg.plotting.arrow3D import Arrow3D
 plt.close('all')
 math = Math()
 
+''' Set the robot's name (either 'hyq' or 'anymal')'''
+robot_name = 'anymal'
+
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
 ng = 4
 
@@ -36,13 +39,13 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([.0, 0.0, 0.0])
+comWF = np.array([.03, 0.05, 0.0])
 
 """ contact points in the World Frame"""
-LF_foot = np.array([0.3, 0.2, -0.5])
-RF_foot = np.array([0.3, -0.2, -0.5])
-LH_foot = np.array([-0.3, 0.2, -0.5])
-RH_foot = np.array([-0.3, -0.2, -0.5])
+LF_foot = np.array([0.3, 0.2, -0.4])
+RF_foot = np.array([0.3, -0.2, -0.4])
+LH_foot = np.array([-0.3, 0.2, -0.4])
+RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
@@ -50,8 +53,7 @@ contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 #print contacts
 
 ''' parameters to be tuned'''
-g = 9.81
-trunk_mass = 35.
+trunk_mass = 45.
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
@@ -78,21 +80,21 @@ HAA = Hip Abduction Adduction
 HFE = Hip Flextion Extension
 KFE = Knee Flextion Extension
 '''
-LF_tau_lim = [50.0, 100.0, 100.0] # HAA, HFE, KFE
-RF_tau_lim = [50.0, 100.0, 100.0] # HAA, HFE, KFE
-LH_tau_lim = [50.0, 100.0, 100.0] # HAA, HFE, KFE
-RH_tau_lim = [50.0, 100.0, 100.0] # HAA, HFE, KFE
+LF_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
+RF_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
+LH_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
+RH_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
 extForceW = np.array([0.0, 0.0, 0.0]) # units are Nm
 
-comp_dyn = ComputationalDynamics()
+comp_dyn = ComputationalDynamics(robot_name)
 
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
-params.setRobotName('anymal')
+params.setRobotName(robot_name)
 params.setContactsPosWF(contacts)
 params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)

@@ -11,13 +11,13 @@ from rigid_body_dynamics import RigidBodyDynamics
 from anymal_kinematics import anymalKinematics
 
 class HyQKinematics:
-    def __init__(self):
+    def __init__(self, robot_name):
         
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
-        self.anymalKin = anymalKinematics()
-
-        self.robotName = 'hyq'
+        self.robotName = robot_name
+        if self.robotName == 'anymal':
+            self.anymalKin = anymalKinematics()
 
         self.upperLegLength = 0.35;
         self.lowerLegLength = 0.341;
