@@ -8,19 +8,12 @@ import numpy as np
 
 from jet_leg.robots.dog_interface import DogInterface
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
-from jet_leg.robots.anymal.anymal_kinematics import anymalKinematics
-from jet_leg.robots.hyqreal.hyqreal_kinematics import hyqrealKinematics
 
 class HyQKinematics:
-    def __init__(self, robot_name):
+    def __init__(self):
         
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
-        self.robotName = robot_name
-        if self.robotName == 'anymal':
-            self.anymalKin = anymalKinematics()
-        elif self.robotName == 'hyqreal':
-            self.hyqrealKin = hyqrealKinematics()
 
         self.upperLegLength = 0.35;
         self.lowerLegLength = 0.341;
@@ -800,14 +793,9 @@ class HyQKinematics:
 #        print self.fr_trunk_J_LF_foot, self.fr_trunk_J_RF_foot, self.fr_trunk_J_LH_foot, self.fr_trunk_J_RH_foot
         return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:]
 
-    def get_jacobians(self, robot_name):
-        self.robotName = robot_name
-        if self.robotName == 'hyq':
-            return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace
-        elif self.robotName == 'hyqreal':
-            return self.hyqrealKin.getLegJacobians()
-        elif self.robotName == 'anymal':
-            return self.anymalKin.getLegJacobians()
+    def getLegJacobians(self):
+        return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace
+
 
     def forward_kin(self, q):
         LF_foot = self.fr_trunk_Xh_LF_foot[0:3,3]
@@ -965,20 +953,14 @@ class HyQKinematics:
             
         return q_leg
     
-    def inverse_kin(self, contactsBF, foot_vel, robot_name):
-        self.robotName = robot_name
+    def fixedBaseInverseKinematics(self, contactsBF, foot_vel):
         q = []
-        if self.robotName == 'hyq':
-            for legID in self.dog.legs:
-                q_leg = self.leg_inverse_kin(legID, contactsBF[legID,:], foot_vel[legID,:])
-                q = np.hstack([q, q_leg])
-            return q
+        for legID in self.dog.legs:
+            q_leg = self.leg_inverse_kin(legID, contactsBF[legID,:], foot_vel[legID,:])
+            q = np.hstack([q, q_leg])
 
-        elif self.robotName == 'hyqreal':
-            q, jac = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
-            return q
+        self.update_homogeneous(q)
+        self.update_jacobians(q)
+        return q
 
-        elif self.robotName == 'anymal':
-            q, jac = self.anymalKin.fixedBaseInverseKinematics(contactsBF)
-            return q
         

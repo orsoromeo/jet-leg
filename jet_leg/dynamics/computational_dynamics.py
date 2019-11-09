@@ -10,7 +10,7 @@ import numpy as np
 from numpy import array, dot, eye, hstack, vstack, zeros
 from scipy.spatial import ConvexHull
 from jet_leg.constraints.constraints import Constraints
-from jet_leg.robots.hyq.hyq_kinematics import HyQKinematics
+from jet_leg.kinematics.kinematics_interface import KinematicsInterface
 from jet_leg.maths.math_tools import Math
 from jet_leg.maths.geometry import Geometry
 from cvxopt import matrix, solvers
@@ -22,8 +22,8 @@ class ComputationalDynamics:
         self.robotName = robot_name
         self.geom = Geometry()
         self.math = Math()
-        self.constr = Constraints(self.robotName)
-        self.kin = HyQKinematics(self.robotName)
+        self.kin = KinematicsInterface(self.robotName)
+        self.constr = Constraints(self.kin)
         self.ineq = ([],[])
         self.eq = ([],[])
 
@@ -96,7 +96,25 @@ class ComputationalDynamics:
 #        print 'mass ', robotMass
 #        print A,t
         eq = (A, t)  # A * x == t
-        
+
+        #we are static so we set to zero
+        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
+
+        contactsWF = iterative_projection_params.getContactsPosWF()
+        comPositionWF = iterative_projection_params.getCoMPosWF()
+        comPositionBF = iterative_projection_params.getCoMPosBF()
+        rpy = iterative_projection_params.getOrientation()
+        #compute the contacs in the base frame for the inv kineamtics
+        contactsBF = np.zeros((4,3))
+
+        for j in np.arange(0, 4):
+            j = int(j)
+            contactsBF[j,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[j,:] - comPositionWF)), comPositionBF)
+
+        q = self.kin.inverse_kin(contactsBF, foot_vel)
+        #self.kin.update_homogeneous(q)
+        J_LF, J_RF, J_LH, J_RH, isIKoutOfWorkSpace = self.kin.get_jacobians()
+
         C, d, isIKoutOfWorkSpace, actuation_polygons = self.constr.getInequalities(iterative_projection_params)
         ineq = (C, d)    
         return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
@@ -347,9 +365,8 @@ class ComputationalDynamics:
             contactsBF[j, :] = contactsPosWF[j, :] - comWorldFrame
 
         foot_vel = np.vstack([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
-        q = self.kin.inverse_kin(contactsBF, foot_vel, self.robotName)
-        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians(self.robotName)
-
+        q = self.kin.inverse_kin(contactsBF, foot_vel)
+        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
 
         if (not isOutOfWorkspace):
             G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)

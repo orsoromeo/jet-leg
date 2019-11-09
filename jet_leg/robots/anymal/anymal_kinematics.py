@@ -93,5 +93,6 @@ class anymalKinematics():
 
     def getLegJacobians(self):
         isOutOfWS = False
+        print ("print in get leg jac anymal",self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS)
         return self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS
 
