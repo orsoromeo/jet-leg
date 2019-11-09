@@ -7,10 +7,10 @@ Created on Mon May 28 13:00:59 2018
 import numpy as np
 from jet_leg.maths.computational_geometry import ComputationalGeometry
 from jet_leg.maths.math_tools import Math
-from jet_leg.robot.hyq_kinematics import HyQKinematics
+from jet_leg.robots.hyq.hyq_kinematics import HyQKinematics
 from scipy.linalg import block_diag
-from jet_leg.robot.dog_interface import DogInterface
-from jet_leg.robot.rigid_body_dynamics import RigidBodyDynamics
+from jet_leg.robots.dog_interface import DogInterface
+from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 
 class Constraints:    
     def __init__(self, robot_name):

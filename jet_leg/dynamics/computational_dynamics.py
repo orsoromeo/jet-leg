@@ -10,7 +10,7 @@ import numpy as np
 from numpy import array, dot, eye, hstack, vstack, zeros
 from scipy.spatial import ConvexHull
 from jet_leg.constraints.constraints import Constraints
-from jet_leg.robot.hyq_kinematics import HyQKinematics
+from jet_leg.robots.hyq.hyq_kinematics import HyQKinematics
 from jet_leg.maths.math_tools import Math
 from jet_leg.maths.geometry import Geometry
 from cvxopt import matrix, solvers

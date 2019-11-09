@@ -21,7 +21,7 @@ plt.close('all')
 math = Math()
 
 ''' Set the robot's name (either 'hyq' or 'anymal')'''
-robot_name = 'anymal'
+robot_name = 'hyq'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
 ng = 4

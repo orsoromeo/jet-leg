@@ -6,9 +6,10 @@ Created on Mon Jul  2 05:34:42 2018
 """
 import numpy as np
 
-from dog_interface import DogInterface
-from rigid_body_dynamics import RigidBodyDynamics
-from anymal_kinematics import anymalKinematics
+from jet_leg.robots.dog_interface import DogInterface
+from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
+from jet_leg.robots.anymal.anymal_kinematics import anymalKinematics
+from jet_leg.robots.hyqreal.hyqreal_kinematics import hyqrealKinematics
 
 class HyQKinematics:
     def __init__(self, robot_name):
@@ -18,6 +19,8 @@ class HyQKinematics:
         self.robotName = robot_name
         if self.robotName == 'anymal':
             self.anymalKin = anymalKinematics()
+        elif self.robotName == 'hyqreal':
+            self.hyqrealKin = hyqrealKinematics()
 
         self.upperLegLength = 0.35;
         self.lowerLegLength = 0.341;
@@ -801,6 +804,8 @@ class HyQKinematics:
         self.robotName = robot_name
         if self.robotName == 'hyq':
             return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace
+        elif self.robotName == 'hyqreal':
+            return self.hyqrealKin.getLegJacobians()
         elif self.robotName == 'anymal':
             return self.anymalKin.getLegJacobians()
 
@@ -968,7 +973,12 @@ class HyQKinematics:
                 q_leg = self.leg_inverse_kin(legID, contactsBF[legID,:], foot_vel[legID,:])
                 q = np.hstack([q, q_leg])
             return q
+
+        elif self.robotName == 'hyqreal':
+            q, jac = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
+            return q
+
         elif self.robotName == 'anymal':
-            q, jac = self.anymalKin.anymalFixedBaseInverseKinematics(contactsBF)
+            q, jac = self.anymalKin.fixedBaseInverseKinematics(contactsBF)
             return q
         

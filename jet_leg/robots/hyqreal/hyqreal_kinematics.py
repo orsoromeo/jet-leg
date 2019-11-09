@@ -3,10 +3,10 @@ from pinocchio.utils import *
 from pinocchio.robot_wrapper import RobotWrapper
 import matplotlib.pyplot as plt
 
-class anymalKinematics():
+class hyqrealKinematics():
     def __init__(self):
-        self.PKG = '/opt/openrobots/share/example-robot-data'
-        self.URDF = '/opt/openrobots/share/example-robot-data/anymal_b_simple_description/robots/anymal.urdf'
+        self.PKG = '...path to hyq real urdf'
+        self.URDF = '...path to hyq real urdf'
         self.robot = RobotWrapper.BuildFromURDF(self.URDF, [self.PKG])
         self.model = self.robot.model
         self.data = self.robot.data
@@ -14,17 +14,22 @@ class anymalKinematics():
         self.LH_foot_jac = None
         self.RF_foot_jac = None
         self.RH_foot_jac = None
+        self.urdf_foot_name_lf = 'lf_foot'
+        self.urdf_foot_name_lh = 'lh_foot'
+        self.urdf_foot_name_rf = 'rf_foot'
+        self.urdf_foot_name_rh = 'rh_foot'
 
     def getBlockIndex(self, frame_name):
-        if frame_name == 'LF_FOOT':
+        if frame_name == self.urdf_foot_name_lf:
             idx = 0
-        elif frame_name == 'LH_FOOT':
+        elif frame_name == self.urdf_foot_name_lh:
             idx = 3
-        elif frame_name == 'RF_FOOT':
+        elif frame_name == self.urdf_foot_name_rf:
             idx = 6
-        elif frame_name == 'RH_FOOT':
+        elif frame_name == self.urdf_foot_name_rh:
             idx = 9
 
+        print ('index is',idx)
         return idx
 
     def footInverseKinematicsFixedBase(self, foot_pos_des, frame_name):
@@ -68,19 +73,20 @@ class anymalKinematics():
         J_leg = J_lin[:,blockIdx:blockIdx+3]
         return q_leg, J_leg, err
 
-    def anymalFixedBaseInverseKinematics(self, feetPosDes):
+    def fixedBaseInverseKinematics(self, feetPosDes):
         f_p_des = np.array(feetPosDes[0,:]).T
-        q_LF, self.LF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'LF_FOOT')
+        q_LF, self.LF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_lf)
 
         f_p_des = np.array(feetPosDes[2, :]).T
-        q_LH, self.LH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'LH_FOOT')
+        q_LH, self.LH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_lh)
 
         f_p_des = np.array(feetPosDes[1, :]).T
-        q_RF, self.RF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'RF_FOOT')
+        q_RF, self.RF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_rf)
 
         f_p_des = np.array(feetPosDes[3, :]).T
-        q_RH, self.RH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, 'RH_FOOT')
+        q_RH, self.RH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_rh)
 
+        '''please NOTICE here the alphabetical order of the legs in the vector q: LF -> LH -> RF -> RH '''
         q = np.vstack([q_LF, q_LH, q_RF, q_RH])
         legJacs = np.vstack([self.LF_foot_jac, self.LH_foot_jac, self.RF_foot_jac, self.RH_foot_jac])
         return q, legJacs

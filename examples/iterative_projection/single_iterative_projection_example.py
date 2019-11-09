@@ -20,8 +20,8 @@ from jet_leg.plotting.arrow3D import Arrow3D
 plt.close('all')
 math = Math()
 
-''' Set the robot's name (either 'hyq' or 'anymal')'''
-robot_name = 'anymal'
+''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
+robot_name = 'hyq'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
 ng = 4
@@ -179,7 +179,7 @@ for j in range(0,nc): # this will only show the contact positions and normals of
     h1 = plt.plot(contacts[idx,0],contacts[idx,1],'ko',markersize=15, label='stance feet')
 h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
 
-'''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
+'''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
 if isConfigurationStable:
     plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM')
 else:
