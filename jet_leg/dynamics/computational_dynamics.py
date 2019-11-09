@@ -328,7 +328,7 @@ class ComputationalDynamics:
         totForce[0] += extForce[0]
         totForce[1] += extForce[1]
         totForce[2] += extForce[2]
-        print grav, extForce, totForce
+        #print grav, extForce, totForce
 
         torque = -np.cross(comWorldFrame, np.transpose(totForce))
         A = np.zeros((6,0))
@@ -336,7 +336,7 @@ class ComputationalDynamics:
         print 'stanceIndex',stanceIndex
         for j in stanceIndex:
             j = int(j)
-            print 'index in lp ',j
+            #print 'index in lp ',j
             r = contactsPosWF[j,:]
             GraspMat = self.getGraspMatrix(r)
             A = np.hstack((A, GraspMat[:,0:3]))

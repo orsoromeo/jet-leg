@@ -35,16 +35,13 @@ class KinematicsInterface:
             return self.anymalKin.getLegJacobians()
 
     def inverse_kin(self, contactsBF, foot_vel):
+
         if self.robotName == 'hyq':
-            #for legID in self.dog.legs:
-            #    q_leg = self.hyqKin.leg_inverse_kin(legID, contactsBF[legID, :], foot_vel[legID, :])
             q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel)
             return q
-
         elif self.robotName == 'hyqreal':
             q, jac = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
             return q
-
         elif self.robotName == 'anymal':
             q, jac = self.anymalKin.fixedBaseInverseKinematics(contactsBF)
             return q

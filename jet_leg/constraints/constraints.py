@@ -231,9 +231,9 @@ class Constraints:
             j = int(j)
             contactsBF[j,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[j,:] - comPositionWF)), comPositionBF)
 
-#        print 'WF ',contactsWF
-#        print contactsBF 
-#        print 'stance legs ', stanceLegs
+        #print 'WF ',contactsWF
+        #print contactsBF
+        #print 'stance legs ', stanceLegs
         
         constraint_mode = params.getConstraintModes()
 
@@ -252,8 +252,8 @@ class Constraints:
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 
         q = self.kin.inverse_kin(contactsBF, foot_vel)
-        #self.kin.update_homogeneous(q)
-        J_LF, J_RF, J_LH, J_RH, isOutofWS = self.kin.get_jacobians()
+
+        #print ("q is ",q)
 
         for j in stanceIndex:
             j = int(j)

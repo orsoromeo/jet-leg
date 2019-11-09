@@ -29,7 +29,7 @@ class hyqrealKinematics():
         elif frame_name == self.urdf_foot_name_rh:
             idx = 9
 
-        print ('index is',idx)
+        #print ('index is',idx)
         return idx
 
     def footInverseKinematicsFixedBase(self, foot_pos_des, frame_name):

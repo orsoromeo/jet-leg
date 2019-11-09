@@ -21,7 +21,7 @@ plt.close('all')
 math = Math()
 
 ''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
-robot_name = 'hyq'
+robot_name = 'anymal'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
 ng = 4
@@ -47,10 +47,7 @@ RF_foot = np.array([0.3, -0.2, -0.4])
 LH_foot = np.array([-0.3, 0.2, -0.4])
 RH_foot = np.array([-0.3, -0.2, -0.4])
 
-contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-
-#contacts = contactsToStack[0:nc+1, :]
-#print contacts
+contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
 ''' parameters to be tuned'''
 trunk_mass = 45.
@@ -95,7 +92,7 @@ comp_dyn = ComputationalDynamics(robot_name)
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
 
-params.setContactsPosWF(contacts)
+params.setContactsPosWF(contactsWF)
 params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
 params.setActiveContacts(stanceFeet)
@@ -137,7 +134,7 @@ force_scaling_factor = 1500
 fz_tot = 0.0
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
-    ax.scatter(contacts[idx,0], contacts[idx,1], contacts[idx,2],c='b',s=100)
+    ax.scatter(contactsWF[idx,0], contactsWF[idx,1], contactsWF[idx,2],c='b',s=100)
     '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
     if isConfigurationStable:
         ax.scatter(comWF[0], comWF[1], comWF[2],c='g',s=100)
@@ -145,9 +142,9 @@ for j in range(0,nc): # this will only show the contact positions and normals of
         fz_tot += grf[2]
 
         ''' draw the set contact forces that respects the constraints'''
-        b = Arrow3D([contacts[idx, 0], contacts[idx, 0] + grf[0] / force_scaling_factor],
-                    [contacts[idx, 1], contacts[idx, 1] + grf[1] / force_scaling_factor],
-                    [contacts[idx, 2], contacts[idx, 2] + grf[2] / force_scaling_factor], mutation_scale=20, lw=3,
+        b = Arrow3D([contactsWF[idx, 0], contactsWF[idx, 0] + grf[0] / force_scaling_factor],
+                    [contactsWF[idx, 1], contactsWF[idx, 1] + grf[1] / force_scaling_factor],
+                    [contactsWF[idx, 2], contactsWF[idx, 2] + grf[2] / force_scaling_factor], mutation_scale=20, lw=3,
                     arrowstyle="-|>",
                     color="b")
         ax.add_artist(b)
@@ -155,10 +152,10 @@ for j in range(0,nc): # this will only show the contact positions and normals of
         ax.scatter(comWF[0], comWF[1], comWF[2],c='r',s=100)
 
     ''' draw 3D arrows corresponding to contact normals'''
-    a = Arrow3D([contacts[idx,0], contacts[idx,0]+normals[idx,0]/10], [contacts[idx,1], contacts[idx,1]+normals[idx,1]/10],[contacts[idx,2], contacts[idx,2]+normals[idx,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
+    a = Arrow3D([contactsWF[idx,0], contactsWF[idx,0]+normals[idx,0]/10], [contactsWF[idx,1], contactsWF[idx,1]+normals[idx,1]/10],[contactsWF[idx,2], contactsWF[idx,2]+normals[idx,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
 
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
-    ax.scatter(contacts[idx, 0], contacts[idx, 1], 0.0, c='k', s=100)
+    ax.scatter(contactsWF[idx, 0], contactsWF[idx, 1], 0.0, c='k', s=100)
     ax.add_artist(a)
 
 print 'sum of vertical forces is', fz_tot
@@ -169,14 +166,14 @@ for j in range(0,nc): # this will only show the force polytopes of the feet that
     idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
     if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
-        plotter.plot_actuation_polygon(ax, forcePolytopes[idx], contacts[idx,:], force_scaling_factor)
+        plotter.plot_actuation_polygon(ax, forcePolytopes[idx], contactsWF[idx,:], force_scaling_factor)
 
 ''' 2D figure '''
 plt.figure()
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
-    h1 = plt.plot(contacts[idx,0],contacts[idx,1],'ko',markersize=15, label='stance feet')
+    h1 = plt.plot(contactsWF[idx,0],contactsWF[idx,1],'ko',markersize=15, label='stance feet')
 h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''

@@ -29,7 +29,7 @@ class anymalKinematics():
         elif frame_name == self.urdf_foot_name_rh:
             idx = 9
 
-        print ('index is',idx)
+        #print ('index is',idx)
         return idx
 
     def footInverseKinematicsFixedBase(self, foot_pos_des, frame_name):
@@ -93,6 +93,6 @@ class anymalKinematics():
 
     def getLegJacobians(self):
         isOutOfWS = False
-        print ("print in get leg jac anymal",self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS)
+        #print ("print in get leg jac anymal",self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS)
         return self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS
 
