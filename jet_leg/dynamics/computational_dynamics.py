@@ -97,24 +97,6 @@ class ComputationalDynamics:
 #        print A,t
         eq = (A, t)  # A * x == t
 
-        #we are static so we set to zero
-        foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
-
-        contactsWF = iterative_projection_params.getContactsPosWF()
-        comPositionWF = iterative_projection_params.getCoMPosWF()
-        comPositionBF = iterative_projection_params.getCoMPosBF()
-        rpy = iterative_projection_params.getOrientation()
-        #compute the contacs in the base frame for the inv kineamtics
-        contactsBF = np.zeros((4,3))
-
-        for j in np.arange(0, 4):
-            j = int(j)
-            contactsBF[j,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[j,:] - comPositionWF)), comPositionBF)
-
-        q = self.kin.inverse_kin(contactsBF, foot_vel)
-        #self.kin.update_homogeneous(q)
-        J_LF, J_RF, J_LH, J_RH, isIKoutOfWorkSpace = self.kin.get_jacobians()
-
         C, d, isIKoutOfWorkSpace, actuation_polygons = self.constr.getInequalities(iterative_projection_params)
         ineq = (C, d)    
         return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
@@ -361,24 +343,9 @@ class ComputationalDynamics:
             A = matrix(A)
             b = matrix(np.vstack([-totForce, np.transpose(torque)]).reshape((6)))
 
-        for j in range(0, 4):
-            contactsBF[j, :] = contactsPosWF[j, :] - comWorldFrame
-
-        foot_vel = np.vstack([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
-        q = self.kin.inverse_kin(contactsBF, foot_vel)
-        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
-
-        if (not isOutOfWorkspace):
-            G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)
-            G = matrix(G)
-            h = matrix(h)
-
-        else:
-            print 'contact is out of workspace'
-            LP_actuation_polygons = [None]
-            isIKoutOfWorkSpace = True
-            G= [None]
-            h = [None]
+        G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)
+        G = matrix(G)
+        h = matrix(h)
 
         lp = p, G, h, A, b
         return p, G, h, A, b, isIKoutOfWorkSpace, LP_actuation_polygons

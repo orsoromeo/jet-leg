@@ -20,7 +20,7 @@ from jet_leg.plotting.arrow3D import Arrow3D
 plt.close('all')
 math = Math()
 
-''' Set the robot's name (either 'hyq' or 'anymal')'''
+''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
 robot_name = 'hyq'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
