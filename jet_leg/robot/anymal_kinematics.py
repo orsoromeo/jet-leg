@@ -2,12 +2,17 @@ import pinocchio
 from pinocchio.utils import *
 from pinocchio.robot_wrapper import RobotWrapper
 import matplotlib.pyplot as plt
+import os
+
 
 class anymalKinematics():
     def __init__(self):
-        self.PKG = '/opt/openrobots/share/example-robot-data'
-        self.URDF = '/opt/openrobots/share/example-robot-data/anymal_b_simple_description/robots/anymal.urdf'
-        self.robot = RobotWrapper.BuildFromURDF(self.URDF, [self.PKG])
+        self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/../../resources/urdfs/anymal/'
+        self.URDF = self.PKG + 'urdf/anymal_boxy.urdf'
+        if self.PKG is None:
+            self.robot = RobotWrapper.BuildFromURDF(self.URDF)
+        else:
+            self.robot = RobotWrapper.BuildFromURDF(self.URDF, [self.PKG])
         self.model = self.robot.model
         self.data = self.robot.data
         self.LF_foot_jac = None

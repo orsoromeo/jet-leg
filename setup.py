@@ -19,9 +19,11 @@
 # along with jet_leg. If not, see <http://www.gnu.org/licenses/>.
 
 from distutils.core import setup
+from setuptools import find_packages
+
 
 setup(
-    name='jet_leg',
+    name='jet_leg_common',
     version='0.1.0',
     description="Python Polyhedron Manipulation",
     url="https://github.com/orsoromeo/jet-leg",
@@ -37,5 +39,5 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Mathematics'],
-    packages=['jet_leg']
+    packages=find_packages()
 )
