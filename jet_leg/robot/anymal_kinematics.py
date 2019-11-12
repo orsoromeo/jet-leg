@@ -60,7 +60,7 @@ class anymalKinematics():
                 break
             if i >= IT_MAX:
                 print("\n Warning: the iterative algorithm has not reached convergence to the desired precision. Error is: ", np.linalg.norm(e))
-                break
+                raise Exception('FailedConvergence')
             J = pinocchio.frameJacobian(self.model, self.data, q, frame_id)
             J_lin = J[:3, :]
             #print J_lin
