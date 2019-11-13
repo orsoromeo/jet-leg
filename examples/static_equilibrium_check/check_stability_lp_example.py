@@ -20,7 +20,7 @@ from jet_leg.plotting.arrow3D import Arrow3D
 plt.close('all')
 math = Math()
 
-''' Set the robot's name (either 'hyq' or 'anymal')'''
+''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
 robot_name = 'anymal'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
@@ -39,7 +39,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 # n = nc*6
-comWF = np.array([.03, 0.05, 0.0])
+comWF = np.array([0., 0., 0.0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])

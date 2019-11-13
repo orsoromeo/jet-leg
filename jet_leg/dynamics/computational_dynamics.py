@@ -10,7 +10,7 @@ import numpy as np
 from numpy import array, dot, eye, hstack, vstack, zeros
 from scipy.spatial import ConvexHull
 from jet_leg.constraints.constraints import Constraints
-from jet_leg.robot.hyq_kinematics import HyQKinematics
+from jet_leg.kinematics.kinematics_interface import KinematicsInterface
 from jet_leg.maths.math_tools import Math
 from jet_leg.maths.geometry import Geometry
 from cvxopt import matrix, solvers
@@ -22,8 +22,8 @@ class ComputationalDynamics:
         self.robotName = robot_name
         self.geom = Geometry()
         self.math = Math()
-        self.constr = Constraints(self.robotName)
-        self.kin = HyQKinematics(self.robotName)
+        self.kin = KinematicsInterface(self.robotName)
+        self.constr = Constraints(self.kin)
         self.ineq = ([],[])
         self.eq = ([],[])
 
@@ -96,7 +96,7 @@ class ComputationalDynamics:
 #        print 'mass ', robotMass
 #        print A,t
         eq = (A, t)  # A * x == t
-        
+
         C, d, isIKoutOfWorkSpace, actuation_polygons = self.constr.getInequalities(iterative_projection_params)
         ineq = (C, d)    
         return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
@@ -168,19 +168,22 @@ class ComputationalDynamics:
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
         proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
 
-        vertices_WF = pypoman.project_polytope(proj, self.ineq, self.eq, method='bretl', max_iter=500, init_angle=0.0)
-        if vertices_WF is False:
-            print 'Project polytope function is False'
+        if isIKoutOfWorkSpace:
             return False, False, False
-
-        else:            
-            compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
-            try:
-                hull = ConvexHull(compressed_vertices)
-            except Exception as err:
-                print("QHull type error: " + str(err))
-                print("matrix to compute qhull:",compressed_vertices)               
+        else:
+            vertices_WF = pypoman.project_polytope(proj, self.ineq, self.eq, method='bretl', max_iter=500, init_angle=0.0)
+            if vertices_WF is False:
+                print 'Project polytope function is False'
                 return False, False, False
+
+            else:
+                compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
+                try:
+                    hull = ConvexHull(compressed_vertices)
+                except Exception as err:
+                    print("QHull type error: " + str(err))
+                    print("matrix to compute qhull:",compressed_vertices)
+                    return False, False, False
                 
                 
 #        print 'hull ', hull.vertices
@@ -328,7 +331,7 @@ class ComputationalDynamics:
         totForce[0] += extForce[0]
         totForce[1] += extForce[1]
         totForce[2] += extForce[2]
-        print grav, extForce, totForce
+        #print grav, extForce, totForce
 
         torque = -np.cross(comWorldFrame, np.transpose(totForce))
         A = np.zeros((6,0))
@@ -336,32 +339,16 @@ class ComputationalDynamics:
         print 'stanceIndex',stanceIndex
         for j in stanceIndex:
             j = int(j)
-            print 'index in lp ',j
+            #print 'index in lp ',j
             r = contactsPosWF[j,:]
             GraspMat = self.getGraspMatrix(r)
             A = np.hstack((A, GraspMat[:,0:3]))
             A = matrix(A)
             b = matrix(np.vstack([-totForce, np.transpose(torque)]).reshape((6)))
 
-        for j in range(0, 4):
-            contactsBF[j, :] = contactsPosWF[j, :] - comWorldFrame
-
-        foot_vel = np.vstack([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
-        q = self.kin.inverse_kin(contactsBF, foot_vel, self.robotName)
-        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians(self.robotName)
-
-
-        if (not isOutOfWorkspace):
-            G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)
-            G = matrix(G)
-            h = matrix(h)
-
-        else:
-            print 'contact is out of workspace'
-            LP_actuation_polygons = [None]
-            isIKoutOfWorkSpace = True
-            G= [None]
-            h = [None]
+        G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)
+        G = matrix(G)
+        h = matrix(h)
 
         lp = p, G, h, A, b
         return p, G, h, A, b, isIKoutOfWorkSpace, LP_actuation_polygons

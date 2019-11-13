@@ -5,10 +5,12 @@ Created on Tue Jun 12 10:54:31 2018
 @author: Romeo Orsolino
 """
 
-
 import numpy as np
 
+from context import jet_leg
+
 from numpy import array
+from numpy.linalg import norm
 from jet_leg.plotting.plotting_tools import Plotter
 
 from jet_leg.maths.math_tools import Math
@@ -18,493 +20,166 @@ from jet_leg.maths.iterative_projection_parameters import IterativeProjectionPar
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import random
-        
+
 plt.close('all')
 math = Math()
 
-# number of contacts
-nc = 3
+print ("''' ONLY_FRICTION, 3 CONTACTS'''")
+
 # number of generators, i.e. rays used to linearize the friction cone
 ng = 4
 
 useVariableJacobian = False
-# number of decision variables of the problem
-n = nc*6
-
-''' Set robot's name'''
-robot_name = 'anymal'
 
 ''' parameters to be tuned'''
+g = 9.81
 total_mass = 85.
 mu = 0.8
-    
-axisZ= array([[0.0], [0.0], [1.0]])
 
-'''Here you can set the number of tests that you want to perform for every scenario'''
-number_of_tests = 100
+axisZ = array([[0.0], [0.0], [1.0]])
+
+comp_dyn = ComputationalDynamics('anymal')
+
+number_of_tests = 10
 onlyFrictionTests3contacts = np.zeros((number_of_tests))
-onlyFrictionTests4contacts = np.zeros((number_of_tests))  
+onlyFrictionTests4contacts = np.zeros((number_of_tests))
 onlyActuationTests3contacts = np.zeros((number_of_tests))
-onlyActuationTests4contacts = np.zeros((number_of_tests))  
+onlyActuationTests4contacts = np.zeros((number_of_tests))
 frictionAndActuation3contacts = np.zeros((number_of_tests))
-frictionAndActuation4contacts = np.zeros((number_of_tests))  
-
-comp_dyn = ComputationalDynamics(robot_name)
+frictionAndActuation4contacts = np.zeros((number_of_tests))
 
 params = IterativeProjectionParameters()
 
+
+def perform_statistics(number_of_tests, number_of_contacts, _constraint_mode):
+    computation_times = np.zeros((number_of_tests))
+    params.setConstraintModes(constraint_mode_IP)
+    for iter in range(0, number_of_tests):
+
+        ''' random normals '''
+        randRoll = np.random.normal(0.0, 0.2)
+        randPitch = np.random.normal(0.0, 0.2)
+        randYaw = np.random.normal(0.0, 0.2)
+        n1 = np.transpose(np.transpose(math.rpyToRot(randRoll, randPitch, randYaw)).dot(axisZ))
+        randRoll = np.random.normal(0.0, 0.2)
+        randPitch = np.random.normal(0.0, 0.2)
+        randYaw = np.random.normal(0.0, 0.2)
+        n2 = np.transpose(np.transpose(math.rpyToRot(randRoll, randPitch, randYaw)).dot(axisZ))
+        randRoll = np.random.normal(0.0, 0.2)
+        randPitch = np.random.normal(0.0, 0.2)
+        randYaw = np.random.normal(0.0, 0.2)
+        n3 = np.transpose(np.transpose(math.rpyToRot(randRoll, randPitch, randYaw)).dot(axisZ))
+        randRoll = np.random.normal(0.0, 0.2)
+        randPitch = np.random.normal(0.0, 0.2)
+        randYaw = np.random.normal(0.0, 0.2)
+        n4 = np.transpose(np.transpose(math.rpyToRot(randRoll, randPitch, randYaw)).dot(axisZ))
+        normals = np.vstack([n1, n2, n3, n4])
+
+        """ contact points """
+        sigma = 0.05  # mean and standard deviation
+        randX = np.random.normal(0.3, sigma)
+        randY = np.random.normal(0.2, sigma)
+        randZ = np.random.normal(-0.5, sigma)
+        LF_foot = np.array([randX, randY, randZ])
+        randX = np.random.normal(0.3, sigma)
+        randY = np.random.normal(-0.2, sigma)
+        randZ = np.random.normal(-0.5, sigma)
+        RF_foot = np.array([randX, randY, randZ])
+        randX = np.random.normal(-0.3, sigma)
+        randY = np.random.normal(0.2, sigma)
+        randZ = np.random.normal(-0.5, sigma)
+        LH_foot = np.array([randX, randY, randZ])
+        randX = np.random.normal(-0.3, sigma)
+        randY = np.random.normal(-0.2, sigma)
+        randZ = np.random.normal(-0.5, sigma)
+        RH_foot = np.array([randX, randY, randZ])
+        contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+        #    print contacts
+        #    contacts = contactsToStack[0:nc, :]
+
+        LF_tau_lim = [80.0, 100.0, 100.0]
+        RF_tau_lim = [80.0, 100.0, 100.0]
+        LH_tau_lim = [80.0, 100.0, 100.0]
+        RH_tau_lim = [80.0, 100.0, 100.0]
+        torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+        comWF = np.array([0.0, 0.0, 0.0])
+
+        ''' compute iterative projection '''
+        stanceLegs = [1, 1, 1, 1]
+        if number_of_contacts is 3:
+            randomSwingLeg = random.randint(0, 3)
+            stanceLegs[randomSwingLeg] = 0
+            print('swing leg is', randomSwingLeg)
+
+        params.setContactsPosWF(contacts)
+        params.setCoMPosWF(comWF)
+        params.setTorqueLims(torque_limits)
+        params.setActiveContacts(stanceLegs)
+        params.setConstraintModes(constraint_mode_IP)
+        params.setContactNormals(normals)
+        params.setFrictionCoefficient(mu)
+        params.setNumberOfFrictionConesEdges(ng)
+        params.setTotalMass(total_mass)
+        #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
+        IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
+        comp_time = comp_time * 1000.0
+
+        print comp_time
+        computation_times[iter] = comp_time
+    return computation_times
+
+
 '''ONLY FRICTION'''
-for iter in range(0,number_of_tests):
+# ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+constraint_mode_IP = ['ONLY_FRICTION',
+                      'ONLY_FRICTION',
+                      'ONLY_FRICTION',
+                      'ONLY_FRICTION']
+contacts_number = 3
+onlyFrictionTests3contacts = perform_statistics(number_of_tests, contacts_number, constraint_mode_IP)
 
-    ''' random normals '''
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n4 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3, n4])
+print ("''' ONLY_FRICTION, 4 CONTACTS'''")
+# ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
+constraint_mode_IP = ['ONLY_FRICTION',
+                      'ONLY_FRICTION',
+                      'ONLY_FRICTION',
+                      'ONLY_FRICTION']
+contacts_number = 4
+onlyFrictionTests4contacts = perform_statistics(number_of_tests, contacts_number, constraint_mode_IP)
 
-    """ contact points """
-    sigma = 0.05 # mean and standard deviation
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.45, sigma)
-    LF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.45, sigma)
-    RF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.45, sigma)
-    LH_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.45, sigma)
-    RH_foot = np.array([randX, randY, randZ])
-    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-    #    print contacts
-    #    contacts = contactsToStack[0:nc, :]
-
-    LF_tau_lim = [80.0, 100.0, 100.0]
-    RF_tau_lim = [80.0, 100.0, 100.0]
-    LH_tau_lim = [80.0, 100.0, 100.0]
-    RH_tau_lim = [80.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-    comWF = np.array([0.0,0.0,0.0])
-
-    # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-    constraint_mode_IP = ['ONLY_FRICTION',
-                          'ONLY_FRICTION',
-                          'ONLY_FRICTION',
-                          'ONLY_FRICTION']
-
-    ''' compute iterative projection '''
-    stanceLegs = [1 ,1, 1, 1]
-    randomSwingLeg = random.randint(0,3)
-    #    print 'Swing leg', randomSwingLeg
-    #stanceLegs[randomSwingLeg] = 0
-
-    params.setContactsPosWF(contacts)
-    params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
-    params.setActiveContacts(stanceLegs)
-    params.setConstraintModes(constraint_mode_IP)
-    params.setContactNormals(normals)
-    params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
-    params.setTotalMass(total_mass)
-    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
-
-    #comp_dyn.check_equilibrium(params)
-    comp_time = comp_time * 1000.0
-
-    print 'check stability done'
-    onlyFrictionTests3contacts[iter] = comp_time
-
-nc = 4
-comWF = np.array([0.0, 0.0, 0.0])
-
-for iter in range(0,number_of_tests):
-
-    # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
-    constraint_mode_IP = ['ONLY_FRICTION',
-                          'ONLY_FRICTION',
-                          'ONLY_FRICTION',
-                          'ONLY_FRICTION']
-    
-    ''' random normals '''    
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n4 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3, n4])
-    
-    """ contact points """
-    sigma = 0.05 # mean and standard deviation
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LH_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RH_foot = np.array([randX, randY, randZ])
-    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-
-    LF_tau_lim = [80.0, 100.0, 100.0]
-    RF_tau_lim = [80.0, 100.0, 100.0]
-    LH_tau_lim = [80.0, 100.0, 100.0]
-    RH_tau_lim = [80.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-    comWF = np.array([0.0,0.0,0.0])
-        
-    stanceLegs = [1 ,1, 1, 1]
-
-    ''' compute iterative projection '''
-    params.setContactsPosWF(contacts)
-    params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
-    params.setActiveContacts(stanceLegs)
-    params.setConstraintModes(constraint_mode_IP)
-    params.setContactNormals(normals)
-    params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
-    params.setTotalMass(total_mass)
-    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
-#    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
-    comp_time = comp_time * 1000.0
-    print 'IP execution time is ',comp_time, 'ms'
-    onlyFrictionTests4contacts[iter] = comp_time
-
-'''ONLY ACTUATION'''
+print ("''' ONLY ACTUATION, 3 CONTACTS'''")
 
 constraint_mode_IP = ['ONLY_ACTUATION',
                       'ONLY_ACTUATION',
                       'ONLY_ACTUATION',
                       'ONLY_ACTUATION']
-params.setConstraintModes(constraint_mode_IP)
+contacts_number = 3
+onlyActuationTests3contacts = perform_statistics(number_of_tests, contacts_number, constraint_mode_IP)
 
-for iter in range(0,number_of_tests):
-    
-    ''' random normals '''    
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3])
-    
-    """ contact points """
-    sigma = 0.05 # mean and standard deviation
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LH_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RH_foot = np.array([randX, randY, randZ])
-    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-#    print contacts
-#    contacts = contactsToStack[0:nc, :]
+print ("''' ONLY ACTUATION, 4 CONTACTS'''")
+constraint_mode_IP = ['ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION']
+contacts_number = 4
+onlyActuationTests4contacts = perform_statistics(number_of_tests, contacts_number, constraint_mode_IP)
 
-    LF_tau_lim = [80.0, 100.0, 100.0]
-    RF_tau_lim = [80.0, 100.0, 100.0]
-    LH_tau_lim = [80.0, 100.0, 100.0]
-    RH_tau_lim = [80.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-    comWF = np.array([0.0,0.0,0.0])
-    
-    ''' compute iterative projection '''
-    stanceLegs = [1 ,1, 1, 1]
-    randomSwingLeg = random.randint(0,3)
-    #    print 'Swing leg', randomSwingLeg
-    stanceLegs[randomSwingLeg] = 0
-
-    params.setContactsPosWF(contacts)
-    params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
-    params.setActiveContacts(stanceLegs)
-    params.setConstraintModes(constraint_mode_IP)
-    params.setContactNormals(normals)
-    params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
-    params.setTotalMass(total_mass)
-    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
-    comp_time = comp_time * 1000.0
-    
-    print 'IP execution time is ',comp_time, 'ms'
-    onlyActuationTests3contacts[iter] = comp_time
-
-nc = 4
-comWF = np.array([0.0, 0.0, 0.0])
-
-for iter in range(0,number_of_tests):
-    
-    ''' random normals '''    
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n4 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3, n4])
-    
-    """ contact points """
-    sigma = 0.05 # mean and standard deviation
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LH_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RH_foot = np.array([randX, randY, randZ])
-    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-#    print contacts
-
-    LF_tau_lim = [80.0, 100.0, 100.0]
-    RF_tau_lim = [80.0, 100.0, 100.0]
-    LH_tau_lim = [80.0, 100.0, 100.0]
-    RH_tau_lim = [80.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-    comWF = np.array([0.0,0.0,0.0])
-        
-    stanceLegs = [1 ,1, 1, 1]
-
-    ''' compute iterative projection '''
-    params.setContactsPosWF(contacts)
-    params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
-    params.setActiveContacts(stanceLegs)
-    params.setConstraintModes(constraint_mode_IP)
-    params.setContactNormals(normals)
-    params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
-    params.setTotalMass(total_mass)
-    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
-#    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
-    comp_time = comp_time * 1000.0
-    print 'IP execution time is ',comp_time, 'ms'
-    onlyActuationTests4contacts[iter] = comp_time
-    
-    
-'''FRICTION_AND_ACTUATION'''
+print ("''' FRICTION AND ACTUATION, 3 CONTACTS'''")
 
 constraint_mode_IP = ['FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION']
-                      
-params.setConstraintModes(constraint_mode_IP)
+contacts_number = 3
+frictionAndActuation3contacts = perform_statistics(number_of_tests, contacts_number, constraint_mode_IP)
 
-for iter in range(0,number_of_tests):
-    
-    ''' random normals '''    
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3])
-    
-    """ contact points """
-    sigma = 0.05 # mean and standard deviation
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LH_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RH_foot = np.array([randX, randY, randZ])
-    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-#    print contacts
-#    contacts = contactsToStack[0:nc, :]
-
-    LF_tau_lim = [80.0, 100.0, 100.0]
-    RF_tau_lim = [80.0, 100.0, 100.0]
-    LH_tau_lim = [80.0, 100.0, 100.0]
-    RH_tau_lim = [80.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-    comWF = np.array([0.0,0.0,0.0])
-    
-    ''' compute iterative projection '''
-    stanceLegs = [1 ,1, 1, 1]
-    randomSwingLeg = random.randint(0,3)
-    #    print 'Swing leg', randomSwingLeg
-    stanceLegs[randomSwingLeg] = 0
-
-    params.setContactsPosWF(contacts)
-    params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
-    params.setActiveContacts(stanceLegs)
-    params.setConstraintModes(constraint_mode_IP)
-    params.setContactNormals(normals)
-    params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
-    params.setTotalMass(total_mass)
-    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
-    comp_time = comp_time * 1000.0
-    
-    print 'IP execution time is ',comp_time, 'ms'
-    frictionAndActuation3contacts[iter] = comp_time
-
-nc = 4
-comWF = np.array([0.0, 0.0, 0.0])
-
-for iter in range(0,number_of_tests):
-    
-    ''' random normals '''    
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n1 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n2 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    randRoll = np.random.normal(0.0, 0.2)
-    randPitch = np.random.normal(0.0, 0.2)
-    randYaw = np.random.normal(0.0, 0.2)
-    n4 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3, n4])
-    
-    """ contact points """
-    sigma = 0.05 # mean and standard deviation
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RF_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    LH_foot = np.array([randX, randY, randZ])
-    randX = np.random.normal(-0.3, sigma)
-    randY = np.random.normal(-0.2, sigma)
-    randZ = np.random.normal(-0.5, sigma)
-    RH_foot = np.array([randX, randY, randZ])
-    contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-#    print contacts
-    LF_tau_lim = [100.0, 100.0, 100.0]
-    RF_tau_lim = [100.0, 100.0, 100.0]
-    LH_tau_lim = [100.0, 100.0, 100.0]
-    RH_tau_lim = [100.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim, ])
-
-    comWF = np.array([0.0,0.0,0.0])
-        
-    stanceLegs = [1 ,1, 1, 1]
-
-    ''' compute iterative projection '''
-    params.setContactsPosWF(contacts)
-    params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
-    params.setActiveContacts(stanceLegs)
-    params.setConstraintModes(constraint_mode_IP)
-    params.setContactNormals(normals)
-    params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
-    params.setTotalMass(total_mass)
-    #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
-    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
-#    IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(constraint_mode_IP, stanceLegs, contacts, normals, trunk_mass, ng, mu, comWF, torque_limits)
-    comp_time = comp_time * 1000.0
-    print 'IP execution time is ',comp_time, 'ms'
-    frictionAndActuation4contacts[iter] = comp_time
+print ("''' FRICTION AND ACTUATION, 4 CONTACTS'''")
+constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION']
+contacts_number = 4
+frictionAndActuation4contacts = perform_statistics(number_of_tests, contacts_number, constraint_mode_IP)
 
 maximum_time = np.zeros((6,1))
 maximum_time[0] = max(onlyFrictionTests3contacts)
