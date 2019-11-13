@@ -40,9 +40,9 @@ class KinematicsInterface:
             q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel)
             return q
         elif self.robotName == 'hyqreal':
-            q, jac = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
+            q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
             return q
         elif self.robotName == 'anymal':
-            q, jac = self.anymalKin.fixedBaseInverseKinematics(contactsBF)
+            q = self.anymalKin.fixedBaseInverseKinematics(contactsBF)
             return q
 

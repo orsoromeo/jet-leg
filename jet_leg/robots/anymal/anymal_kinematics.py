@@ -18,6 +18,7 @@ class anymalKinematics():
         self.urdf_foot_name_lh = 'LH_FOOT'
         self.urdf_foot_name_rf = 'RF_FOOT'
         self.urdf_foot_name_rh = 'RH_FOOT'
+        self.ik_success = False
 
     def getBlockIndex(self, frame_name):
         if frame_name == self.urdf_foot_name_lf:
@@ -55,14 +56,18 @@ class anymalKinematics():
             e[0] = foot_pos[[0]] - foot_pos_des[0]
             e[1] = foot_pos[[1]] - foot_pos_des[1]
             e[2] = foot_pos[[2]] - foot_pos_des[2]
+
+            J = pinocchio.frameJacobian(self.model, self.data, q, frame_id)
+            J_lin = J[:3, :]
+
             if np.linalg.norm(e) < eps:
                 #print("IK Convergence achieved!")
+                IKsuccess = True
                 break
             if i >= IT_MAX:
                 print("\n Warning: the iterative algorithm has not reached convergence to the desired precision. Error is: ", np.linalg.norm(e))
+                IKsuccess = False
                 break
-            J = pinocchio.frameJacobian(self.model, self.data, q, frame_id)
-            J_lin = J[:3, :]
             #print J_lin
             v = - np.linalg.pinv(J_lin) * e
             q = pinocchio.integrate(self.model, q, v * DT)
@@ -71,28 +76,39 @@ class anymalKinematics():
 
         q_leg = q[blockIdx:blockIdx+3]
         J_leg = J_lin[:,blockIdx:blockIdx+3]
-        return q_leg, J_leg, err
+        return q_leg, J_leg, err, IKsuccess
 
     def fixedBaseInverseKinematics(self, feetPosDes):
+
+        self.LF_foot_jac = []
+        self.LH_foot_jac = []
+        self.RF_foot_jac = []
+        self.RH_foot_jac = []
+        leg_ik_success = np.zeros((4))
+
         f_p_des = np.array(feetPosDes[0,:]).T
-        q_LF, self.LF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_lf)
+        q_LF, self.LF_foot_jac, err, leg_ik_success[0] = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_lf)
 
         f_p_des = np.array(feetPosDes[2, :]).T
-        q_LH, self.LH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_lh)
+        q_LH, self.LH_foot_jac, err, leg_ik_success[2] = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_lh)
 
         f_p_des = np.array(feetPosDes[1, :]).T
-        q_RF, self.RF_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_rf)
+        q_RF, self.RF_foot_jac, err, leg_ik_success[1] = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_rf)
 
         f_p_des = np.array(feetPosDes[3, :]).T
-        q_RH, self.RH_foot_jac, err = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_rh)
+        q_RH, self.RH_foot_jac, err, leg_ik_success[3] = self.footInverseKinematicsFixedBase(f_p_des, self.urdf_foot_name_rh)
+
+        self.ik_success =  bool(leg_ik_success[0] and leg_ik_success[1] and leg_ik_success[2] and leg_ik_success[3])
+
+        if self.ik_success is False:
+            print('Warning, IK failed. Jacobian is singular')
 
         '''please NOTICE here the alphabetical order of the legs in the vector q: LF -> LH -> RF -> RH '''
         q = np.vstack([q_LF, q_LH, q_RF, q_RH])
-        legJacs = np.vstack([self.LF_foot_jac, self.LH_foot_jac, self.RF_foot_jac, self.RH_foot_jac])
-        return q, legJacs
+
+        return q
 
     def getLegJacobians(self):
-        isOutOfWS = False
-        #print ("print in get leg jac anymal",self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS)
+        isOutOfWS = not self.ik_success
         return self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS
 

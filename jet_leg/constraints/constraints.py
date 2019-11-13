@@ -23,7 +23,7 @@ class Constraints:
     def compute_actuation_constraints(self, contactIterator, torque_limits):
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
-        print J_LF, J_RF, J_LH, J_RH
+        #print J_LF, J_RF, J_LH, J_RH
         if isOutOfWorkspace:
             C1 = np.zeros((0,0))
             d1 = np.zeros((1,0))

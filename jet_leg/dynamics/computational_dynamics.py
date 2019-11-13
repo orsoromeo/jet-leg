@@ -168,19 +168,22 @@ class ComputationalDynamics:
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
         proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
 
-        vertices_WF = pypoman.project_polytope(proj, self.ineq, self.eq, method='bretl', max_iter=500, init_angle=0.0)
-        if vertices_WF is False:
-            print 'Project polytope function is False'
+        if isIKoutOfWorkSpace:
             return False, False, False
-
-        else:            
-            compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
-            try:
-                hull = ConvexHull(compressed_vertices)
-            except Exception as err:
-                print("QHull type error: " + str(err))
-                print("matrix to compute qhull:",compressed_vertices)               
+        else:
+            vertices_WF = pypoman.project_polytope(proj, self.ineq, self.eq, method='bretl', max_iter=500, init_angle=0.0)
+            if vertices_WF is False:
+                print 'Project polytope function is False'
                 return False, False, False
+
+            else:
+                compressed_vertices = np.compress([True, True], vertices_WF, axis=1)
+                try:
+                    hull = ConvexHull(compressed_vertices)
+                except Exception as err:
+                    print("QHull type error: " + str(err))
+                    print("matrix to compute qhull:",compressed_vertices)
+                    return False, False, False
                 
                 
 #        print 'hull ', hull.vertices
