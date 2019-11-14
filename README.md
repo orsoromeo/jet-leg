@@ -34,6 +34,7 @@ Python dependencies:
 - Pycddlib
 - Matplotlib
 - [Pypoman](https://github.com/stephane-caron/pypoman) for the manipulation of polyhedrical object
+- [Pinocchio](https://github.com/stack-of-tasks/pinocchio) 
 
 The above dependencies can be installed with the following commands:
 ```
@@ -41,7 +42,6 @@ sudo apt-get install cython libglpk-dev python python-dev python-pip python-scip
 CVXOPT_BUILD_GLPK=1 pip install cvxopt --user
 pip install pycddlib --user
 pip install pypoman
-pip install ikpy
 ```
 You can remove all ``--user`` arguments to install these Python modules system-wide.
 
@@ -67,13 +67,12 @@ python setup.py install --user
 -->
 
 ## Testing the library
-After completing the installation navigate to the [examples folder](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/examples):
+After completing the installation navigate to the [examples](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/examples) folder:
 
-- [single_iterative_projection_example.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/single_iterative_projection_example.py) can be used to see how to set up an iterative projection problem in order to compute the friction/actuation/feasible region;
-
-Or to the [figures' code folder](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/figures_code):
-- [plotIPstatistics.py](https://github.com/orsoromeo/jet-leg/blob/master/figures_code/plotIPstatistics.py) can be used to generate some statistics about the computation time of the IP algorithm for random feet positions (see Fig. 6 of the [preprint](https://arxiv.org/abs/1903.07999#)) 
-- [plotInstantaneousActuationRegionVariableMass.py](https://github.com/orsoromeo/jet-leg/blob/master/figures_code/plotInstantaneousActuationRegionVariableMass.py) can be used to generate a plot that shows how the feasible regions can changes depending on the gravitational force acting on the robot's center of mass (see Fig. 8 of the [preprint](https://arxiv.org/abs/1903.07999#)) 
+- [single_iterative_projection_example.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/iterative_projection/single_iterative_projection_example.py) can be used to see how to set up an iterative projection problem in order to compute the friction/actuation/feasible region;
+- [check_stability_lp_example.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/static_equilibrium_check/check_stability_lp_example.py) can be used to quickly check whether the given robot configuration is statically stable or not (without explicitly computing the feasible region);
+- [plotIPstatistics.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/figures_code/plotIPstatistics.py) can be used to generate some statistics about the computation time of the IP algorithm for random feet positions (see Fig. 6 of the [preprint](https://arxiv.org/abs/1903.07999#));
+- [plotInstantaneousActuationRegionVariableMass.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/figures_code/plotInstantaneousActuationRegionVariableMass.py) can be used to generate a plot that shows how the feasible regions can changes depending on the gravitational force acting on the robot's center of mass (see Fig. 8 of the [preprint](https://arxiv.org/abs/1903.07999#)) 
 
 ## Troubleshooting
 
