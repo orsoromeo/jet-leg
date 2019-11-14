@@ -238,7 +238,6 @@ class Constraints:
         constraint_mode = params.getConstraintModes()
 
         tau_lim = params.getTorqueLims()
-        total_mass = params.getTotalMass()
         ng = params.getNumberOfFrictionConesEdges()
         friction_coeff = params.getFrictionCoefficient()
         normals = params.getNormals()
@@ -251,7 +250,7 @@ class Constraints:
         #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 
-        q = self.kin.inverse_kin(contactsBF, foot_vel)
+        self.kin.inverse_kin(contactsBF, foot_vel)
 
         #print ("q is ",q)
 

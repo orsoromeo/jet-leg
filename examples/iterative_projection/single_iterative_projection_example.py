@@ -174,7 +174,7 @@ for j in range(0,nc): # this will only show the contact positions and normals of
     idx = int(stanceID[j])
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
     h1 = plt.plot(contactsWF[idx,0],contactsWF[idx,1],'ko',markersize=15, label='stance feet')
-h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Iterative Projection')
+h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Support Region')
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
 if isConfigurationStable:

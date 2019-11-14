@@ -58,7 +58,7 @@ mu = 0.5
 stanceFeet = [1, 1, 1, 1]
 
 randomSwingLeg = random.randint(0, 3)
-tripleStance = True  # if you want you can define a swing leg using this variable
+tripleStance = False  # if you want you can define a swing leg using this variable
 if tripleStance:
     print 'Swing leg', randomSwingLeg
     stanceFeet[randomSwingLeg] = 0
@@ -87,12 +87,11 @@ torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
 extForceW = np.array([0.0, 0.0, 0.0])  # units are Nm
 
-comp_dyn = ComputationalDynamics()
+comp_dyn = ComputationalDynamics('anymal')
 
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
-params.setRobotName('hyq')
 params.setContactsPosWF(contacts)
 params.setCoMPosWF(comWF)
 params.setTorqueLims(torque_limits)
@@ -109,9 +108,7 @@ params.externalForceWF = extForceW  # params.externalForceWF is actually used an
 # print actuation_polygons
 
 '''I now check whether the given CoM configuration is stable or not'''
-isConfigurationStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
-print isConfigurationStable
-print 'contact forces', contactForces
+C, d, isIKoutOfWorkSpace, forcePolytopes = comp_dyn.constr.getInequalities(params)
 
 '''Plotting the contact points in the 3D figure'''
 fig = plt.figure()
@@ -129,21 +126,6 @@ for j in range(0,
                nc):  # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ax.scatter(contacts[idx, 0], contacts[idx, 1], contacts[idx, 2], c='b', s=100)
-    '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
-    if isConfigurationStable:
-        ax.scatter(comWF[0], comWF[1], comWF[2], c='g', s=100)
-        grf = contactForces[j * 3:j * 3 + 3]
-        fz_tot += grf[2]
-
-        ''' draw the set contact forces that respects the constraints'''
-        b = Arrow3D([contacts[idx, 0], contacts[idx, 0] + grf[0] / force_scaling_factor],
-                    [contacts[idx, 1], contacts[idx, 1] + grf[1] / force_scaling_factor],
-                    [contacts[idx, 2], contacts[idx, 2] + grf[2] / force_scaling_factor], mutation_scale=20, lw=3,
-                    arrowstyle="-|>",
-                    color="b")
-        ax.add_artist(b)
-    else:
-        ax.scatter(comWF[0], comWF[1], comWF[2], c='r', s=100)
 
     ''' draw 3D arrows corresponding to contact normals'''
     a = Arrow3D([contacts[idx, 0], contacts[idx, 0] + normals[idx, 0] / 10],
