@@ -21,7 +21,7 @@ plt.close('all')
 math = Math()
 
 ''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
-robot_name = 'anymal'
+robot_name = 'hyq'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
 ng = 4
@@ -39,7 +39,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([.03, 0.05, 0.0])
+comWF = np.array([.0, 0.0, 0.0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
@@ -50,7 +50,6 @@ RH_foot = np.array([-0.3, -0.2, -0.4])
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
 ''' parameters to be tuned'''
-trunk_mass = 45.
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
@@ -72,17 +71,6 @@ n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LH
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # RH
 normals = np.vstack([n1, n2, n3, n4])
 
-''' torque limits for each leg (this code assumes a hyq-like design, i.e. three joints per leg)
-HAA = Hip Abduction Adduction
-HFE = Hip Flextion Extension
-KFE = Knee Flextion Extension
-'''
-LF_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
-RF_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
-LH_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
-RH_tau_lim = [40.0, 40.0, 40.0] # HAA, HFE, KFE
-torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
 extForceW = np.array([0.0, 0.0, 0.0]) # units are Nm
 
@@ -94,13 +82,13 @@ params = IterativeProjectionParameters()
 
 params.setContactsPosWF(contactsWF)
 params.setCoMPosWF(comWF)
-params.setTorqueLims(torque_limits)
+params.setTorqueLims(comp_dyn.robotModel.robotModel.torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTotalMass(trunk_mass)
+params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
 params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
 
 ''' compute iterative projection 

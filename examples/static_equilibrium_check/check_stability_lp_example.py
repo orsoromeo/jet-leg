@@ -97,13 +97,13 @@ params = IterativeProjectionParameters()
 
 params.setContactsPosWF(contacts)
 params.setCoMPosWF(comWF)
-params.setTorqueLims(torque_limits)
+params.setTorqueLims(comp_dyn.robotModel.robotModel.torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
-params.setTotalMass(trunk_mass)
+params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
 params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
 
 # print "Inequalities", comp_dyn.ineq

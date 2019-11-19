@@ -11,6 +11,7 @@ from numpy import array, dot, eye, hstack, vstack, zeros
 from scipy.spatial import ConvexHull
 from jet_leg.constraints.constraints import Constraints
 from jet_leg.kinematics.kinematics_interface import KinematicsInterface
+from jet_leg.robots.robot_model_interface import RobotModelInterface
 from jet_leg.maths.math_tools import Math
 from jet_leg.maths.geometry import Geometry
 from cvxopt import matrix, solvers
@@ -23,6 +24,7 @@ class ComputationalDynamics:
         self.geom = Geometry()
         self.math = Math()
         self.kin = KinematicsInterface(self.robotName)
+        self.robotModel = RobotModelInterface(self.robotName)
         self.constr = Constraints(self.kin)
         self.ineq = ([],[])
         self.eq = ([],[])
