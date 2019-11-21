@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from jet_leg.robot.anymal_kinematics import anymalKinematics
+from jet_leg.robots.anymal.anymal_kinematics import anymalKinematics
 from pinocchio.utils import *
 
 import time
@@ -15,7 +15,7 @@ print(feet_pos_des)
 
 kin = anymalKinematics()
 start_time = time.time()
-q, legJacobians = kin.anymalFixedBaseInverseKinematics(feet_pos_des)
+q = kin.fixedBaseInverseKinematics(feet_pos_des)
 print('total time is ',time.time()-start_time)
 print('q is:', q.T)
 print('\nresult: %s' % q.flatten().tolist())
