@@ -28,10 +28,9 @@ from std_msgs.msg import Float32, Header
 from std_srvs.srv import Empty
 from termcolor import colored
 
-from context import jet_leg 
-from jet_leg.computational_dynamics import ComputationalDynamics
-from jet_leg.computational_geometry import ComputationalGeometry
-from jet_leg.math_tools import Math
+from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.maths.computational_geometry import ComputationalGeometry
+from jet_leg.maths.math_tools import Math
 
 
 stderr = sys.stderr
