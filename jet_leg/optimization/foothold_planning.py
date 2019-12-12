@@ -30,12 +30,12 @@ from std_srvs.srv import Empty
 from termcolor import colored
 
 #from context import jet_leg 
-from computational_dynamics import ComputationalDynamics
-from computational_geometry import ComputationalGeometry
-from foothold_planning_interface import FootholdPlanningInterface
-from math_tools import Math
-from dog_interface import DogInterface
-from rigid_body_dynamics import RigidBodyDynamics
+from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.maths.computational_geometry import ComputationalGeometry
+from jet_leg.optimization.foothold_planning_interface import FootholdPlanningInterface
+from jet_leg.maths.math_tools import Math
+from jet_leg.robots.dog_interface import DogInterface
+from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 
 
 stderr = sys.stderr
@@ -44,9 +44,10 @@ sys.stderr = stderr
 
 
 class FootHoldPlanning:
-    def __init__(self):      
+    def __init__(self, robot_name):
+        self.robotName = robot_name
         self.compGeo = ComputationalGeometry()
-        self.compDyn = ComputationalDynamics()
+        self.compDyn = ComputationalDynamics(self.robotName)
         self.footPlanning = FootholdPlanningInterface()
         self.math = Math()
         self.dog = DogInterface()
