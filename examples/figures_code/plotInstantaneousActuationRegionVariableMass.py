@@ -12,9 +12,9 @@ from context import jet_leg
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
 from numpy.linalg import norm
 
-from jet_leg.math_tools import Math
-from jet_leg.computational_dynamics import ComputationalDynamics
-from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
+from jet_leg.maths.math_tools import Math
+from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.maths.iterative_projection_parameters import IterativeProjectionParameters
 
 import matplotlib as mpl
 import matplotlib.colors as colors
@@ -24,8 +24,6 @@ from matplotlib.patches import Circle, Wedge, Polygon
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 from matplotlib.collections import PatchCollection
-
-from jet_leg.arrow3D import Arrow3D
 
 def set_axes_radius(ax, origin, radius):
     ax.set_xlim3d([origin[0] - radius, origin[0] + radius])
@@ -60,10 +58,10 @@ ng = 4
 
 # ONLY_ACTUATION or ONLY_FRICTION or FRICTION_AND_ACTUATION
 #constraint_mode = 'ONLY_ACTUATION'
-constraint_mode = ['ONLY_ACTUATION',
-                   'ONLY_ACTUATION',
-                   'ONLY_ACTUATION',
-                   'ONLY_ACTUATION']
+constraint_mode = ['FRICTION_AND_ACTUATION',
+                   'FRICTION_AND_ACTUATION',
+                   'FRICTION_AND_ACTUATION',
+                   'FRICTION_AND_ACTUATION']
                    
 useVariableJacobian = False
 
@@ -110,7 +108,7 @@ RF_tau_lim = [50.0, 100.0, 100.0]
 LH_tau_lim = [50.0, 100.0, 100.0]
 RH_tau_lim = [50.0, 100.0, 100.0]
 torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-comp_dyn = ComputationalDynamics()
+comp_dyn = ComputationalDynamics('hyq')
 
 ''' Add 2D figure '''
 mpl.rcParams['text.usetex'] = True
@@ -133,8 +131,10 @@ params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 
+legends_to_show = [0,1,-2,-1]
 
-for total_mass in range(140, 40, -10):
+mass_range = range(140, 40, -10)
+for total_mass in mass_range:
     params.setTotalMass(total_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     point = np.vstack([IP_points])
@@ -144,7 +144,12 @@ for total_mass in range(140, 40, -10):
     #plotter.plot_polygon(np.transpose(IP_points), x[0],'trunk mass ' + str(trunk_mass*10) + ' N')    
     x = np.hstack([point[:,0], point[0,0]])
     y = np.hstack([point[:,1], point[0,1]])
-    h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(total_mass*10) + ' N')
+    if total_mass is 140 or total_mass is 130 or total_mass is 50 or total_mass is 60:
+        h = plt.plot(x,y, color = colorVal, linewidth=5., label = str(total_mass*10) + ' N')
+    elif total_mass is 110 or total_mass is 80:
+        h = plt.plot(x, y, color=colorVal, linewidth=5., label='$\dots$')
+    else:
+        h = plt.plot(x, y, color=colorVal, linewidth=5.)
 
 h1 = plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15, label='feet')
 constraint_mode = ['ONLY_FRICTION',
@@ -156,18 +161,26 @@ IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(p
 point = np.vstack([IP_points])
 x = np.hstack([point[:,0], point[0,0]])
 y = np.hstack([point[:,1], point[0,1]])
-h2 = plt.plot(x,y, color = 'blue', linestyle='dashed', linewidth=5., label = 'only friction')
+h2 = plt.plot(x,y, color = 'blue', linestyle='dashed', linewidth=5.,markersize=15, label = 'support region')
 
 plt.rc('font', family='serif', size=20)
 plt.grid()
-plt.xlabel("x [m]")
-plt.ylabel("y [m]")
-plt.legend(prop={'size': 20}, bbox_to_anchor=(1.1, 1.1))
-#plt.axis('equal')
-plt.axis([-1.25, 1.75, -1.45, 1.55])
-plt.show()
-fig.savefig('../../figs/IP_bretl/4contacts_only_actuation.pdf')
-fig.savefig('../../figs/IP_bretl/4contacts_only_actuation.png')
+plt.xlabel("x [m]",fontsize=25)
+plt.ylabel("y [m]",fontsize=25)
+plt.xticks(np.arange(-1, 1, step=0.1),fontsize=20)
+plt.yticks(np.arange(-0.4, 1., step=0.1),fontsize=20)
+plt.title("friction and actuation", fontsize = 25).set_position([.5, 1.01])
+ax = plt.subplot(111)
+chartBox = ax.get_position()
+ax.set_position([chartBox.x0+0.05, chartBox.y0+0.045, chartBox.width, chartBox.height])
+#plt.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
+
+plt.axis('equal')
+#plt.axis([-0.4, 0.6, -0.4, 1.])
+#ax.legend(loc='upper center',bbox_to_anchor=(0.75, 1.0))
+#plt.show()
+fig.savefig('../../figs/4contacts_friction_and_actuation.pdf')
+#plt.savefig('../../figs/4contacts_only_actuation.png')
 
 ''' Add 3D figure '''
 
@@ -265,9 +278,9 @@ plt.grid()
 ax.set_xlabel("x [m]")
 ax.set_ylabel("y [m]")
 ax.set_zlabel("z [m]")
-ax.legend(loc='upper right')
+#ax.legend(loc='upper right')
 ax.set_xlim3d([-0.6, 1.0])
 ax.set_ylim3d([-0.5, 1.1])
 ax.set_zlim3d([0.0, 1.6])
 plt.show()
-#fig.savefig('../../figs/IP_bretl/instantaneous_actuation_region_3contacts_3D.png')
+fig.savefig('../../figs/instantaneous_actuation_region_3contacts_3D.pdf')
