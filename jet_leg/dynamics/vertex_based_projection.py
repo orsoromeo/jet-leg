@@ -9,9 +9,9 @@ Created on Thu Jun  7 22:14:22 2018
 import time
 import numpy as np
 import scipy.spatial
-from math_tools import Math
-from constraints import Constraints
-from hyq_kinematics import HyQKinematics
+from jet_leg.maths.math_tools import Math
+from jet_leg.constraints.constraints import Constraints
+from jet_leg.kinematics.kinematics_interface import KinematicsInterface
 
 
 class VertexBasedProjection():
@@ -23,9 +23,7 @@ class VertexBasedProjection():
         for j in range(0,n_a):
             for i in range(0,n_b):
                 sum = np.vstack([sum, a[:,j] + b[:,i]])
-            
-    
-            
+
         return np.transpose(sum)   
     
     def convex_hull(self, input_matrix):#requires 6XN

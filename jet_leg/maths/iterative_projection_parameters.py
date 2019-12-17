@@ -57,6 +57,13 @@ class IterativeProjectionParameters:
                 
         self.actual_swing = 0
 
+    def computeContactsBF(self):
+        self.contactsBF = np.zeros((4, 3))
+        rpy = self.getOrientation()
+        for j in np.arange(0, 4):
+            j = int(j)
+            self.contactsBF[j,:] = np.add(np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (self.contactsWF[j, :] - self.comPositionWF)), self.comPositionBF)
+        return self.contactsBF
 
     def setContactsPosBF(self, contactsBF):
         self.contactsBF = contactsBF

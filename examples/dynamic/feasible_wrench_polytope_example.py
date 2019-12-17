@@ -12,6 +12,7 @@ from jet_leg.plotting.plotting_tools import Plotter
 import random
 from jet_leg.maths.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.dynamics.vertex_based_projection import VertexBasedProjection
 from jet_leg.maths.iterative_projection_parameters import IterativeProjectionParameters
 
 import matplotlib.pyplot as plt
@@ -19,23 +20,46 @@ from jet_leg.plotting.arrow3D import Arrow3D
         
 plt.close('all')
 math = Math()
+class FeasibleWrenchPolytope():
+    def __init__(self):
+        self.vProj = VertexBasedProjection()
 
-def compute_feasible_wrench_polytope_v_rep(forcePolygonsVertices):
+    def computeAngularPart(self, forcePolygonsVertices):
+        numberOfForcePolygons = np.size(forcePolygonsVertices, 0)
+        contactsBF = params.computeContactsBF().T
+        wrenchPolytopes = []
+        for i in np.arange(0, numberOfForcePolygons):
+            footPos = contactsBF[:,i]
+            currentPolytope = forcePolygonsVertices[i]
+            angularPart = np.zeros((3,8))
+            for j in np.arange(0,8):
+                linear = currentPolytope[:,j]
+                print "linear", linear
+                print "foot pos", footPos
+                angularPart[:,j] = np.cross(footPos,linear)
+                print "angular", angularPart
+            sixDpoly = np.vstack([currentPolytope, angularPart])
+            wrenchPolytopes.append(sixDpoly)
 
-    numberOfForcePolygons = np.size(forcePolygonsVertices, 0)
-    print "number of force polytopes", numberOfForcePolygons
-    i = 0
-    tmp_polygon = np.zeros((3,0))
-    print "tmp polygon size", np.size(tmp_polygon,1)
-    for polygon in forcePolygonsVertices:
-        for vertex in np.arange(0,8):
-            i += 1
-            print "v ", polygon[:,vertex]
-        tmp_polygon = polygon
+        return wrenchPolytopes
 
-    print "tot v: ",i
-    FWP = 0
-    return  FWP
+    def compute_feasible_wrench_polytope_v_rep(self, params, forcePolygonsVertices):
+
+        print "contacts BF",params.computeContactsBF()
+        wrenchPolytopes = self.computeAngularPart(forcePolygonsVertices)
+        numberOfForcePolygons = np.size(wrenchPolytopes, 0)
+        print "number of force polytopes", numberOfForcePolygons
+        tmpSum = wrenchPolytopes[0]
+        print "dimensionality of the polytopes:", np.size(tmpSum[:,0])
+        i = 0
+        for j in np.arange(0,numberOfForcePolygons-1):
+            nextPolygon = wrenchPolytopes[j+1]
+            tmpSum = self.vProj.minksum(tmpSum, nextPolygon)
+            print "tmpsm", np.shape(tmpSum)
+
+        currentPolygonSum = self.vProj.convex_hull(tmpSum)
+        print "tmpsm", np.shape(currentPolygonSum)
+        return  currentPolygonSum
 
 ''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
 robot_name = 'anymal'
@@ -56,7 +80,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([.0, 0.0, 0.0])
+comWF = np.array([.0, .0, .0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
@@ -111,17 +135,11 @@ params.externalForceWF = extForceW  # params.externalForceWF is actually used an
 '''I now check whether the given CoM configuration is stable or not'''
 C, d, isIKoutOfWorkSpace, forcePolytopes = comp_dyn.constr.getInequalities(params)
 
-#print "Inequalities", comp_dyn.ineq
-#print "actuation polygons"
-#print actuation_polygons
-
-'''I now check whether the given CoM configuration is stable or not'''
-isConfigurationStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
 print isIKoutOfWorkSpace
-print 'contact forces', contactForces
 print 'vertices', forcePolytopes
 
-compute_feasible_wrench_polytope_v_rep(forcePolytopes)
+fwp = FeasibleWrenchPolytope()
+fwp.compute_feasible_wrench_polytope_v_rep(params, forcePolytopes)
 
 
 '''Plotting the contact points in the 3D figure'''
