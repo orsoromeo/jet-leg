@@ -56,8 +56,7 @@ class Constraints:
             #print "V description: "
             #print actuation_polygons[contactIterator]
 
-        legForcePolytope = Polytope(C1, d1, actuation_polygons)
-        return legForcePolytope, isOutOfWorkspace
+        return C1, d1, actuation_polygons, isOutOfWorkspace
         
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
 
@@ -293,12 +292,17 @@ class Constraints:
                     Ctemp = np.zeros((0,0))
                     d_cone = np.zeros((0))
 
-                forcePolytopes.forcePolytopes[j] = Polytope(Ctemp, d_cone, leg_actuation_polygon)
+            currentLegForcePolytope = Polytope()
+            currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
+            currentLegForcePolytope.setVertices(leg_actuation_polygon[j])
+            print np.shape(currentLegForcePolytope.getVertices())
+            forcePolytopes.forcePolytope[j] = currentLegForcePolytope
                 
             C = block_diag(C, Ctemp)
             d = np.hstack([d, d_cone])
         
         if contactsNumber == 0:
             print 'contactsNumber is zero, there are no stance legs set! This might be because Gazebo is in pause.'
+            
         return C, d, isIKoutOfWorkSpace, forcePolytopes
     

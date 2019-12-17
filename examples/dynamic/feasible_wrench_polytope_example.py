@@ -62,7 +62,7 @@ contactsWF = np.vstack((LF_foot+comWF, RF_foot+comWF, LH_foot+comWF, RH_foot+com
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [0,1,1,1]
+stanceFeet = [1,1,1,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -103,7 +103,7 @@ C, d, isIKoutOfWorkSpace, forcePolytopes = comp_dyn.constr.getInequalities(param
 
 if not isIKoutOfWorkSpace:
     fwp = FeasibleWrenchPolytope()
-    FWP = fwp.computeFeasibleWrenchPolytopeVRep(params, C, d, forcePolytopes)
+    FWP = fwp.computeFeasibleWrenchPolytopeVRep(params, forcePolytopes)
     w_gi = fwp.computeAggregatedCentroidalWrench(params)
     '''I now check whether the given CoM configuration is dynamically stable or not (see "Feasible Wrench Polytope")'''
     start = time.time()

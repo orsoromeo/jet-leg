@@ -9,6 +9,7 @@ import numpy as np
 from jet_leg.dynamics.vertex_based_projection import VertexBasedProjection
 from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
 from scipy.spatial import HalfspaceIntersection
+from cvxopt import matrix
 
 class FeasibleWrenchPolytope():
     def __init__(self):
@@ -39,7 +40,8 @@ class FeasibleWrenchPolytope():
         return w_gi
 
     def computeAngularPart(self, fwp_params, forcePolygonsVertices):
-        contactsBF = fwp_params.computeContactsPosBF().T
+        print "compute ang part",np.shape(forcePolygonsVertices[0]),
+
         contactsWF = fwp_params.getContactsPosWF().T
         wrenchPolytopes = []
         stanceLegs = fwp_params.getStanceFeet()
@@ -48,29 +50,71 @@ class FeasibleWrenchPolytope():
         for i in range(0, contactsNumber):
             index = int(stanceIndex[i])
             footPosWF = contactsWF[:, index]
-            currentPolytope = forcePolygonsVertices[index]
-            angularPart = np.zeros((3, 8))
+            currentPolytope = np.array(forcePolygonsVertices[index])
+            print "current poly", currentPolytope[:,0]
+            dim, numOfVertices = np.shape(currentPolytope)
+            angularPart = np.zeros((3, numOfVertices))
             for j in np.arange(0, 8):
                 linear = currentPolytope[:, j]
                 angularPart[:, j] = np.cross(footPosWF, linear)
 
             sixDpoly = np.vstack([currentPolytope, angularPart])
+            print np.shape(sixDpoly)
             wrenchPolytopes.append(sixDpoly)
+
         return wrenchPolytopes
 
-    def computeFeasibleWrenchPolytopeVRep(self, fwp_params, C, d, forcePolygonsVertices):
-        print C, d
-        hs = np.hstack([C, d])
-        print "halfplanes",hs
-        feasible_point = [0.0, 0.0, 10.0]
-        intersection = HalfspaceIntersection(hs, feasible_point)
-        actuationWrenchPolytopesVRep = self.computeAngularPart(fwp_params, forcePolygonsVertices)
-        numberOfForcePolygons = np.size(actuationWrenchPolytopesVRep, 0)
-        tmpSum = actuationWrenchPolytopesVRep[0]
+    def computedPolytopeConeIntersection(self, forcePolytopes):
+        hs = forcePolytopes.getHalfspaces()
+        result = []
+        feasible_point = np.array([0.0, 0.0, 1.0])
+        h = np.array([hs[0]])
+        print np.shape(h[0])
+        intersection = HalfspaceIntersection(h[0], feasible_point)
+        vx1 = zip(*intersection.intersections)
+        result.append(vx1)
+
+        h = np.array([hs[1]])
+        intersection = HalfspaceIntersection(h[0], feasible_point)
+        vx2 = zip(*intersection.intersections)
+        result.append(vx2)
+
+        h = np.array([hs[2]])
+        intersection = HalfspaceIntersection(h[0], feasible_point)
+        vx3 = zip(*intersection.intersections)
+        result.append(vx3)
+
+        h = np.array([hs[3]])
+        intersection = HalfspaceIntersection(h[0], feasible_point)
+        vx4 = zip(*intersection.intersections)
+        result.append(vx4)
+
+        return result
+
+    def computeFeasibleWrenchPolytopeVRep(self, fwp_params, forcePolytopes):
+
+        forcePolygonsVertices = forcePolytopes.getVertices()
+        intersectionVx = self.computedPolytopeConeIntersection(forcePolytopes)
+        #intersectionVx = forcePolygonsVertices # only for debugging
+
+        actuationWrenchPolytopesVRep = self.computeAngularPart(fwp_params, intersectionVx)
+
+        stanceLegs = fwp_params.getStanceFeet()
+        stanceIndex = fwp_params.getStanceIndex(stanceLegs)
+        contactsNumber = np.sum(stanceLegs)
+
+        polytopesInContact = []
+        for i in range(0, contactsNumber):
+            index = int(stanceIndex[i])
+            polytopesInContact.append(actuationWrenchPolytopesVRep[index])
+
+        tmpSum = np.array(polytopesInContact[0])
         i = 0
-        for j in np.arange(0, numberOfForcePolygons - 1):
-            nextPolygon = actuationWrenchPolytopesVRep[j + 1]
+        for j in np.arange(0, contactsNumber - 1):
+            nextPolygon = np.array(polytopesInContact[j + 1])
+            #print "next", nextPolygon
             tmpSum = self.vProj.minksum(tmpSum, nextPolygon)
 
         currentPolygonSum = self.vProj.convex_hull(tmpSum)
+
         return currentPolygonSum
