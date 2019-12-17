@@ -13,11 +13,15 @@ class IterativeProjectionParameters:
         self.q = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.] 
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
         self.comPositionWF = [0., 0., 0.]
+        self.comLinAcc = [0., 0., 0.]
+        self.comAngAcc = [0., 0., 0.]
         self.footPosWLF = [0.3, 0.2, -.0]
         self.footPosWRF = [0.3, -0.2, -.0]
         self.footPosWLH = [-0.3, 0.2, -.0]
         self.footPosWRH = [-0.3, -0.2, -.0]
-        self.externalForceWF = [0., 0., 0.]
+        self.externalForce = [0., 0., 0.]
+        self.externalCentroidalTorque = [0., 0., 0.]
+        self.externalCentroidalWrench = np.hstack([self.externalForce, self.externalCentroidalTorque])
 
         self.roll = 0.0
         self.pitch = 0.0
@@ -57,7 +61,7 @@ class IterativeProjectionParameters:
                 
         self.actual_swing = 0
 
-    def computeContactsBF(self):
+    def computeContactsPosBF(self):
         self.contactsBF = np.zeros((4, 3))
         rpy = self.getOrientation()
         for j in np.arange(0, 4):
@@ -73,6 +77,12 @@ class IterativeProjectionParameters:
         
     def setCoMPosWF(self, comWF):
         self.comPositionWF = comWF
+
+    def setCoMLinAcc(self, comLinAcc):
+        self.comLinAcc = comLinAcc
+
+    def setCoMAngAcc(self, comAngAcc):
+        self.comAngAcc = comAngAcc
     
     def setTorqueLims(self, torqueLims):
         self.torque_limits = torqueLims
@@ -106,8 +116,14 @@ class IterativeProjectionParameters:
         return self.comPositionWF
         
     def getCoMPosBF(self):
-        return self.comPositionBF        
-        
+        return self.comPositionBF
+
+    def getCoMLinAcc(self):
+        return self.comLinAcc
+
+    def getCoMAngAcc(self):
+        return self.comAngAcc
+
     def getTorqueLims(self):
         return self.torque_limits
         

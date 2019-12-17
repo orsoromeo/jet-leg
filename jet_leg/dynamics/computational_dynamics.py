@@ -325,7 +325,7 @@ class ComputationalDynamics:
         contactsPosWF = LPparams.getContactsPosWF()
         contactsBF = np.zeros((4,3)) # this is just for initialization
         comWorldFrame = LPparams.getCoMPosWF()
-        extForce = LPparams.externalForceWF
+        extForce = LPparams.externalForce
         totForce = grav
         totForce[0] += extForce[0]
         totForce[1] += extForce[1]
