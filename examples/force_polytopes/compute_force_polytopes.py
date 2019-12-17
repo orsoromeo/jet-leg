@@ -36,7 +36,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 # n = nc*6
-comWF = np.array([0.0, -0.0, 0.0])
+comWF = np.array([0.0, 0.0, 0.0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.4, 0.3, -0.5])
