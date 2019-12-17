@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 from jet_leg.plotting.plotting_tools import Plotter
 from jet_leg.constraints.constraints import Constraints
 from jet_leg.robot.hyq_kinematics import HyQKinematics
-from jet_leg.maths.math_tools import Math
+from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.map.height_map import HeightMap
         

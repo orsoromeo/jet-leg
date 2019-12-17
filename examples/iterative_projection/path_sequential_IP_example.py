@@ -14,12 +14,12 @@ import matplotlib.colors as colors
 import matplotlib.cm as cmx
 
 from jet_leg.plotting.plotting_tools import Plotter
-from jet_leg.maths.math_tools import Math
+from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.map.height_map import HeightMap
 
 from jet_leg.optimization.path_sequential_iterative_projection import PathIterativeProjection
-from jet_leg.maths.iterative_projection_parameters import IterativeProjectionParameters
+from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
         
 ''' MAIN '''
 start_t_IPVC = time.time()

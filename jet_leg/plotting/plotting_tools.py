@@ -7,7 +7,7 @@ Created on Mon May 28 12:36:24 2018
 
 import matplotlib.pyplot as plt
 import numpy as np
-from jet_leg.maths.computational_geometry import ComputationalGeometry
+from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 
 class Plotter:
     

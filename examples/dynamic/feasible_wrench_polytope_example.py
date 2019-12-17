@@ -10,10 +10,10 @@ import numpy as np
 from numpy import array
 from jet_leg.plotting.plotting_tools import Plotter
 import random
-from jet_leg.maths.math_tools import Math
+from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.dynamics.feasible_wrench_polytope import FeasibleWrenchPolytope
-from jet_leg.maths.iterative_projection_parameters import IterativeProjectionParameters
+from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
 import time
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
@@ -46,7 +46,7 @@ comWF_lin_acc = np.array([-.0, -0.0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForce = np.array([10., .0, .0]) # units are N
+extForce = np.array([0., .0, .0]) # units are N
 extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
@@ -62,7 +62,7 @@ contactsWF = np.vstack((LF_foot+comWF, RF_foot+comWF, LH_foot+comWF, RH_foot+com
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,1,1,1]
+stanceFeet = [0,1,1,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -103,7 +103,7 @@ C, d, isIKoutOfWorkSpace, forcePolytopes = comp_dyn.constr.getInequalities(param
 
 if not isIKoutOfWorkSpace:
     fwp = FeasibleWrenchPolytope()
-    FWP = fwp.computeFeasibleWrenchPolytopeVRep(params, forcePolytopes)
+    FWP = fwp.computeFeasibleWrenchPolytopeVRep(params, C, d, forcePolytopes)
     w_gi = fwp.computeAggregatedCentroidalWrench(params)
     '''I now check whether the given CoM configuration is dynamically stable or not (see "Feasible Wrench Polytope")'''
     start = time.time()
@@ -117,8 +117,6 @@ if not isIKoutOfWorkSpace:
 else:
     isFWPStable = False
     isStaticallyStable = False
-
-
 
 '''Plotting the contact points in the 3D figure'''
 nc = np.sum(stanceFeet)
@@ -142,11 +140,13 @@ if isFWPStable:
 else:
     plt.plot(comWF[0],comWF[1],'ro',markersize=15, label='CoM (dynamic check)')
 
-plt.arrow(comWF[0], comWF[1], inertialForce[0], inertialForce[1], head_width=0.01, head_length=0.01, fc='orange',
+plt.arrow(comWF[0], comWF[1], inertialForce[0], inertialForce[1], head_width=0.01, head_length=0.01, fc='k',
               ec='orange', label='inertial acceleration')
 plt.arrow(comWF[0] + inertialForce[0], comWF[1] + inertialForce[1], extForce[0], extForce[1], head_width=0.01,
-              head_length=0.01, fc='blue',
-              ec='blue', label='external force')
+              head_length=0.01, fc='blue', ec='blue', label='external force')
+
+plt.scatter([comWF[0], inertialForce[0]], [comWF[1], inertialForce[1]], color='k', marker= '^', label='inertial acceleration')
+plt.scatter([comWF[0], inertialForce[0]], [comWF[1], inertialForce[1]], color='b', marker= '^', label='external force')
 
 if isStaticallyStable:
     plt.plot(comWF[0],comWF[1],'g',markersize=20, marker= '^', label='CoM (static check)')

@@ -31,9 +31,9 @@ from termcolor import colored
 
 #from context import jet_leg 
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
-from jet_leg.maths.computational_geometry import ComputationalGeometry
+from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.optimization.foothold_planning_interface import FootholdPlanningInterface
-from jet_leg.maths.math_tools import Math
+from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.robots.dog_interface import DogInterface
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 

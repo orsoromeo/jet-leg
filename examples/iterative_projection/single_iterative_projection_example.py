@@ -10,9 +10,9 @@ import numpy as np
 from numpy import array
 from jet_leg.plotting.plotting_tools import Plotter
 import random
-from jet_leg.maths.math_tools import Math
+from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
-from jet_leg.maths.iterative_projection_parameters import IterativeProjectionParameters
+from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
 
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
@@ -21,7 +21,7 @@ plt.close('all')
 math = Math()
 
 ''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
-robot_name = 'hyq'
+robot_name = 'anymal'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
 ng = 4

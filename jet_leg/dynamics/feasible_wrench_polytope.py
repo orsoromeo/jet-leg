@@ -8,6 +8,7 @@ Created on Tue Dec 17 10:54:31 2019
 import numpy as np
 from jet_leg.dynamics.vertex_based_projection import VertexBasedProjection
 from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
+from scipy.spatial import HalfspaceIntersection
 
 class FeasibleWrenchPolytope():
     def __init__(self):
@@ -57,14 +58,18 @@ class FeasibleWrenchPolytope():
             wrenchPolytopes.append(sixDpoly)
         return wrenchPolytopes
 
-    def computeFeasibleWrenchPolytopeVRep(self, fwp_params, forcePolygonsVertices):
-
-        wrenchPolytopes = self.computeAngularPart(fwp_params, forcePolygonsVertices)
-        numberOfForcePolygons = np.size(wrenchPolytopes, 0)
-        tmpSum = wrenchPolytopes[0]
+    def computeFeasibleWrenchPolytopeVRep(self, fwp_params, C, d, forcePolygonsVertices):
+        print C, d
+        hs = np.hstack([C, d])
+        print "halfplanes",hs
+        feasible_point = [0.0, 0.0, 10.0]
+        intersection = HalfspaceIntersection(hs, feasible_point)
+        actuationWrenchPolytopesVRep = self.computeAngularPart(fwp_params, forcePolygonsVertices)
+        numberOfForcePolygons = np.size(actuationWrenchPolytopesVRep, 0)
+        tmpSum = actuationWrenchPolytopesVRep[0]
         i = 0
         for j in np.arange(0, numberOfForcePolygons - 1):
-            nextPolygon = wrenchPolytopes[j + 1]
+            nextPolygon = actuationWrenchPolytopesVRep[j + 1]
             tmpSum = self.vProj.minksum(tmpSum, nextPolygon)
 
         currentPolygonSum = self.vProj.convex_hull(tmpSum)

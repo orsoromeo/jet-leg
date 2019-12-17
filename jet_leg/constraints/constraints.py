@@ -5,12 +5,13 @@ Created on Mon May 28 13:00:59 2018
 @author: Romeo Orsolino
 """
 import numpy as np
-from jet_leg.maths.computational_geometry import ComputationalGeometry
-from jet_leg.maths.math_tools import Math
+from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
+from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.kinematics.kinematics_interface import KinematicsInterface
 from scipy.linalg import block_diag
 from jet_leg.robots.dog_interface import DogInterface
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
+from jet_leg.computational_geometry.polytopes import Polytope
 
 class Constraints:    
     def __init__(self, robot_kinematics):
@@ -54,6 +55,8 @@ class Constraints:
             #    #print theta, "[rad] ", theta/np.pi*180, "[deg]"
             #print "V description: "
             #print actuation_polygons[contactIterator]
+
+        legForcePolytope = Polytope(C1, d1, actuation_polygons)
         return C1, d1, actuation_polygons, isOutOfWorkspace
         
     def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force = 10000.0, saturate_max_normal_force = False):            
