@@ -46,8 +46,12 @@ class FeasibleWrenchPolytope():
         numberOfForcePolygons = np.size(forcePolygonsVertices, 0)
         contactsBF = fwp_params.computeContactsBF().T
         wrenchPolytopes = []
-        for i in np.arange(0, numberOfForcePolygons):
-            footPos = contactsBF[:,i]
+        stanceLegs = fwp_params.getStanceFeet()
+        stanceIndex = fwp_params.getStanceIndex(stanceLegs)
+        contactsNumber = np.sum(stanceFeet)
+        for i in range(0, contactsNumber):
+            #r = contactsWF[int(stanceIndex[j]), :]
+            footPos = contactsBF[:,int(stanceIndex[i])]
             currentPolytope = forcePolygonsVertices[i]
             angularPart = np.zeros((3,8))
             for j in np.arange(0,8):
@@ -91,7 +95,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([.3, .0, .0])
+comWF = np.array([.31, .0, .0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
@@ -105,7 +109,7 @@ contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [0,1,1,1]
+stanceFeet = [1,1,0,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -201,14 +205,14 @@ for j in range(0,nc): # this will only show the contact positions and normals of
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
 if isFWPStable:
-    plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM')
+    plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM (dynamic check)')
 else:
-    plt.plot(comWF[0],comWF[1],'ro',markersize=15, label='CoM')
+    plt.plot(comWF[0],comWF[1],'ro',markersize=15, label='CoM (dynamic check)')
 
 if isStaticallyStable:
-    plt.plot(comWF[0],comWF[1],'g',markersize=20, marker= '^', label='CoM')
+    plt.plot(comWF[0],comWF[1],'g',markersize=20, marker= '^', label='CoM (static check)')
 else:
-    plt.plot(comWF[0], comWF[1], 'r', markersize=20, marker='^', label='CoM')
+    plt.plot(comWF[0], comWF[1], 'r', markersize=20, marker='^', label='CoM (static check)')
     
 plt.grid()
 plt.xlabel("X [m]")

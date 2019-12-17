@@ -71,10 +71,7 @@ class ComputationalDynamics:
         stanceIndex = iterative_projection_params.getStanceIndex(stanceLegs)
 
         for j in range(0,contactsNumber):
-           
             r = contactsWF[int(stanceIndex[j]),:]
-            #print 'r is ', r
-           
             graspMatrix = self.getGraspMatrix(r)[:,0:3]
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
