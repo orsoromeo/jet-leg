@@ -68,12 +68,13 @@ class Constraints:
             j = int(j)
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
-                constraints_local_frame, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
+                normal = normals[j,:]
+                constraints_local_frame, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(contactsNumber, params.pointContacts, friction_coeff, normal)
                 isIKoutOfWorkSpace = False
                 leg_actuation_polygon = np.zeros((4, 1))
-                n = self.math.normalize(normals[j,:])
-                rotationMatrix = self.math.rotation_matrix_from_normal(n)
-                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
+#                n = self.math.normalize(normals[j,:])
+#                rotationMatrix = self.math.rotation_matrix_from_normal(n)
+#                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
                 Ctemp, d_cone, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim)
@@ -107,6 +108,8 @@ class Constraints:
                 
             C = block_diag(C, Ctemp)
             d = np.hstack([d, d_cone])
+
+        print C, d
         
         if contactsNumber == 0:
             print 'contactsNumber is zero, there are no stance legs set! This might be because Gazebo is in pause.'

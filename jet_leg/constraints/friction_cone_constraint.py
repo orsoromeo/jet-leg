@@ -15,15 +15,20 @@ from jet_leg.computational_geometry.polytopes import Polytope
 
 
 class FrictionConeConstraint:
-    #def __init__(self, robot_kinematics):
+    def __init__(self):
+        self.max_contact_wrench = 10.0
+        self.min_contact_wrench = -10.0
 
-    def linearized_cone_halfspaces_world(self, contactsNumber, ng, mu, normals, max_normal_force=10000.0,
+    def linearized_cone_halfspaces_world(self, contactsNumber, pointContacts, mu, normal, ng = 4, max_normal_force=10000.0,
                                          saturate_max_normal_force=False):
 
         C = np.zeros((0, 0))
         d = np.zeros((0))
         constraints_local_frame, d_cone = self.linearized_cone_halfspaces(ng, mu, max_normal_force,
-                                                                          saturate_max_normal_force)
+                                                                          saturate_max_normal_force, pointContacts)
+        n = self.math.normalize(normal)
+        rotationMatrix = self.math.rotation_matrix_from_normal(n)
+        Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
 
         return constraints_local_frame, d_cone
 
@@ -50,16 +55,28 @@ class FrictionConeConstraint:
 
         return c_force
 
-    def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force):
-        # print ng
+    def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force, pointContacts):
+        print "point contacts?",pointContacts
         ''' Inequality matrix for a contact force in local contact frame: '''
         if ng == 4:
-            c_force = np.array([
-                [-1, 0, -mu],
-                [+1, 0, -mu],
-                [0, -1, -mu],
-                [0, +1, -mu]])
-            d = np.zeros(c_force.shape[0])
+            if pointContacts:
+                c_force = np.array([
+                    [-1, 0, -mu],
+                    [+1, 0, -mu],
+                    [0, -1, -mu],
+                    [0, +1, -mu]])
+                d = np.zeros(c_force.shape[0])
+            else:
+                c_force = np.array([
+                    [-1, 0, -mu, 0.0, 0.0],
+                    [+1, 0, -mu, 0.0, 0.0],
+                    [0, -1, -mu, 0.0, 0.0],
+                    [0, +1, -mu, 0.0, 0.0],
+                    [0, 0, 0, +1, 0],
+                    [0, 0, 0, 0, +1]])
+                d = np.hstack([np.zeros(4), self.max_contact_wrench, self.max_contact_wrench, -self.min_contact_wrench, -self.min_contact_wrench])
+                print "c force", c_force
+
         elif ng == 8:
             c_force = np.array([
                 [-1, 0, -mu],

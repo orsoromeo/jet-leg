@@ -59,7 +59,7 @@ trunk_mass = 45.
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [0, 1, 1, 0]
+stanceFeet = [0, 1, 1, 1]
 
 randomSwingLeg = random.randint(0, 3)
 tripleStance = False  # if you want you can define a swing leg using this variable
@@ -89,6 +89,7 @@ comp_dyn = ComputationalDynamics(robot_name)
 params = IterativeProjectionParameters()
 
 params.setContactsPosWF(contacts)
+params.pointContacts = True
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
 params.setCoMLinAcc(comWF_lin_acc)
