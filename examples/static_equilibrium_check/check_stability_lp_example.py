@@ -40,11 +40,13 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 # number of decision variables of the problem
 # n = nc*6
 comWF = np.array([0., 0., 0.0])
+comWF_lin_acc = np.array([1.0, 1.0, .0])
+comWF_ang_acc = np.array([.0, .0, .0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
 RF_foot = np.array([0.3, -0.2, -0.4])
-LH_foot = np.array([-0.3, 0.2, -0.4])
+LH_foot = np.array([-0.3, 0.15, -0.4])
 RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
@@ -57,7 +59,7 @@ trunk_mass = 45.
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1, 1, 1, 1]
+stanceFeet = [0, 1, 1, 1]
 
 randomSwingLeg = random.randint(0, 3)
 tripleStance = False  # if you want you can define a swing leg using this variable
@@ -75,19 +77,10 @@ n3 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # LH
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # RH
 normals = np.vstack([n1, n2, n3, n4])
 
-''' torque limits for each leg (this code assumes a hyq-like design, i.e. three joints per leg)
-HAA = Hip Abduction Adduction
-HFE = Hip Flextion Extension
-KFE = Knee Flextion Extension
-'''
-LF_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
-RF_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
-LH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
-RH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
-torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForceW = np.array([0.0, 0.0, 0.0])  # units are Nm
+extForce = np.array([0., 0.0, 0.0]) # units are N
+extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
+extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
 comp_dyn = ComputationalDynamics(robot_name)
 
@@ -96,7 +89,9 @@ comp_dyn = ComputationalDynamics(robot_name)
 params = IterativeProjectionParameters()
 
 params.setContactsPosWF(contacts)
+params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
+params.setCoMLinAcc(comWF_lin_acc)
 params.setTorqueLims(comp_dyn.robotModel.robotModel.torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
@@ -104,7 +99,7 @@ params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
-params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
+
 
 # print "Inequalities", comp_dyn.ineq
 # print "actuation polygons"
@@ -124,7 +119,7 @@ ax.set_zlabel('Z axis')
 
 nc = np.sum(stanceFeet)
 stanceID = params.getStanceIndex(stanceFeet)
-force_scaling_factor = 1500
+force_scaling_factor = 1000
 # plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 fz_tot = 0.0
 for j in range(0,
@@ -164,7 +159,7 @@ plotter = Plotter()
 for j in range(0, nc):  # this will only show the force polytopes of the feet that are defined to be in stance
     idx = int(stanceID[j])
     if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
-        plotter.plot_actuation_polygon(ax, forcePolytopes[idx], contacts[idx, :], force_scaling_factor)
+        plotter.plot_actuation_polygon(ax, forcePolytopes.getVertices()[idx], contacts[idx,:], force_scaling_factor)
 
 ''' 2D figure '''
 plt.figure()
@@ -180,6 +175,15 @@ if isConfigurationStable:
     plt.plot(comWF[0], comWF[1], 'go', markersize=15, label='CoM')
 else:
     plt.plot(comWF[0], comWF[1], 'ro', markersize=15, label='CoM')
+
+inertialForce = comWF_lin_acc*params.getTotalMass()/force_scaling_factor
+plt.arrow(comWF[0], comWF[1], inertialForce[0], inertialForce[1], head_width=0.01, head_length=0.01, fc='k',
+              ec='orange', label='inertial acceleration')
+plt.arrow(comWF[0] + inertialForce[0], comWF[1] + inertialForce[1], extForce[0]/force_scaling_factor, extForce[1]/force_scaling_factor, head_width=0.01,
+              head_length=0.01, fc='blue', ec='blue', label='external force')
+
+plt.scatter([comWF[0], comWF[0] + inertialForce[0]/force_scaling_factor], [comWF[1], comWF[1] + inertialForce[1]/force_scaling_factor], color='k', marker= '^', label='inertial acceleration')
+plt.scatter([comWF[0], comWF[0] + inertialForce[0]/force_scaling_factor], [comWF[1], comWF[1] + inertialForce[1]/force_scaling_factor], color='b', marker= '^', label='external force')
 
 plt.grid()
 plt.xlabel("X [m]")

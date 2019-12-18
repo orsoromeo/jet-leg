@@ -12,9 +12,10 @@ from scipy.spatial import HalfspaceIntersection
 from cvxopt import matrix
 
 class FeasibleWrenchPolytope():
-    def __init__(self):
+    def __init__(self, params):
         self.vProj = VertexBasedProjection()
         self.lp = LpVertexRedundnacy()
+        self.constraint_modes = params.getConstraintModes()
 
     def checkDynamicStability(self, FWP, w_gi):
         isPointRedundant, lambdas = self.lp.isPointRedundant(FWP, w_gi)
@@ -25,18 +26,18 @@ class FeasibleWrenchPolytope():
             isStateStable = False
         return isStateStable
 
-    def computeAggregatedCentroidalWrench(self, fwp_params):
-        static_linear = np.array([0.0, 0.0, fwp_params.getTotalMass() * -9.81])
-        com_pos_WF = fwp_params.getCoMPosWF()
-        static_angular = np.cross(com_pos_WF, static_linear)
-        extForce = fwp_params.externalCentroidalWrench[0:3]
-        inertial_linear = fwp_params.getTotalMass()*fwp_params.getCoMLinAcc() + extForce
-        inertial_angular = fwp_params.getCoMLinAcc() # TODO: add the inertial matrix here
-        linear_aggr_wrench = inertial_linear - static_linear
-        angular_aggr_wrench = static_angular + inertial_angular
-        print linear_aggr_wrench
-        w_gi = np.hstack([linear_aggr_wrench, angular_aggr_wrench])
-        return w_gi
+    #def computeAggregatedCentroidalWrench(self, fwp_params):
+    #    static_linear = np.array([0.0, 0.0, fwp_params.getTotalMass() * -9.81])
+    #    com_pos_WF = fwp_params.getCoMPosWF()
+    #    static_angular = np.cross(com_pos_WF, static_linear)
+    #    extForce = fwp_params.externalCentroidalWrench[0:3]
+    #    inertial_linear = fwp_params.getTotalMass()*fwp_params.getCoMLinAcc() + extForce
+    #    inertial_angular = fwp_params.getCoMLinAcc() # TODO: add the inertial matrix here
+    #    linear_aggr_wrench = inertial_linear - static_linear
+    #    angular_aggr_wrench = static_angular + inertial_angular
+    #    print linear_aggr_wrench
+    #    w_gi = np.hstack([linear_aggr_wrench, angular_aggr_wrench])
+    #    return w_gi
 
     def computeAngularPart(self, fwp_params, forcePolygonsVertices):
 
@@ -79,11 +80,30 @@ class FeasibleWrenchPolytope():
 
         return result
 
+    def get3DforcePolytopeVertices(self, params, forcePolytopes):
+        '''
+        possible constraints for each foot:
+         ONLY_ACTUATION = only joint-torque limits are enforces
+         ONLY_FRICTION = only friction cone constraints are enforced
+         FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
+        '''
+        if self.constraint_modes[0] == 'FRICTION_AND_ACTUATION':
+            print 'FRICTION_AND_ACTUATION'
+            forcePolygonsVertices = self.computedPolytopeConeIntersection(params, forcePolytopes)
+        elif self.constraint_modes[0] == 'ONLY_ACTUATION':
+            print 'ONLY_ACTUATION'
+            forcePolygonsVertices = forcePolytopes.getVertices()
+        elif self.constraint_modes[0] == 'ONLY_FRICTION':
+            forcePolygonsVertices = self.getPiramidsVertices()
+
+        return forcePolygonsVertices
+
     def computeFeasibleWrenchPolytopeVRep(self, fwp_params, forcePolytopes):
 
-        forcePolygonsVertices = forcePolytopes.getVertices()
+        intersectionVx = self.get3DforcePolytopeVertices(fwp_params, forcePolytopes)
+        #forcePolygonsVertices = forcePolytopes.getVertices()
         #intersectionVx = self.computedPolytopeConeIntersection(fwp_params, forcePolytopes)
-        intersectionVx = forcePolygonsVertices # only for debugging
+
 
         actuationWrenchPolytopesVRep = self.computeAngularPart(fwp_params, intersectionVx)
         stanceLegs = fwp_params.getStanceFeet()

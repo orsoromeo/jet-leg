@@ -13,10 +13,11 @@ import random
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.dynamics.feasible_wrench_polytope import FeasibleWrenchPolytope
+from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
 import time
 import matplotlib.pyplot as plt
-from jet_leg.plotting.arrow3D import Arrow3D
+
 
 plt.close('all')
 math = Math()
@@ -40,7 +41,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([1., 1., .0])
+comWF = np.array([0., 0., .0])
 comWFvel = np.array([.0, .0, .0])
 comWF_lin_acc = np.array([-.0, -0.0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
@@ -101,10 +102,12 @@ params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
 '''I now check whether the given CoM configuration is stable or not'''
 C, d, isIKoutOfWorkSpace, forcePolytopes = comp_dyn.constr.getInequalities(params)
 
+rbd = RigidBodyDynamics()
+
 if not isIKoutOfWorkSpace:
-    fwp = FeasibleWrenchPolytope()
+    fwp = FeasibleWrenchPolytope(params)
     FWP = fwp.computeFeasibleWrenchPolytopeVRep(params, forcePolytopes)
-    w_gi = fwp.computeAggregatedCentroidalWrench(params)
+    w_gi = rbd.computeCentroidalWrench(params.getTotalMass(), comWF, params.externalCentroidalWrench, comWF_lin_acc)
     '''I now check whether the given CoM configuration is dynamically stable or not (see "Feasible Wrench Polytope")'''
     start = time.time()
     isFWPStable = fwp.checkDynamicStability(FWP, w_gi)

@@ -14,6 +14,7 @@ from jet_leg.kinematics.kinematics_interface import KinematicsInterface
 from jet_leg.robots.robot_model_interface import RobotModelInterface
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.geometry import Geometry
+from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from cvxopt import matrix, solvers
 import time
 
@@ -28,6 +29,7 @@ class ComputationalDynamics:
         self.constr = Constraints(self.kin)
         self.ineq = ([],[])
         self.eq = ([],[])
+        self.rbd = RigidBodyDynamics()
 
     def getGraspMatrix(self, r):
 
@@ -319,11 +321,9 @@ class ComputationalDynamics:
         totMass = LPparams.robotMass
         nc = np.sum(stanceLegs)
         grav = np.array([[0.], [0.], [-g*totMass]])
-
         p = matrix(np.zeros((3*nc,1)))
 
         contactsPosWF = LPparams.getContactsPosWF()
-        contactsBF = np.zeros((4,3)) # this is just for initialization
         comWorldFrame = LPparams.getCoMPosWF()
         extForce = LPparams.externalForce
         totForce = grav
@@ -331,8 +331,14 @@ class ComputationalDynamics:
         totForce[1] += extForce[1]
         totForce[2] += extForce[2]
         #print grav, extForce, totForce
-
+        externalWrench = np.vstack([totForce, 0.0, 0.0, 0.0])
+        totalCentroidalWrench = self.rbd.computeCentroidalWrench(LPparams.robotMass,
+                                                                 LPparams.getCoMPosWF(),
+                                                                 LPparams.externalCentroidalWrench,
+                                                                 LPparams.getCoMLinAcc())
         torque = -np.cross(comWorldFrame, np.transpose(totForce))
+        print "computed torque", totalCentroidalWrench
+        print "expected torque", totForce, torque
         A = np.zeros((6,0))
         stanceIndex = LPparams.getStanceIndex(stanceLegs)
         print 'stanceIndex',stanceIndex
@@ -343,7 +349,7 @@ class ComputationalDynamics:
             GraspMat = self.getGraspMatrix(r)
             A = np.hstack((A, GraspMat[:,0:3]))
             A = matrix(A)
-            b = matrix(np.vstack([-totForce, np.transpose(torque)]).reshape((6)))
+            b = matrix(totalCentroidalWrench.reshape((6)))
 
         G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)
         G = matrix(G)

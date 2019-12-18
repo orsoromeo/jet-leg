@@ -295,7 +295,6 @@ class Constraints:
             currentLegForcePolytope = Polytope()
             currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
             currentLegForcePolytope.setVertices(leg_actuation_polygon[j])
-            print np.shape(currentLegForcePolytope.getVertices())
             forcePolytopes.forcePolytope[j] = currentLegForcePolytope
                 
             C = block_diag(C, Ctemp)
