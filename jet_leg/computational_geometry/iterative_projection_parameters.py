@@ -58,6 +58,7 @@ class IterativeProjectionParameters:
         self.friction = 0.8
         self.robotMass = 85 #Kg
         self.numberOfGenerators = 4
+        self.pointContacts = True
                 
         self.actual_swing = 0
 
@@ -126,7 +127,7 @@ class IterativeProjectionParameters:
 
     def getTorqueLims(self):
         return self.torque_limits
-        
+
     def getStanceFeet(self):
         return self.stanceFeet
         

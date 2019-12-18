@@ -197,10 +197,10 @@ class ComputationalDynamics:
         #print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
 
 #        print np.size(actuation_polygons,0), np.size(actuation_polygons,1), actuation_polygons
-        if np.size(actuation_polygons.getVertices(),0) is 4:
-            if np.size(actuation_polygons.getVertices(),1) is 3:
+#        if np.size(actuation_polygons.getVertices(),0) is 4:
+#            if np.shape(actuation_polygons.getVertices()) is 3:
 #                print actuation_polygons
-                p = self.reorganizeActuationPolytopes(actuation_polygons.getVertices()[1])
+#                p = self.reorganizeActuationPolytopes(actuation_polygons.getVertices()[1])
 
         return compressed_hull, actuation_polygons, computation_time
         

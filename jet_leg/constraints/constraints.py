@@ -12,6 +12,7 @@ from scipy.linalg import block_diag
 from jet_leg.robots.dog_interface import DogInterface
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from jet_leg.computational_geometry.polytopes import Polytope
+from jet_leg.constraints.friction_cone_constraint import FrictionConeConstraint
 
 class Constraints:    
     def __init__(self, robot_kinematics):
@@ -20,6 +21,7 @@ class Constraints:
         self.math = Math()
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
+        self.frictionConeConstr = FrictionConeConstraint()
 
     def compute_actuation_constraints(self, contactIterator, torque_limits):
 
@@ -260,9 +262,9 @@ class Constraints:
             j = int(j)
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
-                constraints_local_frame, d_cone = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
+                constraints_local_frame, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
                 isIKoutOfWorkSpace = False
-                leg_actuation_polygon = np.zeros((1, 1))
+                leg_actuation_polygon = np.zeros((4, 1))
 #                print normals
                 n = self.math.normalize(normals[j,:])
                 rotationMatrix = self.math.rotation_matrix_from_normal(n)
@@ -279,7 +281,7 @@ class Constraints:
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
                 C1, d1, leg_actuation_polygon, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim)
-                C2, d2 = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
+                C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
                 #            print C1, C2
                 if isIKoutOfWorkSpace is False:
                     #                print d1
@@ -294,6 +296,7 @@ class Constraints:
 
             currentLegForcePolytope = Polytope()
             currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
+
             currentLegForcePolytope.setVertices(leg_actuation_polygon[j])
             forcePolytopes.forcePolytope[j] = currentLegForcePolytope
                 
