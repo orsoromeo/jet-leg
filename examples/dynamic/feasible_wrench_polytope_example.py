@@ -40,7 +40,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([0., 0., .0])
+comWF = np.array([1., 1., .0])
 comWFvel = np.array([.0, .0, .0])
 comWF_lin_acc = np.array([-.0, -0.0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
@@ -145,8 +145,8 @@ plt.arrow(comWF[0], comWF[1], inertialForce[0], inertialForce[1], head_width=0.0
 plt.arrow(comWF[0] + inertialForce[0], comWF[1] + inertialForce[1], extForce[0], extForce[1], head_width=0.01,
               head_length=0.01, fc='blue', ec='blue', label='external force')
 
-plt.scatter([comWF[0], inertialForce[0]], [comWF[1], inertialForce[1]], color='k', marker= '^', label='inertial acceleration')
-plt.scatter([comWF[0], inertialForce[0]], [comWF[1], inertialForce[1]], color='b', marker= '^', label='external force')
+plt.scatter([comWF[0], comWF[0]+inertialForce[0]], [comWF[1], comWF[1]+inertialForce[1]], color='k', marker= '^', label='inertial acceleration')
+plt.scatter([comWF[0], comWF[0]+inertialForce[0]], [comWF[1], comWF[1]+inertialForce[1]], color='b', marker= '^', label='external force')
 
 if isStaticallyStable:
     plt.plot(comWF[0],comWF[1],'g',markersize=20, marker= '^', label='CoM (static check)')
