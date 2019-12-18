@@ -51,7 +51,7 @@ class FeasibleWrenchPolytope():
             index = int(stanceIndex[i])
             print index
             footPosWF = contactsWF[:, index]
-            currentPolytope = np.array(forcePolygonsVertices[index])
+            currentPolytope = np.array(forcePolygonsVertices[i])
             dim, numOfVertices = np.shape(currentPolytope)
             angularPart = np.zeros((3, numOfVertices))
             for j in np.arange(0, numOfVertices):

@@ -41,9 +41,8 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([0., 0., .0])
-comWFvel = np.array([.0, .0, .0])
-comWF_lin_acc = np.array([-.0, -0.0, .0])
+comWF = np.array([0., 0., 0.0])
+comWF_lin_acc = np.array([1.0, 1.0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
@@ -53,8 +52,8 @@ extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
-RF_foot = np.array([0.2, -0.2, -0.4])
-LH_foot = np.array([-0.3, 0.1, -0.4])
+RF_foot = np.array([0.3, -0.2, -0.4])
+LH_foot = np.array([-0.3, 0.15, -0.4])
 RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contactsWF = np.vstack((LF_foot+comWF, RF_foot+comWF, LH_foot+comWF, RH_foot+comWF))
@@ -63,7 +62,7 @@ contactsWF = np.vstack((LF_foot+comWF, RF_foot+comWF, LH_foot+comWF, RH_foot+com
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,1,1,1]
+stanceFeet = [0,1,1,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -136,7 +135,7 @@ for j in range(0,nc): # this will only show the contact positions and normals of
 
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
-inertialForce = comWF_lin_acc*params.getTotalMass()/100
+inertialForce = comWF_lin_acc*params.getTotalMass()/force_scaling_factor
 extForce = extForce/100
 if isFWPStable:
     plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM (dynamic check)')
@@ -145,7 +144,7 @@ else:
 
 plt.arrow(comWF[0], comWF[1], inertialForce[0], inertialForce[1], head_width=0.01, head_length=0.01, fc='k',
               ec='orange', label='inertial acceleration')
-plt.arrow(comWF[0] + inertialForce[0], comWF[1] + inertialForce[1], extForce[0], extForce[1], head_width=0.01,
+plt.arrow(comWF[0] + inertialForce[0], comWF[1] + inertialForce[1], extForce[0]/force_scaling_factor, extForce[1]/force_scaling_factor, head_width=0.01,
               head_length=0.01, fc='blue', ec='blue', label='external force')
 
 plt.scatter([comWF[0], comWF[0]+inertialForce[0]], [comWF[1], comWF[1]+inertialForce[1]], color='k', marker= '^', label='inertial acceleration')
