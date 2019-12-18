@@ -24,13 +24,7 @@ class FrictionConeConstraint:
         d = np.zeros((0))
         constraints_local_frame, d_cone = self.linearized_cone_halfspaces(ng, mu, max_normal_force,
                                                                           saturate_max_normal_force)
-        #        for j in range(0,contactsNumber):
-        #            n = math.normalize(normals[j,:])
-        #            rotationMatrix = math.rotation_matrix_from_normal(n)
-        #            C = block_diag(C, np.dot(constraints_local_frame, rotationMatrix.T))
-        #            d = np.hstack([d, d_cone])
 
-        #        return C, d
         return constraints_local_frame, d_cone
 
     def linearized_cone_vertices(self, ng, mu, cone_height=100.):
