@@ -5,7 +5,6 @@ Created on Mon May 28 13:00:59 2018
 @author: Romeo Orsolino
 """
 import numpy as np
-from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.leg_force_polytopes import LegForcePolytopes
 from scipy.linalg import block_diag
@@ -18,6 +17,7 @@ class FrictionConeConstraint:
     def __init__(self):
         self.max_contact_wrench = 10.0
         self.min_contact_wrench = -10.0
+        self.math = Math()
 
     def linearized_cone_halfspaces_world(self, contactsNumber, pointContacts, mu, normal, ng = 4, max_normal_force=10000.0,
                                          saturate_max_normal_force=False):
@@ -28,9 +28,9 @@ class FrictionConeConstraint:
                                                                           saturate_max_normal_force, pointContacts)
         n = self.math.normalize(normal)
         rotationMatrix = self.math.rotation_matrix_from_normal(n)
-        Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
+        constraints_world_frame = np.dot(constraints_local_frame, rotationMatrix.T)
 
-        return constraints_local_frame, d_cone
+        return constraints_world_frame, d_cone
 
     def linearized_cone_vertices(self, ng, mu, cone_height=100.):
         if ng == 4:
