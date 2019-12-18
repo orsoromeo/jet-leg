@@ -26,9 +26,7 @@ class Math:
         return np.vstack([t, b, n]).T
         
     def getGraspMatrix(self, r):
-        math = Math()
-        G = block([[np.eye(3), np.zeros((3, 3))],
-                       [math.skew(r), np.eye(3)]])
+        G = np.vstack([np.hstack([np.eye(3), np.zeros((3, 3))]),np.hstack([self.skew(r), np.eye(3)])])
         return G    
 
 

@@ -40,13 +40,13 @@ constraint_mode_IP = ['ONLY_FRICTION',
 # number of decision variables of the problem
 # n = nc*6
 comWF = np.array([0., 0., 0.0])
-comWF_lin_acc = np.array([1.0, 1.0, .0])
+comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
 RF_foot = np.array([0.3, -0.2, -0.4])
-LH_foot = np.array([-0.3, 0.15, -0.4])
+LH_foot = np.array([-0.3, 0.2, -0.4])
 RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
@@ -59,7 +59,7 @@ trunk_mass = 45.
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [0, 1, 1, 1]
+stanceFeet = [0, 1, 1, 0]
 
 randomSwingLeg = random.randint(0, 3)
 tripleStance = False  # if you want you can define a swing leg using this variable
@@ -89,7 +89,7 @@ comp_dyn = ComputationalDynamics(robot_name)
 params = IterativeProjectionParameters()
 
 params.setContactsPosWF(contacts)
-params.pointContacts = True
+params.pointContacts = False
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
 params.setCoMLinAcc(comWF_lin_acc)
@@ -130,8 +130,12 @@ for j in range(0,
     '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
     if isConfigurationStable:
         ax.scatter(comWF[0], comWF[1], comWF[2], c='g', s=100)
-        grf = contactForces[j * 3:j * 3 + 3]
-        fz_tot += grf[2]
+        if params.pointContacts:
+            grf = contactForces[j * 3:j * 3 + 3]
+            fz_tot += grf[2]
+        else:
+            grf = contactForces[j * 5:j * 5 + 3]
+            fz_tot += grf[2]
 
         ''' draw the set contact forces that respects the constraints'''
         b = Arrow3D([contacts[idx, 0], contacts[idx, 0] + grf[0] / force_scaling_factor],

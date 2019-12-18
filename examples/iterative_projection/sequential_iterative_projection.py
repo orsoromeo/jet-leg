@@ -35,7 +35,7 @@ from jet_leg.height_map import HeightMap
 
 class SequentialIterativeProjection:
 
-    def setup_iterative_projection(self, constraint_mode, contacts, comWF, trunk_mass, mu, normals):
+    def setup_iterative_projection(self, constraint_mode, contacts, comWF, trunk_mass, mu, normals, point_contacts = True):
         ''' parameters to be tuned'''
         g = 9.81
         isOutOfWorkspace = False;
@@ -83,7 +83,7 @@ class SequentialIterativeProjection:
         #C_force = constr.linearized_cone_halfspaces(ng, mu)
         # Inequality matrix for stacked contact forces in world frame:
         if constraint_mode == 'ONLY_FRICTION':
-            C, d = constr.linearized_cone_halfspaces_world(contactsNumber, ng, mu, normals)
+            C, d = constr.linearized_cone_halfspaces_world(point_contacts, mu, normals)
             
         elif constraint_mode == 'ONLY_ACTUATION':
             #kin = Kinematics()

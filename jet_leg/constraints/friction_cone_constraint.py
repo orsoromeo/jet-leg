@@ -4,32 +4,28 @@ Created on Mon May 28 13:00:59 2018
 
 @author: Romeo Orsolino
 """
+
 import numpy as np
 from jet_leg.computational_geometry.math_tools import Math
-from jet_leg.computational_geometry.leg_force_polytopes import LegForcePolytopes
-from scipy.linalg import block_diag
-from jet_leg.robots.dog_interface import DogInterface
-from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
-from jet_leg.computational_geometry.polytopes import Polytope
-
 
 class FrictionConeConstraint:
     def __init__(self):
-        self.max_contact_wrench = 10.0
-        self.min_contact_wrench = -10.0
+        self.max_contact_wrench = 0.1
+        self.min_contact_wrench = -0.1
         self.math = Math()
 
-    def linearized_cone_halfspaces_world(self, contactsNumber, pointContacts, mu, normal, ng = 4, max_normal_force=10000.0,
+    def linearized_cone_halfspaces_world(self, pointContacts, mu, normal, ng = 4, max_normal_force=10000.0,
                                          saturate_max_normal_force=False):
 
-        C = np.zeros((0, 0))
-        d = np.zeros((0))
         constraints_local_frame, d_cone = self.linearized_cone_halfspaces(ng, mu, max_normal_force,
                                                                           saturate_max_normal_force, pointContacts)
         n = self.math.normalize(normal)
         rotationMatrix = self.math.rotation_matrix_from_normal(n)
-        constraints_world_frame = np.dot(constraints_local_frame, rotationMatrix.T)
-
+        constr_pure_force_local = constraints_local_frame[0:4,0:3]
+        constr_pure_force_world = np.dot(constr_pure_force_local, rotationMatrix.T)
+        constraints_world_frame = constraints_local_frame
+        constraints_world_frame[0:4,0:3] = constr_pure_force_world
+        print "constr WF", constraints_world_frame
         return constraints_world_frame, d_cone
 
     def linearized_cone_vertices(self, ng, mu, cone_height=100.):
@@ -73,9 +69,12 @@ class FrictionConeConstraint:
                     [0, -1, -mu, 0.0, 0.0],
                     [0, +1, -mu, 0.0, 0.0],
                     [0, 0, 0, +1, 0],
-                    [0, 0, 0, 0, +1]])
+                    [0, 0, 0, 0, +1],
+                    [0, 0, 0, -1, 0],
+                    [0, 0, 0, 0, -1]
+                ])
                 d = np.hstack([np.zeros(4), self.max_contact_wrench, self.max_contact_wrench, -self.min_contact_wrench, -self.min_contact_wrench])
-                print "c force", c_force
+                print "c force", c_force, d
 
         elif ng == 8:
             c_force = np.array([
