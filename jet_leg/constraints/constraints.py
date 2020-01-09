@@ -13,6 +13,7 @@ from jet_leg.robots.dog_interface import DogInterface
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from jet_leg.computational_geometry.polytopes import Polytope
 from jet_leg.constraints.friction_cone_constraint import FrictionConeConstraint
+from jet_leg.constraints.force_polytope_constraint import ForcePolytopeConstraint
 
 class Constraints:    
     def __init__(self, robot_kinematics):
@@ -22,7 +23,7 @@ class Constraints:
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
         self.frictionConeConstr = FrictionConeConstraint()
-        self.forcePolytopeConstr = LegForcePolytopes()
+        self.forcePolytopeConstr = ForcePolytopeConstraint(robot_kinematics)
 
     def getInequalities(self, params, saturate_normal_force = False):
 
@@ -68,8 +69,7 @@ class Constraints:
             j = int(j)
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
-                normal = normals[j,:]
-                Ctemp, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normal)
+                Ctemp, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normals[j,:])
                 isIKoutOfWorkSpace = False
                 leg_actuation_polygon = np.zeros((4, 1))
 #                n = self.math.normalize(normals[j,:])
@@ -87,7 +87,7 @@ class Constraints:
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
                 C1, d1, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim)
-                C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normals)
+                C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normals[j,:])
                 #            print C1, C2
                 if isIKoutOfWorkSpace is False:
                     #                print d1
