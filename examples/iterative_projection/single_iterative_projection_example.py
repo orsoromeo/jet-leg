@@ -32,10 +32,10 @@ possible constraints for each foot:
  ONLY_FRICTION = only friction cone constraints are enforced
  FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
 '''
-constraint_mode_IP = ['ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION']
+constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION']
 
 # number of decision variables of the problem
 #n = nc*6
@@ -83,7 +83,7 @@ params = IterativeProjectionParameters()
 params.pointContacts = False
 params.setContactsPosWF(contactsWF)
 params.setCoMPosWF(comWF)
-params.setTorqueLims(comp_dyn.robotModel.robotModel.torque_limits)
+params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)

@@ -14,4 +14,5 @@ class AnymalModel:
         RF_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
         LH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
         RH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
-        self.torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+        self.joint_torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+        self.contact_torque_limits = np.array([-2, 2])

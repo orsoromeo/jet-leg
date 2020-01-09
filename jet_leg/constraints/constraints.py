@@ -16,7 +16,7 @@ from jet_leg.constraints.friction_cone_constraint import FrictionConeConstraint
 from jet_leg.constraints.force_polytope_constraint import ForcePolytopeConstraint
 
 class Constraints:    
-    def __init__(self, robot_kinematics):
+    def __init__(self, robot_kinematics, robot_model):
         #self.robotName = robot_name
         self.kin = robot_kinematics
         self.math = Math()
@@ -24,6 +24,7 @@ class Constraints:
         self.rbd = RigidBodyDynamics()
         self.frictionConeConstr = FrictionConeConstraint()
         self.forcePolytopeConstr = ForcePolytopeConstraint(robot_kinematics)
+        self.model = robot_model
 
     def getInequalities(self, params, saturate_normal_force = False):
 
@@ -48,7 +49,8 @@ class Constraints:
         
         constraint_mode = params.getConstraintModes()
 
-        tau_lim = params.getTorqueLims()
+        tau_lim = self.model.joint_torque_limits #= params.getTorqueLims()
+        contact_torque_lims = self.model.contact_torque_limits
         ng = params.getNumberOfFrictionConesEdges()
         friction_coeff = params.getFrictionCoefficient()
         normals = params.getNormals()
@@ -69,7 +71,7 @@ class Constraints:
             j = int(j)
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
-                Ctemp, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normals[j,:])
+                Ctemp, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normals[j,:], contact_torque_lims)
                 isIKoutOfWorkSpace = False
                 leg_actuation_polygon = np.zeros((4, 1))
 #                n = self.math.normalize(normals[j,:])
@@ -77,17 +79,20 @@ class Constraints:
 #                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
-                Ctemp, d_cone, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim)
+                Ctemp, d_cone, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim, params.pointContacts, contact_torque_lims)
                 #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
-                    d_cone = d_cone.reshape(6) 
+                    if params.pointContacts:
+                        d_cone = d_cone.reshape(6)
+                    else:
+                        d_cone = d_cone.reshape(10)
                 else:
                     Ctemp = np.zeros((0,0))
                     d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
-                C1, d1, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim)
-                C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normals[j,:])
+                C1, d1, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim, params.pointContacts, contact_torque_lims)
+                C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(params.pointContacts, friction_coeff, normals[j,:], contact_torque_lims)
                 #            print C1, C2
                 if isIKoutOfWorkSpace is False:
                     #                print d1
@@ -95,7 +100,10 @@ class Constraints:
                     #               print np.size(C,0), np.size(C,1), C
                     d_cone = np.hstack([d1[0], d2])
                     #                print d
-                    d_cone = d_cone.reshape((6+ng))
+                    if params.pointContacts:
+                        d_cone = d_cone.reshape((6+ng))
+                    else:
+                        d_cone = d_cone.reshape((10 + ng + 4))
                 else:
                     Ctemp = np.zeros((0,0))
                     d_cone = np.zeros((0))

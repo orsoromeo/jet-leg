@@ -20,3 +20,6 @@ class RobotModelInterface:
             self.robotModel = AnymalModel()
         elif self.robotName == 'hyqreal':
             self.robotModel = HyqrealModel()
+
+        self.joint_torque_limits = self.robotModel.joint_torque_limits
+        self.contact_torque_limits = self.robotModel.contact_torque_limits

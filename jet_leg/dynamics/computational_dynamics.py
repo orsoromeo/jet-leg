@@ -26,7 +26,7 @@ class ComputationalDynamics:
         self.math = Math()
         self.kin = KinematicsInterface(self.robotName)
         self.robotModel = RobotModelInterface(self.robotName)
-        self.constr = Constraints(self.kin)
+        self.constr = Constraints(self.kin, self.robotModel)
         self.ineq = ([],[])
         self.eq = ([],[])
         self.rbd = RigidBodyDynamics()
