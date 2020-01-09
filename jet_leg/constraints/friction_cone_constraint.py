@@ -25,7 +25,6 @@ class FrictionConeConstraint:
         constr_pure_force_world = np.dot(constr_pure_force_local, rotationMatrix.T)
         constraints_world_frame = constraints_local_frame
         constraints_world_frame[0:4,0:3] = constr_pure_force_world
-        print "constr WF", constraints_world_frame
         return constraints_world_frame, d_cone
 
     def linearized_cone_vertices(self, ng, mu, cone_height=100.):
@@ -52,7 +51,6 @@ class FrictionConeConstraint:
         return c_force
 
     def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force, pointContacts, contact_torque_lims):
-        print "point contacts?",pointContacts
         ''' Inequality matrix for a contact force in local contact frame: '''
         if ng == 4:
             if pointContacts:
@@ -76,7 +74,6 @@ class FrictionConeConstraint:
                 max_contact_torque = contact_torque_lims[1]
                 min_contact_torque = contact_torque_lims[0]
                 d = np.hstack([np.zeros(4), max_contact_torque, max_contact_torque, -min_contact_torque, -min_contact_torque])
-                print "c force", c_force, d
 
         elif ng == 8:
             c_force = np.array([

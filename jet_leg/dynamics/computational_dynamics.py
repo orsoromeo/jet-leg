@@ -73,16 +73,14 @@ class ComputationalDynamics:
                 graspMatrix = self.math.getGraspMatrix(r)[:,0:3]
             else:
                 graspMatrix = self.math.getGraspMatrix(r)[:,0:5]
-            print "grasp mat", graspMatrix
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
-            print "Ex", Ex
-            print "Ey", Ey
             G = hstack([G, graspMatrix])
+            print "G", G
             
 #        print 'grasp matrix',G
+        print Ex, Ey
         E = vstack((Ex, Ey)) / (g*robotMass - extForce[2] )
-        print "E", E
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
         
@@ -171,6 +169,8 @@ class ComputationalDynamics:
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
         proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
 
+        print "EQ", self.eq
+        print "INEQ", self.ineq
         if isIKoutOfWorkSpace:
             return False, False, False
         else:
@@ -350,15 +350,10 @@ class ComputationalDynamics:
             GraspMat = self.math.getGraspMatrix(r)
             if LPparams.pointContacts:
                 A = np.hstack((A, GraspMat[:,0:3]))
-                print A
                 A = matrix(A)
                 b = matrix(totalCentroidalWrench.reshape((6)))
             else:
-                Atmp = np.zeros((6,2))
-                Atmp[3:5, 0:2] = np.eye(2)
-                print "Atmp", Atmp
-                A = np.hstack((A, GraspMat[:,0:3], Atmp))
-                print A
+                A = np.hstack((A, GraspMat[:,0:5]))
                 A = matrix(A)
                 b = matrix(totalCentroidalWrench.reshape((6)))
 
