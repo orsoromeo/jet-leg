@@ -53,7 +53,7 @@ contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 mu = 0.5
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,1,1,0]
+stanceFeet = [0,1,1,0]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -80,6 +80,7 @@ comp_dyn = ComputationalDynamics(robot_name)
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
 
+params.pointContacts = False
 params.setContactsPosWF(contactsWF)
 params.setCoMPosWF(comWF)
 params.setTorqueLims(comp_dyn.robotModel.robotModel.torque_limits)

@@ -69,13 +69,20 @@ class ComputationalDynamics:
 
         for j in range(0,contactsNumber):
             r = contactsWF[int(stanceIndex[j]),:]
-            graspMatrix = self.math.getGraspMatrix(r)[:,0:3]
+            if iterative_projection_params.pointContacts:
+                graspMatrix = self.math.getGraspMatrix(r)[:,0:3]
+            else:
+                graspMatrix = self.math.getGraspMatrix(r)[:,0:5]
+            print "grasp mat", graspMatrix
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
-            G = hstack([G, graspMatrix])            
+            print "Ex", Ex
+            print "Ey", Ey
+            G = hstack([G, graspMatrix])
             
 #        print 'grasp matrix',G
         E = vstack((Ex, Ey)) / (g*robotMass - extForce[2] )
+        print "E", E
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
         
@@ -86,7 +93,7 @@ class ComputationalDynamics:
             [0, 0, 1, 0, 0, 0],
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
-#        print A
+        print np.shape(A), A
         t = hstack([- extForce[0], - extForce[1], g*robotMass - extForce[2], 0])
 #        print extForceWF, t
 #        print 'mass ', robotMass

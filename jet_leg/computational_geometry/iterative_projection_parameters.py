@@ -59,7 +59,6 @@ class IterativeProjectionParameters:
         self.robotMass = 85 #Kg
         self.numberOfGenerators = 4
         self.pointContacts = True
-                
         self.actual_swing = 0
 
     def computeContactsPosBF(self):
