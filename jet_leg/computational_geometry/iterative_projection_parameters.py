@@ -13,6 +13,7 @@ class IterativeProjectionParameters:
         self.q = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.] 
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
         self.comPositionWF = [0., 0., 0.]
+        self.comLinVel = [0., 0., 0.]
         self.comLinAcc = [0., 0., 0.]
         self.comAngAcc = [0., 0., 0.]
         self.footPosWLF = [0.3, 0.2, -.0]
@@ -22,6 +23,7 @@ class IterativeProjectionParameters:
         self.externalForce = [0., 0., 0.]
         self.externalCentroidalTorque = [0., 0., 0.]
         self.externalCentroidalWrench = np.hstack([self.externalForce, self.externalCentroidalTorque])
+        self.instantaneousCapturePoint = [0.0, 0.0]
 
         self.roll = 0.0
         self.pitch = 0.0
@@ -56,9 +58,10 @@ class IterativeProjectionParameters:
                                'FRICTION_AND_ACTUATION']
                                
         self.friction = 0.8
-        self.robotMass = 85 #Kg
+        self.robotMass = 0.0 #Kg
         self.numberOfGenerators = 4
         self.pointContacts = True
+        self.useInstantaneousCapturePoint = True
         self.actual_swing = 0
 
     def computeContactsPosBF(self):
@@ -105,6 +108,12 @@ class IterativeProjectionParameters:
         
     def setTotalMass(self, mass):
         self.robotMass = mass
+
+    def setInstantaneousCapturePoint(self, ICP):
+        self.instantaneousCapturePoint = ICP
+
+    def getInstantaneousCapturePoint(self):
+        return self.instantaneousCapturePoint
 
     def getContactsPosWF(self):
         return self.contactsWF     

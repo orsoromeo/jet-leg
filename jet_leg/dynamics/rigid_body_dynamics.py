@@ -31,5 +31,4 @@ class RigidBodyDynamics:
         linear_aggr_wrench = inertial_linear - static_linear
         angular_aggr_wrench = inertial_angular - static_angular
         total_wrench = np.hstack([linear_aggr_wrench, angular_aggr_wrench])
-
         return total_wrench

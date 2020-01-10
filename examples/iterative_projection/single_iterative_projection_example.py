@@ -12,7 +12,9 @@ from jet_leg.plotting.plotting_tools import Plotter
 import random
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.dynamics.instantaneous_capture_point import InstantaneousCapturePoint
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
+from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
 
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
@@ -32,10 +34,10 @@ possible constraints for each foot:
  ONLY_FRICTION = only friction cone constraints are enforced
  FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
 '''
-constraint_mode_IP = ['FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION']
+constraint_mode_IP = ['ONLY_FRICTION',
+                      'ONLY_FRICTION',
+                      'ONLY_FRICTION',
+                      'ONLY_FRICTION']
 
 # number of decision variables of the problem
 #n = nc*6
@@ -88,9 +90,11 @@ comp_dyn = ComputationalDynamics(robot_name)
 params = IterativeProjectionParameters()
 
 params.pointContacts = False
+params.useInstantaneousCapturePoint = True
 params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
+params.comLinVel = [1.5, -1.0, 0.0]
 params.setCoMLinAcc(comWF_lin_acc)
 params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
@@ -117,6 +121,14 @@ IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_
 isConfigurationStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
 print isConfigurationStable
 print 'contact forces', contactForces
+
+''' compute Instantaneous Capture Point (ICP) and check if it belongs to the feasible region '''
+if params.useInstantaneousCapturePoint:
+    ICP = InstantaneousCapturePoint()
+    icp = ICP.compute(params)
+    params.instantaneousCapturePoint = icp
+    lpCheck = LpVertexRedundnacy()
+    isIcpInsideFeasibleRegion, lambdas = lpCheck.isPointRedundant(IP_points.T, icp)
 
 '''Plotting the contact points in the 3D figure'''
 fig = plt.figure()
@@ -179,7 +191,13 @@ if isConfigurationStable:
     plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM')
 else:
     plt.plot(comWF[0],comWF[1],'ro',markersize=15, label='CoM')
-    
+
+if params.useInstantaneousCapturePoint:
+    if isIcpInsideFeasibleRegion:
+        plt.plot(params.instantaneousCapturePoint[0], params.instantaneousCapturePoint[1], 'gs', markersize=15, label='ICP')
+    else:
+        plt.plot(params.instantaneousCapturePoint[0], params.instantaneousCapturePoint[1], 'rs', markersize=15, label='ICP')
+
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")

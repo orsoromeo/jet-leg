@@ -45,7 +45,7 @@ class LpVertexRedundnacy():
         subject to  G'*z + A'*y + c = 0
                     z >= 0. '''
         
-        dimensionality, numberOfVertices = np.shape(polytopeVertices)
+        dimensionality, numberOfVertices = np.shape(polytopeVertices) # vertices must be along the columns
         #print "num of vertices", numberOfVertices
         p = matrix(np.zeros(numberOfVertices))
         A1 = matrix(polytopeVertices)
@@ -53,7 +53,7 @@ class LpVertexRedundnacy():
         #print A2
         A = matrix(np.vstack([A1, A2]))
         b1 = matrix(point2check)
-        b2 = 1.0
+        b2 = 1.0 # sum of all the multipliers equal 1
         b = matrix(np.vstack([b1, b2]))
         G = -matrix(np.eye(numberOfVertices))
         h = matrix(np.zeros(numberOfVertices))
@@ -63,4 +63,5 @@ class LpVertexRedundnacy():
         #print "A", A
         #print "B", b
         lp = p, G, h, A, b
+        #print "is redundant", p, G, h, A, b
         return lp
