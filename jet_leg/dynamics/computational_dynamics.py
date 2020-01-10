@@ -226,7 +226,7 @@ class ComputationalDynamics:
     def check_equilibrium(self, LPparams, useVariableJacobian = False, verbose = False):
 
         p, G, h, A, b, isIKoutOfWorkSpace, LP_actuation_polygons = self.setup_lp(LPparams)
-
+        print p, G, h, A, b
         if isIKoutOfWorkSpace:
             #unfeasible_points = np.vstack([unfeasible_points, com_WF])
             print 'something is wrong in the inequalities or the point is out of workspace'
@@ -340,8 +340,10 @@ class ComputationalDynamics:
                                                                  LPparams.getCoMPosWF(),
                                                                  LPparams.externalCentroidalWrench,
                                                                  LPparams.getCoMLinAcc())
-
-        A = np.zeros((6,0))
+        if np.sum(stanceLegs) == 1:
+            A = np.zeros((5,0))
+        else:
+            A = np.zeros((6,0))
         stanceIndex = LPparams.getStanceIndex(stanceLegs)
         for j in stanceIndex:
             j = int(j)
@@ -353,9 +355,20 @@ class ComputationalDynamics:
                 A = matrix(A)
                 b = matrix(totalCentroidalWrench.reshape((6)))
             else:
-                A = np.hstack((A, GraspMat[:,0:5]))
-                A = matrix(A)
-                b = matrix(totalCentroidalWrench.reshape((6)))
+                ''' non-zero foot size case'''
+                if np.sum(stanceLegs) == 1:
+                    print "ciaooooo"
+                    ''' if there is only one stance foot the problem is overconstrained and we can remove the constraint on tau_z'''
+                    A = np.hstack((A, GraspMat[0:5,0:5]))
+                    A = matrix(A)
+                    totW = totalCentroidalWrench[0:5]
+                    b = matrix(totW.reshape((5)))
+                else:
+                    A = np.hstack((A, GraspMat[:,0:5]))
+                    A = matrix(A)
+                    b = matrix(totalCentroidalWrench.reshape((6)))
+
+
 
         G, h, isIKoutOfWorkSpace, LP_actuation_polygons = self.constr.getInequalities(LPparams)
         G = matrix(G)
