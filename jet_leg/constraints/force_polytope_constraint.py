@@ -78,7 +78,7 @@ class ForcePolytopeConstraint:
 
     def hexahedron(self, v_rep):
         geom = ComputationalGeometry()
-        h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6 = geom.get_halfspace_rep(v_rep)
+        h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6 = geom.get_hexahedron_halfspace_rep(v_rep)
         h_rep = np.vstack([h_rep1, h_rep2, h_rep3, h_rep4, h_rep5, h_rep6])
 
         if (h_rep[1, 3] > 0):

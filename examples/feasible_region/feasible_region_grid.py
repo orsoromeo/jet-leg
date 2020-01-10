@@ -6,11 +6,12 @@ Created on Tue Jun 12 10:54:31 2018
 """
 
 import numpy as np
-
+import time
 from numpy import array
 from jet_leg.plotting.plotting_tools import Plotter
 import random
 from jet_leg.computational_geometry.math_tools import Math
+from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.dynamics.instantaneous_capture_point import InstantaneousCapturePoint
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
@@ -126,23 +127,40 @@ if params.useInstantaneousCapturePoint:
     lpCheck = LpVertexRedundnacy()
     isIcpInsideFeasibleRegion, lambdas = lpCheck.isPointRedundant(IP_points.T, icp)
 
-
 """ Defining the equality constraints """
-resolutionX = 0.025
-resolutionY = 0.025
+resolutionX = 0.01
+resolutionY = 0.01
+windowSizeX = 0.9
+windowSizeY = 0.7
+binary_matrix = np.zeros((int(windowSizeY/resolutionY), int(windowSizeX/resolutionX)))
 feasible_points = np.zeros((0, 2))
 unfeasible_points = np.zeros((0, 2))
 
-for point2checkX in np.arange(-0.45 ,0.45 ,resolutionX):
-    for point2checkY in np.arange(-0.4 ,0.4 , resolutionY):
-        point2check = np.array([point2checkX, point2checkY])
-        # LPparams.setCoMPosWF(com_WF)
-        status, x = lpCheck.isPointRedundant(IP_points.T, point2check)
-        if status:
-            feasible_points = np.vstack([feasible_points, point2check])
+compGeom = ComputationalGeometry()
+facets = compGeom.compute_halfspaces_convex_hull(IP_points)
+print "facets", facets
 
+start_t_IP = time.time()
+idX = 0
+for point2checkX in np.arange(-windowSizeX/2.0, windowSizeX/2.0, resolutionX):
+    idY = 0
+    for point2checkY in np.arange(windowSizeY/2.0, -windowSizeY/2.0, -resolutionY):
+        point2check = np.array([point2checkX, point2checkY])
+        isPointFeasible = compGeom.isPointRedundant(facets, point2check)
+        # LPparams.setCoMPosWF(com_WF)
+        # isPointFeasible, x = lpCheck.isPointRedundant(IP_points.T, point2check)
+
+        if isPointFeasible:
+            binary_matrix[idY, idX] = 1
+            feasible_points = np.vstack([feasible_points, point2check])
         else:
+            binary_matrix[idY, idX] = 0
             unfeasible_points = np.vstack([unfeasible_points, point2check])
+        idY +=1
+    idX +=1
+
+
+print "time for computing the grid points", time.time() - start_t_IP
 
 '''Plotting the contact points in the 3D figure'''
 fig = plt.figure()
@@ -220,19 +238,24 @@ if params.useInstantaneousCapturePoint:
                  label='ICP')
 
 ''' plotting Iterative Projection points '''
-feasiblePointsSize = np.size(feasible_points,0)
-for j in range(0, feasiblePointsSize):
-    plt.scatter(feasible_points[j,0], feasible_points[j,1],c='g',s=50)
-    lastFeasibleIndex = j
-
-unfeasiblePointsSize = np.size(unfeasible_points,0)
-for j in range(0, unfeasiblePointsSize):
-    plt.scatter(unfeasible_points[j,0], unfeasible_points[j,1],c='r',s=50)
-    lastUnfeasibleIndex = j
+feasiblePointsSize = np.size(feasible_points, 0)
+#for j in range(0, feasiblePointsSize):
+#    plt.scatter(feasible_points[j, 0], feasible_points[j, 1], c='g', s=50)
+#    lastFeasibleIndex = j
+#
+unfeasiblePointsSize = np.size(unfeasible_points, 0)
+#for j in range(0, unfeasiblePointsSize):
+#    plt.scatter(unfeasible_points[j, 0], unfeasible_points[j, 1], c='r', s=50)
+#    lastUnfeasibleIndex = j
 
 print "number of feasible points", feasiblePointsSize
+print "number of unfeasible points", unfeasiblePointsSize,
+
 plt.grid()
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 plt.legend()
+
+plt.figure()
+plt.imshow(binary_matrix, cmap='gray')
 plt.show()

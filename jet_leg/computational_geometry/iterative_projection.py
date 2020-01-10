@@ -10,12 +10,11 @@ from scipy.spatial import ConvexHull
 import matplotlib.pyplot as plt
 import numpy as np
 from cvxopt import matrix, solvers
-from computational_dynamics import ComputationalDynamics
-from hyq_kinematics import HyQKinematics
+from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.kinematics.kinematics_interface import KinematicsInterface
 from math_tools import Math
-from constraints import Constraints
+from jet_leg.constraints.constraints import Constraints
 import random
-from plotting_tools import Plotter
 
 plt.close('all')
 
@@ -146,10 +145,11 @@ class IterativeProjection:
         
         A1 = A2#np.zeros((6,0))
         #print np.size(A2,0)
-        compDyn = ComputationalDynamics()
+        robot_name = 'anymal'
+        compDyn = ComputationalDynamics(robot_name)
         for j in range(0,contactsNumber):
             r = contacts[j,:]
-            GraspMat = compDyn.getGraspMatrix(r)
+            GraspMat = math.getGraspMatrix(r)
             A1 = np.hstack((A1, GraspMat[:,0:3]))
             #A1 = matrix(A1)
             b = matrix(np.vstack([-grav, np.transpose(torque)]).reshape((6)))
@@ -157,15 +157,11 @@ class IterativeProjection:
         #A = np.hstack((A2, A1))
         A = matrix(A1)
         #contactsFourLegs = np.vstack([contacts, np.zeros((4-nc,3))])\
-        kin = HyQKinematics()
+        kin = KinematicsInterface(robot_name)
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
         contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
-                                                  np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsFourLegs[:,2]),
-                                                    np.transpose(foot_vel[:,2]))
+        q, q_dot, J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs),
+                                                  np.transpose(foot_vel))
         if (not isOutOfWorkspace):
             #kin.update_jacobians(q)
             J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
@@ -190,10 +186,10 @@ class IterativeProjection:
                 
         return inner_vertex, force
                         
-    def compute_halfspaces(self, polygon):
+    def compute_halfspaces(self, vertices):
         ''' we assume the vertices matrix contains all the vertices on the rows. Therefore the size of
         vertices will be N x 2 where N is the number of vertices'''
-        vertices = polygon.vx
+
         hs = np.zeros((0,3))   
         for i in range(0,np.size(vertices,0)-1):
             p1 = vertices[i,:];
@@ -217,69 +213,68 @@ class IterativeProjection:
             #print new_hs
             hs = np.vstack([hs, new_hs])
         return hs
-            
 
-constraint_mode = 'ONLY_ACTUATION'
-com = np.array([0.0, 0.0, 0.0])
-mass = 80
-LF_foot = np.array([0.3, 0.3, -0.5])
-RF_foot = np.array([0.3, -0.3, -0.5])
-LH_foot = np.array([-0.3, 0.3, -0.5])
-RH_foot = np.array([-0.3, -0.3, -0.5])
-Y_inner = np.vstack((LF_foot[0:2],RF_foot[0:2],LH_foot[0:2],RH_foot[0:2],LF_foot[0:2]))
-
-#Y_inner = np.random.rand(30, 2)
-
-hull = ConvexHull(Y_inner)
-polygon = Polygon(Y_inner)
-iterativeProjection = IterativeProjection()
-
-innerPolygon = InnerPolygon(Y_inner)
-
-set1 = PolygonTriple()
-
-
-polygon.clockwise_sort(polygon)
-hs = iterativeProjection.compute_halfspaces(polygon)
-#print hs
-
-nc = 3
-
-contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-contacts = contactsToStack[0:nc, :]
-
-axisZ= np.array([[0.0], [0.0], [1.0]])
-
-math = Math()
-n1 = np.transpose(np.transpose(math.rpyToRot(1.5,1.5,0.0)).dot(axisZ))
-n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-normals = np.vstack([n1, n2, n3, n4])
-
-
-''' initialize Y_inner and Y_outer '''
-inner_vx, directions = iterativeProjection.initiliaze_inner_appriximation(constraint_mode, mass, nc, contacts, com, normals)
-outer_vx = iterativeProjection.initiliaze_outer_appriximation(inner_vx, directions)
-'''1) Compute the edges of Y inner'''
-
-'''2) Pick the edge cutting off the greatest fraction  of Y outer '''
-
-'''3) Find the point in Y furthest outside this edge '''
-
-'''4) Update the outer approximation '''
-
-'''5) Update the inner approximation '''
-
-
-#plt.plot(Y_inner[:,0], Y_inner[:,1], 'o')
-#for simplex in hull.simplices:
-#    plt.plot(Y_inner[simplex, 0], Y_inner[simplex, 1], 'k-')
-fig, ax = plt.subplots()
-plotter = Plotter()
-ax.grid(True)
-#plt.plot(Y_inner[hull.vertices,0], Y_inner[hull.vertices,1], 'r--', lw=5)
-plt.plot(Y_inner[hull.vertices,0], Y_inner[hull.vertices,1], 'bo', lw=5)
-plotter.plot_polygon(inner_vx, color = '--g')
-plotter.plot_polygon(outer_vx, color = '--r')
-plt.show()
+# constraint_mode = 'ONLY_ACTUATION'
+# com = np.array([0.0, 0.0, 0.0])
+# mass = 80
+# LF_foot = np.array([0.3, 0.3, -0.5])
+# RF_foot = np.array([0.3, -0.3, -0.5])
+# LH_foot = np.array([-0.3, 0.3, -0.5])
+# RH_foot = np.array([-0.3, -0.3, -0.5])
+# Y_inner = np.vstack((LF_foot[0:2],RF_foot[0:2],LH_foot[0:2],RH_foot[0:2],LF_foot[0:2]))
+# 
+# #Y_inner = np.random.rand(30, 2)
+# 
+# hull = ConvexHull(Y_inner)
+# polygon = Polygon(Y_inner)
+# iterativeProjection = IterativeProjection()
+# 
+# innerPolygon = InnerPolygon(Y_inner)
+# 
+# set1 = PolygonTriple()
+# 
+# 
+# polygon.clockwise_sort(polygon)
+# hs = iterativeProjection.compute_halfspaces(polygon)
+# #print hs
+# 
+# nc = 3
+# 
+# contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+# contacts = contactsToStack[0:nc, :]
+# 
+# axisZ= np.array([[0.0], [0.0], [1.0]])
+# 
+# math = Math()
+# n1 = np.transpose(np.transpose(math.rpyToRot(1.5,1.5,0.0)).dot(axisZ))
+# n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+# n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+# n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+# normals = np.vstack([n1, n2, n3, n4])
+# 
+# 
+# ''' initialize Y_inner and Y_outer '''
+# inner_vx, directions = iterativeProjection.initiliaze_inner_appriximation(constraint_mode, mass, nc, contacts, com, normals)
+# outer_vx = iterativeProjection.initiliaze_outer_appriximation(inner_vx, directions)
+# '''1) Compute the edges of Y inner'''
+# 
+# '''2) Pick the edge cutting off the greatest fraction  of Y outer '''
+# 
+# '''3) Find the point in Y furthest outside this edge '''
+# 
+# '''4) Update the outer approximation '''
+# 
+# '''5) Update the inner approximation '''
+# 
+# 
+# #plt.plot(Y_inner[:,0], Y_inner[:,1], 'o')
+# #for simplex in hull.simplices:
+# #    plt.plot(Y_inner[simplex, 0], Y_inner[simplex, 1], 'k-')
+# fig, ax = plt.subplots()
+# plotter = Plotter()
+# ax.grid(True)
+# #plt.plot(Y_inner[hull.vertices,0], Y_inner[hull.vertices,1], 'r--', lw=5)
+# plt.plot(Y_inner[hull.vertices,0], Y_inner[hull.vertices,1], 'bo', lw=5)
+# plotter.plot_polygon(inner_vx, color = '--g')
+# plotter.plot_polygon(outer_vx, color = '--r')
+# plt.show()
