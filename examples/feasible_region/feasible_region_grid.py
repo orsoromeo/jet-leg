@@ -20,6 +20,36 @@ from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
 
+def computeFeasibleRegionBinaryMatrix(IP_points, resolutionX = 0.01, resolutionY = 0.01, windowSizeX = 0.9, windowSizeY = 0.7):
+
+    binary_matrix = np.zeros((int(windowSizeY/resolutionY), int(windowSizeX/resolutionX)))
+    feasible_points = np.zeros((0, 2))
+    unfeasible_points = np.zeros((0, 2))
+
+    compGeom = ComputationalGeometry()
+    facets = compGeom.compute_halfspaces_convex_hull(IP_points)
+    print "facets", facets
+
+    idX = 0
+    for point2checkX in np.arange(-windowSizeX/2.0, windowSizeX/2.0, resolutionX):
+        idY = 0
+        for point2checkY in np.arange(windowSizeY/2.0, -windowSizeY/2.0, -resolutionY):
+            point2check = np.array([point2checkX, point2checkY])
+            isPointFeasible = compGeom.isPointRedundant(facets, point2check)
+            # LPparams.setCoMPosWF(com_WF)
+            # isPointFeasible, x = lpCheck.isPointRedundant(IP_points.T, point2check)
+
+            if isPointFeasible:
+                binary_matrix[idY, idX] = 1
+                feasible_points = np.vstack([feasible_points, point2check])
+            else:
+                binary_matrix[idY, idX] = 0
+                unfeasible_points = np.vstack([unfeasible_points, point2check])
+            idY +=1
+        idX +=1
+    return binary_matrix, feasible_points, unfeasible_points
+
+
 plt.close('all')
 math = Math()
 
@@ -127,39 +157,9 @@ if params.useInstantaneousCapturePoint:
     lpCheck = LpVertexRedundnacy()
     isIcpInsideFeasibleRegion, lambdas = lpCheck.isPointRedundant(IP_points.T, icp)
 
-""" Defining the equality constraints """
-resolutionX = 0.01
-resolutionY = 0.01
-windowSizeX = 0.9
-windowSizeY = 0.7
-binary_matrix = np.zeros((int(windowSizeY/resolutionY), int(windowSizeX/resolutionX)))
-feasible_points = np.zeros((0, 2))
-unfeasible_points = np.zeros((0, 2))
-
-compGeom = ComputationalGeometry()
-facets = compGeom.compute_halfspaces_convex_hull(IP_points)
-print "facets", facets
 
 start_t_IP = time.time()
-idX = 0
-for point2checkX in np.arange(-windowSizeX/2.0, windowSizeX/2.0, resolutionX):
-    idY = 0
-    for point2checkY in np.arange(windowSizeY/2.0, -windowSizeY/2.0, -resolutionY):
-        point2check = np.array([point2checkX, point2checkY])
-        isPointFeasible = compGeom.isPointRedundant(facets, point2check)
-        # LPparams.setCoMPosWF(com_WF)
-        # isPointFeasible, x = lpCheck.isPointRedundant(IP_points.T, point2check)
-
-        if isPointFeasible:
-            binary_matrix[idY, idX] = 1
-            feasible_points = np.vstack([feasible_points, point2check])
-        else:
-            binary_matrix[idY, idX] = 0
-            unfeasible_points = np.vstack([unfeasible_points, point2check])
-        idY +=1
-    idX +=1
-
-
+binaryMatrix, feasible_points, unfeasible_points = computeFeasibleRegionBinaryMatrix(IP_points)
 print "time for computing the grid points", time.time() - start_t_IP
 
 '''Plotting the contact points in the 3D figure'''
@@ -257,5 +257,5 @@ plt.ylabel("Y [m]")
 plt.legend()
 
 plt.figure()
-plt.imshow(binary_matrix, cmap='gray')
+plt.imshow(binaryMatrix, cmap='gray')
 plt.show()
