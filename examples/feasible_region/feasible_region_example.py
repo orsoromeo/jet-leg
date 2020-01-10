@@ -116,8 +116,7 @@ stanceID = params.getStanceIndex(stanceFeet)
 force_scaling_factor = 1500
 # plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 fz_tot = 0.0
-for j in range(0,
-               nc):  # this will only show the contact positions and normals of the feet that are defined to be in stance
+for j in range(0, nc):  # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ax.scatter(contactsWF[idx, 0], contactsWF[idx, 1], contactsWF[idx, 2], c='b', s=100)
 

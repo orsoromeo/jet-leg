@@ -75,10 +75,8 @@ class ComputationalDynamics:
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
             G = hstack([G, graspMatrix])
-            print "G", G
             
 #        print 'grasp matrix',G
-        print Ex, Ey
         E = vstack((Ex, Ey)) / (totalCentroidalWrench[2] )
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
@@ -90,7 +88,6 @@ class ComputationalDynamics:
             [0, 0, 1, 0, 0, 0],
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
-        print np.shape(A), A
         t = hstack([totalCentroidalWrench[0:3], 0.0])
 #        print extForceWF, t
 #        print 'mass ', robotMass
@@ -168,8 +165,6 @@ class ComputationalDynamics:
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
         proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
 
-        print "EQ", self.eq
-        print "INEQ", self.ineq
         if isIKoutOfWorkSpace:
             return False, False, False
         else:
@@ -225,7 +220,7 @@ class ComputationalDynamics:
     def check_equilibrium(self, LPparams, useVariableJacobian = False, verbose = False):
 
         p, G, h, A, b, isIKoutOfWorkSpace, LP_actuation_polygons = self.setup_lp(LPparams)
-        print p, G, h, A, b
+
         if isIKoutOfWorkSpace:
             #unfeasible_points = np.vstack([unfeasible_points, com_WF])
             print 'something is wrong in the inequalities or the point is out of workspace'
@@ -350,7 +345,6 @@ class ComputationalDynamics:
             else:
                 ''' non-zero foot size case'''
                 if np.sum(stanceLegs) == 1:
-                    print "ciaooooo"
                     ''' if there is only one stance foot the problem is overconstrained and we can remove the constraint on tau_z'''
                     A = np.hstack((A, GraspMat[0:5,0:5]))
                     A = matrix(A)

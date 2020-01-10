@@ -142,7 +142,6 @@ def talker(robotName):
 
     while not ros.is_shutdown():
 
-        print 'CIAOOOOOOO'
         p.get_sim_wbs()
 
         params.getParamsFromRosDebugTopic(p.hyq_debug_msg)
