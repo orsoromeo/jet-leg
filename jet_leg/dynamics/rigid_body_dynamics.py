@@ -23,7 +23,7 @@ class RigidBodyDynamics:
         static_linear = np.array([0.0, 0.0, robotsMass * gravity]) + extForce
         static_angular = np.cross(com_pos_WF, static_linear) + extTau
         inertial_linear = np.multiply(robotsMass, comLinAcc)
-        robotInertia = np.eye(3)  # TODO: add the inertial matrix here
+        robotInertia = np.eye(3)  # TODO: add the inertia matrix here!!!
         coriolis = robotInertia.dot(comAngVel)
         coriolis = np.cross(np.transpose(comAngVel), np.transpose(coriolis))
         coriolis = coriolis[0]

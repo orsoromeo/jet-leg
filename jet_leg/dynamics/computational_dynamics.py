@@ -49,12 +49,7 @@ class ComputationalDynamics:
     def setup_iterative_projection(self, iterative_projection_params, saturate_normal_force):
         
         stanceLegs = iterative_projection_params.getStanceFeet()
-   
         contactsWF = iterative_projection_params.getContactsPosWF()
-        robotMass = iterative_projection_params.robotMass
-        
-        ''' parameters to be tuned'''
-        g = 9.81
         contactsNumber = np.sum(stanceLegs)
         
         # Unprojected state is:
@@ -64,7 +59,11 @@ class ComputationalDynamics:
         Ey = np.zeros((0))        
         G = np.zeros((6,0))
 
-        extForce = iterative_projection_params.externalForceWF
+        totalCentroidalWrench = self.rbd.computeCentroidalWrench(iterative_projection_params.robotMass,
+                                                                 iterative_projection_params.getCoMPosWF(),
+                                                                 iterative_projection_params.externalCentroidalWrench,
+                                                                 iterative_projection_params.getCoMLinAcc())
+
         stanceIndex = iterative_projection_params.getStanceIndex(stanceLegs)
 
         for j in range(0,contactsNumber):
@@ -80,7 +79,7 @@ class ComputationalDynamics:
             
 #        print 'grasp matrix',G
         print Ex, Ey
-        E = vstack((Ex, Ey)) / (g*robotMass - extForce[2] )
+        E = vstack((Ex, Ey)) / (totalCentroidalWrench[2] )
         f = zeros(2)
         proj = (E, f)  # y = E * x + f
         
@@ -92,7 +91,7 @@ class ComputationalDynamics:
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
         print np.shape(A), A
-        t = hstack([- extForce[0], - extForce[1], g*robotMass - extForce[2], 0])
+        t = hstack([totalCentroidalWrench[0:3], 0.0])
 #        print extForceWF, t
 #        print 'mass ', robotMass
 #        print A,t
@@ -329,12 +328,6 @@ class ComputationalDynamics:
             p = matrix(np.zeros((5*nc,1)))
 
         contactsPosWF = LPparams.getContactsPosWF()
-        comWorldFrame = LPparams.getCoMPosWF()
-        extForce = LPparams.externalForce
-        totForce = grav
-        totForce[0] += extForce[0]
-        totForce[1] += extForce[1]
-        totForce[2] += extForce[2]
 
         totalCentroidalWrench = self.rbd.computeCentroidalWrench(LPparams.robotMass,
                                                                  LPparams.getCoMPosWF(),

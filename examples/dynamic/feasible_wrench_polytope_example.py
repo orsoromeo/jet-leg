@@ -90,7 +90,7 @@ params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
 params.setCoMLinAcc(comWF_lin_acc)
-params.setTorqueLims(comp_dyn.robotModel.robotModel.torque_limits)
+params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
