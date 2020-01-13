@@ -69,7 +69,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 # n = nc*6
-comWF = np.array([.0, -0.05, 0.0])
+comWF = np.array([.0, 0.0, 0.0])
 comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
@@ -80,8 +80,8 @@ extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
-RF_foot = np.array([0.3, -0.2, -0.4])
-LH_foot = np.array([-0.3, 0.2, -0.4])
+RF_foot = np.array([0.37, -0.2, -0.4])
+LH_foot = np.array([-0.23, 0.2, -0.4])
 RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
@@ -120,17 +120,17 @@ params = IterativeProjectionParameters()
 params.pointContacts = False
 params.useInstantaneousCapturePoint = True
 params.setContactsPosWF(contactsWF)
-params.externalCentroidalWrench = extCentroidalWrench
+params.externalCentroidalWrench = extCentroidalWrench # forces = [+- 100.0N, +- 100N, 200N,]  torques = [+- 25.0 Nm, +- 25Nm, +- 25Nm,]
 params.setCoMPosWF(comWF)
-params.comLinVel = [0.25, 0.0, 0.0]
-params.setCoMLinAcc(comWF_lin_acc)
+params.comLinVel = [0.25, 0.0, 0.0]  # [+- 2.0m/s, +- 2.0m/s, 0.5m/s]
+params.setCoMLinAcc(comWF_lin_acc)   # [+- 5m/s^2,+- 5m/s^2,+- 5m/s^2]
 params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
-params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
+
 
 ''' compute iterative projection 
 Outputs of "iterative_projection_bretl" are:
@@ -146,7 +146,7 @@ IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_
 
 '''I now check whether the given CoM configuration is stable or not'''
 isConfigurationStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
-print isConfigurationStable
+print "is CoM stable", isConfigurationStable
 print 'contact forces', contactForces
 
 ''' compute Instantaneous Capture Point (ICP) and check if it belongs to the feasible region '''
@@ -156,6 +156,8 @@ if params.useInstantaneousCapturePoint:
     params.instantaneousCapturePoint = icp
     lpCheck = LpVertexRedundnacy()
     isIcpInsideFeasibleRegion, lambdas = lpCheck.isPointRedundant(IP_points.T, icp)
+    print "is ICP stable? ", isIcpInsideFeasibleRegion
+    print "distance from edges of the polygon", np.min(lambdas)
 
 
 start_t_IP = time.time()
