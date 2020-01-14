@@ -60,9 +60,11 @@ class ComputationalDynamics:
         G = np.zeros((6,0))
 
         totalCentroidalWrench = self.rbd.computeCentroidalWrench(iterative_projection_params.robotMass,
+                                                                 self.robotModel.robotModel.trunkInertia,
                                                                  iterative_projection_params.getCoMPosWF(),
                                                                  iterative_projection_params.externalCentroidalWrench,
-                                                                 iterative_projection_params.getCoMLinAcc())
+                                                                 iterative_projection_params.getCoMLinAcc(),
+                                                                 iterative_projection_params.getCoMAngAcc())
 
         stanceIndex = iterative_projection_params.getStanceIndex(stanceLegs)
 
@@ -76,9 +78,9 @@ class ComputationalDynamics:
             Ey = hstack([Ey, graspMatrix[3]])
             G = hstack([G, graspMatrix])
             
-#        print 'grasp matrix',G
         E = vstack((Ex, Ey)) / (totalCentroidalWrench[2] )
-        f = zeros(2)
+        #f = zeros(2)
+        f = hstack([ totalCentroidalWrench[4], - totalCentroidalWrench[3]])  / (totalCentroidalWrench[2])
         proj = (E, f)  # y = E * x + f
         
         # see Equation (52) in "ZMP Support Areas for Multicontact..."
@@ -88,10 +90,9 @@ class ComputationalDynamics:
             [0, 0, 1, 0, 0, 0],
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
-        t = hstack([totalCentroidalWrench[0:3], 0.0])
+        t = hstack([totalCentroidalWrench[0:3], totalCentroidalWrench[5]])
 #        print extForceWF, t
 #        print 'mass ', robotMass
-#        print A,t
         eq = (A, t)  # A * x == t
 
         C, d, isIKoutOfWorkSpace, actuation_polygons = self.constr.getInequalities(iterative_projection_params)
@@ -325,9 +326,11 @@ class ComputationalDynamics:
         contactsPosWF = LPparams.getContactsPosWF()
 
         totalCentroidalWrench = self.rbd.computeCentroidalWrench(LPparams.robotMass,
+                                                                 self.robotModel.robotModel.trunkInertia,
                                                                  LPparams.getCoMPosWF(),
                                                                  LPparams.externalCentroidalWrench,
-                                                                 LPparams.getCoMLinAcc())
+                                                                 LPparams.getCoMLinAcc(),
+                                                                 LPparams.getCoMAngAcc())
         if np.sum(stanceLegs) == 1:
             A = np.zeros((5,0))
         else:

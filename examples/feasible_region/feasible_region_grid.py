@@ -20,35 +20,6 @@ from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
 
-def computeFeasibleRegionBinaryMatrix(IP_points, resolutionX = 0.01, resolutionY = 0.01, windowSizeX = 0.9, windowSizeY = 0.7):
-
-    binary_matrix = np.zeros((int(windowSizeY/resolutionY), int(windowSizeX/resolutionX)))
-    feasible_points = np.zeros((0, 2))
-    unfeasible_points = np.zeros((0, 2))
-
-    compGeom = ComputationalGeometry()
-    facets = compGeom.compute_halfspaces_convex_hull(IP_points)
-    print "facets", facets
-
-    idX = 0
-    for point2checkX in np.arange(-windowSizeX/2.0, windowSizeX/2.0, resolutionX):
-        idY = 0
-        for point2checkY in np.arange(windowSizeY/2.0, -windowSizeY/2.0, -resolutionY):
-            point2check = np.array([point2checkX, point2checkY])
-            isPointFeasible = compGeom.isPointRedundant(facets, point2check)
-            # LPparams.setCoMPosWF(com_WF)
-            # isPointFeasible, x = lpCheck.isPointRedundant(IP_points.T, point2check)
-
-            if isPointFeasible:
-                binary_matrix[idY, idX] = 1
-                feasible_points = np.vstack([feasible_points, point2check])
-            else:
-                binary_matrix[idY, idX] = 0
-                unfeasible_points = np.vstack([unfeasible_points, point2check])
-            idY +=1
-        idX +=1
-    return binary_matrix, feasible_points, unfeasible_points
-
 
 plt.close('all')
 math = Math()
@@ -70,12 +41,12 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 # number of decision variables of the problem
 # n = nc*6
 comWF = np.array([.0, 0.0, 0.0])
-comWF_lin_acc = np.array([.0, .0, .0])
-comWF_ang_acc = np.array([.0, .0, .0])
+comWF_lin_acc = np.array([0.0, .0, .0])
+comWF_ang_acc = np.array([10.0, 0.0, .0])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForce = np.array([0., .0, 0.0 * 9.81])  # units are N
-extCentroidalTorque = np.array([.0, .0, .0])  # units are Nm
+extForce = np.array([0., 0.0, 0.0 * 9.81])  # units are N
+extCentroidalTorque = np.array([0.0, 0.0, 0.0])  # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
 """ contact points in the World Frame"""
@@ -124,6 +95,7 @@ params.externalCentroidalWrench = extCentroidalWrench # forces = [+- 100.0N, +- 
 params.setCoMPosWF(comWF)
 params.comLinVel = [0.25, 0.0, 0.0]  # [+- 2.0m/s, +- 2.0m/s, 0.5m/s]
 params.setCoMLinAcc(comWF_lin_acc)   # [+- 5m/s^2,+- 5m/s^2,+- 5m/s^2]
+params.setCoMAngAcc(comWF_ang_acc)   # [+- 1rad/s^2,+- 1rad/s^2,+- 1rad/s^2]
 params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
 params.setConstraintModes(constraint_mode_IP)
@@ -161,8 +133,11 @@ if params.useInstantaneousCapturePoint:
 
 
 start_t_IP = time.time()
-binaryMatrix, feasible_points, unfeasible_points = computeFeasibleRegionBinaryMatrix(IP_points)
-print "time for computing the grid points", time.time() - start_t_IP
+compGeom = ComputationalGeometry()
+#feasibility = compGeom.isPointRedundantGivenVertices(IP_points, [0.2, 0.1])
+#print "is point feasible", feasibility
+binaryMatrix, feasible_points, unfeasible_points = compGeom.computeFeasibleRegionBinaryMatrix(IP_points)
+print "time needed to compute the grid points", time.time() - start_t_IP
 
 '''Plotting the contact points in the 3D figure'''
 fig = plt.figure()
@@ -183,7 +158,7 @@ for j in range(0,
     '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
     if isConfigurationStable:
         ax.scatter(comWF[0], comWF[1], comWF[2], c='g', s=100)
-        grf = contactForces[j * 3:j * 3 + 3]
+        grf = contactForces[j*5 : j*5 + 3]
         fz_tot += grf[2]
 
         ''' draw the set contact forces that respects the constraints'''
@@ -258,6 +233,7 @@ plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 plt.legend()
 
+#
 plt.figure()
 plt.imshow(binaryMatrix, cmap='gray')
 plt.show()

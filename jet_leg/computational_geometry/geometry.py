@@ -36,11 +36,12 @@ class Geometry(Math):
         ''' we assume the vertices matrix contains all the vertices on the rows. Therefore the size of
         vertices will be N x 2 where N is the number of vertices'''
         vertices = self.clockwise_sort(vertices)
-        print "clockwise sorted", vertices
+
         hull = ConvexHull(vertices)
         facets = hull.equations
         ''' if the offset term is positive it means that the corresponding line refers to >= .'''
-        flipped_facets = self.flip_normal_inwards(facets, vertices)
+        #flipped_facets = self.flip_normal_inwards(facets, vertices)
+        flipped_facets = facets
         return flipped_facets
 
     def flip_normal_inwards(self, facets, vertices):
@@ -52,21 +53,25 @@ class Geometry(Math):
         A = facets[:, :-1]
         b = facets[:, -1]
 
-        centroidX = np.sum(vertices[:-1,0])
+        centroidX = np.sum(vertices[:-1,0]) # sum all the rows but the last one (the last vertex is a duplicate of the first one)
         centroidX = centroidX/float(vertices_number)
         centroidY = np.sum(vertices[:-1,1])
         centroidY = centroidY/float(vertices_number)
-        centroid = [centroidX, centroidY]
+        centroid = [centroidX, centroidY] # the centroid is always inside the polygon, therefore its distance from the edges has to be always negative
+        print vertices_number, centroid
         new_facets = np.zeros((numberOfFacets, 3))
         for j in np.arange(0, numberOfFacets):
-            normalVec = self.normalize(A[j])
+            #normalVec = self.normalize(A[j])
+            normalVec = A[j]
             distance = np.dot(normalVec, centroid) + b[j]
-            if distance > 0:
+            print "old distance", distance
+            if distance >= 0:
                 new_facets[j,0:2] = -A[j]
                 new_facets[j, 2] = -b[j]
             else:
                 new_facets[j,0:2] = A[j]
                 new_facets[j, 2] = b[j]
+            print "new distance", np.dot(new_facets[j,0:2], centroid) + new_facets[j,2]
 
         return new_facets
 

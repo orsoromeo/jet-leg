@@ -107,6 +107,7 @@ class ComputationalGeometry(Geometry):
     def isPointRedundant(self, facets, point2check):
         ''' This code assumes that the facets are given in the form [A|b] where:
                             A x < b                                            '''
+
         A = facets[:, :-1]
         b = facets[:, -1]
         dist = np.dot(A, point2check) + b
@@ -116,3 +117,38 @@ class ComputationalGeometry(Geometry):
         else:
             isPointInside = True
         return isPointInside
+
+    def isPointRedundantGivenVertices(self, IP_points, point2check):
+
+        facets = self.compute_halfspaces_convex_hull(IP_points)
+        isPointFeasible = self.isPointRedundant(facets, point2check)
+
+        return isPointFeasible
+
+    def computeFeasibleRegionBinaryMatrix(self, IP_points, resolutionX=0.01, resolutionY=0.01, windowSizeX=0.9,
+                                          windowSizeY=0.7):
+
+        binary_matrix = np.zeros((int(windowSizeY / resolutionY), int(windowSizeX / resolutionX)))
+        feasible_points = np.zeros((0, 2))
+        unfeasible_points = np.zeros((0, 2))
+
+        facets = self.compute_halfspaces_convex_hull(IP_points)
+
+        idX = 0
+        for point2checkX in np.arange(-windowSizeX / 2.0, windowSizeX / 2.0, resolutionX):
+            idY = 0
+            for point2checkY in np.arange(windowSizeY / 2.0, -windowSizeY / 2.0, -resolutionY):
+                point2check = np.array([point2checkX, point2checkY])
+                isPointFeasible = self.isPointRedundant(facets, point2check)
+                # LPparams.setCoMPosWF(com_WF)
+                # isPointFeasible, x = lpCheck.isPointRedundant(IP_points.T, point2check)
+
+                if isPointFeasible:
+                    binary_matrix[idY, idX] = 1
+                    feasible_points = np.vstack([feasible_points, point2check])
+                else:
+                    binary_matrix[idY, idX] = 0
+                    unfeasible_points = np.vstack([unfeasible_points, point2check])
+                idY += 1
+            idX += 1
+        return binary_matrix, feasible_points, unfeasible_points
