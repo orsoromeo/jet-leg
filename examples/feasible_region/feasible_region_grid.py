@@ -136,7 +136,7 @@ start_t_IP = time.time()
 compGeom = ComputationalGeometry()
 #feasibility = compGeom.isPointRedundantGivenVertices(IP_points, [0.2, 0.1])
 #print "is point feasible", feasibility
-binaryMatrix, feasible_points, unfeasible_points = compGeom.computeFeasibleRegionBinaryMatrix(IP_points)
+binaryMatrix, feasible_points, unfeasible_points, marginMatrix = compGeom.computeFeasibleRegionBinaryMatrix(IP_points)
 print "time needed to compute the grid points", time.time() - start_t_IP
 
 '''Plotting the contact points in the 3D figure'''
@@ -193,6 +193,7 @@ for j in range(0, nc):  # this will only show the force polytopes of the feet th
 
 ''' 2D figure '''
 plt.figure()
+
 for j in range(0,
                nc):  # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
@@ -235,5 +236,6 @@ plt.legend()
 
 #
 plt.figure()
+# plt.imshow(marginMatrix, cmap='gray')
 plt.imshow(binaryMatrix, cmap='gray')
 plt.show()

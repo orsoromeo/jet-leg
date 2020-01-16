@@ -110,13 +110,13 @@ class ComputationalGeometry(Geometry):
 
         A = facets[:, :-1]
         b = facets[:, -1]
-        dist = np.dot(A, point2check) + b
-        sorted_sol = sorted(dist)
-        if sorted_sol[-1] > 0.0:
+        distances_from_edges = np.dot(A, point2check) + b
+        min_distance = min(-distances_from_edges)
+        if min_distance < 0.0:
             isPointInside = False
         else:
             isPointInside = True
-        return isPointInside
+        return isPointInside, min_distance
 
     def isPointRedundantGivenVertices(self, IP_points, point2check):
 
@@ -129,6 +129,7 @@ class ComputationalGeometry(Geometry):
                                           windowSizeY=0.7):
 
         binary_matrix = np.zeros((int(windowSizeY / resolutionY), int(windowSizeX / resolutionX)))
+        margin_matrix = np.zeros((int(windowSizeY / resolutionY), int(windowSizeX / resolutionX)))
         feasible_points = np.zeros((0, 2))
         unfeasible_points = np.zeros((0, 2))
 
@@ -139,10 +140,10 @@ class ComputationalGeometry(Geometry):
             idY = 0
             for point2checkY in np.arange(windowSizeY / 2.0, -windowSizeY / 2.0, -resolutionY):
                 point2check = np.array([point2checkX, point2checkY])
-                isPointFeasible = self.isPointRedundant(facets, point2check)
+                isPointFeasible, margin = self.isPointRedundant(facets, point2check)
                 # LPparams.setCoMPosWF(com_WF)
                 # isPointFeasible, x = lpCheck.isPointRedundant(IP_points.T, point2check)
-
+                margin_matrix[idY, idX] = margin
                 if isPointFeasible:
                     binary_matrix[idY, idX] = 1
                     feasible_points = np.vstack([feasible_points, point2check])
@@ -151,4 +152,4 @@ class ComputationalGeometry(Geometry):
                     unfeasible_points = np.vstack([unfeasible_points, point2check])
                 idY += 1
             idX += 1
-        return binary_matrix, feasible_points, unfeasible_points
+        return binary_matrix, feasible_points, unfeasible_points, margin_matrix
