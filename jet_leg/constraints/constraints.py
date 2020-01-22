@@ -5,7 +5,6 @@ Created on Mon May 28 13:00:59 2018
 @author: Romeo Orsolino
 """
 import numpy as np
-from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.leg_force_polytopes import LegForcePolytopes
 from scipy.linalg import block_diag
@@ -25,6 +24,7 @@ class Constraints:
         self.frictionConeConstr = FrictionConeConstraint()
         self.forcePolytopeConstr = ForcePolytopeConstraint(robot_kinematics)
         self.model = robot_model
+        self.currentLegForcePolytope = Polytope()
 
     def getInequalities(self, params, saturate_normal_force = False):
 
@@ -108,11 +108,11 @@ class Constraints:
                     Ctemp = np.zeros((0,0))
                     d_cone = np.zeros((0))
 
-            currentLegForcePolytope = Polytope()
-            currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
-
-            currentLegForcePolytope.setVertices(leg_actuation_polygon[j])
-            forcePolytopes.forcePolytope[j] = currentLegForcePolytope
+            if isIKoutOfWorkSpace is False:
+                self.currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
+                print "leg_actuation_polygon", leg_actuation_polygon
+                self.currentLegForcePolytope.setVertices(leg_actuation_polygon[j])
+                forcePolytopes.forcePolytope[j] = self.currentLegForcePolytope
                 
             C = block_diag(C, Ctemp)
             d = np.hstack([d, d_cone])
