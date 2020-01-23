@@ -110,7 +110,6 @@ class Constraints:
 
             if isIKoutOfWorkSpace is False:
                 self.currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
-                print "leg_actuation_polygon", leg_actuation_polygon
                 self.currentLegForcePolytope.setVertices(leg_actuation_polygon[j])
                 forcePolytopes.forcePolytope[j] = self.currentLegForcePolytope
                 

@@ -14,6 +14,7 @@ from jet_leg.kinematics.kinematics_interface import KinematicsInterface
 from jet_leg.robots.robot_model_interface import RobotModelInterface
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.geometry import Geometry
+from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from cvxopt import matrix, solvers
 import time
@@ -30,6 +31,7 @@ class ComputationalDynamics:
         self.ineq = ([],[])
         self.eq = ([],[])
         self.rbd = RigidBodyDynamics()
+        self.compGeom = ComputationalGeometry()
 
     ''' 
     This function is used to prepare all the variables that will be later used 
@@ -159,13 +161,11 @@ class ComputationalDynamics:
             print(err.args)
             return False, False, False
 
-
     def iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
 
         start_t_IP = time.time()
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
         proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
-
         if isIKoutOfWorkSpace:
             return False, False, False
         else:
@@ -366,3 +366,19 @@ class ComputationalDynamics:
 
         lp = p, G, h, A, b
         return p, G, h, A, b, isIKoutOfWorkSpace, LP_actuation_polygons
+
+    def compute_IP_margin(self, iterative_projection_params, saturate_normal_force = False):
+        ''' compute iterative projection
+        Outputs of "iterative_projection_bretl" are:
+        IP_points = resulting 2D vertices
+        actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
+        computation_time = how long it took to compute the iterative projection
+        '''
+        IP_points, force_polytopes, IP_computation_time = self.iterative_projection_bretl(iterative_projection_params)
+
+        facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+        comWF = iterative_projection_params.getCoMPosWF()
+        point2check = np.array([comWF[0], comWF[1]])
+        isPointFeasible, margin = self.compGeom.isPointRedundant(facets, point2check)
+
+        return  isPointFeasible, margin

@@ -109,6 +109,11 @@ class IterativeProjectionParameters:
     def setTotalMass(self, mass):
         self.robotMass = mass
 
+    def setEulerAngles(self, eurlerAngles):
+        self.roll = eurlerAngles[0]
+        self.pitch = eurlerAngles[1]
+        self.yaw = eurlerAngles[2]
+
     def setInstantaneousCapturePoint(self, ICP):
         self.instantaneousCapturePoint = ICP
 
@@ -143,7 +148,7 @@ class IterativeProjectionParameters:
         return self.normals
 
     def getOrientation(self):
-        return self.roll, self.pitch, self.yaw
+        return [self.roll, self.pitch, self.yaw]
         
     def getConstraintModes(self):
         return self.constraintMode
