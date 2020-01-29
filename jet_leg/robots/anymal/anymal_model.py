@@ -1,14 +1,12 @@
 import numpy as np
 
+
 class AnymalModel:
     def __init__(self):
-
         self.trunkMass = 35
         self.trunkInertia = np.array([[0.946438, -0.000938112, 0.00595386],
-                            [-0.000938112, 1.94478, 0.00146328],
-                            [0.00595386, 0.00146328, 2.01835]])
-
-        [0.946438, 1.94478, 2.01835, 0.000938112, -0.00595386, -0.00146328, ]
+                                      [-0.000938112, 1.94478, 0.00146328],
+                                      [0.00595386, 0.00146328, 2.01835]])
 
         ''' torque limits for each leg (this code assumes three joints per leg)
         HAA = Hip Abduction Adduction
@@ -20,4 +18,4 @@ class AnymalModel:
         LH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
         RH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
         self.joint_torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-        self.contact_torque_limits = np.array([-2, 2])
+        self.contact_torque_limits = np.array([-4, 4])
