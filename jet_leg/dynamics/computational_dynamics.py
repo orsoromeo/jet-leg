@@ -72,7 +72,7 @@ class ComputationalDynamics:
 
         for j in range(0,contactsNumber):
             r = contactsWF[int(stanceIndex[j]),:]
-            if iterative_projection_params.pointContacts:
+            if not iterative_projection_params.useContactTorque:
                 graspMatrix = self.math.getGraspMatrix(r)[:,0:3]
             else:
                 graspMatrix = self.math.getGraspMatrix(r)[:,0:5]
@@ -318,7 +318,7 @@ class ComputationalDynamics:
         totMass = LPparams.robotMass
         nc = np.sum(stanceLegs)
         grav = np.array([[0.], [0.], [-g*totMass]])
-        if LPparams.pointContacts:
+        if not LPparams.useContactTorque:
             p = matrix(np.zeros((3*nc,1)))
         else:
             p = matrix(np.zeros((5*nc,1)))
@@ -341,7 +341,7 @@ class ComputationalDynamics:
             #print 'index in lp ',j
             r = contactsPosWF[j,:]
             GraspMat = self.math.getGraspMatrix(r)
-            if LPparams.pointContacts:
+            if not LPparams.useContactTorque:
                 A = np.hstack((A, GraspMat[:,0:3]))
                 A = matrix(A)
                 b = matrix(totalCentroidalWrench.reshape((6)))

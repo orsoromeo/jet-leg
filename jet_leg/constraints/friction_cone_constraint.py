@@ -14,11 +14,11 @@ class FrictionConeConstraint:
         self.min_contact_wrench = -0.1
         self.math = Math()
 
-    def linearized_cone_halfspaces_world(self, pointContacts, mu, normal, contact_torque_lims, ng = 4, max_normal_force=10000.0,
+    def linearized_cone_halfspaces_world(self, useContactTorque, mu, normal, contact_torque_lims, ng = 4, max_normal_force=10000.0,
                                          saturate_max_normal_force=False):
 
         constraints_local_frame, d_cone = self.linearized_cone_halfspaces(ng, mu, max_normal_force,
-                                                                          saturate_max_normal_force, pointContacts, contact_torque_lims)
+                                                                          saturate_max_normal_force, useContactTorque, contact_torque_lims)
         n = self.math.normalize(normal)
         rotationMatrix = self.math.rotation_matrix_from_normal(n)
         constr_pure_force_local = constraints_local_frame[0:4,0:3]
@@ -50,10 +50,10 @@ class FrictionConeConstraint:
 
         return c_force
 
-    def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force, pointContacts, contact_torque_lims):
+    def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force, useContactTorque, contact_torque_lims):
         ''' Inequality matrix for a contact force in local contact frame: '''
         if ng == 4:
-            if pointContacts:
+            if not useContactTorque:
                 c_force = np.array([
                     [-1, 0, -mu],
                     [+1, 0, -mu],

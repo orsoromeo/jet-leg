@@ -89,7 +89,7 @@ comp_dyn = ComputationalDynamics(robot_name)
 params = IterativeProjectionParameters()
 
 params.setContactsPosWF(contacts)
-params.pointContacts = False
+params.useContactTorque = False
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
 params.setCoMLinAcc(comWF_lin_acc)
@@ -130,7 +130,7 @@ for j in range(0,
     '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
     if isConfigurationStable:
         ax.scatter(comWF[0], comWF[1], comWF[2], c='g', s=100)
-        if params.pointContacts:
+        if not params.useContactTorque:
             grf = contactForces[j * 3:j * 3 + 3]
             fz_tot += grf[2]
         else:

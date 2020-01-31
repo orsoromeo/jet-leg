@@ -60,7 +60,7 @@ class IterativeProjectionParameters:
         self.friction = 0.8
         self.robotMass = 0.0 #Kg
         self.numberOfGenerators = 4
-        self.pointContacts = True
+        self.useContactTorque = True
         self.useInstantaneousCapturePoint = True
         self.actual_swing = 0
 

@@ -24,7 +24,7 @@ class ForcePolytopeConstraint:
         self.frictionConeConstr = FrictionConeConstraint()
         self.compGeom = ComputationalGeometry()
 
-    def compute_actuation_constraints(self, contact_iterator, torque_limits, point_contact, contact_torque_lims):
+    def compute_actuation_constraints(self, contact_iterator, torque_limits, use_contact_torque, contact_torque_lims):
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
         # print J_LF, J_RF, J_LH, J_RH
@@ -43,7 +43,7 @@ class ForcePolytopeConstraint:
 
             C1 = np.zeros((0, 0))
             d1 = np.zeros((1, 0))
-            if point_contact:
+            if not use_contact_torque:
                 halfSpaceConstraints, knownTerm = self.hexahedron(actuation_polygons[contact_iterator])
             else:
                 hexahedronHalfSpaceConstraints, d = self.hexahedron(actuation_polygons[contact_iterator])
