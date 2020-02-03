@@ -93,7 +93,7 @@ class Constraints:
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
                 C1, d1, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim, params.useContactTorque, contact_torque_lims)
                 C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(params.useContactTorque, friction_coeff, normals[j,:], contact_torque_lims)
-                print C1.shape, C2.shape, params.useContactTorque
+
                 if isIKoutOfWorkSpace is False:
                     #                print d1
                     Ctemp = np.vstack([C1, C2])
@@ -108,7 +108,6 @@ class Constraints:
                 else:
                     Ctemp = np.zeros((0,0))
                     d_cone = np.zeros((0))
-                print "leg", j, "polytopes", Ctemp, d_cone
 
             if isIKoutOfWorkSpace is False:
                 self.currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
