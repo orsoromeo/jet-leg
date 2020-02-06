@@ -71,8 +71,8 @@ print 'stanceLegs ' ,stanceFeet
 
 ''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
 axisZ= array([[0.0], [0.0], [1.0]])
-
-n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LF
+n1 = np.transpose(np.transpose(math.rpyToRot(0.5,0.0,0.0)).dot(axisZ))  # LF
+r, p, y = math.normalToRpy(n1) # this can be used for training the RL
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # RF
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LH
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # RH
