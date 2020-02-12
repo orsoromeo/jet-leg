@@ -15,6 +15,7 @@ from jet_leg.robots.robot_model_interface import RobotModelInterface
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.geometry import Geometry
 from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
+from jet_leg.dynamics.instantaneous_capture_point import InstantaneousCapturePoint
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from cvxopt import matrix, solvers
 import time
@@ -32,6 +33,7 @@ class ComputationalDynamics:
         self.eq = ([],[])
         self.rbd = RigidBodyDynamics()
         self.compGeom = ComputationalGeometry()
+        self.icp = InstantaneousCapturePoint()
 
     ''' 
     This function is used to prepare all the variables that will be later used 
@@ -378,7 +380,12 @@ class ComputationalDynamics:
 
         facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
         comWF = iterative_projection_params.getCoMPosWF()
-        point2check = np.array([comWF[0], comWF[1]])
-        isPointFeasible, margin = self.compGeom.isPointRedundant(facets, point2check)
+        if(iterative_projection_params.useInstantaneousCapturePoint):
+            ICP = self.icp.compute(iterative_projection_params)
+            iterative_projection_params.instantaneousCapturePoint = ICP
+            referencePoint = np.array([ICP[0], ICP[1]])
+        else:
+            referencePoint = np.array([comWF[0], comWF[1]])
+        isPointFeasible, margin = self.compGeom.isPointRedundant(facets, referencePoint)
 
         return  isPointFeasible, margin
