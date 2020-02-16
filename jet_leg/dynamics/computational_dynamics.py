@@ -377,8 +377,13 @@ class ComputationalDynamics:
         computation_time = how long it took to compute the iterative projection
         '''
         IP_points, force_polytopes, IP_computation_time = self.iterative_projection_bretl(iterative_projection_params)
-
         facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+        reference_point = self.getReferencePoint(iterative_projection_params)
+        isPointFeasible, margin = self.compGeom.isPointRedundant(facets, reference_point)
+
+        return  isPointFeasible, margin
+
+    def getReferencePoint(self, iterative_projection_params):
         comWF = iterative_projection_params.getCoMPosWF()
         if(iterative_projection_params.useInstantaneousCapturePoint):
             ICP = self.icp.compute(iterative_projection_params)
@@ -386,6 +391,5 @@ class ComputationalDynamics:
             referencePoint = np.array([ICP[0], ICP[1]])
         else:
             referencePoint = np.array([comWF[0], comWF[1]])
-        isPointFeasible, margin = self.compGeom.isPointRedundant(facets, referencePoint)
 
-        return  isPointFeasible, margin
+        return referencePoint

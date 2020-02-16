@@ -79,6 +79,15 @@ comp_dyn = ComputationalDynamics(robot_name)
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
+""" contact points in the World Frame"""
+LF_foot = np.array([0.3, 0.2, -0.4])
+RF_foot = np.array([0.3, -0.2, -0.4])
+LH_foot = np.array([-0.3, 0.2, -0.4])
+RH_foot = np.array([-0.3, -0.2, -0.4])
+
+contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+params.setContactsPosWF(contactsWF)
+
 
 start = time.time()
 
@@ -100,16 +109,32 @@ jac = Jacobians("anymal")
 comp_geom = ComputationalGeometry()
 com = CoM(params)
 
+delta_y_range = 0.5
+delta_step = 0.1
 num_of_tests = 25
+delta_y_range_vec = np.linspace(-delta_y_range/2.0, delta_y_range/2.0, num_of_tests)
 print "number of tests", num_of_tests
-margin = np.zeros(num_of_tests)
-jac_com_pos = np.zeros(num_of_tests)
-jac_com_orient = np.zeros(num_of_tests)
-jac_com_lin_vel = np.zeros(num_of_tests)
-jac_com_lin_acc = np.zeros(num_of_tests)
-jac_feet = np.zeros(num_of_tests)
 
-count = 0
+margin, jac_com_pos = jac.plotMarginAndJacobianWrtComPosition(params, delta_y_range_vec)
+
+print "margin", margin
+plt.figure(1)
+plt.subplot(211)
+plt.plot(delta_y_range_vec, margin, 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("com y [m]")
+plt.ylabel("margin [m]")
+
+plt.subplot(212)
+plt.plot(delta_y_range_vec, jac_com_pos, 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("com y [m]")
+plt.ylabel("margin [m]")
+
+delta_vel_range = 0.7
+delta_vel_range_vec = np.linspace(-delta_vel_range/2.0, delta_vel_range/2.0, num_of_tests)
+print num_of_tests, np.shape(delta_vel_range_vec)
+
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
 RF_foot = np.array([0.3, -0.2, -0.4])
@@ -118,14 +143,9 @@ RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 params.setContactsPosWF(contactsWF)
-delta_vel_range = 0.7
-delta_vel_range_vec = np.linspace(-delta_vel_range/2.0, delta_vel_range/2.0, num_of_tests)
-print num_of_tests, np.shape(delta_vel_range_vec)
 
 margin, jac_com_lin_vel = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params, delta_vel_range_vec)
 
-print margin
-print jac_com_lin_vel
 plt.figure(2)
 plt.subplot(211)
 plt.plot(delta_vel_range_vec, margin, 'g', markersize=15, label='CoM')

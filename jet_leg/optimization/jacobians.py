@@ -1,11 +1,46 @@
 import numpy as np
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 import copy
 
 class Jacobians:
     def __init__(self,robot_name):
         self.compDyn = ComputationalDynamics(robot_name)
-        self.delta = 0.01
+        self.compGeom = ComputationalGeometry()
+        self.delta = 0.001
+
+
+    def firstOrderCentralDifferences(self, function, delta):
+        return False
+
+    def computeComPosJacobianSecondOrderCentral(self, params):
+        jacobian = np.zeros(3)
+        initialCoMPos = copy.copy(params.comPositionWF)
+        print "initialCoMPos ", initialCoMPos
+
+        for j in np.arange(0, 3):
+            params.comPositionWF = initialCoMPos
+            params.comPositionWF[j] = initialCoMPos[j] + self.delta / 2.0
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+
+            params.comPositionWF = initialCoMPos
+            isPointFeasible, margin0 = self.compDyn.compute_IP_margin(params)
+            diff = margin1 - margin0
+            jac_left = diff / self.delta
+
+
+            params.comPositionWF = initialCoMPos
+            params.comPositionWF[j] = initialCoMPos[j] - self.delta / 2.0
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            diff = margin0 - margin2
+            jac_right = diff / self.delta
+
+            diff = jac_left - jac_right
+            jacobian[j] = diff / self.delta
+            print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
+
+        return jacobian
+
 
     def computeComPosJacobian(self, params):
         jacobian = np.zeros(3)
@@ -102,3 +137,122 @@ class Jacobians:
             jacobian[j] = diff / self.delta
 
         return jacobian
+
+    def plotMarginAndJacobianOfMarginWrtComVelocity(self, params, velocity_range):
+        num_of_tests = np.shape(velocity_range)
+        margin = np.zeros(num_of_tests)
+        jac_com_lin_vel = np.zeros(num_of_tests)
+        count = 0
+        for delta_vel in velocity_range:
+            params.comLinVel = [0., delta_vel, 0.0]
+            print "count",count, params.comLinVel, params.comPositionWF, params.getContactsPosWF()
+            ''' compute iterative projection 
+            Outputs of "iterative_projection_bretl" are:
+            IP_points = resulting 2D vertices
+            actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
+            computation_time = how long it took to compute the iterative projection
+            '''
+            IP_points, force_polytopes, IP_computation_time = self.compDyn.iterative_projection_bretl(params)
+
+            '''I now check whether the given CoM configuration is stable or not'''
+            isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
+            print "is CoM stable?", isCoMStable
+            # print 'Contact forces:', contactForces
+
+            facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+            point2check = self.compDyn.getReferencePoint(params)
+            isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
+
+            marginJAcWrtComLinVel = self.computeComLinVelJacobian(params)
+            print "marginJAcWrtComLinVel", marginJAcWrtComLinVel
+            jac_com_lin_vel[count] = marginJAcWrtComLinVel[1]
+            # print "com lin vel jacobian", jac_com_lin_vel
+
+            count += 1
+
+        return margin, jac_com_lin_vel
+
+    def plotMarginAndJacobianWrtComPosition(self, params, com_pos_range_y):
+        num_of_tests = np.shape(com_pos_range_y)
+        margin = np.zeros(num_of_tests)
+        jac_com_pos = np.zeros(num_of_tests)
+        count = 0
+
+        for delta_y in com_pos_range_y:
+            """ contact points in the World Frame"""
+            LF_foot = np.array([0.3, 0.2 - delta_y, -0.4])
+            RF_foot = np.array([0.3, -0.2 - delta_y, -0.4])
+            LH_foot = np.array([-0.3, 0.2 - delta_y, -0.4])
+            RH_foot = np.array([-0.3, -0.2 - delta_y, -0.4])
+
+            contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+            params.setContactsPosWF(contactsWF)
+
+            ''' compute iterative projection 
+            Outputs of "iterative_projection_bretl" are:
+            IP_points = resulting 2D vertices
+            actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
+            computation_time = how long it took to compute the iterative projection
+            '''
+            IP_points, force_polytopes, IP_computation_time = self.compDyn.iterative_projection_bretl(params)
+
+            '''I now check whether the given CoM configuration is stable or not'''
+            isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
+            print "is CoM stable?", isCoMStable
+            # print 'Contact forces:', contactForces
+
+            facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+            point2check = self.compDyn.getReferencePoint(params)
+            print count, params.comLinVel, params.comPositionWF
+            isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
+
+            marginJAcWrtComPos = self.computeComPosJacobian(params)
+            print "margin jac wrt com pos", marginJAcWrtComPos
+            jac_com_pos[count] = marginJAcWrtComPos[1]
+            count += 1
+
+        return margin, jac_com_pos
+
+    def plotMarginAndJacobianWrtFootPosition(self, params, foot_id, foot_pos_range_y):
+        num_of_tests = np.shape(foot_pos_range_y)
+        margin = np.zeros(num_of_tests)
+        jac_com_pos = np.zeros(num_of_tests)
+        count = 0
+
+        for delta_y in foot_pos_range_y:
+            """ contact points in the World Frame"""
+            LF_foot = np.array([0.3, 0.2, -0.4])
+            RF_foot = np.array([0.3, -0.2, -0.4])
+            LH_foot = np.array([-0.3, 0.2, -0.4])
+            RH_foot = np.array([-0.3, -0.2, -0.4])
+
+            contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+            contactsWF[foot_id, 1] += delta_y
+            params.setContactsPosWF(contactsWF)
+
+            print "contacts ", params.getContactsPosWF()
+
+            ''' compute iterative projection 
+            Outputs of "iterative_projection_bretl" are:
+            IP_points = resulting 2D vertices
+            actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
+            computation_time = how long it took to compute the iterative projection
+            '''
+            IP_points, force_polytopes, IP_computation_time = self.compDyn.iterative_projection_bretl(params)
+
+            '''I now check whether the given CoM configuration is stable or not'''
+            isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
+            print "is CoM stable?", isCoMStable
+            # print 'Contact forces:', contactForces
+
+            facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+            point2check = self.compDyn.getReferencePoint(params)
+            print count, params.comLinVel, params.comPositionWF
+            isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
+
+            marginJAcWrtComPos = self.computeComPosJacobian(params)
+            print "margin jac wrt com pos", marginJAcWrtComPos
+            jac_com_pos[count] = marginJAcWrtComPos[1]
+            count += 1
+
+        return margin, jac_com_pos
