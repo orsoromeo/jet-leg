@@ -40,7 +40,7 @@ constraint_mode_IP = ['ONLY_FRICTION',
 
 # number of decision variables of the problem
 # n = nc*6
-comWF = np.array([.0, 0.05, 0.0])
+comWF = np.array([.0, 0.0, 0.0])
 comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
@@ -48,14 +48,6 @@ comWF_ang_acc = np.array([.0, .0, .0])
 extForce = np.array([0., .0, 0.0 * 9.81])  # units are N
 extCentroidalTorque = np.array([.0, .0, .0])  # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
-
-""" contact points in the World Frame"""
-LF_foot = np.array([0.3, 0.2, -0.4])
-RF_foot = np.array([0.3, -0.2, -0.4])
-LH_foot = np.array([-0.3, 0.2, -0.4])
-RH_foot = np.array([-0.3, -0.2, -0.4])
-
-contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
 ''' parameters to be tuned'''
 mu = 0.5
@@ -92,10 +84,9 @@ start = time.time()
 
 params.useContactTorque = False
 params.useInstantaneousCapturePoint = True
-params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
-params.comLinVel = [0.25, 0.0, 0.0]
+params.comLinVel = [0., 0.0, 0.0]
 params.setCoMLinAcc(comWF_lin_acc)
 params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
@@ -105,47 +96,104 @@ params.setFrictionCoefficient(mu)
 params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
 params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
 
-''' compute iterative projection 
-Outputs of "iterative_projection_bretl" are:
-IP_points = resulting 2D vertices
-actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
-computation_time = how long it took to compute the iterative projection
-'''
-IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_bretl(params)
-
-'''I now check whether the given CoM configuration is stable or not'''
-isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
-print "is CoM stable?", isCoMStable
-print 'Contact forces:', contactForces
-
+jac = Jacobians("anymal")
 comp_geom = ComputationalGeometry()
-facets = comp_geom.compute_halfspaces_convex_hull(IP_points)
-point2check = np.array([comWF[0], comWF[1]])
-isPointFeasible, margin = comp_geom.isPointRedundant(facets, point2check)
-print "Margin is: ", margin
-
-state = np.hstack([params.getCoMPosWF(), params.comLinVel])
 com = CoM(params)
 
-jac = Jacobians("anymal")
-jac_com_pos = jac.computeComPosJacobian(params)
-print "com pos jacobian", jac_com_pos
+delta_y_range = 0.5
+delta_step = 0.1
+num_of_tests = 20
+delta_y_range_vec = np.linspace(-delta_y_range/2.0, delta_y_range/2.0, num_of_tests)
+print "number of tests", num_of_tests
+margin = np.zeros(num_of_tests)
+jac_com_pos = np.zeros(num_of_tests)
+jac_com_orient = np.zeros(num_of_tests)
+jac_com_lin_vel = np.zeros(num_of_tests)
+jac_com_lin_acc = np.zeros(num_of_tests)
+jac_feet = np.zeros(num_of_tests)   
+count = 0
 
-jac_com_orient = jac.computeComEulerAnglesJacobian(params)
-print "com orientation jacobian", jac_com_orient
+for delta_y in delta_y_range_vec:
+    """ contact points in the World Frame"""
+    LF_foot = np.array([0.3, 0.2 - delta_y, -0.4])
+    RF_foot = np.array([0.3, -0.2 - delta_y, -0.4])
+    LH_foot = np.array([-0.3, 0.2 - delta_y, -0.4])
+    RH_foot = np.array([-0.3, -0.2 - delta_y, -0.4])
 
-jac_com_lin_vel = jac.computeComLinVelJacobian(params)
-print "com lin vel jacobian", jac_com_lin_vel
+    contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+    params.setContactsPosWF(contactsWF)
 
-jac_com_lin_acc = jac.computeComLinVelJacobian(params)
-#print "com lin acc jacobian", jac_com_lin_acc
+    ''' compute iterative projection 
+    Outputs of "iterative_projection_bretl" are:
+    IP_points = resulting 2D vertices
+    actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
+    computation_time = how long it took to compute the iterative projection
+    '''
+    IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_bretl(params)
 
-jac_ang_vel = [0,0,0]
+    '''I now check whether the given CoM configuration is stable or not'''
+    isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
+    print "is CoM stable?", isCoMStable
+    #print 'Contact forces:', contactForces
 
-jac_feet = jac.computeFeetJacobian(params)
-#print "LF foot jacobian", jac_feet
+    facets = comp_geom.compute_halfspaces_convex_hull(IP_points)
+    point2check = np.array([comWF[0], comWF[1]])
+    print count, delta_y
+    isPointFeasible, margin[count] = comp_geom.isPointRedundant(facets, point2check)
+    #print "Margin is: ", margin
 
-state_jacobian = np.hstack([jac_com_pos, jac_com_orient, jac_feet])
-print "jacobian vector: ",state_jacobian
-print "total time", time.time() - start
+    #state = np.hstack([params.getCoMPosWF(), params.comLinVel])
+    #
+    #
+    marginJAcWrtComPos = jac.computeComPosJacobian(params)
+    print "margin jac wrt com pos", marginJAcWrtComPos
+    jac_com_pos[count] = marginJAcWrtComPos[1]
+    #print "com pos jacobian", jac_com_pos
+    #
+    #jac_com_orient = jac.computeComEulerAnglesJacobian(params)
+    #print "com orientation jacobian", jac_com_orient
+    #
+    #jac_com_lin_vel = jac.computeComLinVelJacobian(params)
+    #print "com lin vel jacobian", jac_com_lin_vel
+    #
+    #jac_com_lin_acc = jac.computeComLinVelJacobian(params)
+    ##print "com lin acc jacobian", jac_com_lin_acc
+    #
+    #jac_ang_vel = [0,0,0]
+    #
+    #jac_feet = jac.computeFeetJacobian(params)
+    #print "LF foot jacobian", jac_feet
 
+    #state_jacobian = np.hstack([jac_com_pos, jac_com_orient, jac_feet])
+   # print "jacobian vector: ",state_jacobian
+    print "total time", time.time() - start
+    count +=1
+
+print "margin", margin
+plt.figure(1)
+plt.subplot(211)
+plt.plot(delta_y_range_vec, margin, 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("com y [m]")
+plt.ylabel("margin [m]")
+
+plt.subplot(212)
+plt.plot(delta_y_range_vec, jac_com_pos, 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("com y [m]")
+plt.ylabel("margin [m]")
+plt.show()
+
+#plt.figure(2)
+#plt.subplot(211)
+#plt.plot(delta_y_range_vec, margin, 'g', markersize=15, label='CoM')
+#plt.grid()
+#plt.xlabel("com y [m]")
+#plt.ylabel("margin [m]")
+#
+#plt.subplot(212)
+#plt.plot(delta_y_range_vec, margin, 'g', markersize=15, label='CoM')
+#plt.grid()
+#plt.xlabel("com y [m]")
+#plt.ylabel("margin [m]")
+#plt.show()

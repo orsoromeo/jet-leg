@@ -39,28 +39,28 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([.0, 0.0, 0.0])
+comWF = np.array([.0, -0.0, 0.0])
 comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForce = np.array([0., .0, 0.0*9.81]) # units are N
+extForce = np.array([0., 0.0, 0.0*9.81]) # units are N
 extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
 """ contact points in the World Frame"""
-LF_foot = np.array([0.3, 0.2, -0.4])
-RF_foot = np.array([0.3, -0.2, -0.4])
-LH_foot = np.array([-0.3, 0.2, -0.4])
-RH_foot = np.array([-0.3, -0.2, -0.4])
+LF_foot = np.array([0.36+0.4, 0.2, -0.4])
+RF_foot = np.array([0.36+0.4, -0.2, -0.4])
+LH_foot = np.array([-0.36+0.4, 0.2, -0.4])
+RH_foot = np.array([-0.36+0.4, -0.2, -0.4])
 
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
 ''' parameters to be tuned'''
-mu = 0.5
+mu = 0.8
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [0,1,1,0]
+stanceFeet = [1,1,1,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -71,7 +71,7 @@ print 'stanceLegs ' ,stanceFeet
 
 ''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
 axisZ= array([[0.0], [0.0], [1.0]])
-n1 = np.transpose(np.transpose(math.rpyToRot(0.5,0.0,0.0)).dot(axisZ))  # LF
+n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LF
 r, p, y = math.normalToRpy(n1) # this can be used for training the RL
 n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # RF
 n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LH
@@ -92,7 +92,7 @@ params.useInstantaneousCapturePoint = True
 params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
-params.comLinVel = [0.25, 0.0, 0.0]
+params.comLinVel = [0.0, 0.0, 0.0]
 params.setCoMLinAcc(comWF_lin_acc)
 params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
@@ -115,14 +115,15 @@ IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_
 #print actuation_polygons
 
 '''I now check whether the given CoM configuration is stable or not'''
-isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
-print "is CoM stable?", isCoMStable
-print 'Contact forces:', contactForces
+#isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
+#print "is CoM stable?", isCoMStable
+#print 'Contact forces:', contactForces
 
 comp_geom = ComputationalGeometry()
 facets = comp_geom.compute_halfspaces_convex_hull(IP_points)
 point2check = np.array([comWF[0], comWF[1]])
 isPointFeasible, margin = comp_geom.isPointRedundant(facets, point2check)
+print "isPointFeasible: ", isPointFeasible
 print "Margin is: ", margin
 
 ''' compute Instantaneous Capture Point (ICP) and check if it belongs to the feasible region '''
@@ -149,18 +150,18 @@ for j in range(0,nc): # this will only show the contact positions and normals of
     idx = int(stanceID[j])
     ax.scatter(contactsWF[idx,0], contactsWF[idx,1], contactsWF[idx,2],c='b',s=100)
     '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
-    if isCoMStable:
+    if isPointFeasible:
         ax.scatter(comWF[0], comWF[1], comWF[2],c='g',s=100)
-        grf = contactForces[j*3:j*3+3]
-        fz_tot += grf[2]
+        #grf = contactForces[j*3:j*3+3]
+        #fz_tot += grf[2]
 
         ''' draw the set contact forces that respects the constraints'''
-        b = Arrow3D([contactsWF[idx, 0], contactsWF[idx, 0] + grf[0] / force_scaling_factor],
-                    [contactsWF[idx, 1], contactsWF[idx, 1] + grf[1] / force_scaling_factor],
-                    [contactsWF[idx, 2], contactsWF[idx, 2] + grf[2] / force_scaling_factor], mutation_scale=20, lw=3,
-                    arrowstyle="-|>",
-                    color="b")
-        ax.add_artist(b)
+        #b = Arrow3D([contactsWF[idx, 0], contactsWF[idx, 0] + grf[0] / force_scaling_factor],
+        #            [contactsWF[idx, 1], contactsWF[idx, 1] + grf[1] / force_scaling_factor],
+        #            [contactsWF[idx, 2], contactsWF[idx, 2] + grf[2] / force_scaling_factor], mutation_scale=20, lw=3,
+        #            arrowstyle="-|>",
+        #            color="b")
+        #ax.add_artist(b)
     else:
         ax.scatter(comWF[0], comWF[1], comWF[2],c='r',s=100)
 
@@ -178,8 +179,8 @@ plotter = Plotter()
 for j in range(0,nc): # this will only show the force polytopes of the feet that are defined to be in stance
     idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
-    if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
-        plotter.plot_actuation_polygon(ax, forcePolytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
+    #if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
+        #plotter.plot_actuation_polygon(ax, forcePolytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
 
 ''' 2D figure '''
 plt.figure()
@@ -187,10 +188,10 @@ for j in range(0,nc): # this will only show the contact positions and normals of
     idx = int(stanceID[j])
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
     h1 = plt.plot(contactsWF[idx,0],contactsWF[idx,1],'ko',markersize=15, label='stance feet')
-h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Support Region')
+h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Feasible Region')
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
-if isCoMStable:
+if isPointFeasible:
     plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM')
 else:
     plt.plot(comWF[0],comWF[1],'ro',markersize=15, label='CoM')

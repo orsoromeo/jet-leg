@@ -10,8 +10,10 @@ class Jacobians:
     def computeComPosJacobian(self, params):
         jacobian = np.zeros(3)
         initialCoMPos = copy.copy(params.comPositionWF)
+        print "initialCoMPos ", initialCoMPos
 
         for j in np.arange(0, 3):
+            params.comPositionWF = initialCoMPos
             params.comPositionWF[j] = initialCoMPos[j] + self.delta / 2.0
             isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
             params.comPositionWF = initialCoMPos
@@ -19,6 +21,7 @@ class Jacobians:
             isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
+            print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
 
         return jacobian
 
@@ -46,6 +49,7 @@ class Jacobians:
         initiaPoint = params.comLinVel
 
         for j in np.arange(0, 3):
+            params.comLinVel = initiaPoint
             params.comLinVel[j] = initiaPoint[j] + self.delta / 2.0
             isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
 
@@ -62,6 +66,7 @@ class Jacobians:
         initiaPoint = params.comLinAcc
 
         for j in np.arange(0, 3):
+            params.comLinAcc = initiaPoint
             params.comLinAcc[j] = initiaPoint[j] + self.delta / 2.0
             isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
 
