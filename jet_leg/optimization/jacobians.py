@@ -9,10 +9,6 @@ class Jacobians:
         self.compGeom = ComputationalGeometry()
         self.delta = 0.001
 
-
-    def firstOrderCentralDifferences(self, function, delta):
-        return False
-
     def computeComPosJacobianSecondOrderCentral(self, params):
         jacobian = np.zeros(3)
         initialCoMPos = copy.copy(params.comPositionWF)
@@ -37,6 +33,7 @@ class Jacobians:
 
             diff = jac_left - jac_right
             jacobian[j] = diff / self.delta
+
             print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
 
         return jacobian

@@ -49,10 +49,10 @@ extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
 """ contact points in the World Frame"""
-LF_foot = np.array([0.36+0.4, 0.2, -0.4])
-RF_foot = np.array([0.36+0.4, -0.2, -0.4])
-LH_foot = np.array([-0.36+0.4, 0.2, -0.4])
-RH_foot = np.array([-0.36+0.4, -0.2, -0.4])
+LF_foot = np.array([0.36, 0.2, -0.4])
+RF_foot = np.array([0.36, -0.2, -0.4])
+LH_foot = np.array([-0.36, 0.2, -0.4])
+RH_foot = np.array([-0.36, -0.2, -0.4])
 
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
@@ -60,7 +60,7 @@ contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 mu = 0.8
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,1,1,1]
+stanceFeet = [1,0,1,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -92,7 +92,7 @@ params.useInstantaneousCapturePoint = True
 params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
-params.comLinVel = [0.0, 0.0, 0.0]
+params.comLinVel = [0.1, 0.2, 0.0]
 params.setCoMLinAcc(comWF_lin_acc)
 params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)
@@ -121,7 +121,7 @@ IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_
 
 comp_geom = ComputationalGeometry()
 facets = comp_geom.compute_halfspaces_convex_hull(IP_points)
-point2check = np.array([comWF[0], comWF[1]])
+point2check = comp_dyn.getReferencePoint(params)
 isPointFeasible, margin = comp_geom.isPointRedundant(facets, point2check)
 print "isPointFeasible: ", isPointFeasible
 print "Margin is: ", margin
@@ -152,16 +152,7 @@ for j in range(0,nc): # this will only show the contact positions and normals of
     '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region'''
     if isPointFeasible:
         ax.scatter(comWF[0], comWF[1], comWF[2],c='g',s=100)
-        #grf = contactForces[j*3:j*3+3]
-        #fz_tot += grf[2]
 
-        ''' draw the set contact forces that respects the constraints'''
-        #b = Arrow3D([contactsWF[idx, 0], contactsWF[idx, 0] + grf[0] / force_scaling_factor],
-        #            [contactsWF[idx, 1], contactsWF[idx, 1] + grf[1] / force_scaling_factor],
-        #            [contactsWF[idx, 2], contactsWF[idx, 2] + grf[2] / force_scaling_factor], mutation_scale=20, lw=3,
-        #            arrowstyle="-|>",
-        #            color="b")
-        #ax.add_artist(b)
     else:
         ax.scatter(comWF[0], comWF[1], comWF[2],c='r',s=100)
 
@@ -192,15 +183,10 @@ h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Feasible Region')
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
 if isPointFeasible:
-    plt.plot(comWF[0],comWF[1],'go',markersize=15, label='CoM')
+    plt.plot(point2check[0],point2check[1],'go',markersize=15, label='ground reference point')
 else:
-    plt.plot(comWF[0],comWF[1],'ro',markersize=15, label='CoM')
+    plt.plot(point2check[0],point2check[1],'ro',markersize=15, label='ground reference point')
 
-if params.useInstantaneousCapturePoint:
-    if isIcpInsideFeasibleRegion:
-        plt.plot(params.instantaneousCapturePoint[0], params.instantaneousCapturePoint[1], 'gs', markersize=15, label='ICP')
-    else:
-        plt.plot(params.instantaneousCapturePoint[0], params.instantaneousCapturePoint[1], 'rs', markersize=15, label='ICP')
 
 plt.grid()
 plt.xlabel("X [m]")
