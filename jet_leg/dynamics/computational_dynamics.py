@@ -55,7 +55,12 @@ class ComputationalDynamics:
         stanceLegs = iterative_projection_params.getStanceFeet()
         contactsWF = iterative_projection_params.getContactsPosWF()
         contactsNumber = np.sum(stanceLegs)
-        
+
+        if contactsNumber > 2:
+            iterative_projection_params.useContactTorque = False
+        else:
+            iterative_projection_params.useContactTorque = True
+
         # Unprojected state is:
         #
         #     x = [f1_x, f1_y, f1_z, ... , f3_x, f3_y, f3_z]
