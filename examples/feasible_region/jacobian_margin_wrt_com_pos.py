@@ -33,10 +33,10 @@ possible constraints for each foot:
  ONLY_FRICTION = only friction cone constraints are enforced
  FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
 '''
-constraint_mode_IP = ['ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION',
-                      'ONLY_FRICTION']
+constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION',
+                      'FRICTION_AND_ACTUATION']
 
 # number of decision variables of the problem
 # n = nc*6
@@ -105,22 +105,28 @@ params.setFrictionCoefficient(mu)
 params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
 params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
 
+params_com_x = deepcopy(params)
 params_com_y = deepcopy(params)
+params_com_z = deepcopy(params)
+params_com_vel_x = deepcopy(params)
 params_com_vel_y = deepcopy(params)
+params_com_vel_z = deepcopy(params)
+params_com_acc_x = deepcopy(params)
 params_com_acc_y = deepcopy(params)
+params_com_acc_z = deepcopy(params)
 
-jac = Jacobians("anymal")
+jac = Jacobians(robot_name)
 comp_geom = ComputationalGeometry()
 com = CoM(params)
 
-delta_y_range = 0.9
-num_of_tests = 20
-delta_y_range_vec = np.linspace(-delta_y_range/2.0, delta_y_range/2.0, num_of_tests)
+delta_pos_range = 0.98
+num_of_tests = 30
+delta_pos_range_vec = np.linspace(-delta_pos_range/2.0, delta_pos_range/2.0, num_of_tests)
 print "number of tests", num_of_tests
 
-pos_margin_x, jac_com_pos_x = jac.plotMarginAndJacobianWrtComPosition(params_com_y, delta_y_range_vec, 0)
-pos_margin_y, jac_com_pos_y = jac.plotMarginAndJacobianWrtComPosition(params_com_y, delta_y_range_vec, 1)
-pos_margin_z, jac_com_pos_z = jac.plotMarginAndJacobianWrtComPosition(params_com_y, delta_y_range_vec, 2)
+pos_margin_x, jac_com_pos_x = jac.plotMarginAndJacobianWrtComPosition(params_com_x, delta_pos_range_vec, 0)
+pos_margin_y, jac_com_pos_y = jac.plotMarginAndJacobianWrtComPosition(params_com_y, delta_pos_range_vec, 1)
+pos_margin_z, jac_com_pos_z = jac.plotMarginAndJacobianWrtComPosition(params_com_z, delta_pos_range_vec, 2)
 
 delta_vel_range = 3.0
 delta_vel_range_vec = np.linspace(-delta_vel_range/2.0, delta_vel_range/2.0, num_of_tests)
@@ -135,99 +141,103 @@ RH_foot = np.array([-0.3, -0.2, -0.4])
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 params.setContactsPosWF(contactsWF)
 
-vel_margin, jac_com_lin_vel = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_y, delta_vel_range_vec)
+vel_margin_x, jac_com_lin_vel_x = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_x, delta_vel_range_vec, 0)
+vel_margin_y, jac_com_lin_vel_y = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_y, delta_vel_range_vec, 1)
+vel_margin_z, jac_com_lin_vel_z = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_z, delta_vel_range_vec, 2)
 
-delta_vel_range = 8.0
-delta_acc_range_vec = np.linspace(-delta_vel_range/2.0, delta_vel_range/2.0, num_of_tests)
-acc_margin, jac_com_lin_acc = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_y, delta_acc_range_vec)
+delta_acc_range = 8.0
+delta_acc_range_vec = np.linspace(-delta_acc_range/2.0, delta_acc_range/2.0, num_of_tests)
+acc_margin_x, jac_com_lin_acc_x = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_x, delta_acc_range_vec, 0)
+acc_margin_y, jac_com_lin_acc_y = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_y, delta_acc_range_vec, 1)
+acc_margin_z, jac_com_lin_acc_z = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_z, delta_acc_range_vec, 2)
 
 ### Plotting
 
 ### X axis
 plt.figure(1)
 plt.subplot(231)
-plt.plot(delta_y_range_vec, pos_margin_x, 'g', markersize=15, label='CoM')
+plt.plot(delta_pos_range_vec, pos_margin_x, 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$c_y$ [m]")
+plt.xlabel("$c_x$ [m]")
 plt.ylabel("m [m]")
-plt.title("CoM Y pos margin")
+plt.title("CoM X pos margin")
 
 plt.subplot(234)
-plt.plot(delta_y_range_vec, jac_com_pos_x[0,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_pos_range_vec, jac_com_pos_x[0,:], 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$c_y$ [m]")
-plt.ylabel(" $ \delta m/  \delta c_y$")
-plt.title("CoM Y pos jacobian")
+plt.xlabel("$c_x$ [m]")
+plt.ylabel(" $ \delta m/  \delta c_x$")
+plt.title("CoM X pos jacobian")
 
 plt.subplot(232)
-plt.plot(delta_vel_range_vec, vel_margin, 'g', markersize=15, label='CoM')
+plt.plot(delta_vel_range_vec, pos_margin_y, 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\dot{c}_y$ [m/s]")
+plt.xlabel("$\dot{c}_x$ [m/s]")
 plt.ylabel("m [m]")
-plt.title("CoM Y vel margin")
+plt.title("CoM X vel margin")
 
 plt.subplot(235)
-plt.plot(delta_vel_range_vec, jac_com_lin_vel[0,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_vel_range_vec, jac_com_lin_vel_x[0,:], 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\dot{c}_y$ [m/s]")
-plt.ylabel("$ \delta m/  \delta \dot{c}_y$")
-plt.title("CoM Y vel jacobian")
+plt.xlabel("$\dot{c}_x$ [m/s]")
+plt.ylabel("$ \delta m/  \delta \dot{c}_x$")
+plt.title("CoM X vel jacobian")
 
 plt.subplot(233)
-plt.plot(delta_acc_range_vec, acc_margin, 'g', markersize=15, label='CoM')
+plt.plot(delta_acc_range_vec, acc_margin_x, 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\ddot{c}_y$ [m/s]")
+plt.xlabel("$\ddot{c}_x$ [m/s^2]")
 plt.ylabel("m [m]")
-plt.title("CoM Y acc margin")
+plt.title("CoM X acc margin")
 
 plt.subplot(236)
-plt.plot(delta_acc_range_vec, jac_com_lin_acc[0,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_acc_range_vec, jac_com_lin_acc_x[0,:], 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\ddot{c}_y$ [m/s]")
-plt.ylabel("$ \delta m/  \delta \ddot{c}_y$")
-plt.title("CoM Y acc jacobian")
+plt.xlabel("$\ddot{c}_x$ [m/s^2]")
+plt.ylabel("$ \delta m/  \delta \ddot{c}_x$")
+plt.title("CoM X acc jacobian")
 
 ### Y axis
 plt.figure(2)
 plt.subplot(231)
-plt.plot(delta_y_range_vec, pos_margin_y, 'g', markersize=15, label='CoM')
+plt.plot(delta_pos_range_vec, pos_margin_y, 'g', markersize=15, label='CoM')
 plt.grid()
 plt.xlabel("$c_y$ [m]")
 plt.ylabel("m [m]")
 plt.title("CoM Y pos margin")
 
 plt.subplot(234)
-plt.plot(delta_y_range_vec, jac_com_pos_y[1,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_pos_range_vec, jac_com_pos_y[1,:], 'g', markersize=15, label='CoM')
 plt.grid()
 plt.xlabel("$c_y$ [m]")
 plt.ylabel(" $ \delta m/  \delta c_y$")
 plt.title("CoM Y pos jacobian")
 
 plt.subplot(232)
-plt.plot(delta_vel_range_vec, vel_margin, 'g', markersize=15, label='CoM')
+plt.plot(delta_vel_range_vec, vel_margin_y, 'g', markersize=15, label='CoM')
 plt.grid()
 plt.xlabel("$\dot{c}_y$ [m/s]")
 plt.ylabel("m [m]")
 plt.title("CoM Y vel margin")
 
 plt.subplot(235)
-plt.plot(delta_vel_range_vec, jac_com_lin_vel[1,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_vel_range_vec, jac_com_lin_vel_y[1,:], 'g', markersize=15, label='CoM')
 plt.grid()
 plt.xlabel("$\dot{c}_y$ [m/s]")
 plt.ylabel("$ \delta m/  \delta \dot{c}_y$")
 plt.title("CoM Y vel jacobian")
 
 plt.subplot(233)
-plt.plot(delta_acc_range_vec, acc_margin, 'g', markersize=15, label='CoM')
+plt.plot(delta_acc_range_vec, acc_margin_y, 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\ddot{c}_y$ [m/s]")
+plt.xlabel("$\ddot{c}_y$ [m/s^2]")
 plt.ylabel("m [m]")
 plt.title("CoM Y acc margin")
 
 plt.subplot(236)
-plt.plot(delta_acc_range_vec, jac_com_lin_acc[1,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_acc_range_vec, jac_com_lin_acc_y[1,:], 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\ddot{c}_y$ [m/s]")
+plt.xlabel("$\ddot{c}_y$ [m/s^2]")
 plt.ylabel("$ \delta m/  \delta \ddot{c}_y$")
 plt.title("CoM Y acc jacobian")
 
@@ -235,45 +245,47 @@ plt.title("CoM Y acc jacobian")
 ### Z axis
 plt.figure(3)
 plt.subplot(231)
-plt.plot(delta_y_range_vec, pos_margin_z, 'g', markersize=15, label='CoM')
+plt.plot(delta_pos_range_vec, pos_margin_z, 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$c_y$ [m]")
+plt.xlabel("$c_z$ [m]")
 plt.ylabel("m [m]")
-plt.title("CoM Y pos margin")
+plt.title("CoM Z pos margin")
 
 plt.subplot(234)
-plt.plot(delta_y_range_vec, jac_com_pos_z[2,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_pos_range_vec, jac_com_pos_z[2,:], 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$c_y$ [m]")
-plt.ylabel(" $ \delta m/  \delta c_y$")
-plt.title("CoM Y pos jacobian")
+plt.xlabel("$c_z$ [m]")
+plt.ylabel(" $ \delta m/  \delta c_z$")
+plt.title("CoM Z pos jacobian")
 
 plt.subplot(232)
-plt.plot(delta_vel_range_vec, vel_margin, 'g', markersize=15, label='CoM')
+plt.plot(delta_vel_range_vec, vel_margin_z, 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\dot{c}_y$ [m/s]")
+plt.xlabel("$\dot{c}_z$ [m/s]")
 plt.ylabel("m [m]")
-plt.title("CoM Y vel margin")
+plt.title("CoM Z vel margin")
 
 plt.subplot(235)
-plt.plot(delta_vel_range_vec, jac_com_lin_vel[2,:], 'g', markersize=15, label='CoM')
+plt.plot(delta_vel_range_vec, jac_com_lin_vel_z[2,:], 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\dot{c}_y$ [m/s]")
-plt.ylabel("$ \delta m/  \delta \dot{c}_y$")
-plt.title("CoM Y vel jacobian")
+plt.xlabel("$\dot{c}_z$ [m/s]")
+plt.ylabel("$ \delta m/  \delta \dot{c}_z$")
+plt.title("CoM Z vel jacobian")
 
 plt.subplot(233)
-plt.plot(delta_acc_range_vec, acc_margin, 'g', markersize=15, label='CoM')
+plt.plot(delta_acc_range_vec, acc_margin_z, 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\ddot{c}_y$ [m/s]")
+plt.xlabel("$\ddot{c}_z$ [m/s^2]")
 plt.ylabel("m [m]")
-plt.title("CoM Y acc margin")
+plt.title("CoM Z acc margin")
 
-plt.subplot(236)
-plt.plot(delta_acc_range_vec, jac_com_lin_acc[2,:], 'g', markersize=15, label='CoM')
+sub = plt.subplot(236)
+plt.plot(delta_acc_range_vec, jac_com_lin_acc_z[2,:], 'g', markersize=15, label='CoM')
 plt.grid()
-plt.xlabel("$\ddot{c}_y$ [m/s]")
-plt.ylabel("$ \delta m/  \delta \ddot{c}_y$")
-plt.title("CoM Y acc jacobian")
+plt.xlabel("$\ddot{c}_z$ [m/s^2]")
+plt.ylabel("$ \delta m/  \delta \ddot{c}_z$")
+#sub.set_xlim([-4, 4])
+#sub.set_ylim([-0.5, 0.5])
+plt.title("CoM Z acc jacobian")
 
 plt.show()

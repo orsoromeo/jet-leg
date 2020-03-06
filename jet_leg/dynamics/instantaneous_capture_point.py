@@ -19,9 +19,7 @@ class InstantaneousCapturePoint():
         avg_foot_height = 0.0
         nc = np.sum(params.stanceFeet)
         stanceID = params.getStanceIndex(params.stanceFeet)
-        force_scaling_factor = 1500
         # plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
-        fz_tot = 0.0
         for j in range(0, nc):  # this will only show the contact positions and normals of the feet that are defined to be in stance
             idx = int(stanceID[j])
             avg_foot_height += params.contactsWF[idx][2]
@@ -33,7 +31,6 @@ class InstantaneousCapturePoint():
 
     def computeInstantaneousCapturePoint(self, com_pos_WF, com_vel_WF, robot_height, gravity = -9.81):
         omega = np.sqrt(-gravity/robot_height)
-        print "com_vel", com_vel_WF
         icp = com_pos_WF[0:2] + com_vel_WF[0:2]/omega
         return icp
 

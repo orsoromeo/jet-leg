@@ -103,7 +103,7 @@ class ComputationalDynamics:
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
         t = hstack([totalCentroidalWrench[0:3], totalCentroidalWrench[5]])
-        print "total wrench ", totalCentroidalWrench
+        #print "total wrench ", totalCentroidalWrench
 #        print 'mass ', robotMass
         eq = (A, t)  # A * x == t
 
@@ -383,12 +383,14 @@ class ComputationalDynamics:
         actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
         computation_time = how long it took to compute the iterative projection
         '''
-        IP_points, force_polytopes, IP_computation_time = self.iterative_projection_bretl(iterative_projection_params)
-        facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
-        reference_point = self.getReferencePoint(iterative_projection_params)
-        isPointFeasible, margin = self.compGeom.isPointRedundant(facets, reference_point)
-
-        return  isPointFeasible, margin
+        IP_points, force_polytopes, IP_computation_time = self.try_iterative_projection_bretl(iterative_projection_params)
+        if IP_points is not False:
+            facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+            reference_point = self.getReferencePoint(iterative_projection_params)
+            isPointFeasible, margin = self.compGeom.isPointRedundant(facets, reference_point)
+            return isPointFeasible, margin
+        else:
+            return False, -1000.0
 
     def getReferencePoint(self, iterative_projection_params):
         comWF = iterative_projection_params.getCoMPosWF()

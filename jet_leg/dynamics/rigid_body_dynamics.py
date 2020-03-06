@@ -24,7 +24,8 @@ class RigidBodyDynamics:
         static_linear = grav_vec + extForce
         static_angular = np.cross(com_pos_WF, static_linear) + extTau
         inertial_linear = np.multiply(robotsMass, comLinAcc)
-        #print "comLinAcc", comLinAcc
+        #print "inertial_linear", inertial_linear
+        #print "static_linear", static_linear
         #print "static_linear", static_linear
         #print "inertial_linear", inertial_linear
         # robotInertia = np.eye(3)  # TODO: add the inertia matrix here!!!
@@ -33,7 +34,8 @@ class RigidBodyDynamics:
         coriolis = coriolis[0]
         inertial_angular = np.matmul(robotInertia, comAngAcc) + coriolis
         ''' see eq. 3.9 at page 39 of Hongkai Dai's PhD thesis'''
-        linear_aggr_wrench = inertial_linear - static_linear
+        linear_aggr_wrench = - inertial_linear - static_linear
+        #print "linear_aggr_wrench", linear_aggr_wrench
         angular_aggr_wrench = inertial_angular - static_angular
         total_wrench = np.hstack([linear_aggr_wrench, angular_aggr_wrench])
         return total_wrench
