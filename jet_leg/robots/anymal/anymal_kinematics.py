@@ -25,6 +25,7 @@ class anymalKinematics():
         self.urdf_foot_name_rf = 'RF_FOOT'
         self.urdf_foot_name_rh = 'RH_FOOT'
         self.ik_success = False
+        self.leg_ik_success = [False, False, False, False]
 
     def getBlockIndex(self, frame_name):
         if frame_name == self.urdf_foot_name_lf:
@@ -49,6 +50,8 @@ class anymalKinematics():
         DT = 1e-1
         err = np.zeros((3, 1))
         e = np.zeros((3, 1))
+
+        #print "foot pos des", foot_pos_des
 
         i = 0
         while True:
@@ -86,40 +89,56 @@ class anymalKinematics():
         J_leg = J_lin[:, blockIdx:blockIdx + 3]
         return q_leg, J_leg, err, IKsuccess
 
-    def fixedBaseInverseKinematics(self, feetPosDes):
+    def fixedBaseInverseKinematics(self, feetPosDes, stance_idx):
 
         self.LF_foot_jac = []
         self.LH_foot_jac = []
         self.RF_foot_jac = []
         self.RH_foot_jac = []
-        leg_ik_success = np.zeros((4))
+        self.leg_ik_success = [False, False, False, False]
 
         f_p_des = np.array(feetPosDes[0, :]).T
-        q_LF, self.LF_foot_jac, err, leg_ik_success[0] = self.footInverseKinematicsFixedBase(f_p_des,
+        q_LF, self.LF_foot_jac, err, self.leg_ik_success[0] = self.footInverseKinematicsFixedBase(f_p_des,
                                                                                              self.urdf_foot_name_lf)
 
-        f_p_des = np.array(feetPosDes[2, :]).T
-        q_LH, self.LH_foot_jac, err, leg_ik_success[2] = self.footInverseKinematicsFixedBase(f_p_des,
-                                                                                             self.urdf_foot_name_lh)
-
         f_p_des = np.array(feetPosDes[1, :]).T
-        q_RF, self.RF_foot_jac, err, leg_ik_success[1] = self.footInverseKinematicsFixedBase(f_p_des,
+        q_RF, self.RF_foot_jac, err, self.leg_ik_success[1] = self.footInverseKinematicsFixedBase(f_p_des,
                                                                                              self.urdf_foot_name_rf)
 
+        f_p_des = np.array(feetPosDes[2, :]).T
+        q_LH, self.LH_foot_jac, err, self.leg_ik_success[2] = self.footInverseKinematicsFixedBase(f_p_des,
+                                                                                             self.urdf_foot_name_lh)
+
         f_p_des = np.array(feetPosDes[3, :]).T
-        q_RH, self.RH_foot_jac, err, leg_ik_success[3] = self.footInverseKinematicsFixedBase(f_p_des,
+        q_RH, self.RH_foot_jac, err, self.leg_ik_success[3] = self.footInverseKinematicsFixedBase(f_p_des,
                                                                                              self.urdf_foot_name_rh)
 
-        self.ik_success = bool(leg_ik_success[0] and leg_ik_success[1] and leg_ik_success[2] and leg_ik_success[3])
+        #self.ik_success = bool(leg_ik_success[0] and leg_ik_success[1] and leg_ik_success[2] and leg_ik_success[3])
 
-        if self.ik_success is False:
-            print('Warning, IK failed. Jacobian is singular')
+        #print "stance index is ", stance_idx
+        for legId in np.arange(0,4):
+            #print "leg id ", legId, self.leg_ik_success[legId]
+            if self.leg_ik_success[legId] is False:
+                print('Warning, IK failed. Jacobian is singular. Leg id is', legId)
+
+        number_of_stance_feet = np.shape(stance_idx)[0]
+        are_stance_feet_in_workspace = np.full((1, number_of_stance_feet), False, dtype=bool)[0]
+        previous_flag = True
+        for k in np.arange(0, number_of_stance_feet):
+            stance_leg_id = stance_idx[k]
+            are_stance_feet_in_workspace[k] = self.leg_ik_success[int(stance_leg_id)]
+            previous_flag = are_stance_feet_in_workspace[k] and previous_flag
+
+        are_feet_in_workspace_flag = previous_flag
+        #print "are_feet_in_ws_flag" , are_feet_in_workspace_flag
+        self.ik_success = are_feet_in_workspace_flag
+        #print "self.ik_success is ", self.ik_success
 
         '''please NOTICE here the alphabetical order of the legs in the vector q: LF -> LH -> RF -> RH '''
         q = np.vstack([q_LF, q_LH, q_RF, q_RH])
 
-        return q
+        return q, self.leg_ik_success
 
     def getLegJacobians(self):
         isOutOfWS = not self.ik_success
-        return self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS
+        return self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS, self.leg_ik_success

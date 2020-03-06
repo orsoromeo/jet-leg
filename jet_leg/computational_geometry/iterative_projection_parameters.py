@@ -6,9 +6,12 @@ Created on Wed Nov 14 15:07:45 2018
 """
 import numpy as np
 from math_tools import Math
+from jet_leg.robots.robot_model_interface import RobotModelInterface
 
 class IterativeProjectionParameters:
-    def __init__(self):
+    def __init__(self, robot_name):
+        self.robotName = robot_name
+        self.robotModel = RobotModelInterface(self.robotName)
         self.math = Math()
         self.q = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.] 
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
@@ -58,7 +61,7 @@ class IterativeProjectionParameters:
                                'FRICTION_AND_ACTUATION']
                                
         self.friction = 0.8
-        self.robotMass = 0.0 #Kg
+        self.robotMass = self.robotModel.trunkMass #Kg
         self.numberOfGenerators = 4
         self.useContactTorque = True
         self.useInstantaneousCapturePoint = True

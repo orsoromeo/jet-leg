@@ -24,6 +24,9 @@ class RigidBodyDynamics:
         static_linear = grav_vec + extForce
         static_angular = np.cross(com_pos_WF, static_linear) + extTau
         inertial_linear = np.multiply(robotsMass, comLinAcc)
+        #print "comLinAcc", comLinAcc
+        #print "static_linear", static_linear
+        #print "inertial_linear", inertial_linear
         # robotInertia = np.eye(3)  # TODO: add the inertia matrix here!!!
         coriolis = robotInertia.dot(comAngVel)
         coriolis = np.cross(np.transpose(comAngVel), np.transpose(coriolis))

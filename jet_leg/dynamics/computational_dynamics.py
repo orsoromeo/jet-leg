@@ -51,7 +51,7 @@ class ComputationalDynamics:
     saturate_normal_force = if True this sets a max constant value on the normal force of the friction cones
     '''
     def setup_iterative_projection(self, iterative_projection_params, saturate_normal_force):
-        
+        #print "CoM position in IP setup ", iterative_projection_params.getCoMPosWF()
         stanceLegs = iterative_projection_params.getStanceFeet()
         contactsWF = iterative_projection_params.getContactsPosWF()
         contactsNumber = np.sum(stanceLegs)
@@ -68,6 +68,7 @@ class ComputationalDynamics:
         Ey = np.zeros((0))        
         G = np.zeros((6,0))
 
+        print iterative_projection_params.robotMass
         totalCentroidalWrench = self.rbd.computeCentroidalWrench(iterative_projection_params.robotMass,
                                                                  self.robotModel.robotModel.trunkInertia,
                                                                  iterative_projection_params.getCoMPosWF(),
@@ -79,6 +80,7 @@ class ComputationalDynamics:
 
         for j in range(0,contactsNumber):
             r = contactsWF[int(stanceIndex[j]),:]
+            #print "foot ", r
             if not iterative_projection_params.useContactTorque:
                 graspMatrix = self.math.getGraspMatrix(r)[:,0:3]
             else:
@@ -86,7 +88,8 @@ class ComputationalDynamics:
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
             G = hstack([G, graspMatrix])
-            
+
+        #print "totalCentroidalWrench", totalCentroidalWrench
         E = vstack((Ex, Ey)) / (totalCentroidalWrench[2] )
         #f = zeros(2)
         f = hstack([ totalCentroidalWrench[4], - totalCentroidalWrench[3]])  / (totalCentroidalWrench[2])
@@ -100,7 +103,7 @@ class ComputationalDynamics:
             [0, 0, 0, 0, 0, 1]])
         A = dot(A_f_and_tauz, G)
         t = hstack([totalCentroidalWrench[0:3], totalCentroidalWrench[5]])
-#        print extForceWF, t
+        print "total wrench ", totalCentroidalWrench
 #        print 'mass ', robotMass
         eq = (A, t)  # A * x == t
 
@@ -331,7 +334,6 @@ class ComputationalDynamics:
             p = matrix(np.zeros((5*nc,1)))
 
         contactsPosWF = LPparams.getContactsPosWF()
-
         totalCentroidalWrench = self.rbd.computeCentroidalWrench(LPparams.robotMass,
                                                                  self.robotModel.robotModel.trunkInertia,
                                                                  LPparams.getCoMPosWF(),
@@ -390,6 +392,20 @@ class ComputationalDynamics:
 
     def getReferencePoint(self, iterative_projection_params):
         comWF = iterative_projection_params.getCoMPosWF()
+        if(iterative_projection_params.useInstantaneousCapturePoint):
+            ICP = self.icp.compute(iterative_projection_params)
+            iterative_projection_params.instantaneousCapturePoint = ICP
+            referencePoint = np.array([ICP[0], ICP[1]])
+        else:
+            referencePoint = np.array([comWF[0], comWF[1]])
+
+        return referencePoint
+
+    def getReferencePointWrtBaseFrame(self, iterative_projection_params):
+        pendulum_height = 100.0
+        iterative_projection_params.setCoMPosWF([0.0, 0.0, pendulum_height])
+        comWF = iterative_projection_params.getCoMPosWF()
+        print "com is ", comWF
         if(iterative_projection_params.useInstantaneousCapturePoint):
             ICP = self.icp.compute(iterative_projection_params)
             iterative_projection_params.instantaneousCapturePoint = ICP

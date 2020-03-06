@@ -23,3 +23,4 @@ class RobotModelInterface:
 
         self.joint_torque_limits = self.robotModel.joint_torque_limits
         self.contact_torque_limits = self.robotModel.contact_torque_limits
+        self.trunkMass = self.robotModel.trunkMass

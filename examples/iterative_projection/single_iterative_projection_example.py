@@ -87,12 +87,11 @@ comp_dyn = ComputationalDynamics(robot_name)
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters()
 
-#params.useContactTorque = False
-params.useInstantaneousCapturePoint = True
+#params.useInstantaneousCapturePoint = True
 params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
-params.comLinVel = [0.1, 0.2, 0.0]
+params.comLinVel = [0.0, 0.0, 0.0]
 params.setCoMLinAcc(comWF_lin_acc)
 params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
 params.setActiveContacts(stanceFeet)

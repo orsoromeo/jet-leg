@@ -19,13 +19,14 @@ from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
 
 #from dls_msgs.msg import SimpleDoubleArray, StringDoubleArray, Polygon3D, LegsPolygons
-from dls_msgs.msg import  StringDoubleArray
+#from dls_msgs.msg import  StringDoubleArray
+from xpp_msgs.msg import RobotStateCartesian
 from feasible_region.msg import  Polygon3D, LegsPolygons
 
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
-from jet_leg.optimization.foothold_planning_interface import FootholdPlanningInterface
+#from jet_leg.optimization.foothold_planning_interface import FootholdPlanningInterface
 
 from jet_leg.optimization.foothold_planning import FootHoldPlanning
 
@@ -43,7 +44,7 @@ class HyQSim(threading.Thread):
         self.hyq_wbs_sub_name = "/hyq/robot_states"
         self.hyq_actuation_params_sub_name = "/hyq/debug"
         self.hyq_wbs = dict()
-        self.hyq_debug_msg = StringDoubleArray()
+        self.hyq_debug_msg = RobotStateCartesian()
         self.actuation_polygon_topic_name = "/feasible_region/actuation_polygon"
         self.support_region_topic_name = "/feasible_region/support_region"
         self.force_polygons_topic_name = "/feasible_region/force_polygons"
@@ -53,7 +54,7 @@ class HyQSim(threading.Thread):
     def run(self):
         print "Run!"
         self.sub_clock = ros.Subscriber(self.clock_sub_name, Clock, callback=self._reg_sim_time, queue_size=1000)
-        self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, StringDoubleArray,
+        self.sub_actuation_params = ros.Subscriber(self.hyq_actuation_params_sub_name, RobotStateCartesian,
                                                    callback=self.callback_hyq_debug, queue_size=1000)
         self.pub_polygon = ros.Publisher(self.actuation_polygon_topic_name, Polygon3D, queue_size=10000)
         self.pub_support_region = ros.Publisher(self.support_region_topic_name, Polygon3D, queue_size=1000)
@@ -124,7 +125,7 @@ def talker(robotName):
     force_polytopes_name = "force_polytopes"
 
     params = IterativeProjectionParameters()
-    foothold_params = FootholdPlanningInterface()
+    #foothold_params = FootholdPlanningInterface()
     i = 0
 
     p.get_sim_wbs()

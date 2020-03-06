@@ -36,20 +36,22 @@ class Constraints:
         comPositionWF = params.getCoMPosWF()
         comPositionBF = params.getCoMPosBF()
         rpy = params.getOrientation()
+        #print "RPY", rpy
         #compute the contacs in the base frame for the inv kineamtics
         contactsBF = np.zeros((4,3))
-
+        rot = self.math.rpyToRot(rpy[0], rpy[1], rpy[2])
+        #print "rotation matrix", rot
         for j in np.arange(0, 4):
             j = int(j)
-            contactsBF[j,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[j,:] - comPositionWF)), comPositionBF)
+            contactsBF[j,:]= np.add( np.dot(rot, (contactsWF[j,:] - comPositionWF)), comPositionBF)
 
         #print 'WF ',contactsWF
-        #print contactsBF
+        #print "BF ", contactsBF
         #print 'stance legs ', stanceLegs
         
         constraint_mode = params.getConstraintModes()
 
-        tau_lim = self.model.joint_torque_limits #= params.getTorqueLims()
+        joint_torque_lims = self.model.joint_torque_limits #= params.getTorqueLims()
         contact_torque_lims = self.model.contact_torque_limits
         ng = params.getNumberOfFrictionConesEdges()
         friction_coeff = params.getFrictionCoefficient()
@@ -59,10 +61,11 @@ class Constraints:
         d = np.zeros((0))
 
         stanceIndex = params.getStanceIndex(stanceLegs)
+        #print "stance ID", stanceIndex
         #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 
-        self.kin.inverse_kin(contactsBF, foot_vel)
+        q, legsIkSuccess = self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
 
         #print ("q is ",q)
 
@@ -79,8 +82,8 @@ class Constraints:
 #                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
-                Ctemp, d_cone, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim, params.useContactTorque, contact_torque_lims)
-                #            print d.shape[0]            
+                Ctemp, d_cone, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, joint_torque_lims, params.useContactTorque, contact_torque_lims)
+                #            print d.shape[0]
                 if isIKoutOfWorkSpace is False:
                     if params.useContactTorque:
                         d_cone = d_cone.reshape(10)
@@ -91,7 +94,7 @@ class Constraints:
                     d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
-                C1, d1, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, tau_lim, params.useContactTorque, contact_torque_lims)
+                C1, d1, leg_actuation_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, joint_torque_lims, params.useContactTorque, contact_torque_lims)
                 C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(params.useContactTorque, friction_coeff, normals[j,:], contact_torque_lims)
 
                 if isIKoutOfWorkSpace is False:

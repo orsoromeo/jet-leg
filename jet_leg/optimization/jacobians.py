@@ -135,12 +135,50 @@ class Jacobians:
 
         return jacobian
 
+    def plotMarginAndJacobianOfMarginWrtComLinAcceleration(self, params, acc_range):
+        num_of_tests = np.shape(acc_range)
+        margin = np.zeros(num_of_tests)
+        jac_com_lin_acc = np.zeros((3,num_of_tests[0]))
+        count = 0
+        for delta_acc in acc_range:
+            print "delta_acc", delta_acc
+            params.comLinAcc = [0., delta_acc, 0.0]
+            print "count",count, params.comLinAcc, params.comPositionWF, params.getContactsPosWF()
+            ''' compute iterative projection 
+            Outputs of "iterative_projection_bretl" are:
+            IP_points = resulting 2D vertices
+            actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
+            computation_time = how long it took to compute the iterative projection
+            '''
+            IP_points, force_polytopes, IP_computation_time = self.compDyn.iterative_projection_bretl(params)
+    
+            '''I now check whether the given CoM configuration is stable or not'''
+            isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
+            print "is CoM stable?", isCoMStable
+            #print 'Contact forces:', contactForces
+            print 'IP_points:', IP_points
+
+            facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+            point2check = self.compDyn.getReferencePoint(params)
+            print "point 2 check", point2check
+            isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
+    
+            marginJAcWrtComLinAcc = self.computeComLinAccJacobian(params)
+            print "marginJAcWrtComLinVel", marginJAcWrtComLinAcc
+            jac_com_lin_acc[:,count] = marginJAcWrtComLinAcc[1]     # select Y component
+            # print "com lin vel jacobian", jac_com_lin_vel
+    
+            count += 1
+    
+        return margin, jac_com_lin_acc
+    
     def plotMarginAndJacobianOfMarginWrtComVelocity(self, params, velocity_range):
         num_of_tests = np.shape(velocity_range)
         margin = np.zeros(num_of_tests)
-        jac_com_lin_vel = np.zeros(num_of_tests)
+        jac_com_lin_vel = np.zeros((3,num_of_tests[0]))
         count = 0
         for delta_vel in velocity_range:
+            print "delta_vel", delta_vel
             params.comLinVel = [0., delta_vel, 0.0]
             print "count",count, params.comLinVel, params.comPositionWF, params.getContactsPosWF()
             ''' compute iterative projection 
@@ -158,31 +196,33 @@ class Jacobians:
 
             facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
             point2check = self.compDyn.getReferencePoint(params)
+            print "point 2 check", point2check
             isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
 
             marginJAcWrtComLinVel = self.computeComLinVelJacobian(params)
             print "marginJAcWrtComLinVel", marginJAcWrtComLinVel
-            jac_com_lin_vel[count] = marginJAcWrtComLinVel[1]
+            jac_com_lin_vel[:,count] = marginJAcWrtComLinVel
             # print "com lin vel jacobian", jac_com_lin_vel
 
             count += 1
 
         return margin, jac_com_lin_vel
 
-    def plotMarginAndJacobianWrtComPosition(self, params, com_pos_range_y):
-        num_of_tests = np.shape(com_pos_range_y)
+    def plotMarginAndJacobianWrtComPosition(self, params, com_pos_range, dim_to_check):
+        num_of_tests = np.shape(com_pos_range)
         margin = np.zeros(num_of_tests)
-        jac_com_pos = np.zeros(num_of_tests)
+        jac_com_pos = np.zeros((3,num_of_tests[0]))
         count = 0
 
-        for delta_y in com_pos_range_y:
+        for delta in com_pos_range:
             """ contact points in the World Frame"""
-            LF_foot = np.array([0.3, 0.2 - delta_y, -0.4])
-            RF_foot = np.array([0.3, -0.2 - delta_y, -0.4])
-            LH_foot = np.array([-0.3, 0.2 - delta_y, -0.4])
-            RH_foot = np.array([-0.3, -0.2 - delta_y, -0.4])
+            LF_foot = np.array([0.3, 0.2, -0.4])
+            RF_foot = np.array([0.3, -0.2, -0.4])
+            LH_foot = np.array([-0.3, 0.2, -0.4])
+            RH_foot = np.array([-0.3, -0.2, -0.4])
 
             contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+            contactsWF[:, dim_to_check] += delta
             params.setContactsPosWF(contactsWF)
 
             ''' compute iterative projection 
@@ -196,7 +236,7 @@ class Jacobians:
             '''I now check whether the given CoM configuration is stable or not'''
             isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
             print "is CoM stable?", isCoMStable
-            # print 'Contact forces:', contactForces
+            print 'Contact forces:', contactForces
 
             facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
             point2check = self.compDyn.getReferencePoint(params)
@@ -205,18 +245,18 @@ class Jacobians:
 
             marginJAcWrtComPos = self.computeComPosJacobian(params)
             print "margin jac wrt com pos", marginJAcWrtComPos
-            jac_com_pos[count] = marginJAcWrtComPos[1]
+            jac_com_pos[:, count] = marginJAcWrtComPos
             count += 1
 
         return margin, jac_com_pos
 
-    def plotMarginAndJacobianWrtFootPosition(self, params, foot_id, foot_pos_range_y):
-        num_of_tests = np.shape(foot_pos_range_y)
+    def plotMarginAndJacobianWrtFootPosition(self, params, foot_id, foot_pos_range, dimension_to_check):
+        num_of_tests = np.shape(foot_pos_range)
         margin = np.zeros(num_of_tests)
         jac_com_pos = np.zeros(num_of_tests)
         count = 0
 
-        for delta_y in foot_pos_range_y:
+        for delta in foot_pos_range:
             """ contact points in the World Frame"""
             LF_foot = np.array([0.3, 0.2, -0.4])
             RF_foot = np.array([0.3, -0.2, -0.4])
@@ -224,7 +264,7 @@ class Jacobians:
             RH_foot = np.array([-0.3, -0.2, -0.4])
 
             contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-            contactsWF[foot_id, 1] += delta_y
+            contactsWF[foot_id, dimension_to_check] += delta
             params.setContactsPosWF(contactsWF)
 
             print "contacts ", params.getContactsPosWF()

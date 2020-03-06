@@ -26,7 +26,7 @@ class ForcePolytopeConstraint:
 
     def compute_actuation_constraints(self, contact_iterator, torque_limits, use_contact_torque, contact_torque_lims):
 
-        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
+        J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace, legIkSuccess = self.kin.get_jacobians()
         # print J_LF, J_RF, J_LH, J_RH
         if isOutOfWorkspace:
             C1 = np.zeros((0, 0))

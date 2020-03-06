@@ -34,15 +34,15 @@ class KinematicsInterface:
         elif self.robotName == 'anymal':
             return self.anymalKin.getLegJacobians()
 
-    def inverse_kin(self, contactsBF, foot_vel):
+    def inverse_kin(self, contactsBF, foot_vel, stance_idx):
 
         if self.robotName == 'hyq':
-            q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel)
+            q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel, stance_idx)
             return q
         elif self.robotName == 'hyqreal':
-            q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
+            q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF, stance_idx)
             return q
         elif self.robotName == 'anymal':
-            q = self.anymalKin.fixedBaseInverseKinematics(contactsBF)
-            return q
+            q, legIkSuccess = self.anymalKin.fixedBaseInverseKinematics(contactsBF, stance_idx)
+            return q, legIkSuccess
 
