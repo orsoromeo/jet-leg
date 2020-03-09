@@ -49,10 +49,10 @@ extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
 """ contact points in the World Frame"""
-LF_foot = np.array([0.36, 0.2, -0.4])
-RF_foot = np.array([0.36, -0.2, -0.4])
-LH_foot = np.array([-0.36, 0.2, -0.4])
-RH_foot = np.array([-0.36, -0.2, -0.4])
+LF_foot = np.array([0.3, 0.2, -0.4])
+RF_foot = np.array([0.3, -0.2, -0.4])
+LH_foot = np.array([-0.3, 0.2, -0.4])
+RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
@@ -60,7 +60,7 @@ contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 mu = 0.8
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,0,0,1]
+stanceFeet = [1,1,1,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -85,7 +85,7 @@ comp_dyn = ComputationalDynamics(robot_name)
 
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
-params = IterativeProjectionParameters()
+params = IterativeProjectionParameters(robot_name)
 
 #params.useInstantaneousCapturePoint = True
 params.setContactsPosWF(contactsWF)
@@ -169,8 +169,10 @@ plotter = Plotter()
 for j in range(0,nc): # this will only show the force polytopes of the feet that are defined to be in stance
     idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
-    #if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
-        #plotter.plot_actuation_polygon(ax, forcePolytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
+    if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
+        print "IDX poly", force_polytopes
+        plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
+        print "IDX ", idx
 
 ''' 2D figure '''
 plt.figure()
