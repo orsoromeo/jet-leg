@@ -192,24 +192,12 @@ class ComputationalDynamics:
                     print("QHull type error: " + str(err))
                     print("matrix to compute qhull:",compressed_vertices)
                     return False, False, False
-                
-                
-#        print 'hull ', hull.vertices
+
             compressed_hull = compressed_vertices[hull.vertices]
             compressed_hull = self.geom.clockwise_sort(compressed_hull)
             compressed_hull = compressed_hull
-#        print compressed_hull
-        #vertices_WF = vertices_BF + np.transpose(comWF[0:2])
             computation_time = (time.time() - start_t_IP)
-        #print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
-
-#        print np.size(actuation_polygons,0), np.size(actuation_polygons,1), actuation_polygons
-#        if np.size(actuation_polygons.getVertices(),0) is 4:
-#            if np.shape(actuation_polygons.getVertices()) is 3:
-#                print actuation_polygons
-#                p = self.reorganizeActuationPolytopes(actuation_polygons.getVertices()[1])
-
-        return compressed_hull, actuation_polygons, computation_time
+            return compressed_hull, actuation_polygons, computation_time
         
         
     def instantaneous_actuation_region_bretl(self, stanceLegs, contacts, normals, total_mass, comWF = np.array([0.0,0.0,0.0])):

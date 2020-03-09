@@ -37,7 +37,7 @@ class KinematicsInterface:
     def inverse_kin(self, contactsBF, foot_vel, stance_idx):
 
         if self.robotName == 'hyq':
-            q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel, stance_idx)
+            q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel)
             return q
         elif self.robotName == 'hyqreal':
             q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF, stance_idx)

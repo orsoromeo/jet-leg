@@ -158,18 +158,19 @@ class Jacobians:
             print "is CoM stable?", isCoMStable
             # print 'Contact forces:', contactForces
             print 'IP_points:', IP_points
-            if IP_points is True:
-                print "ip points shape", np.shape(IP_points)
-                facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
-                point2check = self.compDyn.getReferencePoint(params)
-                print "point 2 check", point2check
-                isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
-
-                marginJAcWrtComLinAcc = self.computeComLinAccJacobian(params)
-                print "marginJAcWrtComLinAcc", marginJAcWrtComLinAcc
-                jac_com_lin_acc[:, count] = marginJAcWrtComLinAcc
-            else:
-                jac_com_lin_acc[:, count] = [-1000] * 3
+            #if IP_points is True:
+            #    print "ip points shape", np.shape(IP_points)
+            #    facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+            #    point2check = self.compDyn.getReferencePoint(params)
+            #    print "point 2 check", point2check
+            #    isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
+            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
+            #
+            marginJAcWrtComLinAcc = self.computeComLinAccJacobian(params)
+            #    print "marginJAcWrtComLinAcc", marginJAcWrtComLinAcc
+            jac_com_lin_acc[:, count] = marginJAcWrtComLinAcc
+            #else:
+            #    jac_com_lin_acc[:, count] = [-1000] * 3
 
             # print "com lin vel jacobian", jac_com_lin_vel
 
@@ -193,17 +194,18 @@ class Jacobians:
             actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
             computation_time = how long it took to compute the iterative projection
             '''
-            IP_points, force_polytopes, IP_computation_time = self.compDyn.iterative_projection_bretl(params)
-
-            '''I now check whether the given CoM configuration is stable or not'''
-            isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
-            print "is CoM stable?", isCoMStable
-            # print 'Contact forces:', contactForces
-
-            facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
-            point2check = self.compDyn.getReferencePoint(params)
-            print "point 2 check", point2check
-            isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
+            #IP_points, force_polytopes, IP_computation_time = self.compDyn.iterative_projection_bretl(params)
+            #
+            #'''I now check whether the given CoM configuration is stable or not'''
+            #isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
+            #print "is CoM stable?", isCoMStable
+            ## print 'Contact forces:', contactForces
+            #
+            #facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
+            #point2check = self.compDyn.getReferencePoint(params)
+            #print "point 2 check", point2check
+            #isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
+            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
 
             marginJAcWrtComLinVel = self.computeComLinVelJacobian(params)
             print "marginJAcWrtComLinVel", marginJAcWrtComLinVel
