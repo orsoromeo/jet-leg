@@ -33,15 +33,14 @@ class Jacobians:
 
             diff = jac_left - jac_right
             jacobian[j] = diff / self.delta
-
-            print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
+            #print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
 
         return jacobian
 
     def computeComPosJacobian(self, params):
         jacobian = np.zeros(3)
         initialCoMPos = copy.copy(params.comPositionWF)
-        print "initialCoMPos ", initialCoMPos
+        #print "initialCoMPos ", initialCoMPos
 
         for j in np.arange(0, 3):
             params.comPositionWF = initialCoMPos
@@ -52,7 +51,25 @@ class Jacobians:
             isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
-            print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
+            #print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
+
+        return jacobian
+
+    def computeBaseOrientationJacobian(self, params):
+        jacobian = np.zeros(3)
+        initialBaseOrient = copy.copy(params.eurlerAngles)
+        #print "initialBaseOrient ", initialBaseOrient
+
+        for j in np.arange(0, 3):
+            params.eurlerAngles = initialBaseOrient
+            params.eurlerAngles[j] = initialBaseOrient[j] + self.delta / 2.0
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+            params.eurlerAngles = initialBaseOrient
+            params.eurlerAngles[j] = initialBaseOrient[j] - self.delta / 2.0
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            diff = margin1 - margin2
+            jacobian[j] = diff / self.delta
+            #print "[computeBaseOrientationJacobian]", margin1, margin2, self.delta, jacobian[j]
 
         return jacobian
 
@@ -111,7 +128,6 @@ class Jacobians:
 
     def computeFeetJacobian(self, params):
         jacobian = np.zeros(12)
-        initialContacts = copy.copy(params.getContactsPosWF())
         for footID in np.arange(0, 4):
             jacobian[footID * 3: footID * 3 + 3] = self.computeFootJacobian(params, footID)
         return jacobian
@@ -140,11 +156,11 @@ class Jacobians:
         jac_com_lin_acc = np.zeros((3, num_of_tests[0]))
         count = 0
         for delta_acc in acc_range:
-            print "dimension", dimension
-            print "delta_acc", delta_acc
+            #print "dimension", dimension
+            #print "delta_acc", delta_acc
             params.comLinAcc = [0.0, 0.0, 0.0]
             params.comLinAcc[dimension] = delta_acc
-            print "count", count, params.comLinAcc, params.comPositionWF, params.getContactsPosWF()
+            #print "count", count, params.comLinAcc, params.comPositionWF, params.getContactsPosWF()
             ''' compute iterative projection 
             Outputs of "iterative_projection_bretl" are:
             IP_points = resulting 2D vertices
@@ -155,9 +171,9 @@ class Jacobians:
 
             '''I now check whether the given CoM configuration is stable or not'''
             isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
-            print "is CoM stable?", isCoMStable
+            #print "is CoM stable?", isCoMStable
             # print 'Contact forces:', contactForces
-            print 'IP_points:', IP_points
+            #print 'IP_points:', IP_points
             #if IP_points is True:
             #    print "ip points shape", np.shape(IP_points)
             #    facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
@@ -208,7 +224,7 @@ class Jacobians:
             isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
 
             marginJAcWrtComLinVel = self.computeComLinVelJacobian(params)
-            print "marginJAcWrtComLinVel", marginJAcWrtComLinVel
+            #print "marginJAcWrtComLinVel", marginJAcWrtComLinVel
             jac_com_lin_vel[:, count] = marginJAcWrtComLinVel
             # print "com lin vel jacobian", jac_com_lin_vel
 
@@ -232,12 +248,43 @@ class Jacobians:
             isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
 
             marginJAcWrtComPos = self.computeComPosJacobian(params)
-            print "margin jac wrt com pos", marginJAcWrtComPos
+            #print "margin jac wrt com pos", marginJAcWrtComPos
             jac_com_pos[:, count] = marginJAcWrtComPos
 
             count += 1
 
         return margin, jac_com_pos
+
+    '''
+    @brief this function computes the jacobian of the feasible region margin wrt to the base orientation 
+    for a predefined set of base orienation values
+    @params params = iterative projection parameters 
+    @params dim_to_check = 0 (roll), dim_to_check = 1 (pitch)
+    @params base_orient_range = set of values to use for the roll/pitch test
+    '''
+    def plotMarginAndJacobianWrtBaseOrientation(self, params, base_orient_range, dim_to_check):
+        num_of_tests = np.shape(base_orient_range)
+        margin = np.zeros(num_of_tests)
+        jac_base_orient = np.zeros((3, num_of_tests[0]))
+        count = 0
+        default_euler_angles = copy.deepcopy(params.eurlerAngles)
+        print "default euler", default_euler_angles
+
+        for delta in base_orient_range:
+            eulerAngles = copy.deepcopy(default_euler_angles)
+            eulerAngles[dim_to_check] -= delta
+            params.setEulerAngles(eulerAngles)
+
+            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
+            print "params.eurlerAngles ", params.eurlerAngles
+            print "margin ", margin[count]
+            marginJAcWrtBaseOrient = self.computeBaseOrientationJacobian(params)
+            print "margin jac wrt base orient", marginJAcWrtBaseOrient
+            jac_base_orient[:, count] = marginJAcWrtBaseOrient
+
+            count += 1
+
+        return margin, jac_base_orient
 
     def plotMarginAndJacobianWrtFootPosition(self, params, foot_id, foot_pos_range, dimension_to_check):
         num_of_tests = np.shape(foot_pos_range)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Jun 12 10:54:31 2018
 
@@ -38,9 +37,10 @@ mu = 0.8
 
 axisZ = array([[0.0], [0.0], [1.0]])
 
-comp_dyn = ComputationalDynamics('anymal')
+robot_name = 'anymal'
+comp_dyn = ComputationalDynamics(robot_name)
 
-number_of_tests = 100
+number_of_tests = 1000
 onlyFrictionTests3contacts = np.zeros((number_of_tests))
 onlyFrictionTests4contacts = np.zeros((number_of_tests))
 onlyActuationTests3contacts = np.zeros((number_of_tests))
@@ -48,7 +48,7 @@ onlyActuationTests4contacts = np.zeros((number_of_tests))
 frictionAndActuation3contacts = np.zeros((number_of_tests))
 frictionAndActuation4contacts = np.zeros((number_of_tests))
 
-params = IterativeProjectionParameters()
+params = IterativeProjectionParameters(robot_name)
 
 
 def perform_statistics(number_of_tests, number_of_contacts, _constraint_mode):

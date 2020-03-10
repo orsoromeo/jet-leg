@@ -39,7 +39,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([.0, -0.0, 0.0])
+comWF = np.array([.0, 0.10, 0.0])
 comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
@@ -170,9 +170,8 @@ for j in range(0,nc): # this will only show the force polytopes of the feet that
     idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
     if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
-        print "IDX poly", force_polytopes
+        #print "IDX poly", force_polytopes.getVertices()[idx]
         plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
-        print "IDX ", idx
 
 ''' 2D figure '''
 plt.figure()

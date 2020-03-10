@@ -31,6 +31,7 @@ class IterativeProjectionParameters:
         self.roll = 0.0
         self.pitch = 0.0
         self.yaw = 0.0
+        self.eurlerAngles = [self.roll, self.pitch, self.yaw]
     
         self.LF_tau_lim = [50.0, 50.0, 50.0]
         self.RF_tau_lim = [50.0, 50.0, 50.0]
@@ -116,6 +117,7 @@ class IterativeProjectionParameters:
         self.roll = eurlerAngles[0]
         self.pitch = eurlerAngles[1]
         self.yaw = eurlerAngles[2]
+        self.eurlerAngles = [self.roll, self.pitch, self.yaw]
 
     def setInstantaneousCapturePoint(self, ICP):
         self.instantaneousCapturePoint = ICP
@@ -151,7 +153,7 @@ class IterativeProjectionParameters:
         return self.normals
 
     def getOrientation(self):
-        return [self.roll, self.pitch, self.yaw]
+        return self.eurlerAngles
         
     def getConstraintModes(self):
         return self.constraintMode

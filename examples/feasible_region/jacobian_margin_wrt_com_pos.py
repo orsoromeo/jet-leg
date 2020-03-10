@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Jun 12 10:54:31 2018
 
@@ -19,7 +18,6 @@ from jet_leg.variables.com import CoM
 import time
 
 import matplotlib.pyplot as plt
-from jet_leg.plotting.arrow3D import Arrow3D
 
 plt.close('all')
 math = Math()
@@ -38,8 +36,6 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION']
 
-# number of decision variables of the problem
-# n = nc*6
 comWF = np.array([.0, 0.0, 0.0])
 comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
@@ -114,19 +110,21 @@ params_com_vel_z = deepcopy(params)
 params_com_acc_x = deepcopy(params)
 params_com_acc_y = deepcopy(params)
 params_com_acc_z = deepcopy(params)
+params_base_roll = deepcopy(params)
+params_base_pitch = deepcopy(params)
 
 jac = Jacobians(robot_name)
 comp_geom = ComputationalGeometry()
 com = CoM(params)
 
-delta_pos_range = 0.98
-num_of_tests = 30
+delta_pos_range = 0.8
+num_of_tests = 25
 delta_pos_range_vec = np.linspace(-delta_pos_range/2.0, delta_pos_range/2.0, num_of_tests)
 print "number of tests", num_of_tests
 
-pos_margin_x, jac_com_pos_x = jac.plotMarginAndJacobianWrtComPosition(params_com_x, delta_pos_range_vec, 0)
-pos_margin_y, jac_com_pos_y = jac.plotMarginAndJacobianWrtComPosition(params_com_y, delta_pos_range_vec, 1)
-pos_margin_z, jac_com_pos_z = jac.plotMarginAndJacobianWrtComPosition(params_com_z, delta_pos_range_vec, 2)
+pos_margin_x, jac_com_pos_x = jac.plotMarginAndJacobianWrtComPosition(params_com_x, delta_pos_range_vec, 0) # dm / dx
+pos_margin_y, jac_com_pos_y = jac.plotMarginAndJacobianWrtComPosition(params_com_y, delta_pos_range_vec, 1) # dm / dy
+pos_margin_z, jac_com_pos_z = jac.plotMarginAndJacobianWrtComPosition(params_com_z, delta_pos_range_vec, 2) # dm / dz
 
 delta_vel_range = 3.0
 delta_vel_range_vec = np.linspace(-delta_vel_range/2.0, delta_vel_range/2.0, num_of_tests)
@@ -141,15 +139,21 @@ RH_foot = np.array([-0.3, -0.2, -0.4])
 contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 params.setContactsPosWF(contactsWF)
 
-vel_margin_x, jac_com_lin_vel_x = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_x, delta_vel_range_vec, 0)
-vel_margin_y, jac_com_lin_vel_y = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_y, delta_vel_range_vec, 1)
-vel_margin_z, jac_com_lin_vel_z = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_z, delta_vel_range_vec, 2)
+vel_margin_x, jac_com_lin_vel_x = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_x, delta_vel_range_vec, 0) # dm / d x_d
+vel_margin_y, jac_com_lin_vel_y = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_y, delta_vel_range_vec, 1) # dm / d y_d
+vel_margin_z, jac_com_lin_vel_z = jac.plotMarginAndJacobianOfMarginWrtComVelocity(params_com_vel_z, delta_vel_range_vec, 2) # dm / d z_d
 
 delta_acc_range = 8.0
 delta_acc_range_vec = np.linspace(-delta_acc_range/2.0, delta_acc_range/2.0, num_of_tests)
-acc_margin_x, jac_com_lin_acc_x = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_x, delta_acc_range_vec, 0)
-acc_margin_y, jac_com_lin_acc_y = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_y, delta_acc_range_vec, 1)
-acc_margin_z, jac_com_lin_acc_z = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_z, delta_acc_range_vec, 2)
+acc_margin_x, jac_com_lin_acc_x = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_x, delta_acc_range_vec, 0) # dm/d x_dd
+acc_margin_y, jac_com_lin_acc_y = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_y, delta_acc_range_vec, 1) # dm/d y_dd
+acc_margin_z, jac_com_lin_acc_z = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_acc_z, delta_acc_range_vec, 2) # dm/d z_dd
+
+delta_orientation_range = np.pi/4
+delta_orientation_range_vec = np.linspace(-delta_orientation_range/2.0, delta_orientation_range/2.0, num_of_tests)
+roll_margin, jac_base_roll = jac.plotMarginAndJacobianWrtBaseOrientation(params_base_roll, delta_orientation_range_vec, 0) # roll
+pitch_margin, jac_base_pitch = jac.plotMarginAndJacobianWrtBaseOrientation(params_base_pitch, delta_orientation_range_vec, 1) # pitch
+
 
 ### Plotting
 
@@ -287,5 +291,35 @@ plt.ylabel("$ \delta m/  \delta \ddot{c}_z$")
 #sub.set_xlim([-4, 4])
 #sub.set_ylim([-0.5, 0.5])
 plt.title("CoM Z acc jacobian")
+
+### Orientation
+plt.figure(4)
+plt.subplot(221)
+plt.plot(delta_orientation_range_vec, roll_margin, 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("roll $\theta$ [rad]")
+plt.ylabel("m [m]")
+plt.title("Base roll margin")
+
+plt.subplot(223)
+plt.plot(delta_orientation_range_vec, jac_base_roll[2,:], 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("$roll $\theta$ [rad]")
+plt.ylabel(" $ \delta m/  \delta \theta $")
+plt.title("CoM Z pos jacobian")
+
+plt.subplot(222)
+plt.plot(delta_orientation_range_vec, pitch_margin, 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("pitch [rad]")
+plt.ylabel("m [m]")
+plt.title("Base pitch margin")
+
+plt.subplot(224)
+plt.plot(delta_orientation_range_vec, jac_base_pitch[2,:], 'g', markersize=15, label='CoM')
+plt.grid()
+plt.xlabel("")
+plt.ylabel("")
+plt.title("Basep pitch jacobian")
 
 plt.show()

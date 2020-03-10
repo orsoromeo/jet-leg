@@ -66,7 +66,6 @@ class Constraints:
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 
         self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
-
         #print ("q is ",q)
 
         forcePolytopes = LegForcePolytopes()
@@ -77,7 +76,7 @@ class Constraints:
                 #            print contactsNumber
                 Ctemp, d_cone = self.frictionConeConstr.linearized_cone_halfspaces_world(params.useContactTorque, friction_coeff, normals[j,:], contact_torque_lims)
                 isIKoutOfWorkSpace = False
-                leg_actuation_polygon = np.zeros((4, 1))
+                leg_actuation_polygon[j] = np.zeros((3, 8))
 #                n = self.math.normalize(normals[j,:])
 #                rotationMatrix = self.math.rotation_matrix_from_normal(n)
 #                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
@@ -114,13 +113,13 @@ class Constraints:
                     Ctemp = np.zeros((0,0))
                     d_cone = np.zeros((0))
 
-            print "ik out of ws", isIKoutOfWorkSpace
+            #print "ik out of ws", isIKoutOfWorkSpace
             if isIKoutOfWorkSpace is False:
                 self.currentLegForcePolytope.setHalfSpaces(Ctemp, d_cone)
                 #print "leg_actuation_polygon[j] ", leg_actuation_polygon[j]
                 self.currentLegForcePolytope.setVertices(leg_actuation_polygon[j])
-                print "stance idx", j
-                print "currentLegForcePolytope ", self.currentLegForcePolytope.getVertices()
+                #print "stance idx", j
+                #print "currentLegForcePolytope ", self.currentLegForcePolytope.getVertices()
                 forcePolytopes.forcePolytope[j].setVertices(leg_actuation_polygon[j])
                 
             C = block_diag(C, Ctemp)

@@ -64,7 +64,6 @@ class Plotter:
           vertex[1,j] = vertices[1,j]/float(scaling_factor)
           vertex[2,j] = vertices[2,j]/float(scaling_factor)
           vertex[:,j] = np.add(vertex[:,j],np.transpose(foot_pos))
-          
-        
+
           
       self.plot_cube(ax,vertex)

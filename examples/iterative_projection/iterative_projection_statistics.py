@@ -25,11 +25,6 @@ import random
 plt.close('all')
 math = Math()
 
-# number of contacts
-nc = 3
-# number of generators, i.e. rays used to linearize the friction cone
-ng = 4
-
 # ONLY_ACTUATION, ONLY_FRICTION or FRICTION_AND_ACTUATION
 constraint_mode_IP = ['FRICTION_AND_ACTUATION',
                       'ONLY_FRICTION',
@@ -37,8 +32,6 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION']
 
 useVariableJacobian = False
-# number of decision variables of the problem
-n = nc*6
 
 ''' parameters to be tuned'''
 g = 9.81
@@ -47,13 +40,14 @@ mu = 0.8
     
 axisZ= array([[0.0], [0.0], [1.0]])
 
-comp_dyn = ComputationalDynamics()
+robot_name = 'anymal'
+comp_dyn = ComputationalDynamics(robot_name)
 
-number_of_tests = 10
+number_of_tests = 100
 tests3contacts = np.zeros((number_of_tests))
 tests4contacts = np.zeros((number_of_tests))  
 
-params = IterativeProjectionParameters()
+params = IterativeProjectionParameters(robot_name)
 
 for iter in range(0,number_of_tests):
     
@@ -70,7 +64,11 @@ for iter in range(0,number_of_tests):
     randPitch = np.random.normal(0.0, 0.2)
     randYaw = np.random.normal(0.0, 0.2)
     n3 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
-    normals = np.vstack([n1, n2, n3])
+    randRoll = np.random.normal(0.0, 0.2)
+    randPitch = np.random.normal(0.0, 0.2)
+    randYaw = np.random.normal(0.0, 0.2)
+    n4 = np.transpose(np.transpose(math.rpyToRot(randRoll,randPitch,randYaw)).dot(axisZ))
+    normals = np.vstack([n1, n2, n3, n4])
     
     """ contact points """
     sigma = 0.05 # mean and standard deviation
@@ -94,11 +92,6 @@ for iter in range(0,number_of_tests):
 #    print contacts
 #    contacts = contactsToStack[0:nc, :]
 
-    LF_tau_lim = [80.0, 100.0, 100.0]
-    RF_tau_lim = [80.0, 100.0, 100.0]
-    LH_tau_lim = [80.0, 100.0, 100.0]
-    RH_tau_lim = [80.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
     comWF = np.array([0.0,0.0,0.0])
     
     ''' compute iterative projection '''
@@ -109,12 +102,11 @@ for iter in range(0,number_of_tests):
     
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
     params.setContactNormals(normals)
     params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
+    params.setNumberOfFrictionConesEdges(4)
     params.setTotalMass(total_mass)
     #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
@@ -167,17 +159,6 @@ for iter in range(0,number_of_tests):
     RH_foot = np.array([randX, randY, randZ])
     contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 #    print contacts
-    LF_tau_lim = [100.0, 100.0, 100.0]
-    RF_tau_lim = [100.0, 100.0, 100.0]
-    LH_tau_lim = [100.0, 100.0, 100.0]
-    RH_tau_lim = [100.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim, ])
-
-    LF_tau_lim = [80.0, 100.0, 100.0]
-    RF_tau_lim = [80.0, 100.0, 100.0]
-    LH_tau_lim = [80.0, 100.0, 100.0]
-    RH_tau_lim = [80.0, 100.0, 100.0]
-    torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
     comWF = np.array([0.0,0.0,0.0])
         
     stanceLegs = [1 ,1, 1, 1]
@@ -185,12 +166,11 @@ for iter in range(0,number_of_tests):
     ''' compute iterative projection '''
     params.setContactsPosWF(contacts)
     params.setCoMPosWF(comWF)
-    params.setTorqueLims(torque_limits)
     params.setActiveContacts(stanceLegs)
     params.setConstraintModes(constraint_mode_IP)
     params.setContactNormals(normals)
     params.setFrictionCoefficient(mu)
-    params.setNumberOfFrictionConesEdges(ng)
+    params.setNumberOfFrictionConesEdges(4)
     params.setTotalMass(total_mass)
     #    IP_points, actuation_polygons, comp_time = comp_dyn.support_region_bretl(stanceLegs, contacts, normals, trunk_mass)
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
@@ -208,7 +188,6 @@ plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
 plt.legend()
 
-fig = plt.figure()
 plt.plot([1,2,3])
 plt.subplot(121)
 #print tests

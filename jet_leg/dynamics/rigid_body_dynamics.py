@@ -22,7 +22,7 @@ class RigidBodyDynamics:
         extTau = externalWrench[3:6]
         grav_vec = np.array([0.0, 0.0, robotsMass * gravity])
         static_linear = grav_vec + extForce
-        static_angular = np.cross(com_pos_WF, static_linear) + extTau
+        static_angular = extTau
         inertial_linear = np.multiply(robotsMass, comLinAcc)
         #print "inertial_linear", inertial_linear
         #print "static_linear", static_linear

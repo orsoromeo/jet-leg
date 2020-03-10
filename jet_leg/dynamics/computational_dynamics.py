@@ -68,7 +68,6 @@ class ComputationalDynamics:
         Ey = np.zeros((0))        
         G = np.zeros((6,0))
 
-        print iterative_projection_params.robotMass
         totalCentroidalWrench = self.rbd.computeCentroidalWrench(iterative_projection_params.robotMass,
                                                                  self.robotModel.robotModel.trunkInertia,
                                                                  iterative_projection_params.getCoMPosWF(),
@@ -395,7 +394,6 @@ class ComputationalDynamics:
         pendulum_height = 100.0
         iterative_projection_params.setCoMPosWF([0.0, 0.0, pendulum_height])
         comWF = iterative_projection_params.getCoMPosWF()
-        print "com is ", comWF
         if(iterative_projection_params.useInstantaneousCapturePoint):
             ICP = self.icp.compute(iterative_projection_params)
             iterative_projection_params.instantaneousCapturePoint = ICP
