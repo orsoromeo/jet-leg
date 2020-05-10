@@ -323,9 +323,9 @@ class Jacobians:
             print count, params.comLinVel, params.comPositionWF
             isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
 
-            marginJAcWrtComPos = self.computeComPosJacobian(params)
-            print "margin jac wrt com pos", marginJAcWrtComPos
-            jac_com_pos[count] = marginJAcWrtComPos[1]
+            marginJacWrtComPos = self.computeComPosJacobian(params)
+            print "margin jac wrt com pos", marginJacWrtComPos
+            jac_com_pos[count] = marginJacWrtComPos[1]
             count += 1
 
         return margin, jac_com_pos
