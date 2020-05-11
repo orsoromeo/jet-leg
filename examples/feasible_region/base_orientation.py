@@ -156,6 +156,15 @@ RH_shoulder = np.array([-0.3, -0.2, 0.0])
 
 shouldersBF = np.vstack((LF_shoulder, RF_shoulder, LH_shoulder, RH_shoulder))
 shoulder_position_WF = shouldersBF
+
+''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
+for j in range(0,4):
+    shoulder_position_BF = shouldersBF[j, :]
+    rpy = params.getOrientation()
+    R = math.rpyToRot(rpy[0], rpy[1], rpy[2])
+    shoulder_position_WF[j, 0:3] = np.dot(np.transpose(R), shoulder_position_BF) + [0.0, 0.0, comWF[2]]
+    ax.scatter(shoulder_position_WF[j, 0], shoulder_position_WF[j, 1], shoulder_position_WF[j, 2], c='k', s=100)
+
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ax.scatter(contactsWF[idx,0], contactsWF[idx,1], contactsWF[idx,2],c='b',s=100)
@@ -168,15 +177,6 @@ for j in range(0,nc): # this will only show the contact positions and normals of
 
     ''' draw 3D arrows corresponding to contact normals'''
     a = Arrow3D([contactsWF[idx,0], contactsWF[idx,0]+normals[idx,0]/10], [contactsWF[idx,1], contactsWF[idx,1]+normals[idx,1]/10],[contactsWF[idx,2], contactsWF[idx,2]+normals[idx,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
-
-    ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
-    shoulder_position_BF = shouldersBF[idx,:]
-    print "shouldersBF", shoulder_position_BF
-    rpy = params.getOrientation()
-    R = math.rpyToRot(rpy[0],rpy[1],rpy[2])
-    shoulder_position_WF[idx,0:3] = np.dot(np.transpose(R),shoulder_position_BF) + [0.0,0.0,comWF[2]]
-    print "shoulder_position_WF", shoulder_position_WF[idx,0:3]
-    ax.scatter(shoulder_position_WF[idx,0], shoulder_position_WF[idx,1], shoulder_position_WF[idx,2], c='k', s=100)
     ax.add_artist(a)
 
 print 'sum of vertical forces is', fz_tot
