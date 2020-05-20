@@ -8,11 +8,13 @@ import numpy as np
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.leg_force_polytopes import LegForcePolytopes
 from scipy.linalg import block_diag
+from scipy.spatial.transform import Rotation as Rot
 from jet_leg.robots.dog_interface import DogInterface
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from jet_leg.computational_geometry.polytopes import Polytope
 from jet_leg.constraints.friction_cone_constraint import FrictionConeConstraint
 from jet_leg.constraints.force_polytope_constraint import ForcePolytopeConstraint
+import copy
 
 class Constraints:    
     def __init__(self, robot_kinematics, robot_model):
@@ -29,24 +31,11 @@ class Constraints:
     def getInequalities(self, params, saturate_normal_force = False):
 
         stanceLegs = params.getStanceFeet()
-        
-        #print 'stance legs', stanceLegs
-        contactsNumber = np.sum(stanceLegs)
-        contactsWF = params.getContactsPosWF()
-        comPositionWF = params.getCoMPosWF()
-        comPositionBF = params.getCoMPosBF()
         rpy = params.getOrientation()
-        #print "RPY", rpy
-        #compute the contacs in the base frame for the inv kineamtics
-        contactsBF = np.zeros((4,3))
-        rot = self.math.rpyToRot(rpy[0], rpy[1], rpy[2])
-        #print "rotation matrix", rot
-        for j in np.arange(0, 4):
-            j = int(j)
-            contactsBF[j,:]= np.add( np.dot(rot, (contactsWF[j,:] - comPositionWF)), comPositionBF)
+        contactsNumber = np.sum(stanceLegs)
 
-        #print 'WF ',contactsWF
-        #print "BF ", contactsBF
+        contactsBF = copy.copy(params.computeContactsPosBF())
+        print "contacts BF ", contactsBF
         #print 'stance legs ', stanceLegs
         
         constraint_mode = params.getConstraintModes()
@@ -94,7 +83,7 @@ class Constraints:
                     d_cone = np.zeros((0))
             
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
-                C1, d1, leg_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, joint_torque_lims, params.useContactTorque, contact_torque_lims)
+                C1, d1, leg_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, joint_torque_lims, params.useContactTorque, contact_torque_lims, rpy)
                 leg_actuation_polygon[j] = leg_polygon
                 C2, d2 = self.frictionConeConstr.linearized_cone_halfspaces_world(params.useContactTorque, friction_coeff, normals[j,:], contact_torque_lims)
 
