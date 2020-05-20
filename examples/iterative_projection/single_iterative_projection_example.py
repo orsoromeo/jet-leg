@@ -6,8 +6,9 @@ Created on Tue Jun 12 10:54:31 2018
 """
 
 import numpy as np
-
+import copy
 from numpy import array
+from scipy.spatial.transform import Rotation as Rot
 from jet_leg.plotting.plotting_tools import Plotter
 import random
 from jet_leg.computational_geometry.math_tools import Math
@@ -39,22 +40,34 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 
 # number of decision variables of the problem
 #n = nc*6
-comWF = np.array([.0, 0.10, 0.0])
+comWF = np.array([.0, 0.0, 1.0])
 comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForce = np.array([0., 0.0, 0.0*9.81]) # units are N
+extForce = np.array([0.0, 0.0, 0.0*9.81]) # units are N
 extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
-""" contact points in the World Frame"""
-LF_foot = np.array([0.3, 0.2, -0.4])
-RF_foot = np.array([0.3, -0.2, -0.4])
-LH_foot = np.array([-0.3, 0.2, -0.4])
-RH_foot = np.array([-0.3, -0.2, -0.4])
+''' Roll Pitch Yaw angles of the base link'''
+rpy_base = np.array([0.78, 0.0, 0.0]) # units are rads
+rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
+W_R_B = rot.as_dcm()
 
-contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+""" contact points in the World Frame"""
+LF_foot = np.array([0.36, 0.21, -0.47])
+RF_foot = np.array([0.36, -0.21, -0.47])
+LH_foot = np.array([-0.36, 0.21, -0.47])
+RH_foot = np.array([-0.36, -0.21, -0.47])
+#LF_foot = np.array([0.270093,  0.163428, -0.479816])
+#RF_foot = np.array([0.270093,  0.163428, -0.479816])
+#LH_foot = np.array([0.36,      0.21,     -0.47])
+#RH_foot = np.array([-0.254592, -0.162951, -0.325419])
+
+contactsBF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+contactsWF = copy.copy(contactsBF);
+for j in np.arange(0,4):
+    contactsWF[j,:] = np.add(np.dot(W_R_B,copy.copy(contactsBF[j, :])), comWF)
 
 ''' parameters to be tuned'''
 mu = 0.8
@@ -87,7 +100,7 @@ comp_dyn = ComputationalDynamics(robot_name)
     informations needed for the computation of the IP'''
 params = IterativeProjectionParameters(robot_name)
 
-#params.useInstantaneousCapturePoint = True
+params.setEulerAngles(rpy_base)
 params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
 params.setCoMPosWF(comWF)
@@ -139,12 +152,16 @@ ax = fig.add_subplot(111, projection='3d')
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
+ax.set_xlim(comWF[0]-0.5,comWF[0]+0.5)
+ax.set_ylim(comWF[1]-0.5,comWF[1]+0.5)
+ax.set_zlim(comWF[2]-0.8,comWF[2]+0.2)
 
 nc = np.sum(stanceFeet)
 stanceID = params.getStanceIndex(stanceFeet)
 force_scaling_factor = 1500
 #plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 fz_tot = 0.0
+print "W_R_B", W_R_B
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ax.scatter(contactsWF[idx,0], contactsWF[idx,1], contactsWF[idx,2],c='b',s=100)
@@ -159,7 +176,10 @@ for j in range(0,nc): # this will only show the contact positions and normals of
     a = Arrow3D([contactsWF[idx,0], contactsWF[idx,0]+normals[idx,0]/10], [contactsWF[idx,1], contactsWF[idx,1]+normals[idx,1]/10],[contactsWF[idx,2], contactsWF[idx,2]+normals[idx,2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
 
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
-    ax.scatter(contactsWF[idx, 0], contactsWF[idx, 1], 0.0, c='k', s=100)
+    shoulder_position_BF = [contactsBF[idx,0],contactsBF[idx,1],0.0]
+    rpy = params.getOrientation()
+    shoulder_position_WF = W_R_B.dot(shoulder_position_BF) + comWF
+    ax.scatter(shoulder_position_WF[0], shoulder_position_WF[1], shoulder_position_WF[2], c='k', s=100)
     ax.add_artist(a)
 
 print 'sum of vertical forces is', fz_tot
@@ -170,15 +190,17 @@ for j in range(0,nc): # this will only show the force polytopes of the feet that
     idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
     if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
-        #print "IDX poly", force_polytopes.getVertices()[idx]
         plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
+
 
 ''' 2D figure '''
 plt.figure()
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
-    h1 = plt.plot(contactsWF[idx,0],contactsWF[idx,1],'ko',markersize=15, label='stance feet')
+    shoulder_position_BF = [contactsBF[idx,0],contactsBF[idx,1],0.4]
+    shoulder_position_WF = np.dot(W_R_B,shoulder_position_BF) + comWF
+    h1 = plt.plot(shoulder_position_WF[0],shoulder_position_WF[1],'ko',markersize=15, label='stance feet')
 h2 = plotter.plot_polygon(np.transpose(IP_points), '--b','Feasible Region')
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''

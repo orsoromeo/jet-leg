@@ -62,7 +62,7 @@ print contactsWF
 mu = 0.8
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,1,1,1]
+stanceFeet = [0,1,1,0]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -80,10 +80,8 @@ n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LH
 n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # RH
 normals = np.vstack([n1, n2, n3, n4])
 
-''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForceW = np.array([0.0, 0.0, 0.0]) # units are Nm
 ''' Roll Pitch Yaw angles of the base link'''
-rpy_base = np.array([0.0, -np.pi/8.0, 0.0]) # units are Nm
+rpy_base = np.array([0.0, 0.0, 0.0]) # units are Nm
 
 comp_dyn = ComputationalDynamics(robot_name)
 
@@ -103,7 +101,7 @@ params.setConstraintModes(constraint_mode_IP)
 params.setContactNormals(normals)
 params.setFrictionCoefficient(mu)
 params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
-params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
+
 
 ''' compute iterative projection
 Outputs of "iterative_projection_bretl" are:
@@ -118,24 +116,12 @@ IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_
 #print actuation_polygons
 
 '''I now check whether the given CoM configuration is stable or not'''
-#isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
-#print "is CoM stable?", isCoMStable
-#print 'Contact forces:', contactForces
-
 comp_geom = ComputationalGeometry()
 facets = comp_geom.compute_halfspaces_convex_hull(IP_points)
 point2check = comp_dyn.getReferencePoint(params)
 isPointFeasible, margin = comp_geom.isPointRedundant(facets, point2check)
 print "isPointFeasible: ", isPointFeasible
 print "Margin is: ", margin
-
-''' compute Instantaneous Capture Point (ICP) and check if it belongs to the feasible region '''
-if params.useInstantaneousCapturePoint:
-    ICP = InstantaneousCapturePoint()
-    icp = ICP.compute(params)
-    params.instantaneousCapturePoint = icp
-    lpCheck = LpVertexRedundnacy()
-    isIcpInsideFeasibleRegion, lambdas = lpCheck.isPointRedundant(IP_points.T, icp)
 
 '''Plotting the contact points in the 3D figure'''
 fig = plt.figure()
