@@ -6,6 +6,7 @@ Created on Wed Nov 14 15:07:45 2018
 """
 import numpy as np
 from math_tools import Math
+from scipy.spatial.transform import Rotation as Rot
 from jet_leg.robots.robot_model_interface import RobotModelInterface
 
 class IterativeProjectionParameters:
@@ -71,9 +72,13 @@ class IterativeProjectionParameters:
     def computeContactsPosBF(self):
         self.contactsBF = np.zeros((4, 3))
         rpy = self.getOrientation()
+        #print "RPY ", rpy
+        rot = Rot.from_euler('xyz',[rpy[0], rpy[1], rpy[2]], degrees=False)
+        B_R_W = rot.inv().as_dcm()
         for j in np.arange(0, 4):
             j = int(j)
-            self.contactsBF[j,:] = np.add(np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (self.contactsWF[j, :] - self.comPositionWF)), self.comPositionBF)
+            #self.contactsBF[j,:] = np.add(np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (self.contactsWF[j, :] - self.comPositionWF)), self.comPositionBF)
+            self.contactsBF[j,:] = np.add(np.dot(B_R_W, (self.contactsWF[j, :] - self.comPositionWF)), self.comPositionBF)
         return self.contactsBF
 
     def setContactsPosBF(self, contactsBF):
