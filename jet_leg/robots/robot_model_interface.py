@@ -16,10 +16,12 @@ class RobotModelInterface:
         self.robotName = robot_name
         if self.robotName == 'hyq':
             self.robotModel = HyqModel()
-        elif self.robotName == 'anymal':
+        elif self.robotName == 'anymal_boxy':
             self.robotModel = AnymalModel()
         elif self.robotName == 'hyqreal':
             self.robotModel = HyqrealModel()
+        else:
+            print "Warning! could not set robot model!"
 
         self.joint_torque_limits = self.robotModel.joint_torque_limits
         self.contact_torque_limits = self.robotModel.contact_torque_limits

@@ -21,18 +21,22 @@ class KinematicsInterface:
         self.robotName = robot_name
         if self.robotName == 'hyq':
             self.hyqKin = HyQKinematics()
-        if self.robotName == 'anymal':
-            self.anymalKin = anymalKinematics()
+        elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
+            self.anymalKin = anymalKinematics(self.robotName)
         elif self.robotName == 'hyqreal':
             self.hyqrealKin = hyqrealKinematics()
+        else:
+            print "Warning! could not set kinematic model"
 
     def get_jacobians(self):
         if self.robotName == 'hyq':
             return self.hyqKin.getLegJacobians()
         elif self.robotName == 'hyqreal':
             return self.hyqrealKin.getLegJacobians()
-        elif self.robotName == 'anymal':
+        elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
             return self.anymalKin.getLegJacobians()
+        else:
+            print "Warning! Could not get jacobian matrix."
 
     def inverse_kin(self, contactsBF, foot_vel, stance_idx):
 
@@ -42,7 +46,10 @@ class KinematicsInterface:
         elif self.robotName == 'hyqreal':
             q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF, stance_idx)
             return q
-        elif self.robotName == 'anymal':
+        elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
             q, legIkSuccess = self.anymalKin.fixedBaseInverseKinematics(contactsBF, stance_idx)
             return q, legIkSuccess
+        else:
+            print "Warning! Could not define IK."
+            return false
 

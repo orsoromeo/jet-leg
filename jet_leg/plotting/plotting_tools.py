@@ -11,15 +11,14 @@ from jet_leg.computational_geometry.computational_geometry import ComputationalG
 
 class Plotter:
     
-  def plot_polygon(self, points, color = '--b', Label = ''):
+  def plot_polygon(self, points, color = '--b', Linewidth = 10, Label = ''):
       if np.size(points,1)==2:
           x = np.hstack([points[:,0], points[0,0]])
           y = np.hstack([points[:,1], points[0,1]])
       else:
           x = np.hstack([points[0,:], points[0,0]])
           y = np.hstack([points[1,:], points[1,0]])
-          
-      plt.plot(x, y, color, linewidth=10., label = Label)
+      plt.plot(x, y, color, linewidth=Linewidth, label = Label)
     
   def plot_line(self, ax, line_coefficients):
       a = line_coefficients[0]
@@ -65,5 +64,4 @@ class Plotter:
           vertex[2,j] = vertices[2,j]/float(scaling_factor)
           vertex[:,j] = np.add(vertex[:,j],np.transpose(foot_pos))
 
-          
       self.plot_cube(ax,vertex)

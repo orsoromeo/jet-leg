@@ -794,7 +794,8 @@ class HyQKinematics:
         return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:]
 
     def getLegJacobians(self):
-        return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace
+        leg_ik_success = True
+        return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:], self.isOutOfWorkSpace, leg_ik_success
 
 
     def forward_kin(self, q):

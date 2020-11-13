@@ -31,7 +31,7 @@ class Constraints:
     def getInequalities(self, params, saturate_normal_force = False):
 
         stanceLegs = params.getStanceFeet()
-        rpy = params.getOrientation()
+        rpy = params. getOrientation()
         contactsNumber = np.sum(stanceLegs)
 
         contactsBF = copy.copy(params.computeContactsPosBF())

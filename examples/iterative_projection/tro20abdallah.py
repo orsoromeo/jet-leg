@@ -24,8 +24,8 @@ from jet_leg.plotting.arrow3D import Arrow3D
 plt.close('all')
 math = Math()
 
-''' Set the robot's name (either 'hyq', 'hyqreal', 'anymal_boxy' or 'anymal_coyote')'''
-robot_name = 'anymal_boxy'
+''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
+robot_name = 'anymal'
 
 '''
 possible constraints for each foot:
@@ -41,11 +41,11 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
 # number of decision variables of the problem
 #n = nc*6
 comWF = np.array([.0, 0.0, 1.0])
-comWF_lin_acc = np.array([0.0, .0, .0])
+comWF_lin_acc = np.array([2.5, -.35, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
 ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForce = np.array([0.0, 0.0, 0.0]) # units are N
+extForce = np.array([0.0, 0.0, 0.0*9.81]) # units are N
 extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
 extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
 
@@ -55,10 +55,10 @@ rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=Fal
 W_R_B = rot.as_dcm()
 
 """ contact points in the World Frame"""
-LF_foot = np.array([0.36, 0.21, -0.47])
-RF_foot = np.array([0.36, -0.21, -0.47])
-LH_foot = np.array([-0.36, 0.21, -0.47])
-RH_foot = np.array([-0.36, -0.21, -0.47])
+LF_foot = np.array([0.36, 0.16, -0.55])
+RF_foot = np.array([0.4, -0.2, -0.55])
+LH_foot = np.array([-0.4, 0.2, -0.55])
+RH_foot = np.array([-0.44, -0.24, -0.55])
 #LF_foot = np.array([0.270093,  0.163428, -0.479816])
 #RF_foot = np.array([0.270093,  0.163428, -0.479816])
 #LH_foot = np.array([0.36,      0.21,     -0.47])
@@ -73,7 +73,7 @@ for j in np.arange(0,4):
 mu = 0.8
 
 ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,1,1,1]
+stanceFeet = [1,0,0,1]
 
 randomSwingLeg = random.randint(0,3)
 tripleStance = False # if you want you can define a swing leg using this variable
@@ -133,7 +133,8 @@ IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_
 
 comp_geom = ComputationalGeometry()
 facets = comp_geom.compute_halfspaces_convex_hull(IP_points)
-point2check = comp_dyn.getReferencePoint(params, "ZMP")
+point2check = comp_dyn.getReferencePoint(params, "COM")
+zmp = comp_dyn.getReferencePoint(params, "ZMP")
 isPointFeasible, margin = comp_geom.isPointRedundant(facets, point2check)
 print "isPointFeasible: ", isPointFeasible
 print "Margin is: ", margin
@@ -192,31 +193,54 @@ for j in range(0,nc): # this will only show the force polytopes of the feet that
     plotter.plot_polygon(np.transpose(IP_points))
     if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
         plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
-        print force_polytopes.getVertices()[idx]
 
 base_polygon = np.vstack([shoulder_position_WF, shoulder_position_WF[0,:]])
 ax.plot(base_polygon[:,0],base_polygon[:,1],base_polygon[:,2], '--k')
 
 ''' 2D figure '''
 fig = plt.figure()
+plt.grid()
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
     shoulder_position_BF = [contactsBF[idx,0],contactsBF[idx,1],0.4]
     shoulder_position_WF[j,:] = np.dot(W_R_B,shoulder_position_BF) + comWF
-    h1 = plt.plot(shoulder_position_WF[j,0],shoulder_position_WF[j,1],'ko',markersize=15, label='stance feet')
 
-h2 = plotter.plot_polygon(np.transpose(IP_points), '--b', 5, 'Feasible Region')
+
+plt.scatter(shoulder_position_WF[0,0],shoulder_position_WF[0,1], s=250, c = 'k')
+plt.scatter(shoulder_position_WF[1,0],shoulder_position_WF[1,1], s=250, c = 'k')
+plt.plot(shoulder_position_WF[0,0],shoulder_position_WF[0,1],'ko',markersize=15, label='stance feet')
+h2 = plotter.plot_polygon(np.transpose(IP_points), '--b', 5,'Feasible Region')
+plt.plot([shoulder_position_WF[0,0], shoulder_position_WF[1,0]],[shoulder_position_WF[0,1], shoulder_position_WF[1,1]],'k--',markersize=15,
+         alpha = 0.5, label='convex hull of contact points')
+acc_scaling_factor = 10.0
+Width = 0.01
 
 '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
 if isPointFeasible:
-    plt.plot(point2check[0],point2check[1],'go',markersize=15, label='ground reference point')
+    plt.plot(point2check[0],point2check[1],'go',markersize=15,  markeredgecolor = 'k', label='CoM projection', zorder=10)
+    Color = 'g'
 else:
-    plt.plot(point2check[0],point2check[1],'ro',markersize=15, label='ground reference point')
+    plt.plot(point2check[0],point2check[1],'ro',markersize=15,  markeredgecolor = 'k', label='CoM projection', zorder=10)
+    Color = 'r'
 
+plt.plot(zmp[0], zmp[1],'go',markersize=15,  markeredgecolor = 'k', label='ZMP', zorder=10)
 
-plt.grid()
+plt.arrow(point2check[0],point2check[1], point2check[0] + comWF_lin_acc[0]/acc_scaling_factor, point2check[1] + comWF_lin_acc[1]/acc_scaling_factor,
+          width = Width, head_width = 2*Width, edgecolor = 'k', facecolor = Color, zorder=9)
+
+plt.annotate("CoM acceleration",
+            xy=(point2check[0] + comWF_lin_acc[0]/acc_scaling_factor - 0.1, point2check[1] + comWF_lin_acc[1]/acc_scaling_factor - 0.01), xycoords='data',
+            xytext=(point2check[0] + comWF_lin_acc[0]/acc_scaling_factor - 0.1, point2check[1] + comWF_lin_acc[1]/acc_scaling_factor - 0.01),
+            arrowprops=dict(facecolor='black', shrink=1.5),
+            horizontalalignment='left',
+            verticalalignment='top',
+            fontsize = 12,
+            )
+
 plt.xlabel("X [m]")
 plt.ylabel("Y [m]")
-plt.legend()
+plt.legend(prop={'size': 12})
+fig.savefig('../../figs/double_stance_region.pdf')
 plt.show()
+

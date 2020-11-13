@@ -16,6 +16,7 @@ from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.geometry import Geometry
 from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.dynamics.instantaneous_capture_point import InstantaneousCapturePoint
+from jet_leg.dynamics.zero_moment_point import ZeroMomentPoint
 from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from cvxopt import matrix, solvers
 import time
@@ -34,6 +35,7 @@ class ComputationalDynamics:
         self.rbd = RigidBodyDynamics()
         self.compGeom = ComputationalGeometry()
         self.icp = InstantaneousCapturePoint()
+        self.zmp = ZeroMomentPoint()
 
     ''' 
     This function is used to prepare all the variables that will be later used 
@@ -379,14 +381,20 @@ class ComputationalDynamics:
         else:
             return False, -1000.0
 
-    def getReferencePoint(self, iterative_projection_params):
+    def getReferencePoint(self, iterative_projection_params, type):
         comWF = iterative_projection_params.getCoMPosWF()
-        if(iterative_projection_params.useInstantaneousCapturePoint):
+        if(type=="ICP"):
+            print "compute ICP"
             ICP = self.icp.compute(iterative_projection_params)
             iterative_projection_params.instantaneousCapturePoint = ICP
             referencePoint = np.array([ICP[0], ICP[1]])
-        else:
+        elif(type=="ZMP"):
+            ZMP = self.zmp.compute(iterative_projection_params)
+            referencePoint = np.array([ZMP[0], ZMP[1]])
+        elif(type=="COM"):
             referencePoint = np.array([comWF[0], comWF[1]])
+        else:
+            print "Reference point type unspecified"
 
         return referencePoint
 

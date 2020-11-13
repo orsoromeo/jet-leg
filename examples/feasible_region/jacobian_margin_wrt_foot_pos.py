@@ -78,7 +78,7 @@ comp_dyn = ComputationalDynamics(robot_name)
 
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
-params = IterativeProjectionParameters()
+params = IterativeProjectionParameters(robot_name)
 """ contact points in the World Frame"""
 LF_foot = np.array([0.3, 0.2, -0.4])
 RF_foot = np.array([0.3, -0.2, -0.4])
@@ -114,7 +114,7 @@ num_of_tests = 25
 delta_y_range_vec = np.linspace(-delta_y_range/2.0, delta_y_range/2.0, num_of_tests)
 print "number of tests", num_of_tests
 foot_id = 1
-margin, jac_foot_pos = jac.plotMarginAndJacobianWrtFootPosition(params, foot_id, delta_y_range_vec)
+margin, jac_foot_pos = jac.plotMarginAndJacobianWrtFootPosition(params, foot_id, delta_y_range_vec, 0)
 
 print "margin", margin
 plt.figure(1)
