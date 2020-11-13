@@ -16,8 +16,8 @@ class RobotModelInterface:
         self.robotName = robot_name
         if self.robotName == 'hyq':
             self.robotModel = HyqModel()
-        elif self.robotName == 'anymal_boxy':
-            self.robotModel = AnymalModel()
+        elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
+            self.robotModel = AnymalModel(self.robotName)
         elif self.robotName == 'hyqreal':
             self.robotModel = HyqrealModel()
         else:

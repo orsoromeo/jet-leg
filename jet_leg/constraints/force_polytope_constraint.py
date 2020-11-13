@@ -27,11 +27,11 @@ class ForcePolytopeConstraint:
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace, legIkSuccess = self.kin.get_jacobians()
         # print J_LF, J_RF, J_LH, J_RH
-        print J_LF
-        J_LF = [[0.00000000e+00, - 5.08742684e-01, - 2.92741990e-01],
-         [5.22681032e-01, - 3.53888237e-04, - 1.49860759e-02],
-         [1.56511093e-01, - 4.48279949e-03, - 1.89832737e-01]]
-        print J_LF
+        #print J_LF
+        #J_LF = [[0.00000000e+00, - 5.08742684e-01, - 2.92741990e-01],
+        # [5.22681032e-01, - 3.53888237e-04, - 1.49860759e-02],
+        # [1.56511093e-01, - 4.48279949e-03, - 1.89832737e-01]]
+        #print J_LF
         if isOutOfWorkspace:
             C1 = np.zeros((0, 0))
             d1 = np.zeros((1, 0))
