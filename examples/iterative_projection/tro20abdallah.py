@@ -25,7 +25,7 @@ plt.close('all')
 math = Math()
 
 ''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
-robot_name = 'anymal'
+robot_name = 'anymal_boxy'
 
 '''
 possible constraints for each foot:
@@ -210,7 +210,7 @@ for j in range(0,nc): # this will only show the contact positions and normals of
 plt.scatter(shoulder_position_WF[0,0],shoulder_position_WF[0,1], s=250, c = 'k')
 plt.scatter(shoulder_position_WF[1,0],shoulder_position_WF[1,1], s=250, c = 'k')
 plt.plot(shoulder_position_WF[0,0],shoulder_position_WF[0,1],'ko',markersize=15, label='stance feet')
-h2 = plotter.plot_polygon(np.transpose(IP_points), '--b', 5,'Feasible Region')
+h2 = plotter.plot_polygon(np.transpose(IP_points), '--b', 5,'Improved Feasible Region')
 plt.plot([shoulder_position_WF[0,0], shoulder_position_WF[1,0]],[shoulder_position_WF[0,1], shoulder_position_WF[1,1]],'k--',markersize=15,
          alpha = 0.5, label='convex hull of contact points')
 acc_scaling_factor = 10.0
