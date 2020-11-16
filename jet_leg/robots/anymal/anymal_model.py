@@ -19,7 +19,8 @@ class AnymalModel:
             LH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
             RH_tau_lim = [40.0, 40.0, 40.0]  # HAA, HFE, KFE
             self.joint_torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-            self.contact_torque_limits = np.array([-1.5, 1.7])
+            self.contact_torque_limits = np.array([-1.5, 1.5])
+
         elif self.anymal_type == 'anymal_coyote':
             self.trunkMass = 52
             self.trunkInertia = np.array([[0.946438, -0.000938112, 0.00595386],
@@ -36,4 +37,4 @@ class AnymalModel:
             LH_tau_lim = [80.0, 80.0, 80.0]  # HAA, HFE, KFE
             RH_tau_lim = [80.0, 80.0, 80.0]  # HAA, HFE, KFE
             self.joint_torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
-            self.contact_torque_limits = np.array([-1.5, 1.7])
+            self.contact_torque_limits = np.array([-1.5, 1.5])

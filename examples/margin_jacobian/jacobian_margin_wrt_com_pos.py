@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 plt.close('all')
 math = Math()
 
-''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
-robot_name = 'anymal'
+''' Set the robot's name (either 'hyq', 'hyqreal', 'anymal_boxy' or 'anymal_coyote')'''
+robot_name = 'anymal_coyote'
 
 '''
 possible constraints for each foot:
@@ -36,7 +36,7 @@ constraint_mode_IP = ['FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION',
                       'FRICTION_AND_ACTUATION']
 
-comWF = np.array([.0, 0.0, 0.0])
+comWF = np.array([0.0, 0.0, 0.0])
 comWF_lin_acc = np.array([.0, .0, .0])
 comWF_ang_acc = np.array([.0, .0, .0])
 
@@ -117,7 +117,7 @@ jac = Jacobians(robot_name)
 comp_geom = ComputationalGeometry()
 com = CoM(params)
 
-delta_pos_range = 0.8
+delta_pos_range = 0.2
 num_of_tests = 25
 delta_pos_range_vec = np.linspace(-delta_pos_range/2.0, delta_pos_range/2.0, num_of_tests)
 print "number of tests", num_of_tests
@@ -158,7 +158,8 @@ pitch_margin, jac_base_pitch = jac.plotMarginAndJacobianWrtBaseOrientation(param
 ### Plotting
 
 ### X axis
-plt.figure(1)
+fig1 = plt.figure(1)
+fig1.suptitle("Analytic stability margin")
 plt.subplot(231)
 plt.plot(delta_pos_range_vec, pos_margin_x, 'g', markersize=15, label='CoM')
 plt.grid()
@@ -202,7 +203,8 @@ plt.ylabel("$ \delta m/  \delta \ddot{c}_x$")
 plt.title("CoM X acc jacobian")
 
 ### Y axis
-plt.figure(2)
+fig2 = plt.figure(2)
+fig2.suptitle("Analytic stability margin")
 plt.subplot(231)
 plt.plot(delta_pos_range_vec, pos_margin_y, 'g', markersize=15, label='CoM')
 plt.grid()
@@ -247,7 +249,8 @@ plt.title("CoM Y acc jacobian")
 
 
 ### Z axis
-plt.figure(3)
+fig3 = plt.figure(3)
+fig3.suptitle("Analytic stability margin")
 plt.subplot(231)
 plt.plot(delta_pos_range_vec, pos_margin_z, 'g', markersize=15, label='CoM')
 plt.grid()
@@ -293,7 +296,8 @@ plt.ylabel("$ \delta m/  \delta \ddot{c}_z$")
 plt.title("CoM Z acc jacobian")
 
 ### Orientation
-plt.figure(4)
+fig4 = plt.figure(4)
+fig4.suptitle("Analytic stability margin")
 plt.subplot(221)
 plt.plot(delta_orientation_range_vec, roll_margin, 'g', markersize=15, label='CoM')
 plt.grid()

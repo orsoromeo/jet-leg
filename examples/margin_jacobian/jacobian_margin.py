@@ -24,8 +24,8 @@ from jet_leg.plotting.arrow3D import Arrow3D
 plt.close('all')
 math = Math()
 
-''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
-robot_name = 'anymal'
+''' Set the robot's name (either 'hyq', 'hyqreal', 'anymal_boxy' or 'anymal_coyote')'''
+robot_name = 'anymal_boxy'
 
 '''
 possible constraints for each foot:
@@ -127,7 +127,7 @@ print "Margin is: ", margin
 state = np.hstack([params.getCoMPosWF(), params.comLinVel])
 com = CoM(params)
 
-jac = Jacobians("anymal")
+jac = Jacobians("anymal_boxy")
 jac_com_pos = jac.computeComPosJacobian(params)
 print "com pos jacobian", jac_com_pos
 

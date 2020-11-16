@@ -227,7 +227,7 @@ class ComputationalDynamics:
             x = -1
             return False, x, LP_actuation_polygons
         else:
-            print 'Solving LP'
+            #print 'Solving LP'
             sol = solvers.lp(p, G, h, A, b)
             x = sol['x']
             status = sol['status']
@@ -365,7 +365,7 @@ class ComputationalDynamics:
         lp = p, G, h, A, b
         return p, G, h, A, b, isIKoutOfWorkSpace, LP_actuation_polygons
 
-    def compute_IP_margin(self, iterative_projection_params, saturate_normal_force = False):
+    def compute_IP_margin(self, iterative_projection_params, reference_type, saturate_normal_force = False):
         ''' compute iterative projection
         Outputs of "iterative_projection_bretl" are:
         IP_points = resulting 2D vertices
@@ -375,10 +375,11 @@ class ComputationalDynamics:
         IP_points, force_polytopes, IP_computation_time = self.try_iterative_projection_bretl(iterative_projection_params)
         if IP_points is not False:
             facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
-            reference_point = self.getReferencePoint(iterative_projection_params)
+            reference_point = self.getReferencePoint(iterative_projection_params, reference_type)
             isPointFeasible, margin = self.compGeom.isPointRedundant(facets, reference_point)
             return isPointFeasible, margin
         else:
+            print "Warning! IP failed."
             return False, -1000.0
 
     def getReferencePoint(self, iterative_projection_params, type):

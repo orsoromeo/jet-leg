@@ -18,16 +18,16 @@ class Jacobians:
         for j in np.arange(0, 3):
             params.comPositionWF = initialCoMPos
             params.comPositionWF[j] = initialCoMPos[j] + self.delta / 2.0
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
 
             params.comPositionWF = initialCoMPos
-            isPointFeasible, margin0 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin0 = self.compDyn.compute_IP_margin(params, "COM")
             diff = margin1 - margin0
             jac_left = diff / self.delta
 
             params.comPositionWF = initialCoMPos
             params.comPositionWF[j] = initialCoMPos[j] - self.delta / 2.0
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
             diff = margin0 - margin2
             jac_right = diff / self.delta
 
@@ -37,21 +37,23 @@ class Jacobians:
 
         return jacobian
 
-    def computeComPosJacobian(self, params):
+    def computeComPosJacobian(self, params, contactsWF):
         jacobian = np.zeros(3)
-        initialCoMPos = copy.copy(params.comPositionWF)
-        #print "initialCoMPos ", initialCoMPos
+        default = copy.deepcopy(contactsWF)
 
         for j in np.arange(0, 3):
-            params.comPositionWF = initialCoMPos
-            params.comPositionWF[j] = initialCoMPos[j] + self.delta / 2.0
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
-            params.comPositionWF = initialCoMPos
-            params.comPositionWF[j] = initialCoMPos[j] - self.delta / 2.0
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            feet_pos_dim = copy.deepcopy(default[:, j])
+            feet_pos_dim -= self.delta
+            feet_pos_WF_plus = copy.deepcopy(default)
+            feet_pos_WF_plus[:, j] = feet_pos_dim
+            isPointFeasible, margin1 = self.computeComMargin(params, feet_pos_WF_plus)
+            feet_pos_dim = copy.deepcopy(default[:, j])
+            feet_pos_dim += self.delta
+            feet_pos_WF_minus = copy.deepcopy(default)
+            feet_pos_WF_minus[:, j] = feet_pos_dim
+            isPointFeasible, margin2 = self.computeComMargin(params, feet_pos_WF_minus)
             diff = margin1 - margin2
-            jacobian[j] = diff / self.delta
-            #print "[computeComPosJacobian]", margin1, margin2, self.delta, jacobian[j]
+            jacobian[j] = diff / (2.0*self.delta)
 
         return jacobian
 
@@ -63,10 +65,10 @@ class Jacobians:
         for j in np.arange(0, 3):
             params.eurlerAngles = initialBaseOrient
             params.eurlerAngles[j] = initialBaseOrient[j] + self.delta / 2.0
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
             params.eurlerAngles = initialBaseOrient
             params.eurlerAngles[j] = initialBaseOrient[j] - self.delta / 2.0
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
             #print "[computeBaseOrientationJacobian]", margin1, margin2, self.delta, jacobian[j]
@@ -81,12 +83,12 @@ class Jacobians:
             eulerAngles = initiaPoint
             eulerAngles[j] = initiaPoint[j] + self.delta / 2.0
             params.setEulerAngles(eulerAngles)
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
 
             eulerAngles = initiaPoint
             eulerAngles[j] = initiaPoint[j] - self.delta / 2.0
             params.setEulerAngles(eulerAngles)
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
 
@@ -99,11 +101,11 @@ class Jacobians:
         for j in np.arange(0, 3):
             params.comLinVel = initiaPoint
             params.comLinVel[j] = initiaPoint[j] + self.delta / 2.0
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
 
             params.comLinVel = initiaPoint
             params.comLinVel[j] = initiaPoint[j] - self.delta / 2.0
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
 
@@ -116,11 +118,11 @@ class Jacobians:
         for j in np.arange(0, 3):
             params.comLinAcc = initiaPoint
             params.comLinAcc[j] = initiaPoint[j] + self.delta / 2.0
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
 
             params.comLinAcc = initiaPoint
             params.comLinAcc[j] = initiaPoint[j] - self.delta / 2.0
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
 
@@ -140,11 +142,11 @@ class Jacobians:
             contacts = initialContacts
             contacts[footID, j] = initiaPoint[j] + self.delta / 2.0
             params.setContactsPosWF(contacts)
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
             contacts = initialContacts
             contacts[footID, j] = initiaPoint[j] - self.delta / 2.0
             params.setContactsPosWF(contacts)
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
 
@@ -180,7 +182,7 @@ class Jacobians:
             #    point2check = self.compDyn.getReferencePoint(params)
             #    print "point 2 check", point2check
             #    isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
-            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params, "COM")
             #
             marginJAcWrtComLinAcc = self.computeComLinAccJacobian(params)
             #    print "marginJAcWrtComLinAcc", marginJAcWrtComLinAcc
@@ -221,7 +223,7 @@ class Jacobians:
             #point2check = self.compDyn.getReferencePoint(params)
             #print "point 2 check", point2check
             #isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
-            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params, "COM")
 
             marginJAcWrtComLinVel = self.computeComLinVelJacobian(params)
             #print "marginJAcWrtComLinVel", marginJAcWrtComLinVel
@@ -231,6 +233,13 @@ class Jacobians:
             count += 1
 
         return margin, jac_com_lin_vel
+
+    def computeComMargin(self, params, new_contacts_wf):
+        default_feet_pos_WF = copy.deepcopy(params.getContactsPosWF())
+        params.setContactsPosWF(new_contacts_wf)
+        isPointFeasible, margin = self.compDyn.compute_IP_margin(params, "COM")
+        params.setContactsPosWF(default_feet_pos_WF)
+        return isPointFeasible, margin
 
     def plotMarginAndJacobianWrtComPosition(self, params, com_pos_range, dim_to_check):
         num_of_tests = np.shape(com_pos_range)
@@ -243,16 +252,12 @@ class Jacobians:
             """ contact points in the World Frame"""
             contactsWF = copy.deepcopy(default_feet_pos_WF)
             contactsWF[:, dim_to_check] -= delta
-            params.setContactsPosWF(contactsWF)
-
-            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
-
-            marginJAcWrtComPos = self.computeComPosJacobian(params)
-            #print "margin jac wrt com pos", marginJAcWrtComPos
-            jac_com_pos[:, count] = marginJAcWrtComPos
+            isPointFeasible, margin[count] = self.computeComMargin(params, contactsWF)
+            jac_com_pos[:, count] = self.computeComPosJacobian(params, contactsWF)
 
             count += 1
 
+        params.setContactsPosWF(default_feet_pos_WF)
         return margin, jac_com_pos
 
     '''
@@ -275,7 +280,7 @@ class Jacobians:
             eulerAngles[dim_to_check] -= delta
             params.setEulerAngles(eulerAngles)
 
-            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params)
+            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params, "COM")
             print "params.eurlerAngles ", params.eurlerAngles
             print "margin ", margin[count]
             marginJAcWrtBaseOrient = self.computeBaseOrientationJacobian(params)
@@ -303,7 +308,7 @@ class Jacobians:
             contactsWF[foot_id, dimension_to_check] += delta
             params.setContactsPosWF(contactsWF)
 
-            print "contacts ", params.getContactsPosWF()
+            #print "contacts ", params.getContactsPosWF()
 
             ''' compute iterative projection 
             Outputs of "iterative_projection_bretl" are:
