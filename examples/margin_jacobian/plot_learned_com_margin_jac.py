@@ -3,14 +3,14 @@ import numpy as np
 
 class LearnedMargin:
 
-    def plot_learned_margin(self):
+    def plot_learned_margin(self, filename):
+        path = '/home/rorsolino/catkin_ws/build/jet_leg_learn_ported/devel/lib/jet_leg_learn_ported/'
         iter, ee_offset_x, ee_offset_y, ee_offset_z, \
         mx, my, mz, \
         ee_jac_xx, ee_jac_xx_fin_diff, ee_jac_xy, ee_jac_xy_fin_diff, ee_jac_xz, ee_jac_xz_fin_diff, \
         ee_jac_yx, ee_jac_yx_fin_diff, ee_jac_yy, ee_jac_yy_fin_diff, ee_jac_yz, ee_jac_yz_fin_diff, \
         ee_jac_zx, ee_jac_zx_fin_diff, ee_jac_zy, ee_jac_zy_fin_diff, ee_jac_zz, ee_jac_zz_fin_diff \
-            = np.loadtxt(
-            '/home/rorsolino/catkin_ws/src/towr/towr/dependencies/jet_leg_learn_ported/build/devel/lib/jet_leg_learn_ported/com_jacobian.txt',
+            = np.loadtxt(path + filename,
             delimiter=',', unpack=True)
     
         plt.subplot(431)
