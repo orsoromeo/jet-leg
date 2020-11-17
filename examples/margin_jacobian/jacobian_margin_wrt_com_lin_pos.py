@@ -88,9 +88,6 @@ def computeAnalyticMarginAndDerivatives(stanceFeet):
     contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
     params.setContactsPosWF(contactsWF)
 
-
-    start = time.time()
-
     params.useContactTorque = True
     params.useInstantaneousCapturePoint = True
     params.externalCentroidalWrench = extCentroidalWrench
@@ -108,18 +105,8 @@ def computeAnalyticMarginAndDerivatives(stanceFeet):
     params_com_x = deepcopy(params)
     params_com_y = deepcopy(params)
     params_com_z = deepcopy(params)
-    params_com_vel_x = deepcopy(params)
-    params_com_vel_y = deepcopy(params)
-    params_com_vel_z = deepcopy(params)
-    params_com_acc_x = deepcopy(params)
-    params_com_acc_y = deepcopy(params)
-    params_com_acc_z = deepcopy(params)
-    params_base_roll = deepcopy(params)
-    params_base_pitch = deepcopy(params)
 
     jac = Jacobians(robot_name)
-    comp_geom = ComputationalGeometry()
-    com = CoM(params)
 
     delta_pos_range = 0.39
     delta_pos_range_z = 0.2
@@ -134,8 +121,6 @@ def computeAnalyticMarginAndDerivatives(stanceFeet):
     pos_margin_y, jac_com_pos_y = jac.plotMarginAndJacobianWrtComPosition(params_com_y,delta_pos_range_vec_y, 1) # dm / dy
     pos_margin_z, jac_com_pos_z = jac.plotMarginAndJacobianWrtComPosition(params_com_z,delta_pos_range_vec_z, 2) # dm / dz
 
-    delta_vel_range = 3.0
-    delta_vel_range_vec = np.linspace(-delta_vel_range/2.0, delta_vel_range/2.0, num_of_tests)
     return pos_margin_x, jac_com_pos_x, pos_margin_y, jac_com_pos_y, pos_margin_z, jac_com_pos_z, delta_pos_range_vec_x, delta_pos_range_vec_y, delta_pos_range_vec_z
 
 
@@ -190,7 +175,7 @@ learnedMargin.plot_learned_margin('com_jacobian_1111stance.txt')
 
 fig2 = plt.figure(2)
 fig2.suptitle("Analytic vs. Learned stability margin\n 3 stance feet (0111)")
-contacts = [1, 1, 1, 0]
+contacts = [0, 1, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('com_jacobian_0111stance.txt')

@@ -43,12 +43,12 @@ class Jacobians:
 
         for j in np.arange(0, 3):
             feet_pos_dim = copy.deepcopy(default[:, j])
-            feet_pos_dim -= self.delta
+            feet_pos_dim += self.delta
             feet_pos_WF_plus = copy.deepcopy(default)
             feet_pos_WF_plus[:, j] = feet_pos_dim
             isPointFeasible, margin1 = self.computeComMargin(params, feet_pos_WF_plus)
             feet_pos_dim = copy.deepcopy(default[:, j])
-            feet_pos_dim += self.delta
+            feet_pos_dim -= self.delta
             feet_pos_WF_minus = copy.deepcopy(default)
             feet_pos_WF_minus[:, j] = feet_pos_dim
             isPointFeasible, margin2 = self.computeComMargin(params, feet_pos_WF_minus)
@@ -251,7 +251,7 @@ class Jacobians:
         for delta in com_pos_range:
             """ contact points in the World Frame"""
             contactsWF = copy.deepcopy(default_feet_pos_WF)
-            contactsWF[:, dim_to_check] -= delta
+            contactsWF[:, dim_to_check] += delta
             isPointFeasible, margin[count] = self.computeComMargin(params, contactsWF)
             jac_com_pos[:, count] = self.computeComPosJacobian(params, contactsWF)
 
