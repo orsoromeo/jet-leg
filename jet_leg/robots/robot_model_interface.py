@@ -26,3 +26,8 @@ class RobotModelInterface:
         self.joint_torque_limits = self.robotModel.joint_torque_limits
         self.contact_torque_limits = self.robotModel.contact_torque_limits
         self.trunkMass = self.robotModel.trunkMass
+        self.nominal_stance_LF = self.robotModel.nominal_stance_LF
+        self.nominal_stance_RF = self.robotModel.nominal_stance_RF
+        self.nominal_stance_LH = self.robotModel.nominal_stance_LH
+        self.nominal_stance_RH = self.robotModel.nominal_stance_RH
+        self.max_dev_from_nominal = self.robotModel.max_dev_from_nominal
