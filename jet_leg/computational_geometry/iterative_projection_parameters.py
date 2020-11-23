@@ -73,6 +73,9 @@ class IterativeProjectionParameters:
         self.contactsBF = np.zeros((4, 3))
         rpy = self.getOrientation()
         #print "RPY ", rpy
+        #print "comPositionWF", self.comPositionWF
+        #print "comPositionBF", self.comPositionBF
+        #print "contactsWF", self.contactsWF
         rot = Rot.from_euler('xyz',[rpy[0], rpy[1], rpy[2]], degrees=False)
         B_R_W = rot.inv().as_dcm()
         for j in np.arange(0, 4):
