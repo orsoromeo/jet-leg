@@ -33,7 +33,7 @@ def main():
         values = np.frombuffer(shm.read())
         requested_new_value = values[2]
         cycle_number_cpp = values[0]
-        #print "cycle n. CPP: ", cycle_number_cpp, " cycle n. Python: ", cycle_number_py, "requested new computation ", requested_new_value, " computation completed: ", values[3]
+        print "cycle n. CPP: ", cycle_number_cpp, " cycle n. Python: ", cycle_number_py, "requested new computation ", requested_new_value, " computation completed: ", values[3]
         if cycle_number_cpp == 0 and cycle_number_py == 0:
             previous_cycle_was_received = True
         elif cycle_number_cpp == cycle_number_py - 1:

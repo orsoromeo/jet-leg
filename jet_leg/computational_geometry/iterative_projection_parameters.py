@@ -466,7 +466,7 @@ class IterativeProjectionParameters:
         stanceFeet = [1, 1, 1, 1]
 
         randomSwingLeg = random.randint(0, 3)
-        tripleStance = True  # if you want you can define a swing leg using this variable
+        tripleStance = False  # if you want you can define a swing leg using this variable
         if tripleStance:
             print 'Swing leg', randomSwingLeg
             stanceFeet[randomSwingLeg] = 0
@@ -492,6 +492,9 @@ class IterativeProjectionParameters:
         RF_foot = np.array([0.36, -0.21, -0.47])
         LH_foot = np.array([-0.36, 0.21, -0.47])
         RH_foot = np.array([-0.36, -0.21, -0.47])
+
+        model = RobotModelInterface(self.robotName)
+        LF_foot = model.nominal_stance_LF
 
         contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
         self.setContactsPosWF(contactsWF)

@@ -25,94 +25,10 @@ plt.close('all')
 math = Math()
 
 ''' Set the robot's name (either 'hyq', 'hyqreal', 'anymal_boxy' or 'anymal_coyote')'''
-robot_name = 'anymal_boxy'
-
-'''
-possible constraints for each foot:
- ONLY_ACTUATION = only joint-torque limits are enforces
- ONLY_FRICTION = only friction cone constraints are enforced
- FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
-'''
-constraint_mode_IP = ['FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION']
-
-# number of decision variables of the problem
-#n = nc*6
-comWF = np.array([.0, 0.0, 1.0])
-comWF_lin_acc = np.array([0.0, .0, .0])
-comWF_ang_acc = np.array([.0, .0, .0])
-
-''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForce = np.array([0.0, 0.0, 0.0]) # units are N
-extCentroidalTorque = np.array([.0, .0, .0]) # units are Nm
-extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
-
-''' Roll Pitch Yaw angles of the base link'''
-rpy_base = np.array([0.0, 0.0, 0.0]) # units are rads
-rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
-W_R_B = rot.as_dcm()
-
-""" contact points in the World Frame"""
-LF_foot = np.array([0.36, 0.21, -0.47])
-RF_foot = np.array([0.36, -0.21, -0.47])
-LH_foot = np.array([-0.36, 0.21, -0.47])
-RH_foot = np.array([-0.36, -0.21, -0.47])
-#LF_foot = np.array([0.270093,  0.163428, -0.479816])
-#RF_foot = np.array([0.270093,  0.163428, -0.479816])
-#LH_foot = np.array([0.36,      0.21,     -0.47])
-#RH_foot = np.array([-0.254592, -0.162951, -0.325419])
-
-contactsBF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-contactsWF = copy.copy(contactsBF);
-for j in np.arange(0,4):
-    contactsWF[j,:] = np.add(np.dot(W_R_B,copy.copy(contactsBF[j, :])), comWF)
-
-''' parameters to be tuned'''
-mu = 0.8
-
-''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-stanceFeet = [1,1,1,1]
-
-randomSwingLeg = random.randint(0,3)
-tripleStance = False # if you want you can define a swing leg using this variable
-if tripleStance:
-    print 'Swing leg', randomSwingLeg
-    stanceFeet[randomSwingLeg] = 0
-print 'stanceLegs ' ,stanceFeet
-
-''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
-axisZ= array([[0.0], [0.0], [1.0]])
-n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LF
-r, p, y = math.normalToRpy(n1) # this can be used for training the RL
-n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # RF
-n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # LH
-n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))  # RH
-normals = np.vstack([n1, n2, n3, n4])
-
-''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-extForceW = np.array([0.0, 0.0, 0.0]) # units are Nm
-
-comp_dyn = ComputationalDynamics(robot_name)
-
-'''You now need to fill the 'params' object with all the relevant 
-    informations needed for the computation of the IP'''
-params = IterativeProjectionParameters(robot_name)
-
-params.setEulerAngles(rpy_base)
-params.setContactsPosWF(contactsWF)
-params.externalCentroidalWrench = extCentroidalWrench
-params.setCoMPosWF(comWF)
-params.comLinVel = [0.0, 0.0, 0.0]
-params.setCoMLinAcc(comWF_lin_acc)
-params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
-params.setActiveContacts(stanceFeet)
-params.setConstraintModes(constraint_mode_IP)
-params.setContactNormals(normals)
-params.setFrictionCoefficient(mu)
-params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
-params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
+robot = "anymal_coyote"
+params = IterativeProjectionParameters(robot)
+comp_dyn = ComputationalDynamics(robot)
+params.setDefaultValues()
 
 ''' compute iterative projection 
 Outputs of "iterative_projection_bretl" are:
@@ -152,17 +68,24 @@ ax = fig.add_subplot(111, projection='3d')
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
+comWF = params.getCoMPosWF()
 ax.set_xlim(comWF[0]-0.5,comWF[0]+0.5)
 ax.set_ylim(comWF[1]-0.5,comWF[1]+0.5)
 ax.set_zlim(comWF[2]-0.8,comWF[2]+0.2)
 
+stanceFeet = params.getStanceFeet()
 nc = np.sum(stanceFeet)
 stanceID = params.getStanceIndex(stanceFeet)
 force_scaling_factor = 1500
 #plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
 fz_tot = 0.0
 shoulder_position_WF = np.zeros((4,3))
-
+contactsWF = params.getContactsPosWF()
+normals = params.getNormals()
+contactsBF = params.getContactsPosBF()
+rpy_base = params.getOrientation()
+rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
+W_R_B = rot.as_dcm()
 for j in range(0,nc): # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ax.scatter(contactsWF[idx,0], contactsWF[idx,1], contactsWF[idx,2],c='b',s=100)
@@ -190,7 +113,7 @@ plotter = Plotter()
 for j in range(0,nc): # this will only show the force polytopes of the feet that are defined to be in stance
     idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
-    if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
+    if (params.getConstraintModes()[idx] == 'ONLY_ACTUATION') or (params.getConstraintModes()[idx] == 'FRICTION_AND_ACTUATION'):
         plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
         print force_polytopes.getVertices()[idx]
 

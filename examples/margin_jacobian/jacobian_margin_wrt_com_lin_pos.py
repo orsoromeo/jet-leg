@@ -7,53 +7,23 @@ Created on Tue Jun 12 10:54:31 2018
 import numpy as np
 
 from numpy import array
-from copy import deepcopy
+from copy import copy
 import random
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
-from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
 from jet_leg.optimization.jacobians import Jacobians
-from jet_leg.variables.com import CoM
 from plot_learned_com_margin_jac import LearnedMargin
-
-import time
 
 import matplotlib.pyplot as plt
 
 plt.close('all')
 math = Math()
 
-def computeAnalyticMarginAndDerivatives(stanceFeet):
+def computeAnalyticMarginAndDerivatives(stanceFeet, robot):
 
-    ''' Set the robot's name (either 'hyq', 'hyqreal', 'anymal_boxy' or 'anymal_coyote')'''
-    robot_name = 'anymal_boxy'
-
-    '''
-    possible constraints for each foot:
-     ONLY_ACTUATION = only joint-torque limits are enforces
-     ONLY_FRICTION = only friction cone constraints are enforced
-     FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
-    '''
-    constraint_mode_IP = ['FRICTION_AND_ACTUATION',
-                          'FRICTION_AND_ACTUATION',
-                          'FRICTION_AND_ACTUATION',
-                          'FRICTION_AND_ACTUATION']
-
-    comWF = np.array([0.0, 0.0, 0.0])
-    comWF_lin_acc = np.array([.0, .0, .0])
-    comWF_ang_acc = np.array([.0, .0, .0])
-
-    ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-    extForce = np.array([0., .0, 0.0 * 9.81])  # units are N
-    extCentroidalTorque = np.array([.0, .0, .0])  # units are Nm
-    extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
-
-    ''' parameters to be tuned'''
-    mu = 0.5
-
-    ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-    #stanceFeet = [1, 1, 1, 1]
+    params = IterativeProjectionParameters(robot)
+    params.setDefaultValues()
 
     randomSwingLeg = random.randint(0, 3)
     tripleStance = False  # if you want you can define a swing leg using this variable
@@ -61,52 +31,13 @@ def computeAnalyticMarginAndDerivatives(stanceFeet):
         print 'Swing leg', randomSwingLeg
         stanceFeet[randomSwingLeg] = 0
     print 'stanceLegs ', stanceFeet
-
-    ''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
-    axisZ = array([[0.0], [0.0], [1.0]])
-
-    n1 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # LF
-    n2 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # RF
-    n3 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # LH
-    n4 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # RH
-    normals = np.vstack([n1, n2, n3, n4])
-
-    ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-    extForceW = np.array([0.0, 0.0, 0.0])  # units are Nm
-
-    comp_dyn = ComputationalDynamics(robot_name)
-
-    '''You now need to fill the 'params' object with all the relevant 
-        informations needed for the computation of the IP'''
-    params = IterativeProjectionParameters(robot_name)
-    """ contact points in the World Frame"""
-    LF_foot = np.array([0.36, 0.21, -0.47])
-    RF_foot = np.array([0.36, -0.21, -0.47])
-    LH_foot = np.array([-0.36, 0.21, -0.47])
-    RH_foot = np.array([-0.36, -0.21, -0.47])
-
-    contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-    params.setContactsPosWF(contactsWF)
-
-    params.useContactTorque = True
-    params.useInstantaneousCapturePoint = True
-    params.externalCentroidalWrench = extCentroidalWrench
-    params.setCoMPosWF(comWF)
-    params.comLinVel = [0., 0.0, 0.0]
-    params.setCoMLinAcc(comWF_lin_acc)
-    params.setTorqueLims(comp_dyn.robotModel.robotModel.joint_torque_limits)
     params.setActiveContacts(stanceFeet)
-    params.setConstraintModes(constraint_mode_IP)
-    params.setContactNormals(normals)
-    params.setFrictionCoefficient(mu)
-    params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
-    params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
 
-    params_com_x = deepcopy(params)
-    params_com_y = deepcopy(params)
-    params_com_z = deepcopy(params)
+    params_com_x = copy(params)
+    params_com_y = copy(params)
+    params_com_z = copy(params)
 
-    jac = Jacobians(robot_name)
+    jac = Jacobians(robot)
 
     delta_pos_range = 0.39
     delta_pos_range_z = 0.2
@@ -164,27 +95,28 @@ def plotAnalyticMarginAndDerivatives(pos_margin_x, jac_com_pos_x, pos_margin_y, 
 ### Plotting
 
 ### X axis
+robot_name = 'anymal_coyote'
 learnedMargin = LearnedMargin()
 
 fig1 = plt.figure(1)
 fig1.suptitle("Analytic vs. Learned stability margin\n 4 stance feet (1111)")
 contacts = [1, 1, 1, 1]
-mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts)
+mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_1111stance.txt')
+learnedMargin.plot_learned_margin('com_jacobian_anymal_c_1111stance.txt')
 
 fig2 = plt.figure(2)
 fig2.suptitle("Analytic vs. Learned stability margin\n 3 stance feet (0111)")
 contacts = [0, 1, 1, 1]
-mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts)
+mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_0111stance.txt')
+learnedMargin.plot_learned_margin('com_jacobian_anymal_c_0111stance.txt')
 
 fig3 = plt.figure(3)
 fig3.suptitle("Analytic vs. Learned stability margin\n 2 stance feet (0110)")
 contacts = [0, 1, 1, 0]
-mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts)
+mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_0110stance.txt')
+learnedMargin.plot_learned_margin('com_jacobian_anymal_c_0110stance.txt')
 
 plt.show()
