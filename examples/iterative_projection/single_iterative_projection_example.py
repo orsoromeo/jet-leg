@@ -6,11 +6,9 @@ Created on Tue Jun 12 10:54:31 2018
 """
 
 import numpy as np
-import copy
-from numpy import array
 from scipy.spatial.transform import Rotation as Rot
+
 from jet_leg.plotting.plotting_tools import Plotter
-import random
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.dynamics.instantaneous_capture_point import InstantaneousCapturePoint
@@ -115,7 +113,7 @@ for j in range(0,nc): # this will only show the force polytopes of the feet that
     plotter.plot_polygon(np.transpose(IP_points))
     if (params.getConstraintModes()[idx] == 'ONLY_ACTUATION') or (params.getConstraintModes()[idx] == 'FRICTION_AND_ACTUATION'):
         plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
-        print force_polytopes.getVertices()[idx]
+        #print force_polytopes.getVertices()[idx]
 
 base_polygon = np.vstack([shoulder_position_WF, shoulder_position_WF[0,:]])
 ax.plot(base_polygon[:,0],base_polygon[:,1],base_polygon[:,2], '--k')

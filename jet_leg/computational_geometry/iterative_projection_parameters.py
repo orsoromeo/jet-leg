@@ -7,6 +7,7 @@ Created on Wed Nov 14 15:07:45 2018
 import numpy as np
 from math_tools import Math
 import random
+from copy import copy
 from scipy.spatial.transform import Rotation as Rot
 from jet_leg.robots.robot_model_interface import RobotModelInterface
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
@@ -107,7 +108,6 @@ class IterativeProjectionParameters:
         
     def setActiveContacts(self, activeContacts):
         self.stanceFeet = activeContacts
-        #print self.stanceFeet
         
     def setContactNormals(self, normals):
         self.normals = normals
@@ -458,15 +458,15 @@ class IterativeProjectionParameters:
         comWF_ang_acc = np.array([.0, .0, .0])
 
         ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-        extForce = np.array([0., .0, 0.0 * 9.81])  # units are N
+        extForceW = np.array([0., .0, 0.0 * 9.81])  # units are N
         extCentroidalTorque = np.array([.0, .0, .0])  # units are Nm
-        extCentroidalWrench = np.hstack([extForce, extCentroidalTorque])
+        extCentroidalWrench = np.hstack([extForceW, extCentroidalTorque])
 
         ''' parameters to be tuned'''
         mu = 0.5
 
         ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-        stanceFeet = [1, 1, 1, 1]
+        stanceFeet = [1, 1, 0, 1]
 
         randomSwingLeg = random.randint(0, 3)
         tripleStance = False  # if you want you can define a swing leg using this variable
@@ -484,24 +484,27 @@ class IterativeProjectionParameters:
         n4 = np.transpose(np.transpose(self.math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # RH
         normals = np.vstack([n1, n2, n3, n4])
 
-        ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
-        extForceW = np.array([0.0, 0.0, 0.0])  # units are Nm
+        ''' Roll Pitch Yaw angles of the base link'''
+        rpy_base = np.array([0.0, 0.0, 0.0])  # units are rads
+        rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
+        W_R_B = rot.as_dcm()
 
         '''You now need to fill the 'params' object with all the relevant 
             informations needed for the computation of the IP'''
 
         """ contact points in the World Frame"""
-        LF_foot = np.array([0.36, 0.21, -0.47])
-        RF_foot = np.array([0.36, -0.21, -0.47])
-        LH_foot = np.array([-0.36, 0.21, -0.47])
-        RH_foot = np.array([-0.36, -0.21, -0.47])
-
         model = RobotModelInterface(self.robotName)
         LF_foot = model.nominal_stance_LF
+        RF_foot = model.nominal_stance_RF
+        LH_foot = model.nominal_stance_LH
+        RH_foot = model.nominal_stance_RH
 
-        contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+        contactsBF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+        contactsWF = copy(contactsBF);
+        #for j in np.arange(0, 4):
+        #    contactsWF[j, :] = np.add(np.dot(W_R_B, copy(contactsBF[j, :])), comWF)
         self.setContactsPosWF(contactsWF)
-
+        self.setEulerAngles(rpy_base)
         self.useContactTorque = True
         self.useInstantaneousCapturePoint = True
         self.externalCentroidalWrench = extCentroidalWrench

@@ -78,14 +78,14 @@ class ComputationalDynamics:
                                                                  iterative_projection_params.getCoMAngAcc())
 
         stanceIndex = iterative_projection_params.getStanceIndex(stanceLegs)
-
-        for j in range(0,contactsNumber):
-            r = contactsWF[int(stanceIndex[j]),:]
+        print "number of contacts ", contactsNumber
+        for j in range(0, int(contactsNumber)):
+            r = contactsWF[int(stanceIndex[j]), :]
             #print "foot ", r
             if not iterative_projection_params.useContactTorque:
-                graspMatrix = self.math.getGraspMatrix(r)[:,0:3]
+                graspMatrix = self.math.getGraspMatrix(r)[:, 0:3]
             else:
-                graspMatrix = self.math.getGraspMatrix(r)[:,0:5]
+                graspMatrix = self.math.getGraspMatrix(r)[:, 0:5]
             Ex = hstack([Ex, -graspMatrix[4]])
             Ey = hstack([Ey, graspMatrix[3]])
             G = hstack([G, graspMatrix])
@@ -166,6 +166,7 @@ class ComputationalDynamics:
     def try_iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
         try:
             compressed_hull, actuation_polygons, computation_time = self.iterative_projection_bretl(iterative_projection_params, saturate_normal_force)
+            print "computation time ", computation_time
             return compressed_hull, actuation_polygons, computation_time
         except ValueError as err:
             print 'Could not compute the feasible region'

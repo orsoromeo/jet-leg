@@ -41,16 +41,16 @@ def computeAnalyticMarginAndDerivatives(stanceFeet, robot):
 
     delta_pos_range = 0.79
     delta_pos_range_z = 0.4
-    dx = 0.04
+    dx = 0.02
     num_of_tests = delta_pos_range/dx
     delta_pos_range_vec_x = np.linspace(-delta_pos_range/2.0, delta_pos_range/2.0, num_of_tests)
     delta_pos_range_vec_y = np.linspace(-delta_pos_range/2.0, delta_pos_range/2.0, num_of_tests)
     delta_pos_range_vec_z = np.linspace(-delta_pos_range_z/2.0, delta_pos_range_z/2.0, num_of_tests)
     print "number of tests", num_of_tests
 
-    pos_margin_x, jac_com_pos_x = jac.plotMarginAndJacobianWrtComPosition(params_com_x,delta_pos_range_vec_x, 0) # dm / dx
-    pos_margin_y, jac_com_pos_y = jac.plotMarginAndJacobianWrtComPosition(params_com_y,delta_pos_range_vec_y, 1) # dm / dy
-    pos_margin_z, jac_com_pos_z = jac.plotMarginAndJacobianWrtComPosition(params_com_z,delta_pos_range_vec_z, 2) # dm / dz
+    pos_margin_x, jac_com_pos_x = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_x,delta_pos_range_vec_x, 0) # dm / dx
+    pos_margin_y, jac_com_pos_y = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_y,delta_pos_range_vec_y, 1) # dm / dy
+    pos_margin_z, jac_com_pos_z = jac.plotMarginAndJacobianOfMarginWrtComLinAcceleration(params_com_z,delta_pos_range_vec_z, 2) # dm / dz
 
     return pos_margin_x, jac_com_pos_x, pos_margin_y, jac_com_pos_y, pos_margin_z, jac_com_pos_z, delta_pos_range_vec_x, delta_pos_range_vec_y, delta_pos_range_vec_z
 
