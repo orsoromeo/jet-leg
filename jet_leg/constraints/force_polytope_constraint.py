@@ -161,6 +161,10 @@ class ForcePolytopeConstraint:
                 (3, 8)) * 0  # TODO: correct computation of the force acting on the legs due to gravity
             actuation_polygon = np.matmul(np.linalg.pinv(np.transpose(leg_jacobian)), legs_gravity - torque_lims)
 
+        else:
+            actuation_polygon = np.zeros((3,8))
+
+
         # Only for debugging:
         # actuation_polygon = vertices
         return actuation_polygon

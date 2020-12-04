@@ -1,7 +1,8 @@
 import numpy as np
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
-import copy
+from copy import copy
+from copy import deepcopy
 
 
 class Jacobians:
@@ -39,19 +40,43 @@ class Jacobians:
 
     def computeComPosJacobian(self, params, contactsWF):
         jacobian = np.zeros(3)
-        default = copy.deepcopy(contactsWF)
+        default = copy(contactsWF)
 
         for j in np.arange(0, 3):
-            feet_pos_dim = copy.deepcopy(default[:, j])
-            feet_pos_dim -= self.delta
-            feet_pos_WF_plus = copy.deepcopy(default)
-            feet_pos_WF_plus[:, j] = feet_pos_dim
-            isPointFeasible, margin1 = self.computeComMargin(params, feet_pos_WF_plus)
-            feet_pos_dim = copy.deepcopy(default[:, j])
+            feet_pos_dim = copy(default[:, j])
             feet_pos_dim += self.delta
-            feet_pos_WF_minus = copy.deepcopy(default)
+            feet_pos_WF_plus = copy(default)
+            feet_pos_WF_plus[:, j] = feet_pos_dim
+            params_plus = copy(params)
+            params_plus.setContactsPosWF(feet_pos_WF_plus)
+            isPointFeasible, margin1 = self.computeComMargin(params_plus)
+            feet_pos_dim = copy(default[:, j])
+            feet_pos_dim -= self.delta
+            feet_pos_WF_minus = copy(default)
             feet_pos_WF_minus[:, j] = feet_pos_dim
-            isPointFeasible, margin2 = self.computeComMargin(params, feet_pos_WF_minus)
+            params_minus = copy(params)
+            params_minus.setContactsPosWF(feet_pos_WF_minus)
+            isPointFeasible, margin2 = self.computeComMargin(params_minus)
+            diff = margin1 - margin2
+            jacobian[j] = diff / (2.0*self.delta)
+
+        return jacobian
+
+    def computeComLinAccJacobian(self, params, ref_type):
+        jacobian = np.zeros(3)
+        default_params = copy(params)
+        default_acc = copy(params.comLinAcc)
+
+        for j in np.arange(0, 3):
+            params_plus = copy(default_params)
+            params_plus.comLinAcc = default_acc
+            params_plus.comLinAcc[j] += self.delta
+            isPointFeasible, margin1 = self.computeMargin(params_plus, ref_type)
+
+            params_minus = copy(default_params)
+            params_plus.comLinAcc = default_acc
+            params_minus.comLinAcc[j] -= self.delta
+            isPointFeasible, margin2 = self.computeMargin(params_minus, ref_type)
             diff = margin1 - margin2
             jacobian[j] = diff / (2.0*self.delta)
 
@@ -111,23 +136,6 @@ class Jacobians:
 
         return jacobian
 
-    def computeComLinAccJacobian(self, params):
-        jacobian = np.zeros(3)
-        initiaPoint = params.comLinAcc
-
-        for j in np.arange(0, 3):
-            params.comLinAcc = initiaPoint
-            params.comLinAcc[j] = initiaPoint[j] + self.delta / 2.0
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
-
-            params.comLinAcc = initiaPoint
-            params.comLinAcc[j] = initiaPoint[j] - self.delta / 2.0
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
-            diff = margin1 - margin2
-            jacobian[j] = diff / self.delta
-
-        return jacobian
-
     def computeFeetJacobian(self, params):
         jacobian = np.zeros(12)
         for footID in np.arange(0, 4):
@@ -142,59 +150,40 @@ class Jacobians:
             contacts = initialContacts
             contacts[footID, j] = initiaPoint[j] + self.delta / 2.0
             params.setContactsPosWF(contacts)
-            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "COM")
+            isPointFeasible, margin1 = self.compDyn.compute_IP_margin(params, "ZMP")
             contacts = initialContacts
             contacts[footID, j] = initiaPoint[j] - self.delta / 2.0
             params.setContactsPosWF(contacts)
-            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "COM")
+            isPointFeasible, margin2 = self.compDyn.compute_IP_margin(params, "ZMP")
             diff = margin1 - margin2
             jacobian[j] = diff / self.delta
 
         return jacobian
 
-    def plotMarginAndJacobianOfMarginWrtComLinAcceleration(self, params, acc_range, dimension):
+    def plotMarginAndJacobianWrtComLinAcceleration(self, params, acc_range, dimension):
+
         num_of_tests = np.shape(acc_range)
         margin = np.zeros(num_of_tests)
-        jac_com_lin_acc = np.zeros((3, num_of_tests[0]))
+        jac_com_pos = np.zeros((3, num_of_tests[0]))
         count = 0
-        for delta_acc in acc_range:
-            #print "dimension", dimension
-            #print "delta_acc", delta_acc
-            params.comLinAcc = [0.0, 0.0, 0.0]
-            params.comLinAcc[dimension] = delta_acc
-            #print "count", count, params.comLinAcc, params.comPositionWF, params.getContactsPosWF()
-            ''' compute iterative projection 
-            Outputs of "iterative_projection_bretl" are:
-            IP_points = resulting 2D vertices
-            actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
-            computation_time = how long it took to compute the iterative projection
-            '''
-            IP_points, force_polytopes, IP_computation_time = self.compDyn.try_iterative_projection_bretl(params)
+        default_params = copy(params)
+        default_acc = deepcopy(params.comLinAcc)
+        reference_type = "ZMP"
 
-            '''I now check whether the given CoM configuration is stable or not'''
-            isCoMStable, contactForces, forcePolytopes = self.compDyn.check_equilibrium(params)
-            #print "is CoM stable?", isCoMStable
-            # print 'Contact forces:', contactForces
-            #print 'IP_points:', IP_points
-            #if IP_points is True:
-            #    print "ip points shape", np.shape(IP_points)
-            #    facets = self.compGeom.compute_halfspaces_convex_hull(IP_points)
-            #    point2check = self.compDyn.getReferencePoint(params)
-            #    print "point 2 check", point2check
-            #    isPointFeasible, margin[count] = self.compGeom.isPointRedundant(facets, point2check)
-            isPointFeasible, margin[count] = self.compDyn.compute_IP_margin(params, "COM")
-            #
-            marginJAcWrtComLinAcc = self.computeComLinAccJacobian(params)
-            #    print "marginJAcWrtComLinAcc", marginJAcWrtComLinAcc
-            jac_com_lin_acc[:, count] = marginJAcWrtComLinAcc
-            #else:
-            #    jac_com_lin_acc[:, count] = [-1000] * 3
-
-            # print "com lin vel jacobian", jac_com_lin_vel
+        for delta in acc_range:
+            """ contact points in the World Frame"""
+            tmp_params = copy(default_params)
+            params.comLinAcc = default_acc
+            tmp_params.comLinAcc = default_acc
+            tmp_params.comLinAcc[dimension] = delta
+            isPointFeasible, margin[count] = self.computeMargin(tmp_params, reference_type)
+            jac_com_pos[:, count] = self.computeComLinAccJacobian(tmp_params, reference_type)
 
             count += 1
 
-        return margin, jac_com_lin_acc
+        print "params.comLinAcc", params.comLinAcc
+
+        return margin, jac_com_pos
 
     def plotMarginAndJacobianOfMarginWrtComVelocity(self, params, velocity_range, dimension):
         num_of_tests = np.shape(velocity_range)
@@ -234,30 +223,35 @@ class Jacobians:
 
         return margin, jac_com_lin_vel
 
-    def computeComMargin(self, params, new_contacts_wf):
-        default_feet_pos_WF = copy.deepcopy(params.getContactsPosWF())
-        params.setContactsPosWF(new_contacts_wf)
-        isPointFeasible, margin = self.compDyn.compute_IP_margin(params, "COM")
-        params.setContactsPosWF(default_feet_pos_WF)
+    def computeMargin(self, params_copy, reference_point_type):
+        #default_feet_pos_WF = copy(params.getContactsPosWF())
+        #params.setContactsPosWF(new_contacts_wf)
+        isPointFeasible, margin = self.compDyn.compute_IP_margin(params_copy, reference_point_type)
+        #params.setContactsPosWF(default_feet_pos_WF)
         return isPointFeasible, margin
+
+    def computeComMargin(self, params):
+        return self.computeMargin(params, "COM")
 
     def plotMarginAndJacobianWrtComPosition(self, params, com_pos_range, dim_to_check):
         num_of_tests = np.shape(com_pos_range)
         margin = np.zeros(num_of_tests)
         jac_com_pos = np.zeros((3, num_of_tests[0]))
         count = 0
-        default_feet_pos_WF = copy.deepcopy(params.getContactsPosWF())
+        default_feet_pos_WF = copy(params.getContactsPosWF())
+        default_params = copy(params)
 
         for delta in com_pos_range:
             """ contact points in the World Frame"""
-            contactsWF = copy.deepcopy(default_feet_pos_WF)
-            contactsWF[:, dim_to_check] -= delta
-            isPointFeasible, margin[count] = self.computeComMargin(params, contactsWF)
-            jac_com_pos[:, count] = self.computeComPosJacobian(params, contactsWF)
+            contactsWF = copy(default_feet_pos_WF)
+            contactsWF[:, dim_to_check] += delta
+            tmp_params = copy(default_params)
+            tmp_params.setContactsPosWF(contactsWF)
+            isPointFeasible, margin[count] = self.computeComMargin(tmp_params)
+            jac_com_pos[:, count] = self.computeComPosJacobian(tmp_params, contactsWF)
 
             count += 1
 
-        params.setContactsPosWF(default_feet_pos_WF)
         return margin, jac_com_pos
 
     '''
@@ -272,11 +266,11 @@ class Jacobians:
         margin = np.zeros(num_of_tests)
         jac_base_orient = np.zeros((3, num_of_tests[0]))
         count = 0
-        default_euler_angles = copy.deepcopy(params.eurlerAngles)
+        default_euler_angles = copy(params.eurlerAngles)
         print "default euler", default_euler_angles
 
         for delta in base_orient_range:
-            eulerAngles = copy.deepcopy(default_euler_angles)
+            eulerAngles = copy(default_euler_angles)
             eulerAngles[dim_to_check] -= delta
             params.setEulerAngles(eulerAngles)
 

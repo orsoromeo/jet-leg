@@ -19,7 +19,6 @@
 # along with pypoman. If not, see <http://www.gnu.org/licenses/>.
 
 import pypoman
-import jet_leg_common
 
 #__all__ = [
 #    'compute_cone_face_matrix',

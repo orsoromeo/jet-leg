@@ -6,13 +6,17 @@ Created on Wed Nov 14 15:07:45 2018
 """
 import numpy as np
 from math_tools import Math
+import random
+from copy import copy
 from scipy.spatial.transform import Rotation as Rot
 from jet_leg.robots.robot_model_interface import RobotModelInterface
+from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 
 class IterativeProjectionParameters:
     def __init__(self, robot_name):
         self.robotName = robot_name
         self.robotModel = RobotModelInterface(self.robotName)
+        self.compDyn = ComputationalDynamics(self.robotName)
         self.math = Math()
         self.q = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.] 
         self.comPositionBF = [0., 0., 0.] #var used only for IK inside constraints.py
@@ -104,7 +108,6 @@ class IterativeProjectionParameters:
         
     def setActiveContacts(self, activeContacts):
         self.stanceFeet = activeContacts
-        #print self.stanceFeet
         
     def setContactNormals(self, normals):
         self.normals = normals
@@ -436,4 +439,94 @@ class IterativeProjectionParameters:
         self.numberOfContacts = np.sum(self.stanceFeet)
 
         #print 'stance feet ', self.stanceFeet
+
+    def setDefaultValues(self):
+
+        '''
+        possible constraints for each foot:
+         ONLY_ACTUATION = only joint-torque limits are enforces
+         ONLY_FRICTION = only friction cone constraints are enforced
+         FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
+        '''
+        constraint_mode_IP = ['FRICTION_AND_ACTUATION',
+                              'FRICTION_AND_ACTUATION',
+                              'FRICTION_AND_ACTUATION',
+                              'FRICTION_AND_ACTUATION']
+
+        comWF = np.array([0.0, 0.0, 0.0])
+        comWF_lin_acc = np.array([.0, .0, .0])
+        comWF_ang_acc = np.array([.0, .0, .0])
+
+        ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
+        extForceW = np.array([0., .0, 0.0 * 9.81])  # units are N
+        extCentroidalTorque = np.array([.0, .0, .0])  # units are Nm
+        extCentroidalWrench = np.hstack([extForceW, extCentroidalTorque])
+
+        ''' parameters to be tuned'''
+        mu = 0.5
+
+        ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
+        stanceFeet = [1, 1, 1, 1]
+
+        randomSwingLeg = random.randint(0, 3)
+        tripleStance = False  # if you want you can define a swing leg using this variable
+        if tripleStance:
+            print 'Swing leg', randomSwingLeg
+            stanceFeet[randomSwingLeg] = 0
+        print 'stanceLegs ', stanceFeet
+
+        ''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
+        axisZ = np.array([[0.0], [0.0], [1.0]])
+
+        n1 = np.transpose(np.transpose(self.math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # LF
+        n2 = np.transpose(np.transpose(self.math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # RF
+        n3 = np.transpose(np.transpose(self.math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # LH
+        n4 = np.transpose(np.transpose(self.math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))  # RH
+        normals = np.vstack([n1, n2, n3, n4])
+
+        ''' Roll Pitch Yaw angles of the base link'''
+        rpy_base = np.array([0., 0., 0.0])  # units are rads
+        rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
+        W_R_B = rot.as_dcm()
+
+        '''You now need to fill the 'params' object with all the relevant 
+            informations needed for the computation of the IP'''
+
+        """ contact points in the World Frame"""
+        model = RobotModelInterface(self.robotName)
+        LF_foot = model.nominal_stance_LF
+        RF_foot = model.nominal_stance_RF
+        LH_foot = model.nominal_stance_LH
+        RH_foot = model.nominal_stance_RH
+
+        #LF_foot = [ -0.01,  0.19, -0.46] #model.nominal_stance_LF
+        #RF_foot = [ -0.01, -0.19, -0.46] #model.nominal_stance_RF
+        #LH_foot = [-0.59,  0.19, -0.46] #model.nominal_stance_LH
+        #RH_foot = [-0.59, -0.19, -0.46] #model.nominal_stance_RH
+
+        #LF_foot = [ 0.03597333,  0.14325718, - 0.47537701]
+        #RF_foot = [ 0.03597333, - 0.2348444, - 0.43744031]
+        #LH_foot = [-0.54112909,  0.13747649, - 0.53299111]
+        #RH_foot = [-0.54112909, - 0.2406251, - 0.49505442]
+
+        contactsBF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+        print contactsBF
+        contactsWF = copy(contactsBF);
+        for j in np.arange(0, 4):
+            contactsWF[j, :] = np.add(np.dot(W_R_B, copy(contactsBF[j, :])), comWF)
+        self.setContactsPosWF(contactsWF)
+        self.setEulerAngles(rpy_base)
+        self.useContactTorque = True
+        self.useInstantaneousCapturePoint = True
+        self.externalCentroidalWrench = extCentroidalWrench
+        self.setCoMPosWF(comWF)
+        self.comLinVel = [0., 0.0, 0.0]
+        self.setCoMLinAcc(comWF_lin_acc)
+        self.setTorqueLims(self.compDyn.robotModel.robotModel.joint_torque_limits)
+        self.setActiveContacts(stanceFeet)
+        self.setConstraintModes(constraint_mode_IP)
+        self.setContactNormals(normals)
+        self.setFrictionCoefficient(mu)
+        self.setTotalMass(self.compDyn.robotModel.robotModel.trunkMass)
+        self.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
 

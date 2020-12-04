@@ -5,6 +5,7 @@ Created on Mon May 28 13:00:59 2018
 @author: Romeo Orsolino
 """
 import numpy as np
+import time
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.leg_force_polytopes import LegForcePolytopes
 from scipy.linalg import block_diag
@@ -54,7 +55,9 @@ class Constraints:
         #we are static so we set to zero
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 
+        start_t_ik = time.time()
         self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
+        #print "IK time ", time.time() - start_t_ik
         #print ("q is ",q)
 
         forcePolytopes = LegForcePolytopes()
@@ -115,6 +118,7 @@ class Constraints:
             d = np.hstack([d, d_cone])
         
         if contactsNumber == 0:
+            isIKoutOfWorkSpace = True
             print 'contactsNumber is zero, there are no stance legs set! This might be because Gazebo is in pause.'
             
         return C, d, isIKoutOfWorkSpace, forcePolytopes
