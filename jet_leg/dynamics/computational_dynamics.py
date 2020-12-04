@@ -78,7 +78,7 @@ class ComputationalDynamics:
                                                                  iterative_projection_params.getCoMAngAcc())
 
         stanceIndex = iterative_projection_params.getStanceIndex(stanceLegs)
-        print "number of contacts ", contactsNumber
+        #print "number of contacts ", contactsNumber
         for j in range(0, int(contactsNumber)):
             r = contactsWF[int(stanceIndex[j]), :]
             #print "foot ", r

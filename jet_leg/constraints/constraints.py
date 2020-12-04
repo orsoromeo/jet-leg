@@ -36,7 +36,7 @@ class Constraints:
         contactsNumber = np.sum(stanceLegs)
 
         contactsBF = copy.copy(params.computeContactsPosBF())
-        print "contacts BF ", contactsBF
+        #print "contacts BF ", contactsBF
         #print 'stance legs ', stanceLegs
         
         constraint_mode = params.getConstraintModes()
@@ -57,7 +57,7 @@ class Constraints:
 
         start_t_ik = time.time()
         self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
-        print "IK time ", time.time() - start_t_ik
+        #print "IK time ", time.time() - start_t_ik
         #print ("q is ",q)
 
         forcePolytopes = LegForcePolytopes()

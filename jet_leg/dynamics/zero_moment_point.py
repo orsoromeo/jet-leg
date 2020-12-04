@@ -15,7 +15,7 @@ class ZeroMomentPoint():
 
     def compute(self, params):
         robot_height = self.Icp.computeAverageRobotHeight(params)
-        print "avg height", robot_height
+        #print "avg height", robot_height
         return self.computeZeroMomentPoint(params.comPositionWF, params.comLinAcc, robot_height)
 
 

@@ -4,7 +4,7 @@ import numpy as np
 class LearnedMargin:
 
     def plot_learned_margin(self, filename):
-        path = '/home/rorsolino/catkin_ws/build/jet_leg_learn_ported/'
+        path = '/home/rorsolino/catkin_ws/build/jet_leg_learn_ported/anymal_c/com_position/'
         iter, ee_offset_x, ee_offset_y, ee_offset_z, \
         mx, my, mz, \
         ee_jac_xx, ee_jac_xx_fin_diff, ee_jac_xy, ee_jac_xy_fin_diff, ee_jac_xz, ee_jac_xz_fin_diff, \
@@ -146,9 +146,9 @@ class LearnedMargin:
         plt.ylabel("$\delta m/  \delta c_{z}$")
         plt.legend()
 
-#learned_margin = LearnedMargin()
-#fig1 = plt.figure(1)
-#fig1.suptitle("Learned stability margin network")
-#learned_margin.plot_learned_margin('com_jacobian_anymal_c_1111stance.txt')
-#learned_margin.set_plot_properties()
-#plt.show()
+learned_margin = LearnedMargin()
+fig1 = plt.figure(1)
+fig1.suptitle("Learned stability margin network")
+learned_margin.plot_learned_margin('com_jacobian_anymal_c_1111stance.txt')
+learned_margin.set_plot_properties()
+plt.show()

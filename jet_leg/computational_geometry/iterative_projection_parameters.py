@@ -466,7 +466,7 @@ class IterativeProjectionParameters:
         mu = 0.5
 
         ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-        stanceFeet = [1, 1, 0, 1]
+        stanceFeet = [1, 1, 1, 1]
 
         randomSwingLeg = random.randint(0, 3)
         tripleStance = False  # if you want you can define a swing leg using this variable
@@ -485,7 +485,7 @@ class IterativeProjectionParameters:
         normals = np.vstack([n1, n2, n3, n4])
 
         ''' Roll Pitch Yaw angles of the base link'''
-        rpy_base = np.array([0.0, 0.0, 0.0])  # units are rads
+        rpy_base = np.array([0., 0., 0.0])  # units are rads
         rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
         W_R_B = rot.as_dcm()
 
@@ -499,10 +499,21 @@ class IterativeProjectionParameters:
         LH_foot = model.nominal_stance_LH
         RH_foot = model.nominal_stance_RH
 
+        #LF_foot = [ -0.01,  0.19, -0.46] #model.nominal_stance_LF
+        #RF_foot = [ -0.01, -0.19, -0.46] #model.nominal_stance_RF
+        #LH_foot = [-0.59,  0.19, -0.46] #model.nominal_stance_LH
+        #RH_foot = [-0.59, -0.19, -0.46] #model.nominal_stance_RH
+
+        #LF_foot = [ 0.03597333,  0.14325718, - 0.47537701]
+        #RF_foot = [ 0.03597333, - 0.2348444, - 0.43744031]
+        #LH_foot = [-0.54112909,  0.13747649, - 0.53299111]
+        #RH_foot = [-0.54112909, - 0.2406251, - 0.49505442]
+
         contactsBF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+        print contactsBF
         contactsWF = copy(contactsBF);
-        #for j in np.arange(0, 4):
-        #    contactsWF[j, :] = np.add(np.dot(W_R_B, copy(contactsBF[j, :])), comWF)
+        for j in np.arange(0, 4):
+            contactsWF[j, :] = np.add(np.dot(W_R_B, copy(contactsBF[j, :])), comWF)
         self.setContactsPosWF(contactsWF)
         self.setEulerAngles(rpy_base)
         self.useContactTorque = True

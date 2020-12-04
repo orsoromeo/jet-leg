@@ -13,7 +13,7 @@ from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
 from jet_leg.optimization.jacobians import Jacobians
-from plot_learned_com_margin_jac import LearnedMargin
+from plot_learned_com_pos_margin_jac import LearnedMargin
 
 import matplotlib.pyplot as plt
 
@@ -41,7 +41,7 @@ def computeAnalyticMarginAndDerivatives(stanceFeet, robot):
 
     delta_pos_range = 0.79
     delta_pos_range_z = 0.4
-    dx = 0.04
+    dx = 0.02
     num_of_tests = delta_pos_range/dx
     delta_pos_range_vec_x = np.linspace(-delta_pos_range/2.0, delta_pos_range/2.0, num_of_tests)
     delta_pos_range_vec_y = np.linspace(-delta_pos_range/2.0, delta_pos_range/2.0, num_of_tests)
@@ -103,7 +103,7 @@ fig1.suptitle("Analytic vs. Learned stability margin\n 4 stance feet (1111)")
 contacts = [1, 1, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_anymal_c_1111stance.txt')
+learnedMargin.plot_learned_margin('1111stance.txt')
 learnedMargin.set_plot_properties()
 
 fig2 = plt.figure(2)
@@ -111,7 +111,7 @@ fig2.suptitle("Analytic vs. Learned stability margin\n LF foot in stance (0111)"
 contacts = [0, 1, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_anymal_c_0111stance.txt')
+learnedMargin.plot_learned_margin('0111stance.txt')
 learnedMargin.set_plot_properties()
 
 fig3 = plt.figure(3)
@@ -119,7 +119,7 @@ fig3.suptitle("Analytic vs. Learned stability margin\n RF foot in stance (1011)"
 contacts = [1, 0, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_anymal_c_1011stance.txt')
+learnedMargin.plot_learned_margin('1011stance.txt')
 learnedMargin.set_plot_properties()
 
 fig4 = plt.figure(4)
@@ -127,7 +127,7 @@ fig4.suptitle("Analytic vs. Learned stability margin\n LH foot in stance (1101)"
 contacts = [1, 1, 0, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_anymal_c_1101stance.txt')
+learnedMargin.plot_learned_margin('1101stance.txt')
 learnedMargin.set_plot_properties()
 
 fig5 = plt.figure(5)
@@ -135,7 +135,7 @@ fig5.suptitle("Analytic vs. Learned stability margin\n RH foot in stance (1110)"
 contacts = [1, 1, 1, 0]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_anymal_c_1110stance.txt')
+learnedMargin.plot_learned_margin('1110stance.txt')
 learnedMargin.set_plot_properties()
 
 fig6 = plt.figure(6)
@@ -143,7 +143,7 @@ fig6.suptitle("Analytic vs. Learned stability margin\n 2 stance feet (0110)")
 contacts = [0, 1, 1, 0]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_anymal_c_0110stance.txt')
+learnedMargin.plot_learned_margin('0110stance.txt')
 learnedMargin.set_plot_properties()
 
 fig7 = plt.figure(7)
@@ -151,7 +151,7 @@ fig7.suptitle("Analytic vs. Learned stability margin\n 2 stance feet (1001)")
 contacts = [0, 1, 1, 0]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
-learnedMargin.plot_learned_margin('com_jacobian_anymal_c_1001stance.txt')
+learnedMargin.plot_learned_margin('1001stance.txt')
 learnedMargin.set_plot_properties()
 
 plt.show()
