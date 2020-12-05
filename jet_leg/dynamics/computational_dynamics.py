@@ -412,3 +412,13 @@ class ComputationalDynamics:
             referencePoint = np.array([comWF[0], comWF[1]])
 
         return referencePoint
+
+    def computeMargin(self, params_copy, reference_point_type):
+        #default_feet_pos_WF = copy(params.getContactsPosWF())
+        #params.setContactsPosWF(new_contacts_wf)
+        isPointFeasible, margin = self.compute_IP_margin(params_copy, reference_point_type)
+        #params.setContactsPosWF(default_feet_pos_WF)
+        return isPointFeasible, margin
+
+    def computeComMargin(self, params):
+        return self.computeMargin(params, "COM")

@@ -49,14 +49,14 @@ class Jacobians:
             feet_pos_WF_plus[:, j] = feet_pos_dim
             params_plus = copy(params)
             params_plus.setContactsPosWF(feet_pos_WF_plus)
-            isPointFeasible, margin1 = self.computeComMargin(params_plus)
+            isPointFeasible, margin1 = self.compDyn.computeComMargin(params_plus)
             feet_pos_dim = copy(default[:, j])
             feet_pos_dim -= self.delta
             feet_pos_WF_minus = copy(default)
             feet_pos_WF_minus[:, j] = feet_pos_dim
             params_minus = copy(params)
             params_minus.setContactsPosWF(feet_pos_WF_minus)
-            isPointFeasible, margin2 = self.computeComMargin(params_minus)
+            isPointFeasible, margin2 = self.compDyn.computeComMargin(params_minus)
             diff = margin1 - margin2
             jacobian[j] = diff / (2.0*self.delta)
 
@@ -71,12 +71,12 @@ class Jacobians:
             params_plus = copy(default_params)
             params_plus.comLinAcc = default_acc
             params_plus.comLinAcc[j] += self.delta
-            isPointFeasible, margin1 = self.computeMargin(params_plus, ref_type)
+            isPointFeasible, margin1 = self.compDyn.computeMargin(params_plus, ref_type)
 
             params_minus = copy(default_params)
             params_plus.comLinAcc = default_acc
             params_minus.comLinAcc[j] -= self.delta
-            isPointFeasible, margin2 = self.computeMargin(params_minus, ref_type)
+            isPointFeasible, margin2 = self.compDyn.computeMargin(params_minus, ref_type)
             diff = margin1 - margin2
             jacobian[j] = diff / (2.0*self.delta)
 
@@ -176,7 +176,7 @@ class Jacobians:
             params.comLinAcc = default_acc
             tmp_params.comLinAcc = default_acc
             tmp_params.comLinAcc[dimension] = delta
-            isPointFeasible, margin[count] = self.computeMargin(tmp_params, reference_type)
+            isPointFeasible, margin[count] = self.compDyn.computeMargin(tmp_params, reference_type)
             jac_com_pos[:, count] = self.computeComLinAccJacobian(tmp_params, reference_type)
 
             count += 1
@@ -223,16 +223,6 @@ class Jacobians:
 
         return margin, jac_com_lin_vel
 
-    def computeMargin(self, params_copy, reference_point_type):
-        #default_feet_pos_WF = copy(params.getContactsPosWF())
-        #params.setContactsPosWF(new_contacts_wf)
-        isPointFeasible, margin = self.compDyn.compute_IP_margin(params_copy, reference_point_type)
-        #params.setContactsPosWF(default_feet_pos_WF)
-        return isPointFeasible, margin
-
-    def computeComMargin(self, params):
-        return self.computeMargin(params, "COM")
-
     def plotMarginAndJacobianWrtComPosition(self, params, com_pos_range, dim_to_check):
         num_of_tests = np.shape(com_pos_range)
         margin = np.zeros(num_of_tests)
@@ -247,7 +237,7 @@ class Jacobians:
             contactsWF[:, dim_to_check] += delta
             tmp_params = copy(default_params)
             tmp_params.setContactsPosWF(contactsWF)
-            isPointFeasible, margin[count] = self.computeComMargin(tmp_params)
+            isPointFeasible, margin[count] = self.compDyn.computeComMargin(tmp_params)
             jac_com_pos[:, count] = self.computeComPosJacobian(tmp_params, contactsWF)
 
             count += 1

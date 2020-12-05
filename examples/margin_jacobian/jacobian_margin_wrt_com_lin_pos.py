@@ -107,7 +107,7 @@ learnedMargin.plot_learned_margin('1111stance.txt')
 learnedMargin.set_plot_properties()
 
 fig2 = plt.figure(2)
-fig2.suptitle("Analytic vs. Learned stability margin\n LF foot in stance (0111)")
+fig2.suptitle("Analytic vs. Learned stability margin\n LF foot in swing (0111)")
 contacts = [0, 1, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
@@ -115,7 +115,7 @@ learnedMargin.plot_learned_margin('0111stance.txt')
 learnedMargin.set_plot_properties()
 
 fig3 = plt.figure(3)
-fig3.suptitle("Analytic vs. Learned stability margin\n RF foot in stance (1011)")
+fig3.suptitle("Analytic vs. Learned stability margin\n RF foot in swing (1011)")
 contacts = [1, 0, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
@@ -123,7 +123,7 @@ learnedMargin.plot_learned_margin('1011stance.txt')
 learnedMargin.set_plot_properties()
 
 fig4 = plt.figure(4)
-fig4.suptitle("Analytic vs. Learned stability margin\n LH foot in stance (1101)")
+fig4.suptitle("Analytic vs. Learned stability margin\n LH foot in swing (1101)")
 contacts = [1, 1, 0, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
@@ -131,7 +131,7 @@ learnedMargin.plot_learned_margin('1101stance.txt')
 learnedMargin.set_plot_properties()
 
 fig5 = plt.figure(5)
-fig5.suptitle("Analytic vs. Learned stability margin\n RH foot in stance (1110)")
+fig5.suptitle("Analytic vs. Learned stability margin\n RH foot in swing (1110)")
 contacts = [1, 1, 1, 0]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
@@ -148,7 +148,7 @@ learnedMargin.set_plot_properties()
 
 fig7 = plt.figure(7)
 fig7.suptitle("Analytic vs. Learned stability margin\n 2 stance feet (1001)")
-contacts = [0, 1, 1, 0]
+contacts = [1, 0, 0, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('1001stance.txt')

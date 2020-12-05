@@ -146,7 +146,7 @@ learnedMargin.set_plot_properties()
 
 fig7 = plt.figure(7)
 fig7.suptitle("Analytic vs. Learned stability margin\n 2 stance feet (1001)")
-contacts = [0, 1, 1, 0]
+contacts = [1, 0, 0, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('1001stance.txt')
