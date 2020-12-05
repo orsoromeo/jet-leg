@@ -6,7 +6,7 @@ from pinocchio.utils import *
 
 
 class anymalKinematics():
-    def __init__(self, anymal_type = 'anymal_boxy'):
+    def __init__(self, anymal_type):
         self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/../../../resources/urdfs/anymal/'
         self.URDF = self.PKG + 'urdf/' + anymal_type + '.urdf'
         print self.URDF
