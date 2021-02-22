@@ -512,8 +512,8 @@ class IterativeProjectionParameters:
         contactsBF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
         print contactsBF
         contactsWF = copy(contactsBF);
-        for j in np.arange(0, 4):
-            contactsWF[j, :] = np.add(np.dot(W_R_B, copy(contactsBF[j, :])), comWF)
+        #for j in np.arange(0, 4):
+        #    contactsWF[j, :] = np.add(np.dot(W_R_B, copy(contactsBF[j, :])), comWF)
         self.setContactsPosWF(contactsWF)
         self.setEulerAngles(rpy_base)
         self.useContactTorque = True

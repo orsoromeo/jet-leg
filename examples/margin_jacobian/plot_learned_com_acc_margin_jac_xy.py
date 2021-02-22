@@ -17,41 +17,24 @@ class LearnedAccMargin:
         lb_lim_m = -0.15
         ub_lim_m = 0.25
 
-        plt.subplot(431)
+        plt.subplot(321)
         plt.plot(ee_offset_x, mx, 'b-o', markersize=2, label='learned (forward pass)')
     
-        plt.subplot(432)
+        plt.subplot(322)
         plt.plot(ee_offset_y, my, 'b-o', markersize=2, label='learned (forward pass)')
     
-        plt.subplot(433)
-        plt.plot(ee_offset_z, mz, 'b-o', markersize=2,label='learned (forward pass)')
-    
-        plt.subplot(434)
+        plt.subplot(323)
         plt.plot(ee_offset_x, ee_jac_xx, 'b-o', markersize=2, label='learned (backprop)')
     
-        plt.subplot(435)
+        plt.subplot(324)
         plt.plot(ee_offset_y, ee_jac_yx, 'b-o', markersize=2, label='learned (backprop)')
     
-        plt.subplot(436)
-        plt.plot(ee_offset_z, ee_jac_zx,  'b-o', markersize=2, label='learned (backprop)')
-    
-        plt.subplot(437)
+        plt.subplot(325)
         plt.plot(ee_offset_x, ee_jac_xy, 'b-o', markersize=2, label='learned (backprop)')
     
-        plt.subplot(438)
+        plt.subplot(326)
         plt.plot(ee_offset_y, ee_jac_yy,  'b-o', markersize=2, label='learned (backprop)')
-    
-        plt.subplot(439)
-        plt.plot(ee_offset_z, ee_jac_zy, 'b-o', markersize=2, label='learned (backprop)')
-    
-        plt.subplot(4, 3, 10)
-        plt.plot(ee_offset_x, ee_jac_xz,  'b-o', markersize=2, label='learned (backprop)')
-    
-        plt.subplot(4, 3, 11)
-        plt.plot(ee_offset_y, ee_jac_zz, 'b-o', markersize=2, label='learned (backprop)')
-    
-        plt.subplot(4, 3, 12)
-        plt.plot(ee_offset_z, ee_jac_zz,  'b-o', markersize=2, label='learned (backprop)')
+
 
     def set_plot_properties(self):
 
@@ -59,7 +42,7 @@ class LearnedAccMargin:
         lb_lim_m = -0.15
         ub_lim_m = 0.25
 
-        plt.subplot(431)
+        plt.subplot(321)
         plt.grid()
         plt.ylim((lb_lim_m, ub_lim_m))
         plt.xlabel("$\ddot{c}_{x}$ [m]")
@@ -67,7 +50,7 @@ class LearnedAccMargin:
         plt.title("CoM, x")
         plt.legend()
 
-        plt.subplot(432)
+        plt.subplot(322)
         plt.grid()
         plt.ylim((lb_lim_m, ub_lim_m))
         plt.xlabel("$\ddot{c}_{y}$ [m]")
@@ -75,75 +58,32 @@ class LearnedAccMargin:
         plt.title("CoM, y")
         plt.legend()
 
-        plt.subplot(433)
-        plt.grid()
-        plt.ylim((lb_lim_m, ub_lim_m))
-        plt.xlabel("$\ddot{c}_{z}$ [m]")
-        plt.ylabel("margin $m$ [m]")
-        plt.title("CoM, z")
-        plt.legend()
-
-        plt.subplot(434)
+        plt.subplot(323)
         plt.grid()
         plt.ylim((-y_lim, y_lim))
         plt.xlabel("$\ddot{c}_{x}$ [m]")
         plt.ylabel("$\delta m/  \delta \ddot{c}_{x}$")
         plt.legend()
 
-        plt.subplot(435)
+        plt.subplot(324)
         plt.grid()
         plt.ylim((-y_lim, y_lim))
         plt.xlabel("$\ddot{c}_{y}$ [m]")
         plt.ylabel("$\delta m/  \delta \ddot{c}_{x}$")
         plt.legend()
 
-        plt.subplot(436)
-        plt.grid()
-        plt.ylim((-y_lim, y_lim))
-        plt.xlabel("$\ddot{c}_{z}$ [m]")
-        plt.ylabel("$\delta m/  \delta \ddot{c}_{x}$")
-        plt.legend()
-
-        plt.subplot(437)
+        plt.subplot(325)
         plt.grid()
         plt.ylim((-y_lim, y_lim))
         plt.xlabel("$\ddot{c}_{x}$ [m]")
         plt.ylabel("$\delta m/  \delta \ddot{c}_{y}$")
         plt.legend()
 
-        plt.subplot(438)
+        plt.subplot(326)
         plt.grid()
         plt.ylim((-y_lim, y_lim))
         plt.xlabel("$\ddot{c}_{y}$ [m]")
         plt.ylabel("$\delta m/  \delta \ddot{c}_{y}$")
-        plt.legend()
-
-        plt.subplot(439)
-        plt.grid()
-        plt.ylim((-y_lim, y_lim))
-        plt.xlabel("$\ddot{c}_{z}$ [m]")
-        plt.ylabel("$\delta m/  \delta \ddot{c}_{y}$")
-        plt.legend()
-
-        plt.subplot(4, 3, 10)
-        plt.grid()
-        plt.ylim((-y_lim, y_lim))
-        plt.xlabel("$\ddot{c}_{x}$ [m]")
-        plt.ylabel("$\delta m/  \delta \ddot{c}_{z}$")
-        plt.legend()
-
-        plt.subplot(4, 3, 11)
-        plt.grid()
-        plt.ylim((-y_lim, y_lim))
-        plt.xlabel("$\ddot{c}_{y}$ [m]")
-        plt.ylabel("$\delta m/  \delta \ddot{c}_{z}$")
-        plt.legend()
-
-        plt.subplot(4, 3, 12)
-        plt.grid()
-        plt.ylim((-y_lim, y_lim))
-        plt.xlabel("$\ddot{c}_{z}$ [m]")
-        plt.ylabel("$\delta m/  \delta \ddot{c}_{z}$")
         plt.legend()
 
 #learned_margin = LearnedAccMargin()
