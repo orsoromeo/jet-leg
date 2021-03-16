@@ -65,6 +65,7 @@ class FeasibleWrenchPolytope():
 
     def computedPolytopeConeIntersection(self, fwp_params, forcePolytopes):
         hs = forcePolytopes.getHalfspaces()
+        print "hs", hs
         result = []
         feasible_point = np.array([0.0, 0.0, 1.0])
 
@@ -74,6 +75,7 @@ class FeasibleWrenchPolytope():
         for i in range(0, contactsNumber):
             index = int(stanceIndex[i])
             h = np.array([hs[index]])
+            print h
             intersection = HalfspaceIntersection(h[0], feasible_point)
             vx = zip(*intersection.intersections)
             result.append(vx)

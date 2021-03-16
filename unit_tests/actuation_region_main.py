@@ -5,16 +5,13 @@ Created on Tue Jun 12 10:54:31 2018
 @author: Romeo Orsolino
 """
 
-import time
-import pylab
-import pypoman
+
 import numpy as np
 
-from context import jet_leg 
+from context import jet_leg
 
 from numpy import array, cross, dot, eye, hstack, vstack, zeros, matrix
-from numpy.linalg import norm
-from jet_leg.plotting_tools import Plotter
+
 
 from jet_leg.math_tools import Math
 from jet_leg.computational_dynamics import ComputationalDynamics

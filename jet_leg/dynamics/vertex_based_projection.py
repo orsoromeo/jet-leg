@@ -11,7 +11,8 @@ import numpy as np
 import scipy.spatial
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.constraints.constraints import Constraints
-
+from jet_leg.kinematics.kinematics_interface import KinematicsInterface
+from jet_leg.robots.robot_model_interface import RobotModelInterface
 
 class VertexBasedProjection():
     def minksum(self, a,b):
@@ -71,17 +72,16 @@ class VertexBasedProjection():
         for j in range(0,n):
             tau_x = vertices[0,j]
             tau_y = vertices[1,j]
-            v_new_x = - tau_y / mg
-            v_new_y = tau_x / mg
+            v_new_x = tau_y / mg
+            v_new_y = - tau_x / mg
             v_new = np.array([[v_new_x],[v_new_y]])
             vertices2d = np.hstack([vertices2d, v_new])
         #print 'number of com points', np.size(vertices2d,1)
         print vertices2d
         return vertices2d
+
     
-    
-    
-    def project(self, params):
+    def project(self, params, robot_name):
         start_t = time.time()
         contacts = params.getContactsPosWF()
         contactsNumber = np.size(contacts,0)
@@ -90,14 +90,23 @@ class VertexBasedProjection():
         r3 = contacts[2,:]        
         g = 9.81
         mg = params.getTotalMass()*g
-        normals = params.setContactNormals()
+        normals = params.getNormals()
         n1 = normals[0,:]
         n2 = normals[1,:]
         n3 = normals[2,:]
         math_lp = Math()
-        constr = Constraints()
+        kin = KinematicsInterface(robot_name)
+        robotModel = RobotModelInterface(robot_name)
+        constr = Constraints(kin, robotModel)
+
+        stanceLegs = params.getStanceFeet()
+        stanceIndex = params.getStanceIndex(stanceLegs)
+
+        torque_lims = constr.model.joint_torque_limits
+
+        print params.constraintMode
         
-        if constraint_mode == 'ONLY_ACTUATION':
+        if params.constraintMode[0] == 'ONLY_ACTUATION':
             tau_HAA = 80
             tau_HFE = 120
             tau_KFE = 120
@@ -107,24 +116,19 @@ class VertexBasedProjection():
             vertices_cl = np.array([[dx, dx, -dx, -dx, dx, dx, -dx, -dx],
                                  [dy, -dy, -dy, dy, dy, -dy, -dy, dy],
                                  [dz, dz, dz, dz, -dz, -dz, -dz, -dz]])
-            kin = HyQKinematics()
+
             foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
             contactsFourLegs = np.vstack([contacts, np.zeros((4-contactsNumber,3))])
-            q, q_dot, J_LF, J_RF, J_LH, J_RH,isOutOfWorkspace = kin.inverse_kin(np.transpose(contactsFourLegs[:,0]),
-                                                    np.transpose(foot_vel[:,0]),
-                                                    np.transpose(contactsFourLegs[:,1]),
-                                                    np.transpose(foot_vel[:,1]),
-                                                    np.transpose(contactsFourLegs[:,2]),
-                                                    np.transpose(foot_vel[:,2]))
-            J_LF, J_RF, J_LH, J_RH = kin.update_jacobians(q)
-            vertices_1 = np.transpose(constr.computeActuationPolygon(J_LF))
-            vertices_2 = np.transpose(constr.computeActuationPolygon(J_RF))
-            vertices_3 = np.transpose(constr.computeActuationPolygon(J_LH))
+            q = kin.inverse_kin(contactsFourLegs, foot_vel, stanceIndex)
+            J_LF, J_RF, J_LH, J_RH = kin.hyqKin.update_jacobians(q)
+            vertices_1 = np.transpose(constr.forcePolytopeConstr.computeLegActuationPolygon(J_LF, torque_lims[0]))
+            vertices_2 = np.transpose(constr.forcePolytopeConstr.computeLegActuationPolygon(J_RF, torque_lims[1]))
+            vertices_3 = np.transpose(constr.forcePolytopeConstr.computeLegActuationPolygon(J_LH, torque_lims[2]))
             #print vertices_1
             #print vertices_2
             #print vertices_3
             
-        elif constraint_mode == 'ONLY_FRICTION':
+        elif params.constraintMode[0] == 'ONLY_FRICTION':
         
             n1, n2, n3 = (math_lp.normalize(n) for n in [n1, n2, n3])
             R1, R2, R3 = (math_lp.rotation_matrix_from_normal(n) for n in [n1, n2, n3])
@@ -211,9 +215,9 @@ class VertexBasedProjection():
 #        
         # TODO: use pointsfZhull instead for "ONLY_FRICTION" option:
         #points2d = self.project_points(pointsfZhull, mg) #cimpute com points
-        if constraint_mode == 'ONLY_ACTUATION':
+        if params.constraintMode[0] == 'ONLY_ACTUATION':
             points2d = self.project_points(pointstZhull, mg) #cimpute com points
-        elif constraint_mode == 'ONLY_FRICTION':
+        elif params.constraintMode[0] == 'ONLY_FRICTION':
             points2d = self.project_points(pointsfZhull, mg) #cimpute com points
         
         #print points

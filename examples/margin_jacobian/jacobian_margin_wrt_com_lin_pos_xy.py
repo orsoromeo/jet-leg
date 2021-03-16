@@ -57,10 +57,10 @@ def computeAnalyticMarginAndDerivatives(stanceFeet, robot):
 
 def plotAnalyticMarginAndDerivatives(pos_margin_x, jac_com_pos_x, pos_margin_y, jac_com_pos_y, pos_margin_z, jac_com_pos_z, delta_pos_range_vec_x, delta_pos_range_vec_y, delta_pos_range_vec_z ):
     plt.subplot(321)
-    plt.plot(delta_pos_range_vec_x, pos_margin_x, 'r-o', markersize=2, label='analytic (iterative projection)')
+    plt.plot(delta_pos_range_vec_x, pos_margin_x, 'r-o', markersize=2, label='analytic')
 
     plt.subplot(322)
-    plt.plot(delta_pos_range_vec_y, pos_margin_y, 'r-o', markersize=2, label='analytic (iterative projection)')
+    plt.plot(delta_pos_range_vec_y, pos_margin_y, 'r-o', markersize=2, label='analytic')
 
     plt.subplot(323)
     plt.plot(delta_pos_range_vec_x, jac_com_pos_x[0, :], 'r-o', markersize=2, label='analytic (finite-diff)')
@@ -81,60 +81,66 @@ robot_name = 'anymal_coyote'
 learnedMargin = LearnedMargin()
 
 fig1 = plt.figure(1)
-fig1.suptitle("Analytic vs. Learned stability margin\n 4 stance feet (1111)")
+fig1.suptitle("4 stance feet")
 contacts = [1, 1, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('1111stance.txt')
-learnedMargin.set_plot_properties()
+learnedMargin.set_plot_properties(0.05, 0.25)
 fig1.savefig('../../figs/1111stance_pos.pdf')
 
 fig2 = plt.figure(2)
-fig2.suptitle("Analytic vs. Learned stability margin\n LF foot in swing (0111)")
+fig2.suptitle("LF foot in swing")
 contacts = [0, 1, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('0111stance.txt')
-learnedMargin.set_plot_properties()
+learnedMargin.set_plot_properties(-0.05, 0.15)
+fig2.savefig('../../figs/0111stance_pos.pdf')
 
 fig3 = plt.figure(3)
-fig3.suptitle("Analytic vs. Learned stability margin\n RF foot in swing (1011)")
+fig3.suptitle("RF foot in swing")
 contacts = [1, 0, 1, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('1011stance.txt')
-learnedMargin.set_plot_properties()
+learnedMargin.set_plot_properties(-0.05, 0.15)
+fig3.savefig('../../figs/1011stance_pos.pdf')
 
 fig4 = plt.figure(4)
-fig4.suptitle("Analytic vs. Learned stability margin\n LH foot in swing (1101)")
+fig4.suptitle("LH foot in swing")
 contacts = [1, 1, 0, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('1101stance.txt')
-learnedMargin.set_plot_properties()
+learnedMargin.set_plot_properties(-0.05, 0.15)
+fig4.savefig('../../figs/1101stance_pos.pdf')
 
 fig5 = plt.figure(5)
-fig5.suptitle("Analytic vs. Learned stability margin\n RH foot in swing (1110)")
+fig5.suptitle("RH foot in swing")
 contacts = [1, 1, 1, 0]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('1110stance.txt')
-learnedMargin.set_plot_properties()
+learnedMargin.set_plot_properties(-0.05, 0.15)
+fig5.savefig('../../figs/1110stance_pos.pdf')
 
 fig6 = plt.figure(6)
-fig6.suptitle("Analytic vs. Learned stability margin\n 2 stance feet (0110)")
+fig6.suptitle("LF and RH feet in swing")
 contacts = [0, 1, 1, 0]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('0110stance.txt')
-learnedMargin.set_plot_properties()
+learnedMargin.set_plot_properties(-0.15, 0.05)
+fig6.savefig('../../figs/0110stance_pos.pdf')
 
 fig7 = plt.figure(7)
-fig7.suptitle("Analytic vs. Learned stability margin\n 2 stance feet (1001)")
+fig7.suptitle("RF and LH feet in swing")
 contacts = [1, 0, 0, 1]
 mx, jx, my, jy, mz, jz, vx, vy, vz = computeAnalyticMarginAndDerivatives(contacts, robot_name)
 plotAnalyticMarginAndDerivatives(mx, jx, my, jy, mz, jz, vx, vy, vz)
 learnedMargin.plot_learned_margin('1001stance.txt')
-learnedMargin.set_plot_properties()
+learnedMargin.set_plot_properties(-0.15, 0.05)
+fig7.savefig('../../figs/1001stance_pos.pdf')
 
 plt.show()

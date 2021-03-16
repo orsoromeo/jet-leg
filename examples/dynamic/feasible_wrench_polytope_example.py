@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 plt.close('all')
 math = Math()
 
-''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal')'''
-robot_name = 'hyq'
+''' Set the robot's name (either 'hyq', 'hyqreal' or 'anymal_boxy')'''
+robot_name = 'anymal_boxy'
 
 ''' number of generators, i.e. rays/edges used to linearize the friction cone '''
 ng = 4
@@ -34,10 +34,10 @@ possible constraints for each foot:
  ONLY_FRICTION = only friction cone constraints are enforced
  FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
 '''
-constraint_mode_IP = ['FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION',
-                      'FRICTION_AND_ACTUATION']
+constraint_mode_IP = ['ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION',
+                      'ONLY_ACTUATION']
 
 # number of decision variables of the problem
 #n = nc*6
@@ -84,7 +84,8 @@ comp_dyn = ComputationalDynamics(robot_name)
 
 '''You now need to fill the 'params' object with all the relevant 
     informations needed for the computation of the IP'''
-params = IterativeProjectionParameters()
+
+params = IterativeProjectionParameters(robot_name)
 
 params.setContactsPosWF(contactsWF)
 params.externalCentroidalWrench = extCentroidalWrench
@@ -98,8 +99,15 @@ params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(comp_dyn.robotModel.robotModel.trunkMass)
 
+params = IterativeProjectionParameters(robot_name)
+comp_dyn = ComputationalDynamics(robot_name)
+params.setDefaultValues()
+
 '''I now check whether the given CoM configuration is stable or not'''
 C, d, isIKoutOfWorkSpace, forcePolytopes = comp_dyn.constr.getInequalities(params)
+
+print "force polytopes VX", forcePolytopes.getVertices()
+print "force polytopes HS", forcePolytopes.getHalfspaces()
 
 rbd = RigidBodyDynamics()
 

@@ -74,7 +74,7 @@ class Constraints:
 #                Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
-                Ctemp, d_cone, leg_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, joint_torque_lims, params.useContactTorque, contact_torque_lims)
+                Ctemp, d_cone, leg_polygon, isIKoutOfWorkSpace = self.forcePolytopeConstr.compute_actuation_constraints(j, joint_torque_lims, params.useContactTorque, contact_torque_lims, rpy)
                 leg_actuation_polygon[j] = leg_polygon
                 if isIKoutOfWorkSpace is False:
                     if params.useContactTorque:
@@ -113,6 +113,8 @@ class Constraints:
                 #print "stance idx", j
                 #print "currentLegForcePolytope ", self.currentLegForcePolytope.getVertices()
                 forcePolytopes.forcePolytope[j].setVertices(leg_actuation_polygon[j])
+            else:
+                print "is out of workspace!"
                 
             C = block_diag(C, Ctemp)
             d = np.hstack([d, d_cone])
