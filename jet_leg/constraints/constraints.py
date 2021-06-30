@@ -56,7 +56,7 @@ class Constraints:
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 
         start_t_ik = time.time()
-        self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
+        q, leg_jacobians, knees_pos = self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
         #print "IK time ", time.time() - start_t_ik
         #print ("q is ",q)
 
@@ -123,5 +123,5 @@ class Constraints:
             isIKoutOfWorkSpace = True
             print 'contactsNumber is zero, there are no stance legs set! This might be because Gazebo is in pause.'
             
-        return C, d, isIKoutOfWorkSpace, forcePolytopes
+        return C, d, isIKoutOfWorkSpace, forcePolytopes, q, knees_pos
     

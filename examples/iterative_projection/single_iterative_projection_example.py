@@ -34,7 +34,7 @@ IP_points = resulting 2D vertices
 actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
 computation_time = how long it took to compute the iterative projection
 '''
-IP_points, force_polytopes, IP_computation_time = comp_dyn.iterative_projection_bretl(params)
+IP_points, force_polytopes, IP_computation_time, joints_pos, knee_pos = comp_dyn.iterative_projection_bretl(params)
 
 #print "Inequalities", comp_dyn.ineq
 #print "actuation polygons"
@@ -75,7 +75,7 @@ stanceFeet = params.getStanceFeet()
 nc = np.sum(stanceFeet)
 stanceID = params.getStanceIndex(stanceFeet)
 force_scaling_factor = 1500
-#plt.plot(contacts[0:nc,0],contacts[0:nc,1],'ko',markersize=15)
+
 fz_tot = 0.0
 shoulder_position_WF = np.zeros((4,3))
 contactsWF = params.getContactsPosWF()
@@ -113,10 +113,16 @@ for j in range(0,nc): # this will only show the force polytopes of the feet that
     plotter.plot_polygon(np.transpose(IP_points))
     if (params.getConstraintModes()[idx] == 'ONLY_ACTUATION') or (params.getConstraintModes()[idx] == 'FRICTION_AND_ACTUATION'):
         plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[idx], contactsWF[idx,:], force_scaling_factor)
-        #print force_polytopes.getVertices()[idx]
+
 
 base_polygon = np.vstack([shoulder_position_WF, shoulder_position_WF[0,:]])
 ax.plot(base_polygon[:,0],base_polygon[:,1],base_polygon[:,2], '--k')
+
+for j in range(0, nc):
+    idx = int(stanceID[j])
+    knee = [float(knee_pos[3*idx]), float(knee_pos[3*idx+1]), float(knee_pos[3*idx+2])]
+    legs = np.vstack([shoulder_position_WF[j,:], knee, contactsWF[idx,:]])
+    ax.plot(legs[:,0],legs[:,1],legs[:,2], '-k')
 
 ''' 2D figure '''
 fig = plt.figure()

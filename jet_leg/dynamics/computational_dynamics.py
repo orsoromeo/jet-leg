@@ -108,9 +108,9 @@ class ComputationalDynamics:
 #        print 'mass ', robotMass
         eq = (A, t)  # A * x == t
 
-        C, d, isIKoutOfWorkSpace, actuation_polygons = self.constr.getInequalities(iterative_projection_params)
+        C, d, isIKoutOfWorkSpace, actuation_polygons, q_pos, knee_pos = self.constr.getInequalities(iterative_projection_params)
         ineq = (C, d)    
-        return proj, eq, ineq, actuation_polygons, isIKoutOfWorkSpace
+        return proj, eq, ineq, actuation_polygons, q_pos, knee_pos, isIKoutOfWorkSpace
         
     def reorganizeActuationPolytopes(self, actPolytope):
         outputPolytopeX = np.zeros((1,8))
@@ -177,7 +177,7 @@ class ComputationalDynamics:
 
         start_t_IP = time.time()
 #        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
-        proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
+        proj, self.eq, self.ineq, actuation_polygons, q_pos, knee_pos, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
         if isIKoutOfWorkSpace:
             return False, False, False
         else:
@@ -199,7 +199,7 @@ class ComputationalDynamics:
             compressed_hull = self.geom.clockwise_sort(compressed_hull)
             compressed_hull = compressed_hull
             computation_time = (time.time() - start_t_IP)
-            return compressed_hull, actuation_polygons, computation_time
+            return compressed_hull, actuation_polygons, computation_time, q_pos, knee_pos
         
         
     def instantaneous_actuation_region_bretl(self, stanceLegs, contacts, normals, total_mass, comWF = np.array([0.0,0.0,0.0])):

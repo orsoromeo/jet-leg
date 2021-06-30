@@ -8,7 +8,7 @@ import os
 class hyqrealKinematics():
     def __init__(self):
 
-        self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/../../resources/urdfs/hyqreal/'
+        self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/../../../resources/urdfs/hyqreal/'
         self.URDF = self.PKG + 'urdf/hyqreal.urdf'
         if self.PKG is None:
             self.robot = RobotWrapper.BuildFromURDF(self.URDF)
@@ -42,8 +42,8 @@ class hyqrealKinematics():
     def footInverseKinematicsFixedBase(self, foot_pos_des, frame_name):
         frame_id = self.model.getFrameId(frame_name)
         blockIdx = self.getBlockIndex(frame_name)
-        anymal_q0 = np.vstack([-0.1, 0.7, -1., -0.1, -0.7, 1., 0.1, 0.7,-1., 0.1,-0.7, 1.])
-        q = anymal_q0
+        q0 = np.vstack([-0.1, 0.7, -1., -0.1, -0.7, 1., 0.1, 0.7,-1., 0.1,-0.7, 1.])
+        q = q0
         eps = 0.005
         IT_MAX = 200
         DT = 1e-1
