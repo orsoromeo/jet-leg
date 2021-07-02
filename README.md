@@ -13,8 +13,9 @@ polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions
 ## What you can do with Jet-leg:
 - compute the Support region of legged robots as in [Bretl. et al. 2008](https://ieeexplore.ieee.org/abstract/document/4598894); 
 - compute the Feasible region of legged robots as in [Orsolino. et al. 2019](https://arxiv.org/abs/1903.07999#);
-- compute force polytopes of legged robots;
-- test various formulations of linear, convex or nonlinear optimization problems;
+- compute force polytopes of legged robots given their URDF;
+- compare different leg designs and understand their consequences on the robot's balancing capabilities; 
+- test various formulations of linear, convex or nonlinear trajectory optimization problems;
 
 
 ## Dependencies
