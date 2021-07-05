@@ -454,7 +454,7 @@ class IterativeProjectionParameters:
                               'FRICTION_AND_ACTUATION']
 
         comWF = np.array([0.0, 0.0, 0.0])
-        comWF_lin_acc = np.array([1.0, .0, .0])
+        comWF_lin_acc = np.array([0.0, .0, .0])
         comWF_ang_acc = np.array([.0, .0, .0])
 
         ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
@@ -537,7 +537,9 @@ class IterativeProjectionParameters:
                               'FRICTION_AND_ACTUATION']
 
         comWF = np.array([0.0, 0.0, 0.5])
-        comWF_lin_acc = np.array([1.0, .0, .0])
+        # comWF = np.array([0.64321608, 0., 0.68728643])
+
+        comWF_lin_acc = np.array([0.0, .0, .0])
         comWF_ang_acc = np.array([.0, .0, .0])
 
         ''' extForceW is an optional external pure force (no external torque for now) applied on the CoM of the robot.'''
@@ -549,7 +551,7 @@ class IterativeProjectionParameters:
         mu = 0.5
 
         ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-        stanceFeet = [1, 1, 0, 1]
+        stanceFeet = [1, 1, 1, 1]
 
         randomSwingLeg = random.randint(0, 3)
         tripleStance = False  # if you want you can define a swing leg using this variable
@@ -568,7 +570,8 @@ class IterativeProjectionParameters:
         normals = np.vstack([n1, n2, n3, n4])
 
         ''' Roll Pitch Yaw angles of the base link'''
-        rpy_base = np.array([0., -0.2, 0.0])  # units are rads
+        rpy_base = np.array([0., 0.0, 0.0])  # units are rads
+        # rpy_base = np.array([0., -0.3347509, 0.])  # units are rads
         rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
         W_R_B = rot.as_dcm()
 
@@ -581,11 +584,20 @@ class IterativeProjectionParameters:
         RF_foot = model.nominal_stance_RF
         LH_foot = model.nominal_stance_LH
         RH_foot = model.nominal_stance_RH
+        LF_foot[2] = 0.0
+        RF_foot[2] = 0.0
+        LH_foot[2] = 0.0
+        RH_foot[2] = 0.0
 
-        LF_foot = [0.3, 0.2, 0.0]
-        RF_foot = [0.4, -0.2, 0.4]
-        LH_foot = [-0.3, 0.2, 0.0]
-        RH_foot = [-0.3, -0.2, 0.0]
+        # LF_foot = [0.3, 0.2, 0.0]
+        # RF_foot = [0.3, -0.2, 0.0]
+        # LH_foot = [-0.3, 0.2, 0.0]
+        # RH_foot = [-0.3, -0.2, 0.0]
+
+        # LF_foot = [1.02,  0.2, 0.4]
+        # RF_foot = [0.94, -0.2, 0.4]
+        # LH_foot = [0.34,  0.2,  0.]
+        # RH_foot = [0.42, -0.2,  0.]
 
         contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
