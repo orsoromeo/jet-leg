@@ -9,6 +9,7 @@ import numpy as np
 from jet_leg.robots.hyq.hyq_model import HyqModel
 from jet_leg.robots.anymal.anymal_model import AnymalModel
 from jet_leg.robots.hyqreal.hyqreal_model import HyqrealModel
+from jet_leg.robots.lemo_EP0.lemo_EP0_model import LemoEP0Model
 
 
 class RobotModelInterface:
@@ -20,6 +21,8 @@ class RobotModelInterface:
             self.robotModel = AnymalModel(self.robotName)
         elif self.robotName == 'hyqreal':
             self.robotModel = HyqrealModel()
+        elif self.robotName == 'lemo_EP0':
+            self.robotModel = LemoEP0Model()
         else:
             print "Warning! could not set robot model!"
 

@@ -11,6 +11,7 @@ from jet_leg.dynamics.rigid_body_dynamics import RigidBodyDynamics
 from jet_leg.robots.hyq.hyq_kinematics import HyQKinematics
 from jet_leg.robots.anymal.anymal_kinematics import anymalKinematics
 from jet_leg.robots.hyqreal.hyqreal_kinematics import hyqrealKinematics
+from jet_leg.robots.lemo_EP0.lemo_EP0_kinematics import LemoEP0Kinematics
 
 
 class KinematicsInterface:
@@ -25,6 +26,8 @@ class KinematicsInterface:
             self.anymalKin = anymalKinematics(self.robotName)
         elif self.robotName == 'hyqreal':
             self.hyqrealKin = hyqrealKinematics()
+        elif self.robotName == 'lemo_EP0':
+            self.lemoEP0Kin = LemoEP0Kinematics()
         else:
             print "Warning! could not set kinematic model"
 
@@ -33,6 +36,8 @@ class KinematicsInterface:
             return self.hyqKin.getLegJacobians()
         elif self.robotName == 'hyqreal':
             return self.hyqrealKin.getLegJacobians()
+        elif self.robotName == 'lemo_EP0':
+            return self.lemoEP0Kin.getLegJacobians()
         elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
             return self.anymalKin.getLegJacobians()
         else:
@@ -44,12 +49,15 @@ class KinematicsInterface:
             q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel)
             return q
         elif self.robotName == 'hyqreal':
-            q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF, stance_idx)
+            q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
+            return q
+        elif self.robotName == 'lemo_EP0':
+            q = self.lemoEP0Kin.fixedBaseInverseKinematics(contactsBF)
             return q
         elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
             q, legIkSuccess = self.anymalKin.fixedBaseInverseKinematics(contactsBF, stance_idx)
             return q, legIkSuccess
         else:
             print "Warning! Could not define IK."
-            return false
+            return False
 
