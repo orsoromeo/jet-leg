@@ -537,7 +537,7 @@ class IterativeProjectionParameters:
                               'FRICTION_AND_ACTUATION']
 
         comWF = np.array([0.0, 0.0, 0.5])
-        # comWF = np.array([0.50251256, 0., 0.61613065])
+        # comWF = np.array([0.52020202, 0., 0.59212121])
 
         comWF_lin_acc = np.array([0.0, .0, .0])
         comWF_ang_acc = np.array([.0, .0, .0])
@@ -571,7 +571,7 @@ class IterativeProjectionParameters:
 
         ''' Roll Pitch Yaw angles of the base link'''
         rpy_base = np.array([0., 0.0, 0.0])  # units are rads
-        # rpy_base = np.array([0., -0.84132634, 0.])  # units are rads
+        # rpy_base = np.array([0., -0.86030799, 0.])  # units are rads
         rot = Rot.from_euler('xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
         W_R_B = rot.as_dcm()
 
@@ -594,9 +594,9 @@ class IterativeProjectionParameters:
         # LH_foot = [-0.3, 0.2, 0.0]
         # RH_foot = [-0.3, -0.2, 0.0]
 
-        # LF_foot = [0.86,  0.2, 0.45]
-        # RF_foot = [0.78, -0.2, 0.45]
-        # LH_foot = [0.18,  0.2, 0.]
+        # LF_foot = [0.86,  0.2, 0.5]
+        # RF_foot = [0.86, -0.2, 0.5]
+        # LH_foot = [0.26,  0.2, 0.]
         # RH_foot = [0.26, -0.2, 0.]
 
         contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))

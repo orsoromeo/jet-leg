@@ -102,21 +102,58 @@ class LemoEP0Kinematics():
 
         return q, foot_jac, err, knee_pos, hip_pos, ik_success
 
-    def fixedBaseInverseKinematics(self, feetPosDes):
+    def fixedBaseInverseKinematics(self, feetPosDes, stance_idx):
 
-        leg_ik_success = [False]*4
-
-        f_p_des = np.array(feetPosDes[0,:]).T
-        q_LF, self.LF_foot_jac, err, knee_pos_LF, hip_pos_LF, leg_ik_success[0] = self.footInverseKinematicsFixedBase(0 ,f_p_des, self.urdf_foot_name_lf, self.urdf_knee_name_lf, self.urdf_hip_name_lf)
-
-        f_p_des = np.array(feetPosDes[2, :]).T
-        q_LH, self.LH_foot_jac, err, knee_pos_LH, hip_pos_LH, leg_ik_success[2] = self.footInverseKinematicsFixedBase(2, f_p_des, self.urdf_foot_name_lh, self.urdf_knee_name_lh, self.urdf_hip_name_lh)
-
-        f_p_des = np.array(feetPosDes[1, :]).T
-        q_RF, self.RF_foot_jac, err, knee_pos_RF, hip_pos_RF, leg_ik_success[1] = self.footInverseKinematicsFixedBase(1, f_p_des, self.urdf_foot_name_rf, self.urdf_knee_name_rf, self.urdf_hip_name_rf)
-
-        f_p_des = np.array(feetPosDes[3, :]).T
-        q_RH, self.RH_foot_jac, err, knee_pos_RH, hip_pos_RH, leg_ik_success[3] = self.footInverseKinematicsFixedBase(3, f_p_des, self.urdf_foot_name_rh, self.urdf_knee_name_rh, self.urdf_hip_name_rh)
+        self.LF_foot_jac = []
+        self.LH_foot_jac = []
+        self.RF_foot_jac = []
+        self.RH_foot_jac = []
+        q_LF = np.zeros((3,1))
+        q_RF = np.zeros((3,1))
+        q_LH = np.zeros((3,1))
+        q_RH = np.zeros((3,1))
+        knee_pos_LF = np.zeros((3, 1))
+        knee_pos_RF = np.zeros((3, 1))
+        knee_pos_LH = np.zeros((3, 1))
+        knee_pos_RH = np.zeros((3, 1))
+        hip_pos_LF = np.zeros((3, 1))
+        hip_pos_RF = np.zeros((3, 1))
+        hip_pos_LH = np.zeros((3, 1))
+        hip_pos_RH = np.zeros((3, 1))
+        self.leg_ik_success = [False, False, False, False]
+        number_of_stance_feet = np.shape(stance_idx)[0]
+        leg_ik_success = [False] * 4
+        for k in np.arange(0, number_of_stance_feet):
+            stance_leg_id = int(stance_idx[k])
+            if stance_leg_id == 0:
+                f_p_des = np.array(feetPosDes[0, :]).T
+                q_LF, self.LF_foot_jac, err, knee_pos_LF, hip_pos_LF, leg_ik_success[0] = self.footInverseKinematicsFixedBase(0, f_p_des,
+                                                                                             self.urdf_foot_name_lf, self.urdf_knee_name_lf, self.urdf_hip_name_lf)
+            if stance_leg_id == 1:
+                f_p_des = np.array(feetPosDes[1, :]).T
+                q_RF, self.RF_foot_jac, err, knee_pos_RF, hip_pos_RF, leg_ik_success[1] = self.footInverseKinematicsFixedBase(1, f_p_des,
+                                                                                             self.urdf_foot_name_rf, self.urdf_knee_name_rf, self.urdf_hip_name_rf)
+            if stance_leg_id == 2:
+                f_p_des = np.array(feetPosDes[2, :]).T
+                q_LH, self.LH_foot_jac, err, knee_pos_LH, hip_pos_LH, leg_ik_success[2] = self.footInverseKinematicsFixedBase(2, f_p_des,
+                                                                                             self.urdf_foot_name_lh, self.urdf_knee_name_lh, self.urdf_hip_name_lh)
+            if stance_leg_id == 3:
+                f_p_des = np.array(feetPosDes[3, :]).T
+                q_RH, self.RH_foot_jac, err, knee_pos_RH, hip_pos_RH, leg_ik_success[3] = self.footInverseKinematicsFixedBase(3, f_p_des,
+                                                                                             self.urdf_foot_name_rh, self.urdf_knee_name_rh, self.urdf_hip_name_rh)
+        # leg_ik_success = [False]*4
+        #
+        # f_p_des = np.array(feetPosDes[0,:]).T
+        # q_LF, self.LF_foot_jac, err, knee_pos_LF, hip_pos_LF, leg_ik_success[0] = self.footInverseKinematicsFixedBase(0 ,f_p_des, self.urdf_foot_name_lf, self.urdf_knee_name_lf, self.urdf_hip_name_lf)
+        #
+        # f_p_des = np.array(feetPosDes[2, :]).T
+        # q_LH, self.LH_foot_jac, err, knee_pos_LH, hip_pos_LH, leg_ik_success[2] = self.footInverseKinematicsFixedBase(2, f_p_des, self.urdf_foot_name_lh, self.urdf_knee_name_lh, self.urdf_hip_name_lh)
+        #
+        # f_p_des = np.array(feetPosDes[1, :]).T
+        # q_RF, self.RF_foot_jac, err, knee_pos_RF, hip_pos_RF, leg_ik_success[1] = self.footInverseKinematicsFixedBase(1, f_p_des, self.urdf_foot_name_rf, self.urdf_knee_name_rf, self.urdf_hip_name_rf)
+        #
+        # f_p_des = np.array(feetPosDes[3, :]).T
+        # q_RH, self.RH_foot_jac, err, knee_pos_RH, hip_pos_RH, leg_ik_success[3] = self.footInverseKinematicsFixedBase(3, f_p_des, self.urdf_foot_name_rh, self.urdf_knee_name_rh, self.urdf_hip_name_rh)
 
         for legId in np.arange(0,4):
             if leg_ik_success[legId] is False:
@@ -126,8 +163,8 @@ class LemoEP0Kinematics():
         q = np.vstack([q_LF, q_LH, q_RF, q_RH])
         knees_pos = np.vstack([knee_pos_LF, knee_pos_RF, knee_pos_LH, knee_pos_RH])
         hip_pos = np.vstack([hip_pos_LF, hip_pos_RF, hip_pos_LH, hip_pos_RH])
-        legJacs = np.vstack([self.LF_foot_jac, self.LH_foot_jac, self.RF_foot_jac, self.RH_foot_jac])
-        return q, legJacs, knees_pos, hip_pos
+        # legJacs = np.vstack([self.LF_foot_jac, self.LH_foot_jac, self.RF_foot_jac, self.RH_foot_jac])
+        return q, knees_pos, hip_pos
 
     def getLegJacobians(self):
         isOutOfWS = False

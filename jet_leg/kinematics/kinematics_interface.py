@@ -52,7 +52,7 @@ class KinematicsInterface:
             q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
             return q
         elif self.robotName == 'lemo_EP0':
-            q = self.lemoEP0Kin.fixedBaseInverseKinematics(contactsBF)
+            q = self.lemoEP0Kin.fixedBaseInverseKinematics(contactsBF, stance_idx)
             return q
         elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
             q, legIkSuccess = self.anymalKin.fixedBaseInverseKinematics(contactsBF, stance_idx)

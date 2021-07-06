@@ -56,7 +56,7 @@ class Constraints:
         foot_vel = np.array([[0, 0, 0],[0, 0, 0],[0, 0, 0],[0, 0, 0]])
 
         start_t_ik = time.time()
-        q, leg_jacobians, knees_pos, hips_pos = self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
+        q, knees_pos, hips_pos = self.kin.inverse_kin(contactsBF, foot_vel, stanceIndex)
         #print "IK time ", time.time() - start_t_ik
         #print ("q is ",q)
 
