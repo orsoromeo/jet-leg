@@ -31,30 +31,31 @@ params.setDefaultValuesWrtWorld()
 
 
 ''' Generate trajectory of footholds'''
-step_height = 0.2
+step_height = 0.45
 step_distance = 0.5
 
-des_height = 0.45
+des_height = 0.38
 start_point = [0.0, 0.0, des_height]
 dist_from_goal = 2.0*step_distance
 goal_point = [dist_from_goal, 0.0, des_height + step_height]
 
 avg_pitch = np.arcsin(des_height/dist_from_goal)
 print 'avg pitch', avg_pitch
+mid_pitch = -avg_pitch*2.1
 
 N = 200
 T = 0.1
 base_lin_traj = np.linspace(start_point , goal_point, num=N)
 
 start_orient = [ 0.0, 0.0, 0.0]
-mid_orient = [0.0, -avg_pitch, 0.0]
+mid_orient = [0.0, mid_pitch, 0.0]
 goal_orient = start_orient
 base_orient_traj = np.vstack([np.linspace(start_orient , mid_orient, num=N/2), np.linspace(mid_orient , goal_orient, num=N/2)])
 current_footholds = copy(params.getContactsPosWF())
 step_lenght = [0.1, 0.0, 0.0]
 in_stance = [True, True, True, True]
 
-phase_offsets = np.array([0.0, 0.5, 0.5, 0.])
+phase_offsets = np.array([0.0, 0.5, 0.5, 0.0])
 duty_factor = 0.75
 swing_duration = 0.4
 gait_duration = swing_duration/(1.0 - duty_factor)
@@ -68,9 +69,12 @@ step_idx = [0, 0, 0, 0]
 next_liftoff_time = phase_offsets*gait_duration
 next_touchdown_time = next_liftoff_time+swing_duration
 
+margin_list = list()
+time_list = list()
+
 for i in range(0, N):
     t = i*T
-    print 'iter',i, 'time', t
+    print '====================> iter',i, 'time', t
     com_des = np.array([base_lin_traj[i, 0], base_lin_traj[i, 1], base_lin_traj[i, 2]])
     for leg in range(0, 4):
         if(t > next_liftoff_time[leg]):
@@ -86,12 +90,12 @@ for i in range(0, N):
         if (t >= next_touchdown_time[leg]):
             in_stance[leg] = True
 
-    # print 'stance legs number:',np.sum(np.array(in_stance))
-    # print 'step times', next_liftoff_time
-    # print 'touch down times', next_touchdown_time
-    # print 'step_idx', step_idx
-    # print 'current footholds', current_footholds
-    # print 'in stance', in_stance
+    print 'stance legs number:',np.sum(np.array(in_stance))
+    print 'step times', next_liftoff_time
+    print 'touch down times', next_touchdown_time
+    print 'step_idx', step_idx
+    print 'current footholds', current_footholds
+    print 'in stance', in_stance
 
     ''' Set current parameters'''
     params.setCoMPosWF(com_des)
@@ -109,6 +113,7 @@ for i in range(0, N):
     contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
     print 'current contacts wrt WF', contactsWF
     params.setContactsPosWF(contactsWF)
+    params.setActiveContacts(in_stance)
     ''' compute iterative projection
     Outputs of "iterative_projection_bretl" are:
     IP_points = resulting 2D vertices
@@ -123,6 +128,8 @@ for i in range(0, N):
     isPointFeasible, margin = comp_geom.isPointRedundant(facets, point2check)
     print "isPointFeasible: ", isPointFeasible
     print "Margin is: ", margin
+    margin_list.append(margin)
+    time_list.append(t)
 
     ''' compute Instantaneous Capture Point (ICP) and check if it belongs to the feasible region '''
     if params.useInstantaneousCapturePoint:
@@ -131,6 +138,7 @@ for i in range(0, N):
         params.instantaneousCapturePoint = icp
         lpCheck = LpVertexRedundnacy()
         isIcpInsideFeasibleRegion, lambdas = lpCheck.isPointRedundant(IP_points.T, icp)
+
 
 # '''Plotting the contact points in the 3D figure'''
 # fig = plt.figure()
@@ -227,3 +235,11 @@ for i in range(0, N):
 # plt.ylabel("Y [m]")
 # plt.legend()
 # plt.show()
+
+
+fig = plt.figure()
+plt.plot(time_list, margin_list)
+plt.grid()
+plt.ylabel("margin [m]")
+plt.xlabel("time [s]")
+plt.show()
