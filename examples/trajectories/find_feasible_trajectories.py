@@ -31,21 +31,24 @@ params.setDefaultValuesWrtWorld()
 
 
 ''' Generate trajectory of footholds'''
-step_height = 0.45
+step_height = 0.5
 step_distance = 0.5
 
 des_height = 0.38
 start_point = [0.0, 0.0, des_height]
+mid_height = step_height/2.0 + 0.33
+mid_point = [step_distance, 0.0, mid_height]
 dist_from_goal = 2.0*step_distance
 goal_point = [dist_from_goal, 0.0, des_height + step_height]
 
 avg_pitch = np.arcsin(des_height/dist_from_goal)
 print 'avg pitch', avg_pitch
-mid_pitch = -avg_pitch*2.1
+mid_pitch = -avg_pitch*2.3
 
 N = 200
 T = 0.1
 base_lin_traj = np.linspace(start_point , goal_point, num=N)
+base_lin_traj = np.vstack([np.linspace(start_point , mid_point, num=N/2), np.linspace(mid_point , goal_point, num=N/2)])
 
 start_orient = [ 0.0, 0.0, 0.0]
 mid_orient = [0.0, mid_pitch, 0.0]
