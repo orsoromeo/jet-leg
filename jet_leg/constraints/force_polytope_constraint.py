@@ -38,7 +38,7 @@ class ForcePolytopeConstraint:
                 jacobianMatrices, torque_limits)
             rot = Rot.from_euler(
                 'xyz', [euler_angles[0], euler_angles[1], euler_angles[2]], degrees=False)
-            W_R_B = rot.as_dcm()
+            W_R_B = rot.as_matrix()
             current_actuation_polygon_WF = W_R_B.dot(
                 actuation_polygons[contact_iterator])
             #current_actuation_polygon = actuation_polygons[contact_iterator]

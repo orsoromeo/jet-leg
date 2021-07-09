@@ -88,7 +88,7 @@ contactsBF = params.getContactsPosBF()
 rpy_base = params.getOrientation()
 rot = Rot.from_euler(
     'xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
-W_R_B = rot.as_dcm()
+W_R_B = rot.as_matrix()
 for j in range(0, nc):  # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ax.scatter(contactsWF[idx, 0], contactsWF[idx, 1],
