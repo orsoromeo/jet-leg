@@ -105,13 +105,14 @@ for j in range(0, nc):  # this will only show the contact positions and normals 
                 [contactsWF[idx, 2], contactsWF[idx, 2]+normals[idx, 2]/10], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
 
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
-shoulder_position_BF = [
-    float(hips_pos[3*idx]), float(hips_pos[3*idx+1]), float(hips_pos[3*idx+2])]
-rpy = params.getOrientation()
-shoulder_position_WF[j, :] = W_R_B.dot(shoulder_position_BF) + comWF
-ax.scatter(shoulder_position_WF[j, 0], shoulder_position_WF[j,
-                                                            1], shoulder_position_WF[j, 2], c='k', s=100)
-ax.add_artist(a)
+    print('hip pos', hips_pos[0])
+    shoulder_position_BF = [
+        float(hips_pos[idx][0]), float(hips_pos[idx][1]), float(hips_pos[idx][2])]
+    rpy = params.getOrientation()
+    shoulder_position_WF[j, :] = W_R_B.dot(shoulder_position_BF) + comWF
+    ax.scatter(shoulder_position_WF[j, 0], shoulder_position_WF[j,
+                                                                1], shoulder_position_WF[j, 2], c='k', s=100)
+    ax.add_artist(a)
 
 ''' plotting Iterative Projection points '''
 plotter = Plotter()
@@ -119,13 +120,13 @@ for j in range(0, nc):  # this will only show the force polytopes of the feet th
     idx = int(stanceID[j])
     plotter.plot_polygon(np.transpose(IP_points))
     if (params.getConstraintModes()[idx] == 'ONLY_ACTUATION') or (params.getConstraintModes()[idx] == 'FRICTION_AND_ACTUATION'):
-plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[
-                               idx], contactsWF[idx, :], force_scaling_factor)
+        plotter.plot_actuation_polygon(ax, force_polytopes.getVertices()[
+            idx], contactsWF[idx, :], force_scaling_factor)
 
 for j in range(0, nc):
     idx = int(stanceID[j])
-    knee_BF = [float(knee_pos[3*idx]), float(knee_pos[3*idx+1]),
-               float(knee_pos[3*idx+2])]
+    knee_BF = [float(knee_pos[idx][0]), float(knee_pos[idx][1]),
+               float(knee_pos[idx][2])]
     knee_pos_WF = W_R_B.dot(knee_BF) + comWF
     legs = np.vstack([shoulder_position_WF[j, :],
                      knee_pos_WF, contactsWF[idx, :]])
@@ -133,7 +134,7 @@ for j in range(0, nc):
 
 for j in range(0, 4):
     shoulder_position_BF = [
-        float(hips_pos[3 * j]), float(hips_pos[3 * j + 1]), float(hips_pos[3 * j + 2])]
+        float(hips_pos[j][0]), float(hips_pos[j][1]), float(hips_pos[j][2])]
     rpy = params.getOrientation()
     shoulder_position_WF[j, :] = W_R_B.dot(shoulder_position_BF) + comWF
 tmp = copy(shoulder_position_WF[2, :])

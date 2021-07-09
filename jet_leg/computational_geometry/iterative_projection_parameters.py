@@ -546,9 +546,7 @@ class IterativeProjectionParameters:
         randomSwingLeg = random.randint(0, 3)
         tripleStance = False  # if you want you can define a swing leg using this variable
         if tripleStance:
-            print 'Swing leg', randomSwingLeg
             stanceFeet[randomSwingLeg] = 0
-        print 'stanceLegs ', stanceFeet
 
         ''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
         axisZ = np.array([[0.0], [0.0], [1.0]])
@@ -568,7 +566,7 @@ class IterativeProjectionParameters:
         # rpy_base = np.array([0., -0.48869983, 0.])  # units are rads
         rot = Rot.from_euler(
             'xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
-        W_R_B = rot.as_dcm()
+        W_R_B = rot.as_matrix()
 
         '''You now need to fill the 'params' object with all the relevant 
             informations needed for the computation of the IP'''

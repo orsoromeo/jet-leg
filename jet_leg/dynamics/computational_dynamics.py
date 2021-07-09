@@ -158,7 +158,6 @@ class ComputationalDynamics:
         try:
             compressed_hull, actuation_polygons, computation_time, q_pos, knee_pos, hips_pos = self.iterative_projection_bretl(
                 iterative_projection_params, saturate_normal_force)
-            print "computation time ", computation_time
             return compressed_hull, actuation_polygons, computation_time, q_pos, knee_pos, hips_pos
         except ValueError as err:
             print(err.args)
