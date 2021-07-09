@@ -24,7 +24,7 @@ class RobotModelInterface:
         elif self.robotName == 'lemo_EP0':
             self.robotModel = LemoEP0Model()
         else:
-            print "Warning! could not set robot model!"
+            print("Warning! could not set robot model!")
 
         self.joint_torque_limits = self.robotModel.joint_torque_limits
         self.contact_torque_limits = self.robotModel.contact_torque_limits

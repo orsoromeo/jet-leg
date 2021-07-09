@@ -17,11 +17,12 @@ from jet_leg.computational_geometry.geometry import Geometry
 from cvxopt import matrix, solvers
 import time
 
+
 class LpVertexRedundnacy():
 
     def isPointRedundant(self, vertices, point):
         #vertices = np.array([[1.0, 1.0, -1.0,-1.0], [1.0,-1.0, 1.0,-1.0]])
-        #vertices = np.array([[1.0, 1.0, -1.0,-1.0, 1.0, 1.0, -1.0,-1.0],
+        # vertices = np.array([[1.0, 1.0, -1.0,-1.0, 1.0, 1.0, -1.0,-1.0],
         #                     [1.0,-1.0, 1.0,-1.0, 1.0,-1.0, 1.0,-1.0],
         #                     [0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0]])
         #point = [-0.5, -0.5, 3.0]
@@ -44,24 +45,17 @@ class LpVertexRedundnacy():
         maximize    -h'*z - b'*y
         subject to  G'*z + A'*y + c = 0
                     z >= 0. '''
-        
-        dimensionality, numberOfVertices = np.shape(polytopeVertices) # vertices must be along the columns
-        #print "num of vertices", numberOfVertices
+
+        dimensionality, numberOfVertices = np.shape(
+            polytopeVertices)  # vertices must be along the columns
         p = matrix(np.zeros(numberOfVertices))
         A1 = matrix(polytopeVertices)
-        A2 = matrix(np.ones((1,numberOfVertices)))
-        #print A2
+        A2 = matrix(np.ones((1, numberOfVertices)))
         A = matrix(np.vstack([A1, A2]))
         b1 = matrix(point2check)
-        b2 = 1.0 # sum of all the multipliers equal 1
+        b2 = 1.0  # sum of all the multipliers equal 1
         b = matrix(np.vstack([b1, b2]))
         G = -matrix(np.eye(numberOfVertices))
         h = matrix(np.zeros(numberOfVertices))
-        #print "p", p
-        #print "G", G
-        #print "h", h
-        #print "A", A
-        #print "B", b
         lp = p, G, h, A, b
-        #print "is redundant", p, G, h, A, b
         return lp

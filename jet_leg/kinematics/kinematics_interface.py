@@ -29,7 +29,7 @@ class KinematicsInterface:
         elif self.robotName == 'lemo_EP0':
             self.lemoEP0Kin = LemoEP0Kinematics()
         else:
-            print "Warning! could not set kinematic model"
+            print("Warning! could not set kinematic model")
 
     def get_jacobians(self):
         if self.robotName == 'hyq':
@@ -41,7 +41,7 @@ class KinematicsInterface:
         elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
             return self.anymalKin.getLegJacobians()
         else:
-            print "Warning! Could not get jacobian matrix."
+            print("Warning! Could not get jacobian matrix.")
 
     def inverse_kin(self, contactsBF, foot_vel, stance_idx):
 
@@ -52,12 +52,13 @@ class KinematicsInterface:
             q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)
             return q
         elif self.robotName == 'lemo_EP0':
-            q = self.lemoEP0Kin.fixedBaseInverseKinematics(contactsBF, stance_idx)
+            q = self.lemoEP0Kin.fixedBaseInverseKinematics(
+                contactsBF, stance_idx)
             return q
         elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
-            q, legIkSuccess = self.anymalKin.fixedBaseInverseKinematics(contactsBF, stance_idx)
+            q, legIkSuccess = self.anymalKin.fixedBaseInverseKinematics(
+                contactsBF, stance_idx)
             return q, legIkSuccess
         else:
-            print "Warning! Could not define IK."
+            print("Warning! Could not define IK.")
             return False
-
