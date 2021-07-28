@@ -21,7 +21,7 @@ class ZeroMomentPoint():
 
     def computeZeroMomentPoint(self, com_pos_WF, com_acc_WF, robot_height, gravity = -9.81):
         omega = np.sqrt(-gravity/robot_height)
-        print "com_acc_WF", com_acc_WF
+        # print "com_acc_WF", com_acc_WF
         omega_sqrd = omega**2
         self.zmp = com_pos_WF[0:2] - com_acc_WF[0:2]/omega_sqrd
         return self.zmp

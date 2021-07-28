@@ -75,7 +75,8 @@ class LemoEP0Kinematics():
                 break
             if i >= IT_MAX:
                 print("\n Warning: the iterative algorithm has not reached convergence to the desired precision. Error is: ", np.linalg.norm(e))
-                raise Exception('FailedConvergence at blockIdx', blockIdx)
+                break
+                #raise Exception('FailedConvergence at blockIdx', blockIdx)
             J = pinocchio.frameJacobian(self.model, self.data, q, foot_frame_id)
             J_lin = J[:3, :]
             v = - np.linalg.pinv(J_lin) * e
@@ -89,16 +90,19 @@ class LemoEP0Kinematics():
     def footInverseKinematicsFixedBase(self, leg_id, foot_pos_des, foot_frame_name, knee_frame_name, hip_frame_name):
         q, foot_jac, err, knee_pos, hip_pos = self.footInverseKinematicsFixedBaseUnsafe(foot_pos_des, foot_frame_name, knee_frame_name, hip_frame_name)
         ik_success = True
+
         if(self.check_joint_kinematic_lims):
             for j in range(0,3):
                 if(q[j] >= self.model.upperPositionLimit[leg_id*3+j]):
                     ik_success = False
-                    raise Exception('Maximum kinematic limit violated at leg', leg_id, 'joint',j,': q is', float(q[j
+                    print('Maximum kinematic limit violated at leg', leg_id, 'joint',j,': q is', float(q[j
                         ]), 'and q max is', float(self.model.upperPositionLimit[leg_id*3+j]))
+                    raise
                 elif(q[j] <= self.model.lowerPositionLimit[leg_id*3+j]):
                     ik_success = False
-                    raise Exception('Min kinematic limit violated at leg', leg_id, 'joint', j, ': q is', float(q[
+                    print('Min kinematic limit violated at leg', leg_id, 'joint', j, ': q is', float(q[
                         j]), 'and q min is', float(self.model.lowerPositionLimit[leg_id * 3 + j]))
+                    raise
 
         return q, foot_jac, err, knee_pos, hip_pos, ik_success
 
@@ -143,6 +147,7 @@ class LemoEP0Kinematics():
         for legId in np.arange(0,4):
             if leg_ik_success[legId] is False:
                 print('--- > Warning, IK failed. Jacobian is singular. Leg id is', legId)
+                raise Exception('raise exception')
 
         '''please NOTICE here the alphabetical order of the legs in the vector q: LF -> LH -> RF -> RH '''
         q = np.vstack([q_LF, q_LH, q_RF, q_RH])

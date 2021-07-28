@@ -36,7 +36,7 @@ class Constraints:
         contactsNumber = np.sum(stanceLegs)
 
         contactsBF = copy.copy(params.computeContactsPosBF())
-        print "contacts BF ", contactsBF
+        # print "contacts BF ", contactsBF
         #print 'stance legs ', stanceLegs
         
         constraint_mode = params.getConstraintModes()

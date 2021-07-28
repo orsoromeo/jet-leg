@@ -171,7 +171,7 @@ class ComputationalDynamics:
         except ValueError as err:
             print 'Could not compute the feasible region'
             print(err.args)
-            return False, False, False
+            return False, False, False, False, False, False
 
     def iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
 
