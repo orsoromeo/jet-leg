@@ -11,6 +11,7 @@ from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
 from scipy.spatial import HalfspaceIntersection
 from cvxopt import matrix
 
+
 class FeasibleWrenchPolytope():
     def __init__(self, params):
         self.vProj = VertexBasedProjection()
@@ -19,14 +20,13 @@ class FeasibleWrenchPolytope():
 
     def checkDynamicStability(self, FWP, w_gi):
         isPointRedundant, lambdas = self.lp.isPointRedundant(FWP, w_gi)
-        # print "is point redundant? ", isPointRedundant, lambdas
         if isPointRedundant:
             isStateStable = True
         else:
             isStateStable = False
         return isStateStable
 
-    #def computeAggregatedCentroidalWrench(self, fwp_params):
+    # def computeAggregatedCentroidalWrench(self, fwp_params):
     #    static_linear = np.array([0.0, 0.0, fwp_params.getTotalMass() * -9.81])
     #    com_pos_WF = fwp_params.getCoMPosWF()
     #    static_angular = np.cross(com_pos_WF, static_linear)
@@ -35,7 +35,6 @@ class FeasibleWrenchPolytope():
     #    inertial_angular = fwp_params.getCoMLinAcc() # TODO: add the inertial matrix here
     #    linear_aggr_wrench = inertial_linear - static_linear
     #    angular_aggr_wrench = static_angular + inertial_angular
-    #    print linear_aggr_wrench
     #    w_gi = np.hstack([linear_aggr_wrench, angular_aggr_wrench])
     #    return w_gi
 
@@ -45,11 +44,9 @@ class FeasibleWrenchPolytope():
         wrenchPolytopes = []
         stanceLegs = fwp_params.getStanceFeet()
         stanceIndex = fwp_params.getStanceIndex(stanceLegs)
-        print stanceIndex
         contactsNumber = np.sum(stanceLegs)
         for i in range(0, contactsNumber):
             index = int(stanceIndex[i])
-            print index
             footPosWF = contactsWF[:, index]
             currentPolytope = np.array(forcePolygonsVertices[i])
             dim, numOfVertices = np.shape(currentPolytope)
@@ -65,7 +62,6 @@ class FeasibleWrenchPolytope():
 
     def computedPolytopeConeIntersection(self, fwp_params, forcePolytopes):
         hs = forcePolytopes.getHalfspaces()
-        print "hs", hs
         result = []
         feasible_point = np.array([0.0, 0.0, 1.0])
 
@@ -75,7 +71,6 @@ class FeasibleWrenchPolytope():
         for i in range(0, contactsNumber):
             index = int(stanceIndex[i])
             h = np.array([hs[index]])
-            print h
             intersection = HalfspaceIntersection(h[0], feasible_point)
             vx = zip(*intersection.intersections)
             result.append(vx)
@@ -90,10 +85,9 @@ class FeasibleWrenchPolytope():
          FRICTION_AND_ACTUATION = both friction cone constraints and joint-torque limits
         '''
         if self.constraint_modes[0] == 'FRICTION_AND_ACTUATION':
-            print 'FRICTION_AND_ACTUATION'
-            forcePolygonsVertices = self.computedPolytopeConeIntersection(params, forcePolytopes)
+            forcePolygonsVertices = self.computedPolytopeConeIntersection(
+                params, forcePolytopes)
         elif self.constraint_modes[0] == 'ONLY_ACTUATION':
-            print 'ONLY_ACTUATION'
             forcePolygonsVertices = forcePolytopes.getVertices()
         elif self.constraint_modes[0] == 'ONLY_FRICTION':
             forcePolygonsVertices = self.getPiramidsVertices()
@@ -102,12 +96,13 @@ class FeasibleWrenchPolytope():
 
     def computeFeasibleWrenchPolytopeVRep(self, fwp_params, forcePolytopes):
 
-        intersectionVx = self.get3DforcePolytopeVertices(fwp_params, forcePolytopes)
+        intersectionVx = self.get3DforcePolytopeVertices(
+            fwp_params, forcePolytopes)
         #forcePolygonsVertices = forcePolytopes.getVertices()
         #intersectionVx = self.computedPolytopeConeIntersection(fwp_params, forcePolytopes)
 
-
-        actuationWrenchPolytopesVRep = self.computeAngularPart(fwp_params, intersectionVx)
+        actuationWrenchPolytopesVRep = self.computeAngularPart(
+            fwp_params, intersectionVx)
         stanceLegs = fwp_params.getStanceFeet()
         contactsNumber = np.sum(stanceLegs)
         polytopesInContact = []
@@ -117,11 +112,8 @@ class FeasibleWrenchPolytope():
         tmpSum = np.array(polytopesInContact[0])
         for j in np.arange(0, contactsNumber - 1):
             nextPolygon = np.array(polytopesInContact[j + 1])
-            print np.shape(nextPolygon)
             tmpSum = self.vProj.minksum(tmpSum, nextPolygon)
 
-        print np.shape(tmpSum)
         currentPolygonSum = self.vProj.convex_hull(tmpSum)
-        print np.shape(currentPolygonSum)
 
         return currentPolygonSum

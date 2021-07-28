@@ -8,7 +8,8 @@ import os
 class LemoEP0Kinematics():
     def __init__(self):
         self.check_joint_kinematic_lims = True
-        self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/../../../resources/urdfs/lemo_EP0/'
+        self.PKG = os.path.dirname(os.path.abspath(
+            __file__)) + '/../../../resources/urdfs/lemo_EP0/'
         self.URDF = self.PKG + 'urdf/lemo_EP0.urdf'
         if self.PKG is None:
             self.robot = RobotWrapper.BuildFromURDF(self.URDF)
@@ -34,7 +35,6 @@ class LemoEP0Kinematics():
         self.urdf_hip_name_rf = 'FR_hip'
         self.urdf_hip_name_rh = 'HR_hip'
 
-
     def getBlockIndex(self, foot_frame_name):
         if foot_frame_name == self.urdf_foot_name_lf:
             idx = 0
@@ -52,7 +52,8 @@ class LemoEP0Kinematics():
         knee_frame_id = self.model.getFrameId(knee_frame_name)
         hip_frame_id = self.model.getFrameId(hip_frame_name)
         blockIdx = self.getBlockIndex(foot_frame_name)
-        q0 = np.vstack([0, 0.65, -1.45, 0, 0.65, -1.45, 0, 0.65, -1.45, 0.0, 0.65, -1.45])
+        q0 = np.vstack([0, 0.65, -1.45, 0, 0.65, -1.45,
+                       0, 0.65, -1.45, 0.0, 0.65, -1.45])
         q = q0
         eps = 0.005
         IT_MAX = 200
@@ -75,29 +76,28 @@ class LemoEP0Kinematics():
                 break
             if i >= IT_MAX:
                 print("\n Warning: the iterative algorithm has not reached convergence to the desired precision. Error is: ", np.linalg.norm(e))
-                break
-                #raise Exception('FailedConvergence at blockIdx', blockIdx)
-            J = pinocchio.frameJacobian(self.model, self.data, q, foot_frame_id)
+                raise Exception('FailedConvergence at blockIdx', blockIdx)
+            J = pinocchio.computeFrameJacobian(
+                self.model, self.data, q, foot_frame_id)
             J_lin = J[:3, :]
-            v = - np.linalg.pinv(J_lin) * e
+            v = - np.dot(np.linalg.pinv(J_lin), e)
             q = pinocchio.integrate(self.model, q, v * DT)
             i += 1
 
         q_leg = q[blockIdx:blockIdx+3]
-        J_leg = J_lin[:,blockIdx:blockIdx+3]
+        J_leg = J_lin[:, blockIdx:blockIdx+3]
         return q_leg, J_leg, err, knee_pos, hip_pos
 
     def footInverseKinematicsFixedBase(self, leg_id, foot_pos_des, foot_frame_name, knee_frame_name, hip_frame_name):
-        q, foot_jac, err, knee_pos, hip_pos = self.footInverseKinematicsFixedBaseUnsafe(foot_pos_des, foot_frame_name, knee_frame_name, hip_frame_name)
+        q, foot_jac, err, knee_pos, hip_pos = self.footInverseKinematicsFixedBaseUnsafe(
+            foot_pos_des, foot_frame_name, knee_frame_name, hip_frame_name)
         ik_success = True
 
         if(self.check_joint_kinematic_lims):
-            for j in range(0,3):
+            for j in range(0, 3):
                 if(q[j] >= self.model.upperPositionLimit[leg_id*3+j]):
                     ik_success = False
-                    print('Maximum kinematic limit violated at leg', leg_id, 'joint',j,': q is', float(q[j
-                        ]), 'and q max is', float(self.model.upperPositionLimit[leg_id*3+j]))
-                    raise
+                    raise Exception('Maximum kinematic limit violated at leg', leg_id, 'joint', j, ': q is', float(q[j]), 'and q max is', float(self.model.upperPositionLimit[leg_id*3+j]))
                 elif(q[j] <= self.model.lowerPositionLimit[leg_id*3+j]):
                     ik_success = False
                     print('Min kinematic limit violated at leg', leg_id, 'joint', j, ': q is', float(q[
@@ -112,10 +112,10 @@ class LemoEP0Kinematics():
         self.LH_foot_jac = []
         self.RF_foot_jac = []
         self.RH_foot_jac = []
-        q_LF = np.zeros((3,1))
-        q_RF = np.zeros((3,1))
-        q_LH = np.zeros((3,1))
-        q_RH = np.zeros((3,1))
+        q_LF = np.zeros((3, 1))
+        q_RF = np.zeros((3, 1))
+        q_LH = np.zeros((3, 1))
+        q_RH = np.zeros((3, 1))
         knee_pos_LF = np.zeros((3, 1))
         knee_pos_RF = np.zeros((3, 1))
         knee_pos_LH = np.zeros((3, 1))
@@ -131,27 +131,28 @@ class LemoEP0Kinematics():
             if stance_leg_id == 0:
                 f_p_des = np.array(feetPosDes[0, :]).T
                 q_LF, self.LF_foot_jac, err, knee_pos_LF, hip_pos_LF, leg_ik_success[0] = self.footInverseKinematicsFixedBase(0, f_p_des,
-                                                                                             self.urdf_foot_name_lf, self.urdf_knee_name_lf, self.urdf_hip_name_lf)
+                                                                                                                              self.urdf_foot_name_lf, self.urdf_knee_name_lf, self.urdf_hip_name_lf)
             if stance_leg_id == 1:
                 f_p_des = np.array(feetPosDes[1, :]).T
                 q_RF, self.RF_foot_jac, err, knee_pos_RF, hip_pos_RF, leg_ik_success[1] = self.footInverseKinematicsFixedBase(1, f_p_des,
-                                                                                             self.urdf_foot_name_rf, self.urdf_knee_name_rf, self.urdf_hip_name_rf)
+                                                                                                                              self.urdf_foot_name_rf, self.urdf_knee_name_rf, self.urdf_hip_name_rf)
             if stance_leg_id == 2:
                 f_p_des = np.array(feetPosDes[2, :]).T
                 q_LH, self.LH_foot_jac, err, knee_pos_LH, hip_pos_LH, leg_ik_success[2] = self.footInverseKinematicsFixedBase(2, f_p_des,
-                                                                                             self.urdf_foot_name_lh, self.urdf_knee_name_lh, self.urdf_hip_name_lh)
+                                                                                                                              self.urdf_foot_name_lh, self.urdf_knee_name_lh, self.urdf_hip_name_lh)
             if stance_leg_id == 3:
                 f_p_des = np.array(feetPosDes[3, :]).T
                 q_RH, self.RH_foot_jac, err, knee_pos_RH, hip_pos_RH, leg_ik_success[3] = self.footInverseKinematicsFixedBase(3, f_p_des,
-                                                                                             self.urdf_foot_name_rh, self.urdf_knee_name_rh, self.urdf_hip_name_rh)
-        for legId in np.arange(0,4):
+                                                                                                                              self.urdf_foot_name_rh, self.urdf_knee_name_rh, self.urdf_hip_name_rh)
+        for legId in np.arange(0, 4):
             if leg_ik_success[legId] is False:
                 print('--- > Warning, IK failed. Jacobian is singular. Leg id is', legId)
                 raise Exception('raise exception')
 
         '''please NOTICE here the alphabetical order of the legs in the vector q: LF -> LH -> RF -> RH '''
         q = np.vstack([q_LF, q_LH, q_RF, q_RH])
-        knees_pos = np.vstack([knee_pos_LF, knee_pos_RF, knee_pos_LH, knee_pos_RH])
+        knees_pos = np.vstack(
+            [knee_pos_LF, knee_pos_RF, knee_pos_LH, knee_pos_RH])
         hip_pos = np.vstack([hip_pos_LF, hip_pos_RF, hip_pos_LH, hip_pos_RH])
         # legJacs = np.vstack([self.LF_foot_jac, self.LH_foot_jac, self.RF_foot_jac, self.RH_foot_jac])
         return q, knees_pos, hip_pos
@@ -159,4 +160,3 @@ class LemoEP0Kinematics():
     def getLegJacobians(self):
         isOutOfWS = False
         return self.LF_foot_jac, self.RF_foot_jac, self.LH_foot_jac, self.RH_foot_jac, isOutOfWS
-

@@ -29,7 +29,7 @@ from std_msgs.msg import Float32, Header
 from std_srvs.srv import Empty
 from termcolor import colored
 
-#from context import jet_leg 
+#from context import jet_leg
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.optimization.foothold_planning_interface import FootholdPlanningInterface
@@ -52,124 +52,103 @@ class FootHoldPlanning:
         self.math = Math()
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
-        
+
     def selectMaximumFeasibleArea(self, footPlanningParams, params):
-   
+
         params.setCoMPosWF(footPlanningParams.com_position_to_validateW)
-        
-#        print "com pos to validate" , params.com_position_to_validateW
-#        print "sample contacts" , params.sample_contacts
-        
+
 #        footPlanningParams.numberOfFeetOptions = np.size(footPlanningParams.footOptions,0)
-        print 'number of feet options ',footPlanningParams.numberOfFeetOptions
-#        print numberOfFeetOptions
         feasible_regions = []
         area = []
         for i in range(0, footPlanningParams.numberOfFeetOptions):
-            #these two lines go together to overwrite the future swing foot
-                     
-            params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[i]
-            IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(params)
+            # these two lines go together to overwrite the future swing foot
 
-#            print 'IAR', IAR
-            d = self.math.find_residual_radius(IAR, footPlanningParams.com_position_to_validateW)
-            print 'residual radius', d
+            params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[i]
+            IAR, actuation_polygons_array, computation_time = self.compDyn.iterative_projection_bretl(
+                params)
+
+            d = self.math.find_residual_radius(
+                IAR, footPlanningParams.com_position_to_validateW)
             feasible_regions.append(IAR)
-#            print 'FR', feasible_regions
-            area.append( self.compGeo.computePolygonArea(IAR))
-        
-        print 'area ', area
-        print 'max arg ',np.argmax(np.array(area), axis=0)
+            area.append(self.compGeo.computePolygonArea(IAR))
+
         return np.argmax(np.array(area), axis=0), feasible_regions
-        
+
     def selectMinumumRequiredFeasibleAreaResidualRadius(self,  footPlanningParams, params):
         ng = 4
         params.setConstraintModes(['FRICTION_AND_ACTUATION',
-                           'FRICTION_AND_ACTUATION',
-                           'FRICTION_AND_ACTUATION',
-                           'FRICTION_AND_ACTUATION'])
+                                   'FRICTION_AND_ACTUATION',
+                                   'FRICTION_AND_ACTUATION',
+                                   'FRICTION_AND_ACTUATION'])
         params.setNumberOfFrictionConesEdges(ng)
 
         params.setCoMPosWF(footPlanningParams.com_position_to_validateW)
 
-#        print numberOfFeetOptions
         feasible_regions = []
         residualRadiusToStack = []
-#        print 'empty res radii', residualRadiusToStack
 #        footOptions = []
         area = []
         mapFootHoldIdxToPolygonIdx = []
-        
+
 #        counter = 0
-        print 'number of feet options ',footPlanningParams.numberOfFeetOptions
         numberOfOptions = footPlanningParams.numberOfFeetOptions
-        
-        #check the prediction point at the beginning
+
+        # check the prediction point at the beginning
         if numberOfOptions > 0:
-            foothold_index  = int((numberOfOptions -1)/2.0) #assumes numberOfOptions is odd
-            #        print 'initial foothold index', foothold_index
-            #these two lines go together to overwrite the future swing foot
+            # assumes numberOfOptions is odd
+            foothold_index = int((numberOfOptions - 1)/2.0)
+            # these two lines go together to overwrite the future swing foot
             params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index]
-            #        print 'contacts WF', params.contactsWF
-            #        print 'com pos WF', params.getCoMPosWF()
-            IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
-            #        print 'IAR', IAR
+            IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(
+                params)
             if IAR is False:
-                return False, False, False, False 
+                return False, False, False, False
             else:
-                residualRadius = deepcopy(self.math.find_residual_radius(IAR, footPlanningParams.com_position_to_validateW))
-                area.append( self.compGeo.computePolygonArea(IAR))
+                residualRadius = deepcopy(self.math.find_residual_radius(
+                    IAR, footPlanningParams.com_position_to_validateW))
+                area.append(self.compGeo.computePolygonArea(IAR))
                 mapFootHoldIdxToPolygonIdx.append(foothold_index)
                 #            footOptions.append(deepcopy(params.contactsWF[params.actual_swing] ))
                 feasible_regions.append(IAR)
                 residualRadiusToStack.append(residualRadius)
                 if residualRadius < footPlanningParams.minRadius:
                     gradient, searchDirection, residualRadius, foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx = self.compute_search_direciton(params, footPlanningParams, residualRadius, foothold_index, area,
-                                             feasible_regions, mapFootHoldIdxToPolygonIdx, residualRadiusToStack)
+                                                                                                                                                                                   feasible_regions, mapFootHoldIdxToPolygonIdx, residualRadiusToStack)
                 else:
                     gradient = False
-                            
+
                 if gradient is not False:
-                   # print 'gradient before while', gradient
                     foothold_index += searchDirection
-                    params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index] 
-                
-            #            print 'number of option',numberOfOptions  
-                #move along the grid to find the feasible point 
+                    params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index]
+
+                # move along the grid to find the feasible point
                     while ((gradient > 0.0) and (residualRadius < footPlanningParams.minRadius) and (foothold_index > 0) and (foothold_index < numberOfOptions-1)):
-                        
-                        #these two lines go together to overwrite the future swing foot
-                        params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index+searchDirection]  
-                        IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+
+                        # these two lines go together to overwrite the future swing foot
+                        params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index+searchDirection]
+                        IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(
+                            params)
                         if IAR is False:
                             residualRadius = 0.0
                             newArea = 0.0
                         else:
-                            residualRadius = self.math.find_residual_radius(IAR, footPlanningParams.com_position_to_validateW)
+                            residualRadius = self.math.find_residual_radius(
+                                IAR, footPlanningParams.com_position_to_validateW)
                             newArea = self.compGeo.computePolygonArea(IAR)
                         oldArea = area[-1]
                         oldResidualRadius = residualRadiusToStack[-1]
-                        #                   print 'old residual radius', oldResidualRadius
                         #                   gradient = residualRadius - oldResidualRadius
                         gradient = newArea - oldArea
-                        #                   print 'area gradient ', gradient
                         #                   gradient = (residualRadius - newResidualRadius)/gridResolution
-                        if gradient > 0:                
+                        if gradient > 0:
                             foothold_index += searchDirection
                             mapFootHoldIdxToPolygonIdx.append(foothold_index)
                             feasible_regions.append(IAR)
                             residualRadiusToStack.append(residualRadius)
                             area.append(newArea)
-            print 'area ', area
-            
         else:
             foothold_index = -1
 #            feasible_regions = false
-                    
-                
-#        print 'res radii', residualRadiusToStack
-    
-#            print 'foothold index ', foothold_index
 #            footPlanningParams.option_index = foothold_index
         return foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
 
@@ -178,8 +157,8 @@ class FootHoldPlanning:
         # these two lines go together to overwrite the future swing foot
         if foothold_index < footPlanningParams.numberOfFeetOptions:
             params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index + 1]
-            #print "residualRadius, params.actual_swing, foothold_index, params.contactsWF", residualRadius, params.actual_swing, foothold_index, params.contactsWF
-            IAR1, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+            IAR1, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(
+                params)
             newResidualRadius1 = deepcopy(
                 self.math.find_residual_radius(IAR1, footPlanningParams.com_position_to_validateW))
             searchDirection1 = +1
@@ -190,10 +169,11 @@ class FootHoldPlanning:
             residualRadiusToStack.append(newResidualRadius1)
         else:
             newResidualRadius1 = 0.0
-            
+
         # these two lines go together to overwrite the future swing foot
         params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[foothold_index - 1]
-        IAR2, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+        IAR2, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(
+            params)
         if IAR2 is not False:
             if foothold_index > 0:
                 newResidualRadius2 = deepcopy(
@@ -209,7 +189,6 @@ class FootHoldPlanning:
                 newResidualRadius2 = 0.0
         else:
             newResidualRadius2 = 0.0
-        #            print 'RADS', residualRadius, newResidualRadius1, newResidualRadius2
         if (newResidualRadius1 > (residualRadius + footPlanningParams.TOL)) and (
                 newResidualRadius1 > (newResidualRadius2 + footPlanningParams.TOL)):
             searchDirection = searchDirection1
@@ -223,8 +202,6 @@ class FootHoldPlanning:
             residualRadius = newResidualRadius2
         else:  # you are already in the max
             searchDirection = 0
-            #                    print 'final foothold index', foothold_index
-            print 'RETURN before entering while loop'
             gradient = False
             return gradient, searchDirection, residualRadius, foothold_index, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
 
@@ -236,30 +213,25 @@ class FootHoldPlanning:
                                    'FRICTION_AND_ACTUATION',
                                    'FRICTION_AND_ACTUATION',
                                    'FRICTION_AND_ACTUATION'])
-        
+
         params.setNumberOfFrictionConesEdges(ng)
 
         params.setCoMPosWF(footPlanningParams.com_position_to_validateW)
 
-        #        print numberOfFeetOptions
         feasible_regions = []
         residualRadiusToStack = []
-        #        print 'empty res radii', residualRadiusToStack
-        #        footOptions = []
         area = []
         mapFootHoldIdxToPolygonIdx = []
 
-        #        counter = 0
-        print 'number of feet options ', footPlanningParams.numberOfFeetOptions
         numberOfOptions = footPlanningParams.numberOfFeetOptions
-        print footPlanningParams.footOptions
 
         # check the prediction point at the beginning
         if numberOfOptions > 0:
             for footIndex in range(0, int(numberOfOptions)):
                 # these two lines go together to overwrite the future swing foot
                 params.contactsWF[params.actual_swing] = footPlanningParams.footOptions[footIndex]
-                IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(params)
+                IAR, actuation_polygons_array, computation_time = self.compDyn.try_iterative_projection_bretl(
+                    params)
                 if IAR is False:
                     residualRadius = 0.0
                     newArea = 0.0
@@ -272,19 +244,12 @@ class FootHoldPlanning:
                     feasible_regions.append(IAR)
                     residualRadiusToStack.append(residualRadius)
                     area.append(newArea)
-            print 'area ', area
             if np.size(area, 0) > 0:
                 maxFootIndex = np.argmax(area)
             else:
                 maxFootIndex = -1
-            print 'max foothold: ', maxFootIndex
 
         else:
             maxFootIndex = -1
-        #            feasible_regions = false
 
-        #        print 'res radii', residualRadiusToStack
-
-        #            print 'foothold index ', foothold_index
-        #            footPlanningParams.option_index = foothold_index
         return maxFootIndex, residualRadiusToStack, feasible_regions, mapFootHoldIdxToPolygonIdx
