@@ -84,5 +84,3 @@ class polytopesLinearInterpolation:
             params)
         self.maxRetractionPolytope = np.zeros((8, 3))
         self.maxExtensionPolytope = np.zeros((8, 3))
-
-    def interpolate(self, footPos):

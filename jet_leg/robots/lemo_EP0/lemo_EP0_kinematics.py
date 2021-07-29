@@ -97,7 +97,8 @@ class LemoEP0Kinematics():
             for j in range(0, 3):
                 if(q[j] >= self.model.upperPositionLimit[leg_id*3+j]):
                     ik_success = False
-                    raise Exception('Maximum kinematic limit violated at leg', leg_id, 'joint', j, ': q is', float(q[j]), 'and q max is', float(self.model.upperPositionLimit[leg_id*3+j]))
+                    raise Exception('Maximum kinematic limit violated at leg', leg_id, 'joint', j, ': q is', float(
+                        q[j]), 'and q max is', float(self.model.upperPositionLimit[leg_id*3+j]))
                 elif(q[j] <= self.model.lowerPositionLimit[leg_id*3+j]):
                     ik_success = False
                     print('Min kinematic limit violated at leg', leg_id, 'joint', j, ': q is', float(q[

@@ -42,8 +42,8 @@ for p in range(0, N_pitch):
         print('indices', p, h)
         step_height = 0.0
         while (feas.test_trajectory(params, comp_dyn, step_height, height_range[h], pitch_range[p])):
-            data[p,h] = step_height
-            print('data',p,h,data[p,h])
+            data[p, h] = step_height
+            print('data', p, h, data[p, h])
             step_height += 0.025
             print('step height', step_height)
             params.setDefaultValuesWrtWorld()
@@ -54,7 +54,6 @@ plt.pcolormesh(data)
 plt.colorbar()
 plt.ylabel("body pitch [rad]")
 plt.xlabel("body des height [m]")
-plt.xticks(np.linspace(0 , N_height, num=N_height), height_range)
-plt.yticks(np.linspace(0 , N_pitch, num=N_pitch), pitch_range)
+plt.xticks(np.linspace(0, N_height, num=N_height), height_range)
+plt.yticks(np.linspace(0, N_pitch, num=N_pitch), pitch_range)
 plt.show()
-
