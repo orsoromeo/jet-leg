@@ -33,7 +33,7 @@ class ForcePolytopeConstraint:
             current_actuation_polygon_WF = 0
             print('Out of workspace IK!!!')
         else:
-            jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
+            jacobianMatrices = [J_LF, J_RF, J_LH, J_RH]
             actuation_polygons = self.computeActuationPolygons(
                 jacobianMatrices, torque_limits)
             rot = Rot.from_euler(

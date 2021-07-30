@@ -56,7 +56,6 @@ class Constraints:
 
         q, knees_pos, hips_pos = self.kin.inverse_kin(
             contactsBF, foot_vel, stanceIndex)
-
         forcePolytopes = LegForcePolytopes()
         leg_actuation_polygon = np.zeros((4, 3, 8))
         for j in stanceIndex:

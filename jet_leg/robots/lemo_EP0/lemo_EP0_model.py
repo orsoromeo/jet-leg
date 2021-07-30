@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class LemoEP0Model:
     def __init__(self):
 
@@ -17,7 +18,8 @@ class LemoEP0Model:
         RF_tau_lim = [33.0, 33.0, 50.0]  # HAA, HFE, KFE
         LH_tau_lim = [33.0, 33.0, 50.0]  # HAA, HFE, KFE
         RH_tau_lim = [33.0, 33.0, 50.0]  # HAA, HFE, KFE
-        self.joint_torque_limits = np.array([LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
+        self.joint_torque_limits = np.array(
+            [LF_tau_lim, RF_tau_lim, LH_tau_lim, RH_tau_lim])
 
         ''' Add a fake small torque at the foot to enable the computation of the feasible region when only
         two point contacts with the environment '''

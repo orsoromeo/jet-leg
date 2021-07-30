@@ -23,11 +23,11 @@ import time
 
 
 class ComputationalDynamics:
-    def __init__(self, robot_name):
+    def __init__(self, robot_name, pinocchio_model=False):
         self.robotName = robot_name
         self.geom = Geometry()
         self.math = Math()
-        self.kin = KinematicsInterface(self.robotName)
+        self.kin = KinematicsInterface(self.robotName, pinocchio_model)
         self.robotModel = RobotModelInterface(self.robotName)
         self.constr = Constraints(self.kin, self.robotModel)
         self.ineq = ([], [])
@@ -170,11 +170,13 @@ class ComputationalDynamics:
         proj, self.eq, self.ineq, actuation_polygons, q_pos, knee_pos, hips_pos, isIKoutOfWorkSpace = self.setup_iterative_projection(
             iterative_projection_params, saturate_normal_force)
         if isIKoutOfWorkSpace:
+            print('IK is out of workspace')
             return False, False, False
         else:
             vertices_WF = pypoman.project_polytope(
                 proj, self.ineq, self.eq, method='bretl', max_iter=500, init_angle=0.0)
             if vertices_WF is False:
+                print('List of vertices is False')
                 return False, False, False
 
             else:

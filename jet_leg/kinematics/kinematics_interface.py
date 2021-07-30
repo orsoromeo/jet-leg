@@ -15,7 +15,7 @@ from jet_leg.robots.lemo_EP0.lemo_EP0_kinematics import LemoEP0Kinematics
 
 
 class KinematicsInterface:
-    def __init__(self, robot_name):
+    def __init__(self, robot_name, pinocchio_model=False):
 
         self.dog = DogInterface()
         self.rbd = RigidBodyDynamics()
@@ -27,7 +27,7 @@ class KinematicsInterface:
         elif self.robotName == 'hyqreal':
             self.hyqrealKin = hyqrealKinematics()
         elif self.robotName == 'lemo_EP0':
-            self.lemoEP0Kin = LemoEP0Kinematics()
+            self.lemoEP0Kin = LemoEP0Kinematics(pinocchio_model)
         else:
             print("Warning! could not set kinematic model")
 
@@ -47,6 +47,7 @@ class KinematicsInterface:
 
         if self.robotName == 'hyq':
             q = self.hyqKin.fixedBaseInverseKinematics(contactsBF, foot_vel)
+            print('q', q)
             return q
         elif self.robotName == 'hyqreal':
             q = self.hyqrealKin.fixedBaseInverseKinematics(contactsBF)

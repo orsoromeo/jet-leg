@@ -514,7 +514,7 @@ class IterativeProjectionParameters:
         # params.externalForceWF is actually used anywhere at the moment
         self.externalForceWF = extForceW
 
-    def setDefaultValuesWrtWorld(self):
+    def setDefaultValuesWrtWorld(self, pinocchio=False):
         '''
         possible constraints for each foot:
          ONLY_ACTUATION = only joint-torque limits are enforces
@@ -527,7 +527,7 @@ class IterativeProjectionParameters:
                               'FRICTION_AND_ACTUATION']
 
         comWF = np.array([0.0, 0.0, 0.5])
-        # comWF = np.array([0.73869347, 0., 0.72321608])
+        # comWF = np.array([0.27083333, 0., 0.38])
 
         comWF_lin_acc = np.array([0.0, .0, .0])
         comWF_ang_acc = np.array([.0, .0, .0])
@@ -572,11 +572,17 @@ class IterativeProjectionParameters:
             informations needed for the computation of the IP'''
 
         """ contact points in the World Frame"""
-        model = RobotModelInterface(self.robotName)
-        LF_foot = model.nominal_stance_LF
-        RF_foot = model.nominal_stance_RF
-        LH_foot = model.nominal_stance_LH
-        RH_foot = model.nominal_stance_RH
+        if pinocchio:
+            LF_foot = pinocchio.model.jointPlacements[1].translation
+            RF_foot = pinocchio.model.jointPlacements[4].translation
+            LH_foot = pinocchio.model.jointPlacements[7].translation
+            RH_foot = pinocchio.model.jointPlacements[10].translation
+        else:
+            model = RobotModelInterface(self.robotName)
+            LF_foot = model.nominal_stance_LF
+            RF_foot = model.nominal_stance_RF
+            LH_foot = model.nominal_stance_LH
+            RH_foot = model.nominal_stance_RH
         LF_foot[2] = 0.0
         RF_foot[2] = 0.0
         LH_foot[2] = 0.0
@@ -587,10 +593,10 @@ class IterativeProjectionParameters:
         # LH_foot = [-0.3, 0.2, 0.0]
         # RH_foot = [-0.3, -0.2, 0.0]
 
-        # LF_foot = [1.1,  0.2, 0.5]
-        # RF_foot = [1.02, -0.2, 0.5]
-        # LH_foot = [0.42,  0.2, 0.]
-        # RH_foot = [0.5, -0.2, 0.5]
+        # LF_foot = [0.62,  0.2, 0.]
+        # RF_foot = [0.54, -0.2, 0.]
+        # LH_foot = [-0.06,  0.2, 0.]
+        # RH_foot = [0.02, -0.2, 0.]
 
         contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 

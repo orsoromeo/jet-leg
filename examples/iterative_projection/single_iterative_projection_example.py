@@ -7,7 +7,7 @@ Created on Tue Jun 12 10:54:31 2018
 
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot
-
+import os
 from jet_leg.plotting.plotting_tools import Plotter
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
@@ -19,6 +19,9 @@ from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
 from copy import copy
+import pinocchio
+from pinocchio.utils import *
+from pinocchio.robot_wrapper import RobotWrapper
 
 plt.close('all')
 math = Math()
@@ -26,10 +29,63 @@ math = Math()
 ''' Set the robot's name (current options: 'hyq', 'hyqreal', 'anymal_boxy', 'anymal_coyote' or 'lemo_EP0')'''
 robot = "lemo_EP0"
 params = IterativeProjectionParameters(robot)
-comp_dyn = ComputationalDynamics(robot)
-params.setDefaultValuesWrtWorld()
 
-''' compute iterative projection 
+PKG = os.path.dirname(os.path.abspath(
+    __file__)) + '/../../resources/urdfs/lemo_EP0/'
+URDF = PKG + 'urdf/lemo_EP0.urdf'
+if PKG is None:
+    pin = RobotWrapper.BuildFromURDF(URDF)
+else:
+    pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
+comp_dyn = ComputationalDynamics(robot, pin)
+
+urdf_hip_id_lf = 1
+urdf_hip_id_rf = 4
+urdf_hip_id_lh = 7
+urdf_hip_id_rh = 10
+
+body_length = 0.2
+pin.model.jointPlacements[urdf_hip_id_lf].translation[0] = body_length
+pin.model.jointPlacements[urdf_hip_id_rf].translation[0] = body_length
+pin.model.jointPlacements[urdf_hip_id_lh].translation[0] = -body_length
+pin.model.jointPlacements[urdf_hip_id_rh].translation[0] = -body_length
+
+links_length = 0.3
+#pin.model.jointPlacements[urdf_hip_id_lf+1].translation[0] = links_length
+
+FL_foot_frame_id = pin.model.getFrameId('FL_foot')
+HL_foot_frame_id = pin.model.getFrameId('HL_foot')
+FR_foot_frame_id = pin.model.getFrameId('FR_foot')
+HR_foot_frame_id = pin.model.getFrameId('HR_foot')
+FL_foot_frame = pin.model.frames[FL_foot_frame_id]
+HL_foot_frame = pin.model.frames[HL_foot_frame_id]
+FR_foot_frame = pin.model.frames[FR_foot_frame_id]
+HR_foot_frame = pin.model.frames[HR_foot_frame_id]
+FL_foot_frame.placement.translation[2] = -links_length
+HL_foot_frame.placement.translation[2] = -links_length
+FR_foot_frame.placement.translation[2] = -links_length
+HR_foot_frame.placement.translation[2] = -links_length
+print(FL_foot_frame.placement.translation)
+print(HL_foot_frame.placement.translation)
+print(FR_foot_frame.placement.translation)
+print(HR_foot_frame.placement.translation)
+
+FL_calf_frame = pin.model.jointPlacements[urdf_hip_id_lf+2]
+HL_calf_frame = pin.model.jointPlacements[urdf_hip_id_rf+2]
+FR_calf_frame = pin.model.jointPlacements[urdf_hip_id_lh+2]
+HR_calf_frame = pin.model.jointPlacements[urdf_hip_id_rh+2]
+FL_calf_frame.translation[2] = -links_length
+HL_calf_frame.translation[2] = -links_length
+FR_calf_frame.translation[2] = -links_length
+HR_calf_frame.translation[2] = -links_length
+print(FL_calf_frame.translation)
+print(HL_calf_frame.translation)
+print(FR_calf_frame.translation)
+print(HR_calf_frame.translation)
+
+params.setDefaultValuesWrtWorld(pin)
+
+''' compute iterative projection
 Outputs of "iterative_projection_bretl" are:
 IP_points = resulting 2D vertices
 actuation_polygons = these are the vertices of the 3D force polytopes (one per leg)
@@ -44,7 +100,7 @@ IP_points, force_polytopes, IP_computation_time, joints_pos, knee_pos, hips_pos 
 # print actuation_polygons
 
 '''I now check whether the given CoM configuration is stable or not'''
-#isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
+# isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
 # print "is CoM stable?", isCoMStable
 # print 'Contact forces:', contactForces
 
@@ -129,7 +185,7 @@ for j in range(0, nc):
                float(knee_pos[idx][2])]
     knee_pos_WF = W_R_B.dot(knee_BF) + comWF
     legs = np.vstack([shoulder_position_WF[j, :],
-                     knee_pos_WF, contactsWF[idx, :]])
+                      knee_pos_WF, contactsWF[idx, :]])
     ax.plot(legs[:, 0], legs[:, 1], legs[:, 2], '-k')
 
 for j in range(0, 4):
@@ -148,22 +204,23 @@ fig = plt.figure()
 for j in range(0, nc):  # this will only show the contact positions and normals of the feet that are defined to be in stance
     idx = int(stanceID[j])
     ''' The black spheres represent the projection of the contact points on the same plane of the feasible region'''
-shoulder_position_BF = [contactsBF[idx, 0], contactsBF[idx, 1], 0.4]
-shoulder_position_WF[j, :] = np.dot(W_R_B, shoulder_position_BF) + comWF
-idx = int(stanceID[j])
-h1 = plt.plot(contactsWF[idx, 0], contactsWF[idx, 1],
-              'ko', markersize=15, label='stance feet')
+    shoulder_position_BF = [contactsBF[idx, 0], contactsBF[idx, 1], 0.4]
+    shoulder_position_WF[j, :] = np.dot(W_R_B, shoulder_position_BF) + comWF
+    idx = int(stanceID[j])
+    print('stance indices', idx)
+    h1 = plt.plot(contactsWF[idx, 0], contactsWF[idx, 1],
+                  'ko', markersize=15, label='stance feet')
 
-h2 = plotter.plot_polygon(np.transpose(IP_points), '--b', 5, 'Feasible Region')
+    h2 = plotter.plot_polygon(np.transpose(
+        IP_points), '--b', 5, 'Feasible Region')
 
-'''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
-if isPointFeasible:
-    plt.plot(point2check[0], point2check[1], 'go',
-             markersize=15, label='ground reference point')
-else:
-    plt.plot(point2check[0], point2check[1], 'ro',
-             markersize=15, label='ground reference point')
-
+    '''CoM will be plotted in green if it is stable (i.e., if it is inside the feasible region)'''
+    if isPointFeasible:
+        plt.plot(point2check[0], point2check[1], 'go',
+                 markersize=15, label='ground reference point')
+    else:
+        plt.plot(point2check[0], point2check[1], 'ro',
+                 markersize=15, label='ground reference point')
 
 plt.grid()
 plt.xlabel("X [m]")
