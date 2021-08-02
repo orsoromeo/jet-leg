@@ -23,22 +23,20 @@ params.setDefaultValuesWrtWorld()
 
 links_length_min = 0.25
 links_length_max = 0.45
-N_links_l = 3
+N_links_l = 5
 
 links_range = np.linspace(links_length_min, links_length_max, num=N_links_l)
 
 body_length_min = 0.2
 body_length_max = 0.4
-N_body_l = 3
+N_body_l = 5
 body_range = np.linspace(body_length_min, body_length_max, num=N_body_l)
 
 feas = FeasibilityAnalysis()
 
 data = np.zeros([N_body_l, N_links_l])
 for b in range(0, N_body_l):
-    params.setDefaultValuesWrtWorld()
     for l in range(0, N_links_l):
-        params.setDefaultValuesWrtWorld()
         print('indices', b, l)
         step_height = 0.0
         while (feas.test_body_vs_links_length(

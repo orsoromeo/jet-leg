@@ -26,7 +26,7 @@ comp_dyn = ComputationalDynamics(robot)
 params.setDefaultValuesWrtWorld()
 
 ''' Generate trajectory of footholds'''
-step_height = 0.48
+step_height = 0.4
 pitch = -0.7
 des_height = 0.36
 

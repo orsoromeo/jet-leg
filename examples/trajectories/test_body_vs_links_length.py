@@ -24,13 +24,14 @@ params = IterativeProjectionParameters(robot)
 params.setDefaultValuesWrtWorld()
 
 ''' Generate trajectory of footholds'''
-step_height = 0.0
+step_height = 0.4
 body_length = 0.33
 links_length = 0.3
 
 f = FeasibilityAnalysis()
-f.test_body_vs_links_length(
-    params, robot, step_height, body_length, links_length)
+optimize_height_and_pitch = True
+f.test_body_vs_links_length(optimize_height_and_pitch,
+                            params, robot, step_height, body_length, links_length)
 
 # fig = plt.figure()
 # plt.plot(time_list, margin_list)
