@@ -583,6 +583,7 @@ class IterativeProjectionParameters:
             RF_foot = model.nominal_stance_RF
             LH_foot = model.nominal_stance_LH
             RH_foot = model.nominal_stance_RH
+
         LF_foot[2] = 0.0
         RF_foot[2] = 0.0
         LH_foot[2] = 0.0

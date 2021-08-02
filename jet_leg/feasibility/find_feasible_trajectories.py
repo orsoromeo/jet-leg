@@ -88,7 +88,10 @@ class FeasibilityAnalysis():
             pin = RobotWrapper.BuildFromURDF(URDF)
         else:
             pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
+
         self.setup_body_parameters(pin, body_length, links_length)
+
+        params.setDefaultValuesWrtWorld(pin)
 
         FL_foot_frame_id = pin.model.getFrameId('FL_foot')
         FL_foot_frame = pin.model.frames[FL_foot_frame_id]
@@ -102,10 +105,8 @@ class FeasibilityAnalysis():
         dist_from_goal = 2.0*step_distance
         goal_point = [dist_from_goal, 0.0, des_height + step_height]
         mid_pitch = -np.arcsin(step_height/dist_from_goal)
-        print('mid pitch', mid_pitch)
 
         comp_dyn = ComputationalDynamics(robot_name, pin)
-
         return self.test_trajectory(params, comp_dyn, des_height, mid_pitch,
                                     start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
 
@@ -122,6 +123,7 @@ class FeasibilityAnalysis():
         base_orient_traj = np.vstack([np.linspace(
             start_orient, mid_orient, num=int(N/2)), np.linspace(mid_orient, goal_orient, num=int(N/2))])
         current_footholds = copy(params.getContactsPosWF())
+        print('Initial footholds', current_footholds)
         in_stance = [True, True, True, True]
 
         phase_offsets = np.array([0.0, 0.5, 0.5, 0.0])
