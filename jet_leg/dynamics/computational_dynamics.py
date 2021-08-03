@@ -29,7 +29,7 @@ class ComputationalDynamics:
         self.math = Math()
         self.kin = KinematicsInterface(self.robotName, pinocchio_model)
         self.robotModel = RobotModelInterface(self.robotName)
-        self.constr = Constraints(self.kin, self.robotModel)
+        self.constr = Constraints(self.kin, self.robotModel, pinocchio_model)
         self.ineq = ([], [])
         self.eq = ([], [])
         self.rbd = RigidBodyDynamics()

@@ -15,6 +15,7 @@ from jet_leg.dynamics.instantaneous_capture_point import InstantaneousCapturePoi
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
 from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.optimization.lp_vertex_redundancy import LpVertexRedundnacy
+from jet_leg.feasibility.find_feasible_trajectories import FeasibilityAnalysis
 
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
@@ -38,13 +39,14 @@ if PKG is None:
 else:
     pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
 comp_dyn = ComputationalDynamics(robot, pin)
+f = FeasibilityAnalysis()
 
 urdf_hip_id_lf = 1
 urdf_hip_id_rf = 4
 urdf_hip_id_lh = 7
 urdf_hip_id_rh = 10
 
-body_length = 0.2
+body_length = 0.6
 pin.model.jointPlacements[urdf_hip_id_lf].translation[0] = body_length
 pin.model.jointPlacements[urdf_hip_id_rf].translation[0] = body_length
 pin.model.jointPlacements[urdf_hip_id_lh].translation[0] = -body_length
@@ -187,6 +189,11 @@ for j in range(0, nc):
     legs = np.vstack([shoulder_position_WF[j, :],
                       knee_pos_WF, contactsWF[idx, :]])
     ax.plot(legs[:, 0], legs[:, 1], legs[:, 2], '-k')
+
+    step_distance = 1.0
+    step_height = 0.5
+    if f.kneeStepCollision(step_distance, step_height, knee_pos_WF):
+        print('Knee collision detected! Knee pos in WF is', knee_pos_WF)
 
 for j in range(0, 4):
     shoulder_position_BF = [

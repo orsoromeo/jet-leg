@@ -13,9 +13,18 @@ import os
 import pinocchio
 from pinocchio.utils import *
 from pinocchio.robot_wrapper import RobotWrapper
+from scipy.spatial.transform import Rotation as Rot
 
 
 class FeasibilityAnalysis():
+    def __init__(self):
+        PKG = os.path.dirname(os.path.abspath(
+            __file__)) + '/../../resources/urdfs/lemo_EP0/'
+        URDF = PKG + 'urdf/lemo_EP0.urdf'
+        if PKG is None:
+            self.pin = RobotWrapper.BuildFromURDF(URDF)
+        else:
+            self.pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
 
     def test_pitch_and_height(self, params, comp_dyn, step_height, des_height, pitch):
         print('current step height', step_height)
@@ -32,6 +41,24 @@ class FeasibilityAnalysis():
         mid_pitch = pitch
 
         return self.test_trajectory(params, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
+
+    def setup_kinematic_lims(self, hip_x_lim, hip_y_lim, knee_lim):
+        for leg in range(0, 4):
+            self.pin.model.lowerPositionLimit[leg*3] = hip_x_min
+            self.pin.model.lowerPositionLimit[1+leg*3] = hip_y_min
+            self.pin.model.lowerPositionLimit[2+leg*3] = knee_min
+
+            self.pin.model.upperPositionLimit[leg*3] = hip_x_max
+            self.pin.model.upperPositionLimit[1+leg*3] = hip_y_max
+            self.pin.model.upperPositionLimit[2+leg*3] = knee_max
+        return True
+
+    def setup_torque_lims(self, hip_x_lim, hip_y_lim, knee_lim):
+        for leg in range(0, 4):
+            self.pin.model.effortLimit[leg*3] = hip_x_lim
+            self.pin.model.effortLimit[1+leg*3] = hip_y_lim
+            self.pin.model.effortLimit[2+leg*3] = knee_lim
+        return True
 
     def setup_body_parameters(self, pin, body_length, links_length):
         urdf_hip_id_lf = 1
@@ -74,6 +101,27 @@ class FeasibilityAnalysis():
         # print(FR_calf_frame.translation)
         # print(HR_calf_frame.translation)
         return True
+
+    def kneeStepCollision(self, step_distance, step_height, knee_pos):
+        e_v = [0, -1]
+        e_h = [1, 0]
+
+        if knee_pos[0] >= step_distance:
+            step_edge = [step_distance, step_height]
+            h_offset = np.dot(step_edge, e_v)
+            h_plane_eq = [e_v[0], e_v[1], h_offset]
+            v_offset = np.dot(step_edge, e_h)
+            v_plane_eq = [e_h[0], e_h[1], v_offset]
+            knee_pos_xz = [knee_pos[0], knee_pos[2]]
+            return self.isInCollision(knee_pos_xz, h_plane_eq) and self.isInCollision(knee_pos_xz, v_plane_eq)
+        else:
+            step_edge = [step_distance, 0.0]
+            h_offset = np.dot(step_edge, e_v)
+            h_plane_eq = [e_v[0], e_v[1], h_offset]
+            v_offset = np.dot(step_edge, -np.array(e_h))
+            v_plane_eq = [e_h[0], e_h[1], v_offset]
+            knee_pos_xz = [knee_pos[0], knee_pos[2]]
+            return self.isInCollision(knee_pos_xz, h_plane_eq) and self.isInCollision(knee_pos_xz, v_plane_eq)
 
     def isInCollision(self, point, plane_eq):
         dist = np.dot(point, plane_eq[0:2]) - plane_eq[2]
@@ -245,7 +293,18 @@ class FeasibilityAnalysis():
             base_plane_eq = [base_plane_eq[0], base_plane_eq[1], offset_term]
             hip_plane_eq = [hip_plane_eq[0], hip_plane_eq[1], hip_offset_term]
             if check_collision and self.isInCollision(corner_point, base_plane_eq) and self.isInCollision(corner_point, hip_plane_eq):
-                print('Collision detected!')
+                print('Base collision detected!')
                 return False
+
+            rot = Rot.from_euler('xyz', euler_angles, degrees=False)
+            W_R_B = rot.as_matrix()
+            if check_collision:
+                for leg in range(0, 4):
+                    knee_pos_WF = W_R_B.dot(knee_pos[leg]) + com_des
+                    col = self.kneeStepCollision(
+                        step_distance, step_height, knee_pos_WF)
+                    if col:
+                        print('Knee collision detected on leg', leg)
+                        return False
 
         return True

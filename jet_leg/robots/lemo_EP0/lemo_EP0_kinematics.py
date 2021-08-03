@@ -96,7 +96,6 @@ class LemoEP0Kinematics():
         q, foot_jac, err, knee_pos, hip_pos = self.footInverseKinematicsFixedBaseUnsafe(
             foot_pos_des, foot_frame_name, knee_frame_name, hip_frame_name)
         ik_success = True
-        print('check kin lims', self.check_joint_kinematic_lims)
         if(self.check_joint_kinematic_lims):
             for j in range(0, 3):
                 if(q[j] >= self.model.upperPositionLimit[leg_id*3+j]):

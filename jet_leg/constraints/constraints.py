@@ -19,7 +19,7 @@ import copy
 
 
 class Constraints:
-    def __init__(self, robot_kinematics, robot_model):
+    def __init__(self, robot_kinematics, robot_model, pinocchio=False):
         # self.robotName = robot_name
         self.kin = robot_kinematics
         self.math = Math()
@@ -28,6 +28,7 @@ class Constraints:
         self.frictionConeConstr = FrictionConeConstraint()
         self.forcePolytopeConstr = ForcePolytopeConstraint(robot_kinematics)
         self.model = robot_model
+        self.pin = pinocchio
         self.currentLegForcePolytope = Polytope()
 
     def getInequalities(self, params, saturate_normal_force=False):
@@ -40,8 +41,13 @@ class Constraints:
         print('contacts BF', contactsBF)
 
         constraint_mode = params.getConstraintModes()
+        joint_torque_lims = self.model.joint_torque_limits
+        if self.pin is not False:
+            for leg in range(0, 4):
+                joint_torque_lims[leg, 0] = self.pin.model.effortLimit[leg*3]
+                joint_torque_lims[leg, 1] = self.pin.model.effortLimit[leg*3+1]
+                joint_torque_lims[leg, 2] = self.pin.model.effortLimit[leg*3+2]
 
-        joint_torque_lims = self.model.joint_torque_limits  # = params.getTorqueLims()
         contact_torque_lims = self.model.contact_torque_limits
         ng = params.getNumberOfFrictionConesEdges()
         friction_coeff = params.getFrictionCoefficient()
