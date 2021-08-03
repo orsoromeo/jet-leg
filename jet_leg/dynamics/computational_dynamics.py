@@ -69,7 +69,7 @@ class ComputationalDynamics:
         Ex = np.zeros((0))
         Ey = np.zeros((0))
         G = np.zeros((6, 0))
-
+        print('Ext wrench', iterative_projection_params.externalCentroidalWrench)
         totalCentroidalWrench = self.rbd.computeCentroidalWrench(iterative_projection_params.robotMass,
                                                                  self.robotModel.robotModel.trunkInertia,
                                                                  iterative_projection_params.getCoMPosWF(),

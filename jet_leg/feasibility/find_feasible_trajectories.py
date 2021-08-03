@@ -42,7 +42,18 @@ class FeasibilityAnalysis():
 
         return self.test_trajectory(params, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
 
-    def setup_kinematic_lims(self, hip_x_lim, hip_y_lim, knee_lim):
+    def setup_kinematic_lims(self, hip_x_min, hip_y_min, knee_min):
+        hip_x_range = self.pin.model.upperPositionLimit[0] - \
+            self.pin.model.lowerPositionLimit[0]
+        hip_x_max = hip_x_min + hip_x_range
+
+        hip_y_range = self.pin.model.upperPositionLimit[1] - \
+            self.pin.model.lowerPositionLimit[1]
+        hip_y_max = hip_y_min + hip_y_range
+        knee_range = self.pin.model.upperPositionLimit[2] - \
+            self.pin.model.lowerPositionLimit[2]
+        knee_max = knee_min + knee_range
+
         for leg in range(0, 4):
             self.pin.model.lowerPositionLimit[leg*3] = hip_x_min
             self.pin.model.lowerPositionLimit[1+leg*3] = hip_y_min
