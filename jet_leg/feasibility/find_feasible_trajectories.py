@@ -146,11 +146,15 @@ class FeasibilityAnalysis():
         print('No feasible value of height and pitch found!', p, h, mid_pitch)
         return False
 
-    def make_footholds(self, N, T, params, dist_from_goal, step_distance, step_height):
+    def make_footholds(self, N, T, params, dist_from_goal, step_distance, step_height, is_trot):
         footholds = np.array([[[0.0]*3]*N]*4)
-        in_stance = [True, True, True, True]
-        phase_offsets = np.array([0.0, 0.5, 0.5, 0.0])
-        duty_factor = 0.75
+        in_stance = np.array([[True]*N]*4)
+        if is_trot:
+            phase_offsets = np.array([0.0, 0.5, 0.5, 0.0])
+            duty_factor = 0.75
+        else:
+            phase_offsets = np.array([0.0, 0.5, 0.25, 0.75])
+            duty_factor = 0.75
         swing_duration = 0.4
         gait_duration = swing_duration/(1.0 - duty_factor)
         tot_time = N*T
@@ -170,35 +174,60 @@ class FeasibilityAnalysis():
                     next_touchdown_time[leg] = next_liftoff_time[leg] + \
                         swing_duration
                     next_liftoff_time[leg] += gait_duration
-                    in_stance[leg] = False
+                    in_stance[leg][i] = False
                     if(current_footholds[leg][0] >= step_distance):
                         current_footholds[leg][2] = step_height
                 if (t >= next_touchdown_time[leg]):
-                    in_stance[leg] = True
-        return footholds
+                    in_stance[leg][i] = True
+        return footholds, in_stance
+
+    def make_base_trot_traj(self, N, start_point, mid_point, goal_point):
+        base_lin_traj = np.vstack([np.linspace(
+            start_point, mid_point, num=int(N/2)), np.linspace(mid_point, goal_point, num=int(N/2))])
+        return base_lin_traj
+
+    def make_base_walk_traj(self, footholds_traj, stance_traj, des_height):
+        N = len(footholds_traj[0])
+        base_lin_traj = [[0.0]*3]*N
+        for i in range(0, N):
+            n_stance_legs = 0
+            for leg in range(0, 4):
+                if stance_traj[leg][i]:
+                    n_stance_legs += 1
+                    base_lin_traj[i] += footholds_traj[leg][i]
+            base_lin_traj[i] = base_lin_traj[i]/n_stance_legs
+            base_lin_traj[i][2] += des_height
+
+        return base_lin_traj
 
     def test_trajectory(self, params, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
         tot_time = 20.0
         N = 50
         T = tot_time/float(N)
-        base_lin_traj = np.vstack([np.linspace(
-            start_point, mid_point, num=int(N/2)), np.linspace(mid_point, goal_point, num=int(N/2))])
+
+        min_margin = -0.01
+        is_trot = False
+
+        footholds_traj, in_stance_traj = self.make_footholds(
+            N, T, params, dist_from_goal, step_distance, step_height, is_trot)
+
+        if is_trot:
+            base_lin_traj = self.make_base_trot_traj(
+                N, start_point, mid_point, goal_point)
+        else:
+            base_lin_traj = self.make_base_walk_traj(
+                footholds_traj, in_stance_traj, des_height)
+
         start_orient = [0.0, 0.0, 0.0]
         mid_orient = [0.0, mid_pitch, 0.0]
         goal_orient = start_orient
         base_orient_traj = np.vstack([np.linspace(
             start_orient, mid_orient, num=int(N/2)), np.linspace(mid_orient, goal_orient, num=int(N/2))])
 
-        min_margin = -0.01
-
-        footholds_traj = self.make_footholds(
-            N, T, params, dist_from_goal, step_distance, step_height)
-
         for i in range(0, N):
             t = i*T
             print('====================> iter', i, 'time', t)
-            com_des = np.array(
-                [base_lin_traj[i, 0], base_lin_traj[i, 1], base_lin_traj[i, 2]])
+            com_des = base_lin_traj[i]
             params.setCoMPosWF(com_des)
             print('current CoM pos', com_des)
             euler_angles = np.array(
@@ -213,6 +242,7 @@ class FeasibilityAnalysis():
                 (LF_foot, RF_foot, LH_foot, RH_foot))
             print('current contacts wrt WF', contactsWF)
             params.setContactsPosWF(contactsWF)
+            in_stance = [in_stance_traj[leg][i] for leg in range(0, 4)]
             params.setActiveContacts(in_stance)
             ''' compute iterative projection
             Outputs of "iterative_projection_bretl" are:
@@ -245,12 +275,9 @@ class FeasibilityAnalysis():
             hip_plane_eq = [-np.cos(current_pitch), -np.sin(current_pitch)]
             com_xz = [com_des[0], com_des[2]]
             point2test = com_xz - collision_margin*np.array(base_plane_eq)
-            print('point 2 test', point2test)
             offset_term = np.dot(point2test, base_plane_eq)
-            print('hips', hips_pos[0][0])
             hip_offset_term = np.dot(
                 [hips_pos[0][0], hips_pos[0][2]], hip_plane_eq)
-            print('offset', offset_term, hip_offset_term)
             base_plane_eq = [base_plane_eq[0], base_plane_eq[1], offset_term]
             hip_plane_eq = [hip_plane_eq[0], hip_plane_eq[1], hip_offset_term]
             if check_collision and self.isInCollision(corner_point, base_plane_eq) and self.isInCollision(corner_point, hip_plane_eq):
