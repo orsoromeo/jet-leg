@@ -8,7 +8,7 @@ import numpy as np
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
-from jet_leg.feasibility.find_feasible_trajectories import FeasibilityAnalysis
+from jet_leg.feasibility.height_and_pitch_feasibility import HeightPitchFeasibility
 
 import matplotlib.pyplot as plt
 
@@ -32,7 +32,7 @@ des_height_max = 0.4
 N_height = 11
 height_range = np.linspace(des_height_min, des_height_max, num=N_height)
 
-feas = FeasibilityAnalysis()
+feas = HeightPitchFeasibility()
 
 data = np.zeros([N_pitch, N_height])
 for p in range(0, N_pitch):

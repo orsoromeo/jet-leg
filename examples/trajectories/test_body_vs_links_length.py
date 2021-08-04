@@ -9,7 +9,7 @@ import numpy as np
 
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
-from jet_leg.feasibility.find_feasible_trajectories import FeasibilityAnalysis
+from jet_leg.feasibility.body_params_feasibility import BodyParamsFeasibility
 
 import matplotlib.pyplot as plt
 
@@ -28,7 +28,7 @@ step_height = 0.4
 body_length = 0.33
 links_length = 0.3
 
-f = FeasibilityAnalysis()
+f = BodyParamsFeasibility()
 optimize_height_and_pitch = True
 f.test_body_vs_links_length(optimize_height_and_pitch,
                             params, robot, step_height, body_length, links_length)

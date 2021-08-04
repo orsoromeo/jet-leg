@@ -26,22 +26,6 @@ class FeasibilityAnalysis():
         else:
             self.pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
 
-    def test_pitch_and_height(self, params, comp_dyn, step_height, des_height, pitch):
-        print('current step height', step_height)
-        print('current desired robot height', des_height)
-        print('current desired pitch', pitch)
-        start_point = [0.0, 0.0, des_height]
-        mid_height = step_height/2.0 + des_height
-        step_distance = 0.5
-        mid_point = [step_distance, 0.0, mid_height]
-        dist_from_goal = 2.0*step_distance
-        goal_point = [dist_from_goal, 0.0, des_height + step_height]
-
-        avg_pitch = np.arcsin(step_height/dist_from_goal)
-        mid_pitch = pitch
-
-        return self.test_trajectory(params, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
-
     def setup_kinematic_lims(self, hip_x_min, hip_y_min, knee_min):
         hip_x_range = self.pin.model.upperPositionLimit[0] - \
             self.pin.model.lowerPositionLimit[0]
@@ -139,43 +123,6 @@ class FeasibilityAnalysis():
         print('distance from point', dist)
         return dist > 0.0
 
-    def test_body_vs_links_length(self, optimize_height_and_pitch, params, robot_name, step_height, body_length, links_length):
-        print('current step height', step_height)
-        print('current desired body length', body_length)
-        print('current desired links length', links_length)
-
-        PKG = os.path.dirname(os.path.abspath(
-            __file__)) + '/../../resources/urdfs/lemo_EP0/'
-        URDF = PKG + 'urdf/lemo_EP0.urdf'
-        if PKG is None:
-            pin = RobotWrapper.BuildFromURDF(URDF)
-        else:
-            pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
-
-        self.setup_body_parameters(pin, body_length, links_length)
-
-        FL_foot_frame_id = pin.model.getFrameId('FL_foot')
-        FL_foot_frame = pin.model.frames[FL_foot_frame_id]
-        links_length = -FL_foot_frame.placement.translation[2]
-        print('links lenght', links_length)
-        des_height = links_length
-        print('des height', des_height)
-        start_point = [0.0, 0.0, des_height]
-        mid_height = step_height/2.0 + des_height
-        step_distance = 0.5
-        mid_point = [step_distance, 0.0, mid_height]
-        dist_from_goal = 2.0*step_distance
-        goal_point = [dist_from_goal, 0.0, des_height + step_height]
-        mid_pitch = -np.arcsin(step_height/dist_from_goal)
-
-        comp_dyn = ComputationalDynamics(robot_name, pin)
-        if optimize_height_and_pitch:
-            return self.test_trajectory_with_variable_pitch_and_height(params, pin, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
-        else:
-            params.setDefaultValuesWrtWorld(pin)
-            return self.test_trajectory(params, comp_dyn, des_height, mid_pitch,
-                                        start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
-
     def test_trajectory_with_variable_pitch_and_height(self, params, pin, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
         pitch_min = mid_pitch*1.5
         pitch_max = mid_pitch*2.5
@@ -197,6 +144,39 @@ class FeasibilityAnalysis():
                     return True
         print('No feasible value of height and pitch found!', p, h, mid_pitch)
         return False
+
+    def make_footholds(self, N, T, params, dist_from_goal, step_distance, step_height):
+        footholds = np.zeros([3, N])
+        print('footholds', footholds)
+        in_stance = [True, True, True, True]
+        phase_offsets = np.array([0.0, 0.5, 0.5, 0.0])
+        duty_factor = 0.75
+        swing_duration = 0.4
+        gait_duration = swing_duration/(1.0 - duty_factor)
+        tot_time = N*T
+        avg_speed = dist_from_goal/tot_time
+        step_lenght = avg_speed*gait_duration
+        step_idx = [0, 0, 0, 0]
+        next_liftoff_time = phase_offsets*gait_duration
+        next_touchdown_time = next_liftoff_time+swing_duration
+        current_footholds = copy(params.getContactsPosWF())
+        print('Initial footholds', current_footholds)
+        for i in range(0, N):
+            t = i*T
+            for leg in range(0, 4):
+                if(t > next_liftoff_time[leg]):
+                    current_footholds[leg][0] += step_lenght
+                    step_idx[leg] += 1
+                    next_touchdown_time[leg] = next_liftoff_time[leg] + \
+                        swing_duration
+                    next_liftoff_time[leg] += gait_duration
+                    in_stance[leg] = False
+                    if(current_footholds[leg][0] >= step_distance):
+                        current_footholds[leg][2] = step_height
+                if (t >= next_touchdown_time[leg]):
+                    in_stance[leg] = True
+
+        return footholds
 
     def test_trajectory(self, params, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
         tot_time = 20.0
@@ -226,8 +206,11 @@ class FeasibilityAnalysis():
         next_liftoff_time = phase_offsets*gait_duration
         next_touchdown_time = next_liftoff_time+swing_duration
 
-        margin_list = list()
-        time_list = list()
+        min_margin = -0.01
+
+        footholds_traj = self.make_footholds(
+            N, T, params, dist_from_goal, step_distance, step_height)
+
         for i in range(0, N):
             t = i*T
             print('====================> iter', i, 'time', t)
@@ -281,8 +264,10 @@ class FeasibilityAnalysis():
                 point2check = comp_dyn.getReferencePoint(params, "ZMP")
                 isPointFeasible, margin = comp_geom.isPointRedundant(
                     facets, point2check)
-                margin_list.append(margin)
-                time_list.append(t)
+                print('Margin is', margin)
+                if margin < min_margin:
+                    print('Margin is too low!')
+                    return False
             except:
                 print('exception caught! Terminate trajectory')
                 return False

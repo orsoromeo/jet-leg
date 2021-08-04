@@ -46,7 +46,7 @@ urdf_hip_id_rf = 4
 urdf_hip_id_lh = 7
 urdf_hip_id_rh = 10
 
-body_length = 0.6
+body_length = 0.33
 pin.model.jointPlacements[urdf_hip_id_lf].translation[0] = body_length
 pin.model.jointPlacements[urdf_hip_id_rf].translation[0] = body_length
 pin.model.jointPlacements[urdf_hip_id_lh].translation[0] = -body_length

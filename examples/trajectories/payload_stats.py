@@ -22,8 +22,8 @@ comp_dyn = ComputationalDynamics(robot)
 params.setDefaultValuesWrtWorld()
 
 min_load = 0.0
-max_load = -400.0
-N_load = 21
+max_load = -150.0
+N_load = 16
 load_range = np.linspace(min_load, max_load, num=N_load)
 
 min_lever = -0.3

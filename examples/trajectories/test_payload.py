@@ -24,10 +24,10 @@ params = IterativeProjectionParameters(robot)
 params.setDefaultValuesWrtWorld()
 
 ''' Generate trajectory of footholds'''
-step_height = 0.3
+step_height = 0.
 
-vertical_force = -200
-horizontal_location = 0.5
+vertical_force = -98.0
+horizontal_location = 0.0
 
 f = PayloadFeasibility()
 optimize_height_and_pitch = False

@@ -8,7 +8,7 @@ import numpy as np
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from jet_leg.computational_geometry.iterative_projection_parameters import IterativeProjectionParameters
-from jet_leg.feasibility.find_feasible_trajectories import FeasibilityAnalysis
+from jet_leg.feasibility.body_params_feasibility import BodyParamsFeasibility
 
 import matplotlib.pyplot as plt
 
@@ -33,7 +33,7 @@ N_body_l = 11
 body_range = np.linspace(body_length_min, body_length_max, num=N_body_l)
 
 optimize_height_and_pitch = False
-feas = FeasibilityAnalysis()
+feas = BodyParamsFeasibility()
 
 data = np.zeros([N_body_l, N_links_l])
 for b in range(0, N_body_l):
