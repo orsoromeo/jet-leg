@@ -9,6 +9,7 @@ import numpy as np
 from jet_leg.computational_geometry.computational_geometry import ComputationalGeometry
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
 from copy import copy
+from copy import deepcopy
 import os
 import pinocchio
 from pinocchio.utils import *
@@ -146,8 +147,7 @@ class FeasibilityAnalysis():
         return False
 
     def make_footholds(self, N, T, params, dist_from_goal, step_distance, step_height):
-        footholds = np.zeros([3, N])
-        print('footholds', footholds)
+        footholds = np.array([[[0.0]*3]*N]*4)
         in_stance = [True, True, True, True]
         phase_offsets = np.array([0.0, 0.5, 0.5, 0.0])
         duty_factor = 0.75
@@ -160,10 +160,10 @@ class FeasibilityAnalysis():
         next_liftoff_time = phase_offsets*gait_duration
         next_touchdown_time = next_liftoff_time+swing_duration
         current_footholds = copy(params.getContactsPosWF())
-        print('Initial footholds', current_footholds)
         for i in range(0, N):
             t = i*T
             for leg in range(0, 4):
+                footholds[leg][i] = copy(current_footholds[leg])
                 if(t > next_liftoff_time[leg]):
                     current_footholds[leg][0] += step_lenght
                     step_idx[leg] += 1
@@ -175,7 +175,6 @@ class FeasibilityAnalysis():
                         current_footholds[leg][2] = step_height
                 if (t >= next_touchdown_time[leg]):
                     in_stance[leg] = True
-
         return footholds
 
     def test_trajectory(self, params, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
@@ -189,22 +188,6 @@ class FeasibilityAnalysis():
         goal_orient = start_orient
         base_orient_traj = np.vstack([np.linspace(
             start_orient, mid_orient, num=int(N/2)), np.linspace(mid_orient, goal_orient, num=int(N/2))])
-        current_footholds = copy(params.getContactsPosWF())
-        print('Initial footholds', current_footholds)
-        in_stance = [True, True, True, True]
-        phase_offsets = np.array([0.0, 0.5, 0.5, 0.0])
-        duty_factor = 0.75
-        swing_duration = 0.4
-        gait_duration = swing_duration/(1.0 - duty_factor)
-        tot_time = N*T
-        avg_speed = dist_from_goal/tot_time
-        # print 'gait duration', gait_duration
-        # print 'avg speed', avg_speed
-        step_lenght = avg_speed*gait_duration
-        # print 'step length', step_lenght
-        step_idx = [0, 0, 0, 0]
-        next_liftoff_time = phase_offsets*gait_duration
-        next_touchdown_time = next_liftoff_time+swing_duration
 
         min_margin = -0.01
 
@@ -216,34 +199,16 @@ class FeasibilityAnalysis():
             print('====================> iter', i, 'time', t)
             com_des = np.array(
                 [base_lin_traj[i, 0], base_lin_traj[i, 1], base_lin_traj[i, 2]])
-            for leg in range(0, 4):
-                if(t > next_liftoff_time[leg]):
-                    current_footholds[leg][0] += step_lenght
-                    step_idx[leg] += 1
-                    next_touchdown_time[leg] = next_liftoff_time[leg] + \
-                        swing_duration
-                    next_liftoff_time[leg] += gait_duration
-                    in_stance[leg] = False
-                    if(current_footholds[leg][0] >= step_distance):
-                        current_footholds[leg][2] = step_height
-                if (t >= next_touchdown_time[leg]):
-                    in_stance[leg] = True
-            # print('stance legs number:', np.sum(np.array(in_stance)))
-            # print('step times', next_liftoff_time)
-            # print('touch down times', next_touchdown_time)
-            # print('step_idx', step_idx)
-            # print('current footholds', current_footholds)
-            # print('in stance', in_stance)
             params.setCoMPosWF(com_des)
             print('current CoM pos', com_des)
             euler_angles = np.array(
                 [base_orient_traj[i, 0], base_orient_traj[i, 1], base_orient_traj[i, 2]])
             params.setEulerAngles(euler_angles)
             # print('current base orient', euler_angles)
-            LF_foot = current_footholds[0]
-            RF_foot = current_footholds[1]
-            LH_foot = current_footholds[2]
-            RH_foot = current_footholds[3]
+            LF_foot = footholds_traj[0][i]
+            RF_foot = footholds_traj[1][i]
+            LH_foot = footholds_traj[2][i]
+            RH_foot = footholds_traj[3][i]
             contactsWF = np.vstack(
                 (LF_foot, RF_foot, LH_foot, RH_foot))
             print('current contacts wrt WF', contactsWF)
