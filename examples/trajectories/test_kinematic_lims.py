@@ -29,7 +29,7 @@ step_height = 0.1
 hip_y_kin_lim = -1.30899694
 knee_kin_lim = -2.86233997
 
-f = KinematicFeasibility()
+f = KinematicFeasibility(params.pin)
 optimize_height_and_pitch = False
 f.test_hipy_vs_knee_position_limits(optimize_height_and_pitch,
                                     params, robot, step_height, hip_y_kin_lim, knee_kin_lim)

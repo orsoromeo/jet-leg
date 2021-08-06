@@ -18,14 +18,8 @@ from scipy.spatial.transform import Rotation as Rot
 
 
 class FeasibilityAnalysis():
-    def __init__(self):
-        PKG = os.path.dirname(os.path.abspath(
-            __file__)) + '/../../resources/urdfs/lemo_EP0/'
-        URDF = PKG + 'urdf/lemo_EP0.urdf'
-        if PKG is None:
-            self.pin = RobotWrapper.BuildFromURDF(URDF)
-        else:
-            self.pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
+    def __init__(self, pinocchio):
+        self.pin = pinocchio
 
     def setup_kinematic_lims(self, hip_x_min, hip_y_min, knee_min):
         hip_x_range = self.pin.model.upperPositionLimit[0] - \
@@ -189,6 +183,7 @@ class FeasibilityAnalysis():
     def make_base_walk_traj(self, footholds_traj, stance_traj, des_height):
         N = len(footholds_traj[0])
         base_lin_traj = [[0.0]*3]*N
+        print('des height', des_height)
         for i in range(0, N):
             n_stance_legs = 0
             for leg in range(0, 4):
@@ -218,6 +213,8 @@ class FeasibilityAnalysis():
             base_lin_traj = self.make_base_walk_traj(
                 footholds_traj, in_stance_traj, des_height)
 
+        print('base linear traj', base_lin_traj)
+
         start_orient = [0.0, 0.0, 0.0]
         mid_orient = [0.0, mid_pitch, 0.0]
         goal_orient = start_orient
@@ -233,7 +230,7 @@ class FeasibilityAnalysis():
             euler_angles = np.array(
                 [base_orient_traj[i, 0], base_orient_traj[i, 1], base_orient_traj[i, 2]])
             params.setEulerAngles(euler_angles)
-            # print('current base orient', euler_angles)
+            print('current base orient', euler_angles)
             LF_foot = footholds_traj[0][i]
             RF_foot = footholds_traj[1][i]
             LH_foot = footholds_traj[2][i]

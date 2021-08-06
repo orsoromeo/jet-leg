@@ -18,7 +18,7 @@ math = Math()
 ''' Set the robot's name (current options: 'hyq', 'hyqreal', 'anymal_boxy', 'anymal_coyote' or 'lemo_EP0')'''
 robot = "lemo_EP0"
 params = IterativeProjectionParameters(robot)
-comp_dyn = ComputationalDynamics(robot)
+comp_dyn = ComputationalDynamics(robot, params.pin)
 params.setDefaultValuesWrtWorld()
 
 links_length_min = 0.25
@@ -26,14 +26,16 @@ links_length_max = 0.4
 N_links_l = 16
 
 links_range = np.linspace(links_length_min, links_length_max, num=N_links_l)
+links_range = [round(k, 2) for k in links_range]
 
 body_length_min = 0.25
 body_length_max = 0.45
 N_body_l = 11
 body_range = np.linspace(body_length_min, body_length_max, num=N_body_l)
+body_range = [round(k, 2) for k in body_range]
 
 optimize_height_and_pitch = False
-feas = BodyParamsFeasibility()
+feas = BodyParamsFeasibility(params.pin)
 
 data = np.zeros([N_body_l, N_links_l])
 for b in range(0, N_body_l):

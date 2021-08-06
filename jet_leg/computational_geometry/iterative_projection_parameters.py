@@ -4,6 +4,7 @@ Created on Wed Nov 14 15:07:45 2018
 
 @author: Romeo Orsolino
 """
+import os
 import numpy as np
 from jet_leg.computational_geometry.math_tools import Math
 import random
@@ -11,13 +12,25 @@ from copy import copy
 from scipy.spatial.transform import Rotation as Rot
 from jet_leg.robots.robot_model_interface import RobotModelInterface
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+import pinocchio
+from pinocchio.utils import *
+from pinocchio.robot_wrapper import RobotWrapper
 
 
 class IterativeProjectionParameters:
     def __init__(self, robot_name):
+
+        PKG = os.path.dirname(os.path.abspath(__file__)) + \
+            '/../../resources/urdfs/'+robot_name+'/'
+        URDF = PKG + robot_name + '.urdf'
+        if PKG is None:
+            self.pin = RobotWrapper.BuildFromURDF(URDF)
+        else:
+            self.pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
+
         self.robotName = robot_name
         self.robotModel = RobotModelInterface(self.robotName)
-        self.compDyn = ComputationalDynamics(self.robotName)
+        self.compDyn = ComputationalDynamics(self.robotName, self.pin)
         self.math = Math()
         self.q = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
         # var used only for IK inside constraints.py
@@ -527,7 +540,7 @@ class IterativeProjectionParameters:
                               'FRICTION_AND_ACTUATION']
 
         comWF = np.array([0.0, 0.0, 0.5])
-        # comWF = np.array([0.27083333, 0., 0.38])
+        # comWF = np.array([0.58333333, 0.03066667, 0.45666667])
 
         comWF_lin_acc = np.array([0.0, .0, .0])
         comWF_ang_acc = np.array([.0, .0, .0])
@@ -563,7 +576,7 @@ class IterativeProjectionParameters:
 
         ''' Roll Pitch Yaw angles of the base link'''
         rpy_base = np.array([0., 0.0, 0.0])  # units are rads
-        # rpy_base = np.array([0., -0.48869983, 0.])  # units are rads
+        # rpy_base = np.array([0., -0.11745879, 0.])  # units are rads
         rot = Rot.from_euler(
             'xyz', [rpy_base[0], rpy_base[1], rpy_base[2]], degrees=False)
         W_R_B = rot.as_matrix()
@@ -594,11 +607,10 @@ class IterativeProjectionParameters:
         # LH_foot = [-0.3, 0.2, 0.0]
         # RH_foot = [-0.3, -0.2, 0.0]
 
-        # LF_foot = [0.62,  0.2, 0.]
-        # RF_foot = [0.54, -0.2, 0.]
-        # LH_foot = [-0.06,  0.2, 0.]
-        # RH_foot = [0.02, -0.2, 0.]
-
+        # LF_foot = [1.13,  0.092, 0.2]
+        # RF_foot = [0.97, -0.092, 0.2]
+        # LH_foot = [0.31,  0.092, 0.]
+        # RH_foot = [0.31, -0.092, 0.]
         contactsWF = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
         self.setContactsPosWF(contactsWF)

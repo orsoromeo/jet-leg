@@ -23,7 +23,7 @@ import time
 
 
 class ComputationalDynamics:
-    def __init__(self, robot_name, pinocchio_model=False):
+    def __init__(self, robot_name, pinocchio_model):
         self.robotName = robot_name
         self.geom = Geometry()
         self.math = Math()

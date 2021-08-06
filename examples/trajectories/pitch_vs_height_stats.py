@@ -22,17 +22,19 @@ comp_dyn = ComputationalDynamics(robot)
 params.setDefaultValuesWrtWorld()
 
 pitch_min = 0.0
-pitch_max = -0.8
+pitch_max = -0.7
 N_pitch = 21
 
 pitch_range = np.linspace(pitch_min, pitch_max, num=N_pitch)
+pitch_range = [round(k, 2) for k in pitch_range]
 
 des_height_min = 0.3
-des_height_max = 0.4
+des_height_max = 0.5
 N_height = 11
 height_range = np.linspace(des_height_min, des_height_max, num=N_height)
+height_range = [round(k, 2) for k in height_range]
 
-feas = HeightPitchFeasibility()
+feas = HeightPitchFeasibility(params.pin)
 
 data = np.zeros([N_pitch, N_height])
 for p in range(0, N_pitch):

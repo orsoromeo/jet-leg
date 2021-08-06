@@ -22,20 +22,21 @@ comp_dyn = ComputationalDynamics(robot)
 params.setDefaultValuesWrtWorld()
 
 hip_y_default_min = -1.30
-knee_default_min = -2.86
+hip_y_default_max = 3.4
+amplitude = (hip_y_default_max - hip_y_default_min)/2.0
 
-hipy_kin_min = hip_y_default_min - 60.0/180.0*np.pi
-hipy_kin_max = hip_y_default_min + 60.0/180.0*np.pi
-N_hipy = 7
+hipy_min_min = hip_y_default_min - amplitude
+hipy_min_max = hip_y_default_min + amplitude
+N_hipy = 15
 
-hipy_range = np.linspace(hipy_kin_min, hipy_kin_max, num=N_hipy)
-hipy_range = [round(h, 2) for h in hipy_range]
+hipy_min_range = np.linspace(hipy_min_min, hipy_min_max, num=N_hipy)
+hipy_min_range = [round(h, 2) for h in hipy_min_range]
 
-knee_kin_min = knee_default_min - 30.0/180.0*np.pi
-knee_kin_max = knee_default_min + 30.0/180.0*np.pi
-N_knee = 13
-knee_range = np.linspace(knee_kin_min, knee_kin_max, num=N_knee)
-knee_range = [round(k, 2) for k in knee_range]
+hip_y_max_min = hip_y_default_max - amplitude
+hip_y_max_max = hip_y_default_max + amplitude
+N_knee = 15
+hipy_max_range = np.linspace(hip_y_max_min, hip_y_max_max, num=N_knee)
+hipy_max_range = [round(k, 2) for k in hipy_max_range]
 
 optimize_height_and_pitch = False
 feas = KinematicFeasibility(params.pin)
@@ -45,8 +46,8 @@ for kin_k in range(0, N_knee):
     for kin_h in range(0, N_hipy):
         print('indices', kin_k, kin_h)
         step_height = 0.0
-        while (feas.test_hipy_vs_knee_position_limits(optimize_height_and_pitch,
-                                                      params, robot, step_height, hipy_range[kin_h], knee_range[kin_k])):
+        while (feas.test_hipy_position_limits(optimize_height_and_pitch,
+                                              params, robot, step_height, hipy_min_range[kin_h], hipy_max_range[kin_k])):
             data[kin_k, kin_h] = step_height
             print('data', kin_k, kin_h, data[kin_k, kin_h])
             step_height += 0.025
@@ -58,8 +59,8 @@ plt.pcolormesh(data)
 plt.colorbar()
 plt.ylabel("Min Knee Lim [rad]")
 plt.xlabel("Min Hip Lim [rad]")
-print(knee_range)
-print(hipy_range)
-plt.xticks(np.linspace(0, N_hipy, num=N_hipy), hipy_range)
-plt.yticks(np.linspace(0, N_knee, num=N_knee), knee_range)
+print(hipy_max_range)
+print(hipy_min_range)
+plt.xticks(np.linspace(0, N_hipy, num=N_hipy), hipy_min_range)
+plt.yticks(np.linspace(0, N_knee, num=N_knee), hipy_max_range)
 plt.show()

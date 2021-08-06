@@ -33,7 +33,7 @@ lever_range = np.linspace(min_lever, max_lever, num=N_lever)
 lever_range = [round(k, 2) for k in lever_range]
 
 optimize_height_and_pitch = False
-feas = PayloadFeasibility()
+feas = PayloadFeasibility(params.pin)
 
 data = np.zeros([N_lever, N_load])
 for lever_idx in range(0, N_lever):

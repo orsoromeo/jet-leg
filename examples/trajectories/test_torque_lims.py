@@ -24,12 +24,12 @@ params = IterativeProjectionParameters(robot)
 params.setDefaultValuesWrtWorld()
 
 ''' Generate trajectory of footholds'''
-step_height = 0.4
+step_height = 0.1
 
-hip_y_tau_lim = 10.0
-knee_tau_lim = 20.0
+hip_y_tau_lim = 50.0
+knee_tau_lim = 50.0
 
-f = TorquesFeasibility()
+f = TorquesFeasibility(params.pin)
 optimize_height_and_pitch = False
 f.test_hipy_vs_knee_torque(optimize_height_and_pitch,
                            params, robot, step_height, hip_y_tau_lim, knee_tau_lim)

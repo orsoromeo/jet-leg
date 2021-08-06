@@ -33,7 +33,7 @@ N_knee_tau = 21
 knee_range = np.linspace(knee_tau_min, knee_tau_max, num=N_knee_tau)
 
 optimize_height_and_pitch = False
-feas = TorquesFeasibility()
+feas = TorquesFeasibility(params.pin)
 
 data = np.zeros([N_knee_tau, N_hipy_tau])
 for tau_k in range(0, N_knee_tau):

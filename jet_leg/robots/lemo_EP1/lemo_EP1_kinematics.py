@@ -7,8 +7,8 @@ import os
 
 
 class LemoEP0Kinematics(KinematicsBase):
-    def __init__(self, pinocchio_model):
-        super(LemoEP0Kinematics, self).__init__('lemo_EP0', pinocchio_model)
+    def __init__(self, pinocchio_model=False):
+        super(LemoEP0Kinematics, self).__init__('lemo_EP1', pinocchio_model)
 
         self.urdf_foot_name_lf = 'FL_foot'
         self.urdf_foot_name_lh = 'HL_foot'

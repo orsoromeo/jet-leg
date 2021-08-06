@@ -7,7 +7,6 @@ Created on Tue Jun 12 10:54:31 2018
 
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot
-import os
 from jet_leg.plotting.plotting_tools import Plotter
 from jet_leg.computational_geometry.math_tools import Math
 from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
@@ -20,26 +19,17 @@ from jet_leg.feasibility.find_feasible_trajectories import FeasibilityAnalysis
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
 from copy import copy
-import pinocchio
-from pinocchio.utils import *
-from pinocchio.robot_wrapper import RobotWrapper
 
 plt.close('all')
 math = Math()
 
 ''' Set the robot's name (current options: 'hyq', 'hyqreal', 'anymal_boxy', 'anymal_coyote' or 'lemo_EP0')'''
 robot = "lemo_EP0"
-params = IterativeProjectionParameters(robot)
 
-PKG = os.path.dirname(os.path.abspath(
-    __file__)) + '/../../resources/urdfs/lemo_EP0/'
-URDF = PKG + 'urdf/lemo_EP0.urdf'
-if PKG is None:
-    pin = RobotWrapper.BuildFromURDF(URDF)
-else:
-    pin = RobotWrapper.BuildFromURDF(URDF, [PKG])
-comp_dyn = ComputationalDynamics(robot, pin)
-f = FeasibilityAnalysis()
+params = IterativeProjectionParameters(robot)
+comp_dyn = ComputationalDynamics(robot, params.pin)
+f = FeasibilityAnalysis(params.pin)
+
 
 urdf_hip_id_lf = 1
 urdf_hip_id_rf = 4
@@ -47,22 +37,22 @@ urdf_hip_id_lh = 7
 urdf_hip_id_rh = 10
 
 body_length = 0.33
-pin.model.jointPlacements[urdf_hip_id_lf].translation[0] = body_length
-pin.model.jointPlacements[urdf_hip_id_rf].translation[0] = body_length
-pin.model.jointPlacements[urdf_hip_id_lh].translation[0] = -body_length
-pin.model.jointPlacements[urdf_hip_id_rh].translation[0] = -body_length
+params.pin.model.jointPlacements[urdf_hip_id_lf].translation[0] = body_length
+params.pin.model.jointPlacements[urdf_hip_id_rf].translation[0] = body_length
+params.pin.model.jointPlacements[urdf_hip_id_lh].translation[0] = -body_length
+params.pin.model.jointPlacements[urdf_hip_id_rh].translation[0] = -body_length
 
 links_length = 0.3
 #pin.model.jointPlacements[urdf_hip_id_lf+1].translation[0] = links_length
 
-FL_foot_frame_id = pin.model.getFrameId('FL_foot')
-HL_foot_frame_id = pin.model.getFrameId('HL_foot')
-FR_foot_frame_id = pin.model.getFrameId('FR_foot')
-HR_foot_frame_id = pin.model.getFrameId('HR_foot')
-FL_foot_frame = pin.model.frames[FL_foot_frame_id]
-HL_foot_frame = pin.model.frames[HL_foot_frame_id]
-FR_foot_frame = pin.model.frames[FR_foot_frame_id]
-HR_foot_frame = pin.model.frames[HR_foot_frame_id]
+FL_foot_frame_id = params.pin.model.getFrameId('FL_foot')
+HL_foot_frame_id = params.pin.model.getFrameId('HL_foot')
+FR_foot_frame_id = params.pin.model.getFrameId('FR_foot')
+HR_foot_frame_id = params.pin.model.getFrameId('HR_foot')
+FL_foot_frame = params.pin.model.frames[FL_foot_frame_id]
+HL_foot_frame = params.pin.model.frames[HL_foot_frame_id]
+FR_foot_frame = params.pin.model.frames[FR_foot_frame_id]
+HR_foot_frame = params.pin.model.frames[HR_foot_frame_id]
 FL_foot_frame.placement.translation[2] = -links_length
 HL_foot_frame.placement.translation[2] = -links_length
 FR_foot_frame.placement.translation[2] = -links_length
@@ -72,10 +62,10 @@ print(HL_foot_frame.placement.translation)
 print(FR_foot_frame.placement.translation)
 print(HR_foot_frame.placement.translation)
 
-FL_calf_frame = pin.model.jointPlacements[urdf_hip_id_lf+2]
-HL_calf_frame = pin.model.jointPlacements[urdf_hip_id_rf+2]
-FR_calf_frame = pin.model.jointPlacements[urdf_hip_id_lh+2]
-HR_calf_frame = pin.model.jointPlacements[urdf_hip_id_rh+2]
+FL_calf_frame = params.pin.model.jointPlacements[urdf_hip_id_lf+2]
+HL_calf_frame = params.pin.model.jointPlacements[urdf_hip_id_rf+2]
+FR_calf_frame = params.pin.model.jointPlacements[urdf_hip_id_lh+2]
+HR_calf_frame = params.pin.model.jointPlacements[urdf_hip_id_rh+2]
 FL_calf_frame.translation[2] = -links_length
 HL_calf_frame.translation[2] = -links_length
 FR_calf_frame.translation[2] = -links_length
@@ -85,7 +75,7 @@ print(HL_calf_frame.translation)
 print(FR_calf_frame.translation)
 print(HR_calf_frame.translation)
 
-params.setDefaultValuesWrtWorld(pin)
+params.setDefaultValuesWrtWorld(params.pin)
 
 ''' compute iterative projection
 Outputs of "iterative_projection_bretl" are:
