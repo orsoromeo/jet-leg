@@ -19,15 +19,17 @@ from jet_leg.feasibility.find_feasible_trajectories import FeasibilityAnalysis
 import matplotlib.pyplot as plt
 from jet_leg.plotting.arrow3D import Arrow3D
 from copy import copy
+import sys
 
 plt.close('all')
 math = Math()
 
 ''' Set the robot's name (current options: 'hyq', 'hyqreal', 'anymal_boxy', 'anymal_coyote' or 'lemo_EP0')'''
-robot = "lemo_EP0"
+robot = sys.argv[1]
+print('robot name:', robot)
 
 params = IterativeProjectionParameters(robot)
-comp_dyn = ComputationalDynamics(robot, params.pin)
+print('after first')
 f = FeasibilityAnalysis(params.pin)
 
 
@@ -84,21 +86,21 @@ actuation_polygons = these are the vertices of the 3D force polytopes (one per l
 computation_time = how long it took to compute the iterative projection
 '''
 
-IP_points, force_polytopes, IP_computation_time, joints_pos, knee_pos, hips_pos = comp_dyn.iterative_projection_bretl(
+IP_points, force_polytopes, IP_computation_time, joints_pos, knee_pos, hips_pos = params.compDyn.iterative_projection_bretl(
     params)
 
-# print "Inequalities", comp_dyn.ineq
+# print "Inequalities", params.compDyn.ineq
 # print "actuation polygons"
 # print actuation_polygons
 
 '''I now check whether the given CoM configuration is stable or not'''
-# isCoMStable, contactForces, forcePolytopes = comp_dyn.check_equilibrium(params)
+# isCoMStable, contactForces, forcePolytopes = params.compDyn.check_equilibrium(params)
 # print "is CoM stable?", isCoMStable
 # print 'Contact forces:', contactForces
 
 comp_geom = ComputationalGeometry()
 facets = comp_geom.compute_halfspaces_convex_hull(IP_points)
-point2check = comp_dyn.getReferencePoint(params, "ZMP")
+point2check = params.compDyn.getReferencePoint(params, "ZMP")
 isPointFeasible, margin = comp_geom.isPointRedundant(facets, point2check)
 print("isPointFeasible: ", isPointFeasible)
 print("Margin is: ", margin)

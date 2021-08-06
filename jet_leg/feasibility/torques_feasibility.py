@@ -19,10 +19,9 @@ class TorquesFeasibility(FeasibilityAnalysis):
         dist_from_goal = 2.0*step_distance
         goal_point = [dist_from_goal, 0.0, des_height + step_height]
         mid_pitch = -np.arcsin(step_height/dist_from_goal)
-        comp_dyn = ComputationalDynamics(robot_name, self.pin)
         if optimize_height_and_pitch:
-            return self.test_trajectory_with_variable_pitch_and_height(params, self.pin, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
+            return self.test_trajectory_with_variable_pitch_and_height(params, self.pin, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)
         else:
             params.setDefaultValuesWrtWorld(self.pin)
-            return self.test_trajectory(params, comp_dyn, des_height, mid_pitch,
+            return self.test_trajectory(params, des_height, mid_pitch,
                                         start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height)

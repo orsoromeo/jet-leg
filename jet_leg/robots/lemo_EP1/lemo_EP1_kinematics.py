@@ -6,10 +6,10 @@ from jet_leg.kinematics.kinematics_base import KinematicsBase
 import os
 
 
-class LemoEP0Kinematics(KinematicsBase):
+class LemoEP1Kinematics(KinematicsBase):
     def __init__(self, pinocchio_model=False):
-        super(LemoEP0Kinematics, self).__init__('lemo_EP1', pinocchio_model)
-
+        super(LemoEP1Kinematics, self).__init__('lemo_EP1', pinocchio_model)
+        print('base class init done')
         self.urdf_foot_name_lf = 'FL_foot'
         self.urdf_foot_name_lh = 'HL_foot'
         self.urdf_foot_name_rf = 'FR_foot'

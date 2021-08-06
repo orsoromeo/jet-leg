@@ -1,10 +1,10 @@
 import numpy as np
 
 
-class LemoEP0Model:
+class LemoEP1Model:
     def __init__(self):
 
-        self.trunkMass = 30
+        self.trunkMass = 45
         self.trunkInertia = np.array([[2.13993, 0.00902021, 0.0958655],
                                       [0.00902021, 6.19139, 0.000206023],
                                       [0.0958655, 0.000206023, 6.26289]])

@@ -118,7 +118,7 @@ class FeasibilityAnalysis():
         print('distance from point', dist)
         return dist > 0.0
 
-    def test_trajectory_with_variable_pitch_and_height(self, params, pin, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
+    def test_trajectory_with_variable_pitch_and_height(self, params, pin, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
         pitch_min = mid_pitch*1.5
         pitch_max = mid_pitch*2.5
         N_pitch = 10
@@ -132,7 +132,7 @@ class FeasibilityAnalysis():
             for h in height_range:
                 print('pitch & height', p, h)
                 params.setDefaultValuesWrtWorld(pin)
-                res = self.test_trajectory(params, comp_dyn, h, p, start_point,
+                res = self.test_trajectory(params, params.compDyn, h, p, start_point,
                                            mid_point, goal_point, dist_from_goal, step_distance, step_height)
                 if res:
                     print('Feasible pitch and height values found!', p, h)
@@ -195,7 +195,7 @@ class FeasibilityAnalysis():
 
         return base_lin_traj
 
-    def test_trajectory(self, params, comp_dyn, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
+    def test_trajectory(self, params, des_height, mid_pitch, start_point, mid_point, goal_point, dist_from_goal, step_distance, step_height):
         tot_time = 20.0
         N = 50
         T = tot_time/float(N)
@@ -248,12 +248,12 @@ class FeasibilityAnalysis():
             computation_time = how long it took to compute the iterative projection
             '''
             try:
-                IP_points, force_polytopes, IP_computation_time, joints_pos, knee_pos, hips_pos = comp_dyn.iterative_projection_bretl(
+                IP_points, force_polytopes, IP_computation_time, joints_pos, knee_pos, hips_pos = params.compDyn.iterative_projection_bretl(
                     params)
                 comp_geom = ComputationalGeometry()
                 facets = comp_geom.compute_halfspaces_convex_hull(
                     IP_points)
-                point2check = comp_dyn.getReferencePoint(params, "ZMP")
+                point2check = params.compDyn.getReferencePoint(params, "ZMP")
                 isPointFeasible, margin = comp_geom.isPointRedundant(
                     facets, point2check)
                 print('Margin is', margin)

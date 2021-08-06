@@ -12,6 +12,7 @@ from jet_leg.robots.hyq.hyq_kinematics import HyQKinematics
 from jet_leg.robots.anymal.anymal_kinematics import anymalKinematics
 from jet_leg.robots.hyqreal.hyqreal_kinematics import hyqrealKinematics
 from jet_leg.robots.lemo_EP0.lemo_EP0_kinematics import LemoEP0Kinematics
+from jet_leg.robots.lemo_EP1.lemo_EP1_kinematics import LemoEP1Kinematics
 
 
 class KinematicsInterface:
@@ -28,6 +29,8 @@ class KinematicsInterface:
             self.hyqrealKin = hyqrealKinematics()
         elif self.robotName == 'lemo_EP0':
             self.lemoEP0Kin = LemoEP0Kinematics(pinocchio_model)
+        elif self.robotName == 'lemo_EP1':
+            self.lemoEP1Kin = LemoEP1Kinematics(pinocchio_model)
         else:
             print("Warning! could not set kinematic model")
 
@@ -38,6 +41,8 @@ class KinematicsInterface:
             return self.hyqrealKin.getLegJacobians()
         elif self.robotName == 'lemo_EP0':
             return self.lemoEP0Kin.getLegJacobians()
+        elif self.robotName == 'lemo_EP1':
+            return self.lemoEP1Kin.getLegJacobians()
         elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':
             return self.anymalKin.getLegJacobians()
         else:
@@ -54,6 +59,10 @@ class KinematicsInterface:
             return q
         elif self.robotName == 'lemo_EP0':
             q = self.lemoEP0Kin.fixedBaseInverseKinematics(
+                contactsBF, stance_idx)
+            return q
+        elif self.robotName == 'lemo_EP1':
+            q = self.lemoEP1Kin.fixedBaseInverseKinematics(
                 contactsBF, stance_idx)
             return q
         elif self.robotName == 'anymal_boxy' or self.robotName == 'anymal_coyote':

@@ -10,6 +10,7 @@ from jet_leg.robots.hyq.hyq_model import HyqModel
 from jet_leg.robots.anymal.anymal_model import AnymalModel
 from jet_leg.robots.hyqreal.hyqreal_model import HyqrealModel
 from jet_leg.robots.lemo_EP0.lemo_EP0_model import LemoEP0Model
+from jet_leg.robots.lemo_EP1.lemo_EP1_model import LemoEP1Model
 
 
 class RobotModelInterface:
@@ -23,6 +24,8 @@ class RobotModelInterface:
             self.robotModel = HyqrealModel()
         elif self.robotName == 'lemo_EP0':
             self.robotModel = LemoEP0Model()
+        elif self.robotName == 'lemo_EP1':
+            self.robotModel = LemoEP1Model()
         else:
             print("Warning! could not set robot model!")
 
