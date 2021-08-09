@@ -17,9 +17,6 @@ n_vars_tot = n_vars*N
 x0 = [0.0]*(n_vars_tot)
 ub = [1e6]*(n_vars_tot)
 lb = [-1e-6]*(n_vars_tot)
-eps = [1.0e-6]*(n_vars_tot)
-minus_eps = [-1.0e-3]*(n_vars_tot)
-
 
 lower_states = [-10.0]*n_states
 lower_forces = [-20.0]*n_forces
@@ -65,16 +62,19 @@ initial_cond = LinearConstraint(boundary_constr, lb=lb, ub=ub)
 
 # 2) dynamic constraint:
 # f = m*a  with a = (v_k - v_{k-1})/T
-A_dyn = np.zeros([n_vars_tot, n_vars_tot])
-A = np.zeros([n_vars, 2*n_vars])
+A_dyn = np.zeros([2*N, n_vars_tot])
+A = np.zeros([2, 2*n_vars])
+mass = 1.0
+A[0:2, 3:5] = -np.eye(2)*T*mass
+A[0:2, 6+n_vars:10+n_vars] = [[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0]]  # forces
+A[0:2, 3+n_vars:5+n_vars] = np.eye(2)*T*mass
+for i in range(0, N-1):
+    A_dyn[i*2:i*2+2, i*n_vars:(i+2)*n_vars] = A
 
-A[2:4, 2:4] = -np.eye(2)*T
-A[4:6, 4:6] = -np.eye(2)  # forces
-A[2:4, 2+n_vars:4+n_vars] = np.eye(2)*T
-for i in range(1, N):
-    A_dyn[i*n_vars:(i+1)*n_vars, (i-1)*n_vars:(i+1)*n_vars] = A
-
+eps = [1.0e-6]*(2*N)
+minus_eps = [-1.0e-3]*(2*N)
 dyn_constr = LinearConstraint(A_dyn, lb=minus_eps, ub=eps)
+
 
 # 3) velocity constraint
 A_vel = np.zeros([n_vars_tot, n_vars_tot])
@@ -86,6 +86,8 @@ A[0:n_vel, n_pos:n_pos + n_vel] = np.eye(n_pos)
 for i in range(0, N-1):
     A_vel[i*n_vars:(i+1)*n_vars, i*n_vars:(i+2)*n_vars] = A
 
+eps = [1.0e-6]*(n_vars_tot)
+minus_eps = [-1.0e-3]*(n_vars_tot)
 vel_constr = LinearConstraint(A_vel, lb=minus_eps, ub=eps)
 
 res = minimize(
@@ -113,6 +115,11 @@ print('pitch', pitch)
 print('vel_x', vel_x)
 print('vel_y', vel_y)
 print('pitch_d', pitch_d)
+print('force front X', f_x_front)
+print('force front Y', f_y_front)
+print('force hind X', f_x_hind)
+print('force hind Y', f_y_hind)
+
 
 fig, axs = plt.subplots(10)
 fig.suptitle('Trajectories')
@@ -122,7 +129,11 @@ axs[1].plot(pos_y)
 axs[2].plot(pitch)
 axs[3].plot(vel_x)
 axs[4].plot(vel_y)
-axs[5].plot(pitch_d)
+axs[5].plot(f_x_front)
+axs[5].plot(f_x_front)
+axs[5].plot(f_x_front)
+axs[5].plot(f_x_front)
+
 axs[6].plot(f_x_front)
 axs[7].plot(f_y_front)
 axs[8].plot(f_x_hind)
