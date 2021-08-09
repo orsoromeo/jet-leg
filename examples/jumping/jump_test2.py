@@ -4,9 +4,11 @@ from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint
 import matplotlib.pyplot as plt
 np.set_printoptions(threshold=sys.maxsize)
 
-N = 10
+N = 20
 total_time = 2.0
 T = total_time/float(N)
+mass = 30.0
+grav = 9.81
 
 n_pos = 3  # x,y, pitch
 n_vel = 3
@@ -14,16 +16,13 @@ n_states = n_pos + n_vel
 n_forces = 4
 n_vars = n_states + n_forces
 n_vars_tot = n_vars*N
-x0 = [0.0]*(n_vars_tot)
-ub = [1e6]*(n_vars_tot)
-lb = [-1e-6]*(n_vars_tot)
 
-lower_states = [-10.0]*n_states
-lower_forces = [-20.0]*n_forces
+lower_states = [-100.0]*n_states
+lower_forces = [-2000.0, 0.0, -2000.0, 0.0]
 lower = np.hstack([lower_states, lower_forces])
 
-upper_states = [10.0]*n_states
-upper_forces = [20.0]*n_forces
+upper_states = [100.0]*n_states
+upper_forces = [2000.0]*n_forces
 upper = np.hstack([upper_states, upper_forces])
 
 bounds = [(lower[s], upper[s]) for i in range(0, N) for s in range(0, n_vars)]
@@ -43,58 +42,91 @@ def minimize_vel(x, w, N):
 # Linear constraints: lb <= A.dot(x) <= ub
 
 # 1) boundary conditions
-initial_state = [1.0]*n_pos
-final_state = [5.0]*n_pos
-boundary_constr = np.zeros([n_vars_tot, n_vars_tot])
-boundary_constr[0:n_pos, 0:n_pos] = np.eye(n_pos)
-boundary_constr[n_vars_tot - n_vars:n_vars_tot - n_vars + n_pos,
-                n_vars_tot - n_vars:n_vars_tot - n_vars + n_pos] = np.eye(n_pos)
-ub[0:n_pos] = initial_state
-x0[0:n_pos] = initial_state
-ub[n_vars_tot - n_vars:n_vars_tot - n_vars + n_pos] = final_state
-x0[n_vars_tot - n_vars:n_vars_tot - n_vars + n_pos] = final_state
+initial_state = [5.0, 5.0, 5.0, 0.0, 0.0, 0.0]
+final_state = [15.0, 15.0, 5.0, 0.0, 0.0, 0.0]
+
+boundary_constr = np.zeros([2*(n_pos+n_vel), n_vars_tot])
+boundary_constr[0:(n_pos+n_vel), 0:(n_pos+n_vel)] = np.eye(n_pos+n_vel)
+boundary_constr[(n_pos+n_vel):2*(n_pos+n_vel), n_vars_tot -
+                n_vars:n_vars_tot - n_vars + (n_pos+n_vel)] = np.eye(n_pos+n_vel)
+ub = [1e6]*(2*(n_pos+n_vel))
+lb = [-1e-6]*(2*(n_pos+n_vel))
+ub[0:n_pos+n_vel] = initial_state
+ub[n_pos+n_vel:2*(n_pos+n_vel)] = final_state
 lb = [u - 1e-8 for u in ub]
 print('initial state', np.shape(boundary_constr))
 print('LB', len(lb))
 print('UB', ub)
-print('x0', len(x0))
 initial_cond = LinearConstraint(boundary_constr, lb=lb, ub=ub)
+
+x0 = [0.0]*(n_vars_tot)
+x0[0:(n_pos+n_vel)] = initial_state
+x0[n_vars_tot-n_vars:n_vars_tot-n_vars+(n_pos+n_vel)] = final_state
+print('x0', x0)
 
 # 2) dynamic constraint:
 # f = m*a  with a = (v_k - v_{k-1})/T
 A_dyn = np.zeros([2*N, n_vars_tot])
 A = np.zeros([2, 2*n_vars])
-mass = 1.0
-A[0:2, 3:5] = -np.eye(2)*T*mass
-A[0:2, 6+n_vars:10+n_vars] = [[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0]]  # forces
-A[0:2, 3+n_vars:5+n_vars] = np.eye(2)*T*mass
+A[0:2, 3:5] = -np.eye(2)/T*mass
+A[0:2, 6+n_vars:10+n_vars] = [[-1.0, 0.0, -1.0, 0.0],
+                              [0.0, -1.0, 0.0, -1.0]]  # forces
+A[0:2, 3+n_vars:5+n_vars] = np.eye(2)/T*mass
 for i in range(0, N-1):
     A_dyn[i*2:i*2+2, i*n_vars:(i+2)*n_vars] = A
 
-eps = [1.0e-6]*(2*N)
-minus_eps = [-1.0e-3]*(2*N)
+eps = [1.0e-6, -grav+1.0e-6]*(N)
+minus_eps = [-1.0e-6, -grav-1.0e-6]*(N)
+print('eps', eps)
 dyn_constr = LinearConstraint(A_dyn, lb=minus_eps, ub=eps)
 
 
 # 3) velocity constraint
-A_vel = np.zeros([n_vars_tot, n_vars_tot])
-A = np.zeros([n_vars, 2*n_vars])
-A[0:n_pos, 0:n_pos] = -np.eye(n_pos)*T
-A[0:n_pos, n_vars:n_pos+n_vars] = np.eye(n_pos)*T
-A[0:n_vel, n_pos:n_pos + n_vel] = np.eye(n_pos)
+A_vel = np.zeros([3*N, n_vars_tot])
+A = np.zeros([3, 2*n_vars])
+A[0:n_pos, 0:n_pos] = -np.eye(n_pos)/T
+A[0:n_pos, n_vars:n_pos+n_vars] = np.eye(n_pos)/T
+A[0:n_pos, n_pos+n_vars:n_pos + n_vars + n_vel] = -np.eye(n_pos)
 
 for i in range(0, N-1):
-    A_vel[i*n_vars:(i+1)*n_vars, i*n_vars:(i+2)*n_vars] = A
+    A_vel[i*n_pos:(i+1)*n_pos, i*n_vars:(i+2)*n_vars] = A
 
-eps = [1.0e-6]*(n_vars_tot)
-minus_eps = [-1.0e-3]*(n_vars_tot)
+eps = [1.0e-6]*(3*N)
+minus_eps = [-1.0e-3]*(3*N)
 vel_constr = LinearConstraint(A_vel, lb=minus_eps, ub=eps)
+
+# 4) swing constraint
+
+lift_off_front = total_time*1.0/5.0
+touch_down_front = 3.0/5.0*total_time
+lift_off_hind = total_time*2.0/5.0
+touch_down_hind = 4.0/5.0*total_time
+timings = [[lift_off_front, touch_down_front],
+           [lift_off_hind, touch_down_hind]]
+
+A_swing = np.zeros([0, n_vars_tot])
+print('timngs', timings[0])
+for i in range(0, N):
+    t = T*i
+    for leg in range(0, 2):
+        print('leg', leg)
+        if (t >= timings[leg][0]) and (t <= timings[leg][1]):
+            A_new = np.zeros([2, n_vars_tot])
+            A_new[0, i*n_vars+n_states+2*leg] = 1.0
+            A_new[1, i*n_vars+n_states+2*leg+1] = 1.0
+            A_swing = np.vstack([A_swing, A_new])
+print('A_swing', np.shape(A_swing))
+print('A_swing', A_swing)
+n_swing_constr = np.shape(A_swing)[0]
+eps = [1.0e-6]*(n_swing_constr)
+minus_eps = [-1.0e-3]*(n_swing_constr)
+swing_constr = LinearConstraint(A_swing, lb=minus_eps, ub=eps)
 
 res = minimize(
     minimize_vel,
     x0=x0,
     args=(1.0, N,),
-    constraints={initial_cond, vel_constr, dyn_constr},
+    constraints={initial_cond, dyn_constr, vel_constr, swing_constr},
     bounds=bounds)
 
 print("Solution:", res.x)
@@ -129,11 +161,7 @@ axs[1].plot(pos_y)
 axs[2].plot(pitch)
 axs[3].plot(vel_x)
 axs[4].plot(vel_y)
-axs[5].plot(f_x_front)
-axs[5].plot(f_x_front)
-axs[5].plot(f_x_front)
-axs[5].plot(f_x_front)
-
+axs[5].plot(pitch_d)
 axs[6].plot(f_x_front)
 axs[7].plot(f_y_front)
 axs[8].plot(f_x_hind)
