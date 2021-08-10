@@ -25,7 +25,23 @@ upper_states = [100.0]*n_states
 upper_forces = [2000.0]*n_forces
 upper = np.hstack([upper_states, upper_forces])
 
-bounds = [(lower[s], upper[s]) for i in range(0, N) for s in range(0, n_vars)]
+tol = 1e-6
+initial_state = [0.0, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, mass/2.0, 0.0, mass/2.0]
+final_state = [2.0, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, mass/2.0, 0.0, mass/2.0]
+bounds_init = [(initial_state[s]-tol, initial_state[s]+tol)
+               for s in range(0, n_vars)]
+bounds = [(lower[s], upper[s]) for i in range(1, N-2)
+          for s in range(0, n_vars)]
+before_final_state_lb = np.hstack([[final_state[0]-tol, final_state[1]-tol, final_state[2]-tol],
+                                   [-100.0]*3, [-2000, 0.0, -2000.0, 0.0]])
+before_final_state_ub = np.hstack([[final_state[0]+tol, final_state[1]+tol, final_state[2]+tol], [
+    100.0]*3, [2000, 2000.0, 2000.0, 2000.0]])
+print('before_final_state_ub', before_final_state_ub)
+bounds_before_final = [(before_final_state_lb[s], before_final_state_ub[s])
+                       for s in range(0, n_vars)]
+bounds_final = [(final_state[s] - tol, final_state[s]+tol)
+                for s in range(0, n_vars)]
+bounds = np.vstack([bounds_init, bounds, bounds_before_final, bounds_final])
 
 
 def objective_function(x):
@@ -39,30 +55,26 @@ def minimize_vel(x, w, N):
     return cost*w
 
 
+def quadratic_bezier_curve(t, p0, p1, p2):
+    return (1-t)*[(1-t)*p0 + t*p1] + t*[(1-t)*p1+t*p2]
+
+
+def bezier_curve(amplitude, time, td_time, lo_time, td_location, lo_location):
+    p1_x = (td_location[0]+lo_location[0])/2.0
+    p1_y = amplitude
+    t = (time - td_time)/(lo_time-td_time)
+    x = quadratic_bezier_curve(
+        t, td_location[0], p1_x, lo_location[0])
+    y = quadratic_bezier_curve(
+        t, td_location[1], p1_y, lo_location[1])
+    return [x, y]
+
+
 # Linear constraints: lb <= A.dot(x) <= ub
 
-# 1) boundary conditions
-initial_state = [5.0, 5.0, 5.0, 0.0, 0.0, 0.0]
-final_state = [15.0, 15.0, 5.0, 0.0, 0.0, 0.0]
-
-boundary_constr = np.zeros([2*(n_pos+n_vel), n_vars_tot])
-boundary_constr[0:(n_pos+n_vel), 0:(n_pos+n_vel)] = np.eye(n_pos+n_vel)
-boundary_constr[(n_pos+n_vel):2*(n_pos+n_vel), n_vars_tot -
-                n_vars:n_vars_tot - n_vars + (n_pos+n_vel)] = np.eye(n_pos+n_vel)
-ub = [1e6]*(2*(n_pos+n_vel))
-lb = [-1e-6]*(2*(n_pos+n_vel))
-ub[0:n_pos+n_vel] = initial_state
-ub[n_pos+n_vel:2*(n_pos+n_vel)] = final_state
-lb = [u - 1e-8 for u in ub]
-print('initial state', np.shape(boundary_constr))
-print('LB', len(lb))
-print('UB', ub)
-initial_cond = LinearConstraint(boundary_constr, lb=lb, ub=ub)
-
 x0 = [0.0]*(n_vars_tot)
-x0[0:(n_pos+n_vel)] = initial_state
-x0[n_vars_tot-n_vars:n_vars_tot-n_vars+(n_pos+n_vel)] = final_state
-print('x0', x0)
+x0[0:n_vars] = initial_state
+x0[n_vars_tot-n_vars:n_vars_tot] = final_state
 
 # 2) dynamic constraint:
 # f = m*a  with a = (v_k - v_{k-1})/T
@@ -77,7 +89,6 @@ for i in range(0, N-1):
 
 eps = [1.0e-6, -grav+1.0e-6]*(N)
 minus_eps = [-1.0e-6, -grav-1.0e-6]*(N)
-print('eps', eps)
 dyn_constr = LinearConstraint(A_dyn, lb=minus_eps, ub=eps)
 
 
@@ -91,7 +102,7 @@ A[0:n_pos, n_pos+n_vars:n_pos + n_vars + n_vel] = -np.eye(n_pos)
 for i in range(0, N-1):
     A_vel[i*n_pos:(i+1)*n_pos, i*n_vars:(i+2)*n_vars] = A
 
-eps = [1.0e-6]*(3*N)
+eps = [1.0e-3]*(3*N)
 minus_eps = [-1.0e-3]*(3*N)
 vel_constr = LinearConstraint(A_vel, lb=minus_eps, ub=eps)
 
@@ -126,7 +137,7 @@ res = minimize(
     minimize_vel,
     x0=x0,
     args=(1.0, N,),
-    constraints={initial_cond, dyn_constr, vel_constr, swing_constr},
+    constraints={vel_constr, dyn_constr, swing_constr},
     bounds=bounds)
 
 print("Solution:", res.x)
