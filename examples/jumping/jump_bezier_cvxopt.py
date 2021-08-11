@@ -32,23 +32,29 @@ upper_ampl = [10000.0]*n_ampl
 upper = np.hstack([upper_states, upper_ampl])
 
 tol = 1e-3
-x_init = 0.0
+z_init = 10.0
+x_init = 1.0
 x_final = 1.0
 avg_vel_x = (x_final - x_init)/total_time
-vel_z_init = 0.0
+vel_z_init = 1.0
+
 vel_z_final = -vel_z_init
-initial_state = [x_init, 0.0, 0.0, avg_vel_x, vel_z_init, 0.0]
-final_state = [x_final, 0.0, 0.0, avg_vel_x, vel_z_final, 0.0]
-bounds_init = [(initial_state[s]-tol, initial_state[s]+tol)
-               for s in range(0, n_vars)]
-bounds = [(lower_states[s], upper_states[s]) for i in range(1, N-1)
-          for s in range(0, n_vars)]
-bounds_final = [(final_state[s] - tol, final_state[s]+tol)
-                for s in range(0, n_vars)]
-bounds_ampl = [(lower_ampl[s], upper_ampl[s])
-               for s in range(0, n_ampl)]
-bounds = np.vstack([bounds_init, bounds, bounds_final, bounds_ampl])
-print('bounds', bounds)
+# initial_state = [x_init, z_init, 0.0, avg_vel_x, vel_z_init, 0.0]
+initial_state = [0.0]*n_states
+# final_state = [x_final, z_init, 0.0, avg_vel_x, vel_z_final, 0.0]
+final_state = [0.0]*n_states
+lb_init = [initial_state[s] for s in range(0, n_vars)]
+ub_init = [initial_state[s] for s in range(0, n_vars)]
+lb = [lower_states[s] for i in range(1, N-1) for s in range(0, n_vars)]
+ub = [upper_states[s] for i in range(1, N-1) for s in range(0, n_vars)]
+lb_final = [final_state[s] for s in range(0, n_vars)]
+ub_final = [final_state[s] for s in range(0, n_vars)]
+lb_ampl = [lower_ampl[s] for s in range(0, n_ampl)]
+ub_ampl = [upper_ampl[s] for s in range(0, n_ampl)]
+lb = np.hstack([lb_init, lb, lb_final, lb_ampl])
+ub = np.hstack([ub_init, ub, ub_final, ub_ampl])
+print('lower bounds', lb)
+print('upper bounds', ub)
 
 base2hip_dist_x = 0.3
 front_foot_0 = [x_init+base2hip_dist_x, 0.0]
@@ -58,15 +64,11 @@ hind_foot_0 = [x_init-base2hip_dist_x, 0.0]
 hind_foot_1 = [x_final-base2hip_dist_x, 0.0]
 
 
-def objective_function(x):
-    return np.sum(x)
-
-
-def minimize_vel(x, w, N):
-    cost = 0.0
+def minimize_vel(n_states, N, n_vars_tot):
+    A = np.zeros([n_vars_tot, n_vars_tot])
     for i in range(0, N):
-        cost += np.sum(x[i*3+3:i*3+6])
-    return cost*w
+        A[i*n_states+3:(i+1)*n_states, i*n_states+3:(i+1)*n_states] = np.eye(3)
+    return A
 
 
 def quadratic_bezier_curve(t, p0, p1, p2):
@@ -123,11 +125,23 @@ def compute_torque_matrix(i, lift_off_front, touch_down_front, lift_off_hind, to
 
 
 # Linear constraints: lb <= A.dot(x) <= ub
+# inequality constraints
+bounds_constr = np.vstack([np.eye(n_vars_tot), 1.0*np.eye(n_vars_tot)])
+bounds_b = np.hstack([ub, -lb])
 
-x0 = [((final_state[s]*n*T + (N-n)*T*initial_state[s])/total_time)
-      for n in range(0, N) for s in range(0, n_states)]
-x0_ampl = [0.0, 100, 0.0, 100, 0.0, 100, 0.0, 100]
-x0 = np.hstack([x0, x0_ampl])
+print('bounds', bounds_constr)
+print('b bounds', bounds_b)
+
+# equality constraints
+bc = np.zeros([2*n_pos, n_vars_tot])
+bc[0:n_pos, 0:n_pos] = np.eye(n_pos)
+bc[n_pos:2*n_pos, n_pos*(N-1):n_pos*N] = np.eye(n_pos)
+bounds_eq_constr = bc
+bounds_eq_b = np.hstack([0.0]*n_states)
+
+print('bounds_eq_constr', bounds_eq_constr)
+print('bounds_eq_b', bounds_eq_b)
+
 
 # 2) dynamic constraint:
 # f = m*a with a = (v_k - v_{k-1})/T
@@ -135,7 +149,7 @@ A_dyn_lin = np.zeros([2*N, n_vars_tot])
 A_vel = np.zeros([2, 2*n_vars])
 A_vel[0:2, 3:5] = -mass*np.eye(2)/T
 A_vel[0:2, 3+n_vars:5+n_vars] = mass*np.eye(2)/T
-print('A vel', A_vel)
+# print('A vel', A_vel)
 
 lift_off_front = total_time*1.0/5.0
 touch_down_front = 3.0/5.0*total_time
@@ -145,22 +159,18 @@ touch_down_hind = 4.0/5.0*total_time
 for i in range(0, N-1):
     A_force = compute_force_matrix(
         i, lift_off_front, touch_down_front, lift_off_hind, touch_down_hind, total_time)
-    print('A force', A_force)
+    # print('A force', A_force)
     A_dyn_lin[i*2:i*2+2, n_states*N:n_vars_tot] = A_force
     A_dyn_lin[i*2:i*2+2, i*n_vars:(i+2)*n_vars] = A_vel
 
 A_dyn_lin[(N-1)*2:(N-1)*2+2, n_states*N:n_vars_tot] = A_force
 A_dyn_lin[(N-1)*2:(N-1)*2+2, (N-1)*n_vars:N*n_vars] = A_vel[:, 0:n_states]
 
-print('A dyn', A_dyn_lin)
+# print('A dyn', A_dyn_lin)
 
-dyn_tol = 1e-4
-ub = [dyn_tol, -grav*mass+dyn_tol]*(N)
-lb = [-dyn_tol, -grav*mass-dyn_tol]*(N)
-# dyn_constr_lin = LinearConstraint(
-#     A_dyn_lin, lb=lb, ub=ub)
+dyn_constr_b = [0.0, -grav*mass]*(N)
 
-print('Dynamic bound', ub)
+# print('Dynamic bound', dyn_constr_b)
 
 # angular part
 A_dyn_ang = np.zeros([N, n_vars_tot])
@@ -192,8 +202,6 @@ for i in range(0, N-1):
 
 eps = [1.0e-6]*(N)
 minus_eps = [-1.0e-6]*(N)
-# dyn_constr_ang = LinearConstraint(
-#     A_dyn_ang, lb=minus_eps, ub=eps, keep_feasible=True)
 
 # 3) velocity constraint
 A_vel = np.zeros([3*N, n_vars_tot])
@@ -205,26 +213,28 @@ A[0:n_pos, n_pos+n_vars:n_pos + n_vars + n_vel] = -np.eye(n_pos)
 for i in range(0, N-1):
     A_vel[i*n_pos:(i+1)*n_pos, i*n_vars:(i+2)*n_vars] = A
 
-eps = [1.0e-3]*(3*N)
-minus_eps = [-1.0e-3]*(3*N)
-# vel_constr = LinearConstraint(
-#     A_vel, lb=minus_eps, ub=eps, keep_feasible=True)
+A_vel[(N-1)*n_pos:(N)*n_pos, (N-1)*n_vars:(N)*n_vars] = A[:, 0:n_states]
 
-# res = minimize(
-#     minimize_vel,
-#     x0=x0,
-#     args=(1.0, N,),
-#     constraints={dyn_constr_lin},
-#     bounds=bounds)
+
+vel_b = [0.0]*(3*N)
+
+print('A vel', A_vel)
+
+# CVXOPT
 n = n_vars_tot
-Q = 2*matrix(np.eye(n))
-p = matrix(np.ones([n, 1]))
+Q = matrix(minimize_vel(n_states, N, n))
+p = matrix(np.zeros([n, 1]))
 
-nc = np.shape(A_dyn_lin)[0]
-print('Rank', np.linalg.matrix_rank(A_dyn_lin))
+G = matrix(bounds_constr)
+q = matrix(bounds_b)
+
+A_tot = np.vstack([bounds_eq_constr, A_dyn_lin, A_vel])
+nc = np.shape(A_tot)[0]
+A = matrix(A_tot, (nc, n))
+b_tot = np.hstack([bounds_eq_b, dyn_constr_b, vel_b])
+b = matrix(b_tot)
+
 print('number of constraints', nc)
-A = matrix(A_dyn_lin[0:nc, :], (nc, n))
-b = matrix([0.0]*nc)
 sol = solvers.qp(Q, p, A=A, b=b)
 
 print("Solution:", sol['x'])
