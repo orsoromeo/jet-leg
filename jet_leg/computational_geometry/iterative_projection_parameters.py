@@ -101,7 +101,6 @@ class IterativeProjectionParameters:
         B_R_W = rot.inv().as_matrix()
         for j in np.arange(0, 4):
             j = int(j)
-            # self.contactsBF[j,:] = np.add(np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (self.contactsWF[j, :] - self.comPositionWF)), self.comPositionBF)
             self.contactsBF[j, :] = np.add(
                 np.dot(B_R_W, (self.contactsWF[j, :] - self.comPositionWF)), self.comPositionBF)
         return self.contactsBF

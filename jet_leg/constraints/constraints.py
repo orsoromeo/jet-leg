@@ -38,7 +38,6 @@ class Constraints:
         contactsNumber = np.sum(stanceLegs)
 
         contactsBF = copy.copy(params.computeContactsPosBF())
-        print('contacts BF', contactsBF)
 
         constraint_mode = params.getConstraintModes()
         joint_torque_lims = self.model.joint_torque_limits

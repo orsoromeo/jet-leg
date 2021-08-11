@@ -19,17 +19,17 @@ math = Math()
 ''' Set the robot's name (current options: 'hyq', 'hyqreal', 'anymal_boxy', 'anymal_coyote' or 'lemo_EP0')'''
 robot = sys.argv[1]
 params = IterativeProjectionParameters(robot)
-comp_dyn = ComputationalDynamics(robot)
+comp_dyn = ComputationalDynamics(robot, params.pin)
 params.setDefaultValuesWrtWorld()
 
 hipy_tau_min = 0
-hipy_tau_max = 50
-N_hipy_tau = 11
+hipy_tau_max = 150
+N_hipy_tau = 16
 
 hipy_range = np.linspace(hipy_tau_min, hipy_tau_max, num=N_hipy_tau)
 
 knee_tau_min = 0
-knee_tau_max = 100
+knee_tau_max = 200
 N_knee_tau = 21
 knee_range = np.linspace(knee_tau_min, knee_tau_max, num=N_knee_tau)
 

@@ -19,12 +19,12 @@ math = Math()
 ''' Set the robot's name (current options: 'hyq', 'hyqreal', 'anymal_boxy', 'anymal_coyote' or 'lemo_EP0')'''
 robot = sys.argv[1]
 params = IterativeProjectionParameters(robot)
-comp_dyn = ComputationalDynamics(robot)
+comp_dyn = ComputationalDynamics(robot, params.pin)
 params.setDefaultValuesWrtWorld()
 
 min_load = 0.0
-max_load = -150.0
-N_load = 16
+max_load = -250.0
+N_load = 26
 load_range = np.linspace(min_load, max_load, num=N_load)
 
 min_lever = -0.3

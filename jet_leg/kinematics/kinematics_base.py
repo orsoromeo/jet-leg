@@ -31,7 +31,6 @@ class KinematicsBase():
         blockIdx = self.getBlockIndex(foot_frame_name)
 
         q = self.q0
-        print('q0 is', self.q0)
         eps = 0.005
         IT_MAX = 200
         DT = 1e-1
@@ -104,9 +103,7 @@ class KinematicsBase():
         leg_ik_success = [True] * 4
         knees_pos = np.zeros((4, 3))
         for k in np.arange(0, number_of_stance_feet):
-            print('k', k)
             stance_leg_id = int(stance_idx[k])
-            print('id', stance_leg_id)
             if stance_leg_id == 0:
                 f_p_des = np.array(feetPosDes[0, :]).T
                 q_LF, self.LF_foot_jac, err, knee_pos_LF, hip_pos_LF, leg_ik_success[0] = self.footInverseKinematicsFixedBase(0, f_p_des,
