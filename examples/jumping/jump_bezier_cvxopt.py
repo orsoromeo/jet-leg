@@ -9,7 +9,7 @@ from jet_leg.computational_geometry.iterative_projection_parameters import Itera
 
 np.set_printoptions(threshold=sys.maxsize)
 
-N = 20
+N = 40
 total_time = 5.0
 T = total_time/float(N)
 print('T', T)
@@ -24,15 +24,14 @@ n_ampl = 8
 n_vars_tot = n_vars*N+n_ampl
 
 max_ampl = 1e8
-max_ampl_pos = 300
+max_ampl_pos = 0
 lower_ampl = [-max_ampl, max_ampl_pos, -max_ampl,
               max_ampl_pos, -max_ampl, max_ampl_pos, -max_ampl, max_ampl_pos]
-# lower_ampl = [-max_ampl]*n_ampl
 upper_ampl = [max_ampl]*n_ampl
 
 robot_height = 0.4
-z_init = 0.0
-z_final = 0.0
+z_init = robot_height
+z_final = robot_height
 x_init = 0.0
 x_final = 0.0
 
@@ -45,10 +44,8 @@ hind_foot_1 = [x_final-base2hip_dist_x, 0.0]
 
 
 def minimize_vel(n_states, N, n_vars_tot):
-    A = np.zeros([n_vars_tot, n_vars_tot])
-    for i in range(0, N):
-        A[i*n_states+3:(i+1)*n_states, i*n_states+3:(i+1)*n_states] = np.eye(3)
-    return A
+    Q = np.eye(n_vars_tot)
+    return Q
 
 
 def quadratic_bezier_curve(t, p0, p1, p2):
@@ -112,17 +109,23 @@ ampl_constr[n_ampl:2*n_ampl, N*n_states:n_vars_tot] = -np.eye(n_ampl)
 
 ampl_b = np.hstack([upper_ampl, -np.array(lower_ampl)])
 
-print('ampl_constr', ampl_constr)
-print('ampl b', ampl_b)
+# print('ampl_constr', ampl_constr)
+# print('ampl b', ampl_b)
 
 # equality constraints
 bounds_eq_constr = np.zeros([2*n_pos, n_vars_tot])
 bounds_eq_constr[0:n_pos, 0:n_pos] = np.eye(n_pos)
-bounds_eq_constr[n_pos:2*n_pos, n_pos*(N-1):n_pos*N] = np.eye(n_pos)
+bounds_eq_constr[n_pos:2*n_pos, n_states *
+                 (N-1):n_states*(N-1)+n_pos] = np.eye(n_pos)
 bounds_eq_b = np.hstack([x_init, z_init, 0.0, x_final, z_final, 0.0])
 
-print('bounds_eq_constr', bounds_eq_constr)
-print('bounds_eq_b', bounds_eq_b)
+# bounds_eq_constr = np.zeros([2*n_pos, n_vars_tot])
+# bounds_eq_constr[3:n_states, 3:n_states] = np.eye(n_pos)
+# bounds_eq_constr[n_pos:2*n_pos, n_pos*(N-1):n_pos*N] = np.eye(n_pos)
+# bounds_eq_b = np.hstack([x_init, z_init, 0.0, x_final, z_final, 0.0])
+
+# print('bounds_eq_constr', bounds_eq_constr)
+# print('bounds_eq_b', bounds_eq_b)
 
 
 # 2) dynamic constraint:
@@ -131,7 +134,6 @@ A_dyn_lin = np.zeros([2*N, n_vars_tot])
 A_vel = np.zeros([2, 2*n_vars])
 A_vel[0:2, 3:5] = -mass*np.eye(2)/T
 A_vel[0:2, 3+n_vars:5+n_vars] = mass*np.eye(2)/T
-# print('A vel', A_vel)
 
 lift_off_front = total_time*1.0/5.0
 touch_down_front = 3.0/5.0*total_time
@@ -141,21 +143,16 @@ touch_down_hind = 4.0/5.0*total_time
 for i in range(0, N-1):
     A_force = compute_force_matrix(
         i, lift_off_front, touch_down_front, lift_off_hind, touch_down_hind, total_time)
-    # print('A force', A_force)
     A_dyn_lin[i*2:i*2+2, n_states*N:n_vars_tot] = A_force
     A_dyn_lin[i*2:i*2+2, i*n_vars:(i+2)*n_vars] = A_vel
 
 A_dyn_lin[(N-1)*2:(N-1)*2+2, n_states*N:n_vars_tot] = A_force
 A_dyn_lin[(N-1)*2:(N-1)*2+2, (N-1)*n_vars:N*n_vars] = A_vel[:, 0:n_states]
 
-# print('A dyn', A_dyn_lin)
-
 dyn_constr_b = [0.0, -grav*mass]*(N)
 
-# print('Dynamic bound', dyn_constr_b)
-
 # 3) velocity constraint
-A_vel = np.zeros([3*N, n_vars_tot])
+A_vel = np.zeros([3*(N-1), n_vars_tot])
 A = np.zeros([3, 2*n_vars])
 A[0:n_pos, 0:n_pos] = -np.eye(n_pos)/T
 A[0:n_pos, n_vars:n_pos+n_vars] = np.eye(n_pos)/T
@@ -163,8 +160,8 @@ A[0:n_pos, n_pos+n_vars:n_pos + n_vars + n_vel] = -np.eye(n_pos)
 
 for i in range(0, N-1):
     A_vel[i*n_pos:(i+1)*n_pos, i*n_vars:(i+2)*n_vars] = A
-A_vel[(N-1)*n_pos:(N)*n_pos, (N-1)*n_vars:(N)*n_vars] = A[:, 0:n_states]
-vel_b = [0.0]*(3*N)
+# A_vel[(N-1)*n_pos:(N)*n_pos, (N-1)*n_vars:(N)*n_vars] = A[:, 0:n_states]
+vel_b = [0.0]*(3*(N-1))
 
 # print('A vel', A_vel)
 
@@ -176,19 +173,23 @@ p = matrix(np.zeros([n, 1]))
 G = matrix(ampl_constr)
 q = matrix(ampl_b)
 
+# A_tot = np.vstack([bounds_eq_constr, A_vel])
 A_tot = np.vstack([bounds_eq_constr, A_dyn_lin, A_vel])
 nc = np.shape(A_tot)[0]
+print('constraints number', nc)
+print('A_tot', A_tot)
 A = matrix(A_tot, (nc, n))
 b_tot = np.hstack([bounds_eq_b, dyn_constr_b, vel_b])
+# b_tot = np.hstack([bounds_eq_b, vel_b])
 b = matrix(b_tot)
 
-print('number of constraints', nc)
 sol = solvers.qp(Q, p, G, q, A=A, b=b)
 
 if sol['status'] is 'optimal':
-    print("Solution:", sol['x'])
+    print("Solution is", sol['status'])
     pos_x = [sol['x'][i*n_vars] for i in range(0, N)]
-    pos_z = [sol['x'][i*n_vars+1]/100.0+robot_height for i in range(0, N)]
+    # pos_z = [sol['x'][i*n_vars+1]/80+robot_height for i in range(0, N)]
+    pos_z = [sol['x'][i*n_vars+1] for i in range(0, N)]
     pitch = [sol['x'][i*n_vars+2] for i in range(0, N)]
     vel_x = [sol['x'][i*n_vars+3] for i in range(0, N)]
     vel_y = [sol['x'][i*n_vars+4] for i in range(0, N)]
@@ -223,9 +224,59 @@ if sol['status'] is 'optimal':
     # check total momentum
     Mx = (sum(f_x_front) + sum(f_x_hind))*T
     print('total momentum along X', Mx)
-    Mz = (sum(f_z_front) + sum(f_z_hind))*T - mass*grav*total_time
-    print('total momentum along Z', Mz, 'Gravity component is', -mass*grav *
-          total_time, 'Force component is', (sum(f_z_front) + sum(f_z_hind))*T)
+    f = (sum(f_z_front) + sum(f_z_hind))*T
+    g = mass*grav*total_time
+    Mz = f - g
+    print('total momentum along Z', Mz,
+          'Gravity component is', -g, 'Force component is', f)
+
+    # f_z_front = np.array(f_z_front)/f*g
+    # f_z_hind = [f_z_hind[s]/f*g for s in range(0, N)]
+    # f = (sum(f_z_front) + sum(f_z_hind))*T
+    # g = mass*grav*total_time
+    # Mz = f - g
+    # print('total momentum along Z', Mz,
+    #       'Gravity component is', -g, 'Force component is', f)
+
+    fig, axs = plt.subplots(10)
+    fig.suptitle('Trajectory')
+
+    time = np.linspace(0, total_time-T, N)
+    print('time', time)
+    axs[0].plot(time, pos_x)
+    axs[0].set_ylabel('pos X [m]')
+    axs[1].plot(time, pos_z)
+    axs[1].set_ylabel('pos Z [m]')
+    axs[2].plot(time, pitch)
+    axs[2].set_ylabel('pitch [rad]')
+    axs[3].plot(time, vel_x)
+    axs[3].set_ylabel('vel X [m/s]')
+    axs[4].plot(time, vel_y)
+    axs[4].set_ylabel('vel Z [m/s]')
+    axs[5].plot(time, pitch_d)
+    axs[5].set_ylabel('pitch_dot [rad/s]')
+    axs[6].plot(time, f_x_front)
+    axs[6].set_ylabel('front f X [N]')
+    axs[7].plot(time, f_z_front)
+    axs[7].set_ylabel('front f Z [N]')
+    axs[8].plot(time, f_x_hind)
+    axs[8].set_ylabel('hind f X [N]')
+    axs[9].plot(time, f_z_hind)
+    axs[9].set_ylabel('front f X [N]')
+    axs[9].set_xlabel('time [s]')
+
+    axs[0].grid()
+    axs[1].grid()
+    axs[2].grid()
+    axs[3].grid()
+    axs[4].grid()
+    axs[5].grid()
+    axs[6].grid()
+    axs[7].grid()
+    axs[8].grid()
+    axs[9].grid()
+
+    plt.show()
 
     # load robot model
     ''' Set the robot's name (current options: 'hyq', 'hyqreal', 'anymal_boxy', 'anymal_coyote' or 'lemo_EP0')'''
@@ -299,33 +350,6 @@ if sol['status'] is 'optimal':
         tau_hy_hind[i] = tau_hind[1]
         tau_kn_hind[i] = tau_hind[2]
 
-    fig, axs = plt.subplots(10)
-    fig.suptitle('Trajectory')
-
-    axs[0].plot(pos_x)
-    axs[1].plot(pos_z)
-    axs[2].plot(pitch)
-    axs[3].plot(vel_x)
-    axs[4].plot(vel_y)
-    axs[5].plot(pitch_d)
-    axs[6].plot(f_x_front)
-    axs[7].plot(f_z_front)
-    axs[8].plot(f_x_hind)
-    axs[9].plot(f_z_hind)
-
-    axs[0].grid()
-    axs[1].grid()
-    axs[2].grid()
-    axs[3].grid()
-    axs[4].grid()
-    axs[5].grid()
-    axs[6].grid()
-    axs[7].grid()
-    axs[8].grid()
-    axs[9].grid()
-
-    plt.show()
-
     fig2, axs2 = plt.subplots(4)
     fig2.suptitle('Torques')
 
@@ -334,10 +358,15 @@ if sol['status'] is 'optimal':
     # print('tau_hy_hind', tau_hy_hind)
     # print('tau_kn_hind', tau_kn_hind)
 
-    axs2[0].plot(tau_hy_front)
-    axs2[1].plot(tau_kn_front)
-    axs2[2].plot(tau_hy_hind)
-    axs2[3].plot(tau_kn_hind)
+    axs2[0].plot(time, tau_hy_front)
+    axs2[0].set_ylabel('front HY [Nm]')
+    axs2[1].plot(time, tau_kn_front)
+    axs2[1].set_ylabel('front KN [Nm]')
+    axs2[2].plot(time, tau_hy_hind)
+    axs2[2].set_ylabel('hind HY [Nm]')
+    axs2[3].plot(time, tau_kn_hind)
+    axs2[3].set_ylabel('hind KN [Nm]')
+    axs2[3].set_xlabel('time [s]')
 
     axs2[0].grid()
     axs2[1].grid()
