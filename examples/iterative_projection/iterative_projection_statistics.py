@@ -120,7 +120,7 @@ for iter in range(0,number_of_tests):
     IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
     comp_time = comp_time * 1000.0
     
-    print comp_time
+    # print comp_time
     tests3contacts[iter] = comp_time
 
 nc = 4
