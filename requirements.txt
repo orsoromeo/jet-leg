@@ -1,0 +1,6 @@
+pytest
+numpy
+scipy
+matplotlib
+pycddlib
+pypoman

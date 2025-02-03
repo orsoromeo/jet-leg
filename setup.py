@@ -18,12 +18,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with jet_leg. If not, see <http://www.gnu.org/licenses/>.
 
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import find_packages, setup
 
 
 setup(
-    name='jet_leg_common',
+    name='jet_leg',
     version='0.1.0',
     description="Python Polyhedron Manipulation",
     url="https://github.com/orsoromeo/jet-leg",
