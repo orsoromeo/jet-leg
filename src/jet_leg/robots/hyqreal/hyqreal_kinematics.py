@@ -42,7 +42,7 @@ class hyqrealKinematics():
     def footInverseKinematicsFixedBase(self, foot_pos_des, frame_name):
         frame_id = self.model.getFrameId(frame_name)
         blockIdx = self.getBlockIndex(frame_name)
-        anymal_q0 = np.vstack([-0.1, 0.7, -1., -0.1, -0.7, 1., 0.1, 0.7,-1., 0.1,-0.7, 1.])
+        anymal_q0 = pinocchio.neutral(self.model)
         q = anymal_q0
         eps = 0.005
         IT_MAX = 200
@@ -69,7 +69,7 @@ class hyqrealKinematics():
                 print("\n Warning: the iterative algorithm has not reached convergence to the desired precision. Error is: ", np.linalg.norm(e))
                 raise Exception('FailedConvergence')
             pinocchio.computeJointJacobians(self.model, self.data, q) # compute jacobians
-            J = pinocchio.getFrameJacobian(self.model, self.data, frame_id, pinocchio.WORLD)
+            J = pinocchio.getFrameJacobian(self.model, self.data, frame_id, pinocchio.LOCAL_WORLD_ALIGNED)
             J_lin = J[:3, :]
             #print J_lin
             v = - np.linalg.pinv(J_lin) * e

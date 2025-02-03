@@ -11,5 +11,5 @@ starting_contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 foot_vel = np.array([0.0, 0.0, 0.0, 0.0])
 
 q = kin.inverse_kin(starting_contacts, foot_vel)
-print "Pinocchio's IK for Anymal: ", q
+print("Pinocchio's IK for Anymal: ", q)
 
