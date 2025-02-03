@@ -5,7 +5,7 @@ Created on Wed Nov 14 15:07:45 2018
 @author: Romeo Orsolino
 """
 import numpy as np
-from math_tools import Math
+from jet_leg.maths.math_tools import Math
 
 class IterativeProjectionParameters:
     def __init__(self):
@@ -72,7 +72,6 @@ class IterativeProjectionParameters:
         
     def setActiveContacts(self, activeContacts):
         self.stanceFeet = activeContacts
-        #print self.stanceFeet
         
     def setContactNormals(self, normals):
         self.normals = normals
@@ -127,10 +126,8 @@ class IterativeProjectionParameters:
 
     def getStanceIndex(self, stanceLegs):
         stanceIdx = []
-        #        print 'stance', stanceLegs
         for iter in range(0, 4):
             if stanceLegs[iter] == 1:
-                #                print 'new poly', stanceIndex, iter
                 stanceIdx = np.hstack([stanceIdx, iter])
         return stanceIdx
 
@@ -167,9 +164,7 @@ class IterativeProjectionParameters:
     def getParamsFromRosDebugTopic(self, received_data):
         
         num_of_elements = np.size(received_data.data)
-        # print 'number of elements: ', num_of_elements
         for j in range(0,num_of_elements):
-#            print j, received_data.name[j], str(received_data.name[j]), str("footPosLFx")
             if str(received_data.name[j]) == str("LF_HAAmaxVar"):
                 self.LF_tau_lim[0] = received_data.data[j]           
             if str(received_data.name[j]) == str("LF_HFEmaxVar"):
@@ -228,7 +223,6 @@ class IterativeProjectionParameters:
                 self.footPosWRH[2] = received_data.data[j]
 
             self.contactsWF = np.array([self.footPosWLF, self.footPosWRF, self.footPosWLH, self.footPosWRH])
-            #print self.contactsWF
 
             if str(received_data.name[j]) == str("actual_CoMX"):
                 self.comPositionWF[0] = received_data.data[j]
@@ -250,12 +244,7 @@ class IterativeProjectionParameters:
             if str(received_data.name[j]) == str("extPerturbForceY"):
                 self.externalForceWF[1] = received_data.data[j]                       
             if str(received_data.name[j]) == str("extPerturbForceZ"):
-                self.externalForceWF[2] = received_data.data[j]   
-             
-#            print 'ext force ',self.externalForceWF
-
-#            print self.contactsWF
-          
+                self.externalForceWF[2] = received_data.data[j]                
             if str(received_data.name[j]) == str("LF_HAA_th"):
                 self.q[0] = received_data.data[j]  
             if str(received_data.name[j]) == str("LF_HFE_th"):
@@ -308,11 +297,7 @@ class IterativeProjectionParameters:
             if str(received_data.name[j]) == str("normalRHy"):
                 self.normals[3,1] = received_data.data[j]  
             if str(received_data.name[j]) == str("normalRHz"):
-                self.normals[3,2] = received_data.data[j]                  
-            
-            #print 'normals',self.normals
- 
-    
+                self.normals[3,2] = received_data.data[j]                      
             if str(received_data.name[j]) == str("robotMass"):
                 self.robotMass = received_data.data[j] 
            
@@ -338,7 +323,6 @@ class IterativeProjectionParameters:
         num_of_elements = np.size(received_data.data)         
         for j in range(0,num_of_elements):
             if str(received_data.name[j]) == str("future_stance_LF"):
-#                print 'future lf',received_data.data[j]
                 self.stanceFeet[0] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RF"):
                 self.stanceFeet[1] = int(received_data.data[j])
@@ -346,7 +330,7 @@ class IterativeProjectionParameters:
                 self.stanceFeet[2] = int(received_data.data[j])
             if str(received_data.name[j]) == str("future_stance_RH"):
                 self.stanceFeet[3] = int(received_data.data[j])  
-        print 'stance feet ', self.stanceFeet
+        print('stance feet ', self.stanceFeet)
         self.numberOfContacts = np.sum(self.stanceFeet)
         
     def getCurrentStanceFeetFlags(self, received_data):
@@ -381,9 +365,6 @@ class IterativeProjectionParameters:
                 self.stanceFeet[3] = 1                
             else:
                 self.stanceFeet[3] = 0
-        
- 
+            
         self.numberOfContacts = np.sum(self.stanceFeet)
-
-        #print 'stance feet ', self.stanceFeet
 

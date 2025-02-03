@@ -92,39 +92,30 @@ class Math:
         num = (segment_point2[0] - segment_point1[0])*(segment_point1[1] - point_to_check[1]) - (segment_point1[0] - point_to_check[0])*(segment_point2[1] - segment_point1[1])
         denum_sq = (segment_point2[0] - segment_point1[0])*(segment_point2[0] - segment_point1[0]) + (segment_point2[1] - segment_point1[1])*(segment_point2[1] - segment_point1[1])
         dist = num/np.sqrt(denum_sq)
-#        print segment_point1, segment_point2, point_to_check, dist
         return dist
         
     def find_residual_radius(self, polygon, point_to_check):
         # this function returns a positive distance if the point is on the right side of the segment. This will return 
         # a positive distance for a polygon queried in clockwise order and with a point_to_check which lies inside the polygon itself 
-        # print 'poly',polygon
         numberOfVertices = np.size(polygon,0)
-        # print 'polygon in residual radius computation', polygon
-        # print 'number of vertices', numberOfVertices
         residual_radius = 1000000.0
         for i in range(0,numberOfVertices-1):
             s1 = polygon[i,:]
             s2 = polygon[i+1,:]
-            # print s1, s2, point_to_check
             d_temp = self.find_point_to_line_signed_distance(s1, s2, point_to_check)
-#            print i, s1, s2, d_temp
             if d_temp < 0.0:
-                print 'Warning! found negative distance. Polygon might not be in clockwise order...'
+                print('Warning! found negative distance. Polygon might not be in clockwise order...')
             elif d_temp < residual_radius:
                 residual_radius = d_temp
         
         # we dont need to compute for the last edge cause we added an extra point to close the polytop (last point equal to the first)
         
-#        print polygon[numberOfVertices-1,:], polygon[0,:], d_temp
         return residual_radius
         
     def find_polygon_segment_intersection(self, vertices_input, desired_direction, starting_point):
         desired_direction = desired_direction/np.linalg.norm(desired_direction)*10.0
-        #print "desired dir: ", desired_direction
 
         desired_com_line = self.line(starting_point, starting_point+desired_direction)
-        #print "des line : ", desired_com_line
         tmp_vertices = np.vstack([vertices_input, vertices_input[0]])
         intersection_points = np.zeros((0,2))
         points_along_direction = np.zeros((0,2))
@@ -134,7 +125,6 @@ class Math:
             v1 = tmp_vertices[i,:]
             v2 = tmp_vertices[i+1,:]        
             actuation_region_edge = self.line(v1, v2)
-            #print desired_com_line, actuation_region_edge
             new_point = self.two_lines_intersection(desired_com_line, actuation_region_edge)
 
             if new_point:
@@ -146,29 +136,14 @@ class Math:
                     point_to_com_distance = np.vstack([point_to_com_distance, d])
 
             else:
-                print "lines are parallel!"
+                print("lines are parallel!")
                 #while new_point is False:
                 #    desired_com_line = self.line(starting_point, starting_point+desired_direction)
                 #    new_point = self.two_lines_intersection(desired_com_line, actuation_region_edge)
                 #    intersection_points = np.vstack([intersection_points, new_point])
                 #    print new_point
         
-        #print points_along_direction, point_to_com_distance
         idx = np.argmin(point_to_com_distance)
         final_point = points_along_direction[idx,:]
-        #print points_along_direction, point_to_com_distance, idx
         return final_point, intersection_points
         
-
-#p1 = [1,1.5]
-#s1 = [0,0]
-#s2 = [0,2]
-#s3 = [2,2]
-#s4 = [2,0]
-#poly = np.vstack([s1,s2,s3,s4])
-#math = Math()
-##d =  math.find_point_to_line_signed_distance(s4, s1, p1)
-##print d
-##math = Math()
-#d = math.find_residual_radius(poly, p1)
-#print d

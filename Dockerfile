@@ -4,7 +4,7 @@ FROM python:3.8-slim-buster
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y cython libglpk-dev
+RUN apt-get update && apt-get install -y cython libglpk-dev 
 
 COPY requirements.txt requirements.txt
 COPY setup.py setup.py

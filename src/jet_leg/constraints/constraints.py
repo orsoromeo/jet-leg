@@ -23,17 +23,14 @@ class Constraints:
     def compute_actuation_constraints(self, contactIterator, torque_limits):
 
         J_LF, J_RF, J_LH, J_RH, isOutOfWorkspace = self.kin.get_jacobians()
-        #print J_LF, J_RF, J_LH, J_RH
         if isOutOfWorkspace:
             C1 = np.zeros((0,0))
             d1 = np.zeros((1,0))
             actuation_polygons = 0
-            print 'Out of workspace IK!!!'
+            print('Out of workspace IK!!!')
         else:
             jacobianMatrices = np.array([J_LF, J_RF, J_LH, J_RH])
-#            print 'Jacobians',jacobianMatrices
             actuation_polygons = self.computeActuationPolygons(jacobianMatrices, torque_limits)
-#                print 'actuation polygon ',actuation_polygons
             ''' in the case of the IP alg. the contact force limits must be divided by the mass
             because the gravito inertial wrench is normalized'''
                 
@@ -94,7 +91,6 @@ class Constraints:
         return c_force
         
     def linearized_cone_halfspaces(self, ng, mu, max_normal_force, saturate_max_normal_force):
-        #print ng
         ''' Inequality matrix for a contact force in local contact frame: '''
         if ng == 4:
             c_force = np.array([
@@ -158,13 +154,10 @@ class Constraints:
                                 [-h_rep5[3]],
                                 [h_rep6[3]]])                        
         
-        #print constraint, known_term
         return constraint, known_term
 
     def computeActuationPolygons(self, legsJacobians, torque_limits):
 
-#        if np.sum(stanceFeet) == 4:
-#            print 'test', torque_limits[0]
         actuation_polygons = np.array([self.computeLegActuationPolygon(legsJacobians[0], torque_limits[0]),
                                        self.computeLegActuationPolygon(legsJacobians[1], torque_limits[1]),
                                        self.computeLegActuationPolygon(legsJacobians[2], torque_limits[2]), 
@@ -218,7 +211,6 @@ class Constraints:
 
         stanceLegs = params.getStanceFeet()
         
-        #print 'stance legs', stanceLegs
         contactsNumber = np.sum(stanceLegs)
         contactsWF = params.getContactsPosWF()
         comPositionWF = params.getCoMPosWF()
@@ -230,10 +222,6 @@ class Constraints:
         for j in np.arange(0, 4):
             j = int(j)
             contactsBF[j,:]= np.add( np.dot(self.math.rpyToRot(rpy[0], rpy[1], rpy[2]), (contactsWF[j,:] - comPositionWF)), comPositionBF)
-
-        #print 'WF ',contactsWF
-        #print contactsBF
-        #print 'stance legs ', stanceLegs
         
         constraint_mode = params.getConstraintModes()
 
@@ -252,22 +240,18 @@ class Constraints:
 
         self.kin.inverse_kin(contactsBF, foot_vel)
 
-        #print ("q is ",q)
-
         for j in stanceIndex:
             j = int(j)
             if constraint_mode[j] == 'ONLY_FRICTION':
                 #            print contactsNumber
                 constraints_local_frame, d_cone = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
                 isIKoutOfWorkSpace = False
-#                print normals
                 n = self.math.normalize(normals[j,:])
                 rotationMatrix = self.math.rotation_matrix_from_normal(n)
                 Ctemp = np.dot(constraints_local_frame, rotationMatrix.T)
             
             if constraint_mode[j] == 'ONLY_ACTUATION':
                 Ctemp, d_cone, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim)
-                #            print d.shape[0]            
                 if isIKoutOfWorkSpace is False:
                     d_cone = d_cone.reshape(6) 
                 else:
@@ -277,13 +261,9 @@ class Constraints:
             if constraint_mode[j] == 'FRICTION_AND_ACTUATION':
                 C1, d1, actuation_polygons, isIKoutOfWorkSpace = self.compute_actuation_constraints(j, tau_lim)
                 C2, d2 = self.linearized_cone_halfspaces_world(contactsNumber, ng, friction_coeff, normals)
-                #            print C1, C2
                 if isIKoutOfWorkSpace is False:
-                    #                print d1
                     Ctemp = np.vstack([C1, C2])
-                    #               print np.size(C,0), np.size(C,1), C
                     d_cone = np.hstack([d1[0], d2])
-                    #                print d
                     d_cone = d_cone.reshape((6+ng))
                 else:
                     Ctemp = np.zeros((0,0))
@@ -293,6 +273,6 @@ class Constraints:
             d = np.hstack([d, d_cone])
         
         if contactsNumber == 0:
-            print 'contactsNumber is zero, there are no stance legs set! This might be because Gazebo is in pause.'
+            print('contactsNumber is zero, there are no stance legs set! This might be because Gazebo is in pause.')
         return C, d, isIKoutOfWorkSpace, actuation_polygons
     

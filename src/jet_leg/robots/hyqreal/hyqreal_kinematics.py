@@ -68,7 +68,8 @@ class hyqrealKinematics():
             if i >= IT_MAX:
                 print("\n Warning: the iterative algorithm has not reached convergence to the desired precision. Error is: ", np.linalg.norm(e))
                 raise Exception('FailedConvergence')
-            J = pinocchio.frameJacobian(self.model, self.data, q, frame_id)
+            pinocchio.computeJointJacobians(self.model, self.data, q) # compute jacobians
+            J = pinocchio.getFrameJacobian(self.model, self.data, frame_id, pinocchio.WORLD)
             J_lin = J[:3, :]
             #print J_lin
             v = - np.linalg.pinv(J_lin) * e

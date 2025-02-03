@@ -4,3 +4,4 @@ scipy
 matplotlib
 pycddlib
 pypoman
+pin

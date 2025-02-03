@@ -63,11 +63,11 @@ class anymalKinematics():
             e[1] = foot_pos[[1]] - foot_pos_des[1]
             e[2] = foot_pos[[2]] - foot_pos_des[2]
 
-            J = pinocchio.frameJacobian(self.model, self.data, q, frame_id)
+            pinocchio.computeJointJacobians(self.model, self.data, q) # compute jacobians
+            J = pinocchio.getFrameJacobian(self.model, self.data, frame_id, pinocchio.WORLD)
             J_lin = J[:3, :]
 
             if np.linalg.norm(e) < eps:
-                # print("IK Convergence achieved!")
                 IKsuccess = True
                 break
             if i >= IT_MAX:
@@ -76,11 +76,9 @@ class anymalKinematics():
                     np.linalg.norm(e))
                 IKsuccess = False
                 break
-            # print J_lin
-            v = - np.linalg.pinv(J_lin) * e
+            v = - np.linalg.pinv(J_lin) @ e
             q = pinocchio.integrate(self.model, q, v * DT)
             i += 1
-            # print i
 
         q_leg = q[blockIdx:blockIdx + 3]
         J_leg = J_lin[:, blockIdx:blockIdx + 3]

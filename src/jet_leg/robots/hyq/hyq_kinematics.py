@@ -788,9 +788,6 @@ class HyQKinematics:
         self.fr_trunk_J_RH_foot[6-1,1-1] = (- self.lowerLegLength *  self.s__q_RH_HAA *  self.s__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.s__q_RH_HAA *  self.c__q_RH_HFE) + ( self.BASE2HAA_offset_z *  self.s__q_RH_HAA);
         self.fr_trunk_J_RH_foot[6-1,2-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE) + ( self.upperLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE);
         self.fr_trunk_J_RH_foot[6-1,3-1] = ( self.lowerLegLength *  self.c__q_RH_HAA *  self.c__q_RH_HFE *  self.s__q_RH_KFE) + ( self.lowerLegLength *  self.c__q_RH_HAA *  self.s__q_RH_HFE *  self.c__q_RH_KFE);
-        #print self.fr_trunk_J_LF_foot[3:6,:]
-        
-#        print self.fr_trunk_J_LF_foot, self.fr_trunk_J_RF_foot, self.fr_trunk_J_LH_foot, self.fr_trunk_J_RH_foot
         return self.fr_trunk_J_LF_foot[3:6,:] , self.fr_trunk_J_RF_foot[3:6,:], self.fr_trunk_J_LH_foot[3:6,:], self.fr_trunk_J_RH_foot[3:6,:]
 
     def getLegJacobians(self):
@@ -820,7 +817,7 @@ class HyQKinematics:
         elif legID == 3:
             q = self.hyq_RH_chain.inverse_kinematics(target_frame)
         else:
-            print "warning: leg ID is wrong"
+            print("warning: leg ID is wrong")
         q_leg = q[1:4]
         return q_leg
 
@@ -872,13 +869,8 @@ class HyQKinematics:
         haaYOffset_sign_flip[self.dog.RF] = -1.0;
         haaYOffset_sign_flip[self.dog.RH] = -1.0;
  
-#        print 'foot pos ', footPositionBF
         q_leg = [np.nan, np.nan, np.nan]
         foot_haa_frame = footPositionBF - [self.BASE2HAA_offset_x*haaXOffset_sign_flip[legID], self.BASE2HAA_offset_y*haaYOffset_sign_flip[legID], 0.0]
-#        print self.BASE2HAA_offset_x, self.BASE2HAA_offset_y, self.BASE2HAA_offset_z
-#        print foot_haa_frame
-        
-        
         
         haa2foot_yz = np.sqrt(np.square(foot_haa_frame[self.rbd.LY]) + np.square(foot_haa_frame[self.rbd.LZ])) 
         hfe2foot_yz = 0.0
@@ -948,7 +940,7 @@ class HyQKinematics:
 #       //Check if the outputs are inf or nan
         for joint in self.dog.legJoints:
             if not np.isfinite(q_leg[joint]):
-                print "Position of joint ",joint," and leg ", 0," is not finite !!!" 
+                print("Position of joint ",joint," and leg ", 0," is not finite !!!" )
 #            return false;
             
         return q_leg

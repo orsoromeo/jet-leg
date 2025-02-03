@@ -157,7 +157,7 @@ class ComputationalDynamics:
             compressed_hull, actuation_polygons, computation_time = self.iterative_projection_bretl(iterative_projection_params, saturate_normal_force)
             return compressed_hull, actuation_polygons, computation_time
         except ValueError as err:
-            print 'Could not compute the feasible region'
+            print('Could not compute the feasible region')
             print(err.args)
             return False, False, False
 
@@ -165,7 +165,6 @@ class ComputationalDynamics:
     def iterative_projection_bretl(self, iterative_projection_params, saturate_normal_force = False):
 
         start_t_IP = time.time()
-#        print stanceLegs, contacts, normals, comWF, ng, mu, saturate_normal_force
         proj, self.eq, self.ineq, actuation_polygons, isIKoutOfWorkSpace = self.setup_iterative_projection(iterative_projection_params, saturate_normal_force)
 
         if isIKoutOfWorkSpace:
@@ -173,7 +172,6 @@ class ComputationalDynamics:
         else:
             vertices_WF = pypoman.project_polytope(proj, self.ineq, self.eq, method='bretl', max_iter=500, init_angle=0.0)
             if vertices_WF is False:
-                print 'Project polytope function is False'
                 return False, False, False
 
             else:
@@ -186,19 +184,14 @@ class ComputationalDynamics:
                     return False, False, False
                 
                 
-#        print 'hull ', hull.vertices
             compressed_hull = compressed_vertices[hull.vertices]
             compressed_hull = self.geom.clockwise_sort(compressed_hull)
             compressed_hull = compressed_hull
-#        print compressed_hull
         #vertices_WF = vertices_BF + np.transpose(comWF[0:2])
             computation_time = (time.time() - start_t_IP)
-        #print("Iterative Projection (Bretl): --- %s seconds ---" % computation_time)
 
-#        print np.size(actuation_polygons,0), np.size(actuation_polygons,1), actuation_polygons
         if np.size(actuation_polygons,0) is 4:
             if np.size(actuation_polygons,1) is 3:
-#                print actuation_polygons
                 p = self.reorganizeActuationPolytopes(actuation_polygons[1])
 
         return compressed_hull, actuation_polygons, computation_time
@@ -226,11 +219,10 @@ class ComputationalDynamics:
 
         if isIKoutOfWorkSpace:
             #unfeasible_points = np.vstack([unfeasible_points, com_WF])
-            print 'something is wrong in the inequalities or the point is out of workspace'
+            print('something is wrong in the inequalities or the point is out of workspace')
             x = -1
             return False, x, LP_actuation_polygons
         else:
-            print 'Solving LP'
             sol = solvers.lp(p, G, h, A, b)
             x = sol['x']
             status = sol['status']
@@ -285,7 +277,6 @@ class ComputationalDynamics:
         #                sol=solvers.lp(p, G, h, A, b)
         #                x = sol['x']
         #                status = sol['status']
-                        #print x
                     if status == 'optimal':
                         feasible_points = np.vstack([feasible_points, com_WF])
                         contact_forces = np.vstack([contact_forces, np.transpose(x)])
@@ -331,15 +322,12 @@ class ComputationalDynamics:
         totForce[0] += extForce[0]
         totForce[1] += extForce[1]
         totForce[2] += extForce[2]
-        #print grav, extForce, totForce
 
         torque = -np.cross(comWorldFrame, np.transpose(totForce))
         A = np.zeros((6,0))
         stanceIndex = LPparams.getStanceIndex(stanceLegs)
-        print 'stanceIndex',stanceIndex
         for j in stanceIndex:
             j = int(j)
-            #print 'index in lp ',j
             r = contactsPosWF[j,:]
             GraspMat = self.getGraspMatrix(r)
             A = np.hstack((A, GraspMat[:,0:3]))
