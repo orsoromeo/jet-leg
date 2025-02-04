@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="hyq">
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.0560691331299813 0.021493682967627666 0.0036081141592049586" rpy="0.0 0.0 0.0"/>
+      <mass value="60.978"/>
+      <inertia ixx="1.5727651692862368" ixy="0.02846518720991833" ixz="-0.20354038112779044" iyy="8.502743030521936" iyz="-0.004425323842294127" izz="9.196486342929056"/>
+    </inertial>
+  </link>
+
+ <!-- Links -->
+  <!-- Hip assembly link -->
+  <link name="rf_hipassembly">
+    <inertial>
+      <origin xyz="-0.010027 -0.010608 0.003644"/>
+      <mass value="4.973275"/>
+      <inertia ixx="0.011231" ixy="-0.000592" ixz="0.000225" iyy="0.015768" iyz="0.000224" izz="0.016863"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 -1.57079632679 -1.57079632679" xyz="0 -0.046 0"/>
+      <geometry>
+         --&gt;
+
+        <cylinder length="0.117" radius="0.0444"/>
+      </geometry>
+    </visual>
+  </link>
+  <!-- Upper leg link -->
+  <link name="rf_upperleg">
+    <inertial>
+      <origin xyz="0.107987 -0.011459 0.002121"/>
+      <mass value="5.877927"/>
+      <inertia ixx="0.016432" ixy="0.001863" ixz="-0.003897" iyy="0.075737" iyz="0.00024" izz="0.079267"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://hyqreal_description/meshes/leg/upperleg.dae" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://hyqreal_description/meshes/leg/upperleg.dae" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Lower leg link -->
+  <link name="rf_lowerleg">
+    <inertial>
+      <origin xyz="0.149302 -0.003801 -0.000624"/>
+      <mass value="1.291954"/>
+      <inertia ixx="0.001088" ixy="-0.000572" ixz="0.000118" iyy="0.029215" iyz="0.00046" izz="0.029772"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://hyqreal_description/meshes/leg/lowerleg.dae" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://hyqreal_description/meshes/leg/lowerleg_decimated.dae" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Foot link -->
+  <link name="rf_foot">
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <sphere radius="0.032"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <sphere radius="0.032"/>
+      </geometry>
+    </collision>
+  </link>
+
+<!-- Joints -->
+  <!-- HAA joint -->
+  <joint name="rf_haa_joint" type="revolute">
+    <origin rpy="0 1.57079632679 0" xyz="0.4435 -0.139 0"/>
+    <parent link="base_link"/>
+    <child link="rf_hipassembly"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.1" friction="0"/>
+    <limit effort="173.0" lower="-0.733038285838" upper="0.401425727959" velocity="12.0"/>
+    <safety_controller k_position="50" k_velocity="10" soft_lower_limit="-0.733038285838" soft_upper_limit="0.401425727959"/>
+  </joint>
+  <!-- HFE joint -->
+  <joint name="rf_hfe_joint" type="revolute">
+    <origin rpy="-1.57079632679 0 0" xyz="0 -0.117 0"/>
+    <parent link="rf_hipassembly"/>
+    <child link="rf_upperleg"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.1" friction="0"/>
+    <limit effort="208" lower="-2.35619449019" upper="2.35619449019" velocity="12.0"/>
+    <safety_controller k_position="50" k_velocity="10" soft_lower_limit="-2.35619449019" soft_upper_limit="2.35619449019"/>
+  </joint>
+  <!-- KFE joint -->
+  <joint name="rf_kfe_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0.36 0 0"/>
+    <parent link="rf_upperleg"/>
+    <child link="rf_lowerleg"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.1" friction="0"/>
+    <limit effort="249" lower="-2.77001205584" upper="-0.669857366915" velocity="12.0"/>
+    <safety_controller k_position="50.0" k_velocity="10.0" soft_lower_limit="-2.77001205584" soft_upper_limit="-0.669857366915"/>
+  </joint>
+  <!-- Foot joint -->
+  <joint name="rf_foot_joint" type="fixed">
+    <origin rpy="1.57079632679 0 -1.57079632679" xyz="0.38 0 0"/>
+    <parent link="rf_lowerleg"/>
+    <child link="rf_foot"/>
+  </joint>
+
+</robot>
