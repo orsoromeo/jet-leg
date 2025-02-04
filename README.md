@@ -18,12 +18,17 @@ polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions
 - test various formulations of linear, convex or nonlinear trajectory optimization problems;
 
 ## Quick installation
-You can directly install the pre-built library usign pip. First install the required dependencies:
+You can directly install the pre-built library usign pip. First, create a virtual environment:
+```
+python -m venv my_project
+cd source/bin/activate
+```
+Then, install the required dependencies:
 ```
 sudo apt-get install -y cython libglpk-dev python3-tk
 pip install pytest numpy scipy matplotlib pycddlib pypoman pin 
 ```
-and the run:
+and finally run:
 ```
 pip install jet-leg
 ```
@@ -34,7 +39,7 @@ python3 -c "import jet_leg"
 Have a look to the [this](https://github.com/orsoromeo/jet-leg/tree/master/examples) folder for a few examples on how to use the library. 
 
 ## Build from source
-For a source installation you need to clone the repo first. Then, you can build the package using the provided Docker environment. Do so by running the following command:
+For active development of the library a source installation is recommended. For this, you will need to clone the repo first. Then, you can build the package using the provided Docker environment. Do so by running the following command:
 ```
 cd jet-leg
 ./build.sh
@@ -45,7 +50,7 @@ This will create a docker image with all the required dependencies. You can then
 ```
 To make sure that the installation worked successfully, you can run, for example:
 ```
-python3 python3 src/examples/iterative_projection/single_iterative_projection_example.py
+python3 examples/iterative_projection/single_iterative_projection_example.py
 ```
 The example above should generate two figures representing the feasible region of the Anymal robot in a default configuration in 2D and 3D.
 

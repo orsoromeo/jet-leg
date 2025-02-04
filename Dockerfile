@@ -11,6 +11,9 @@ COPY setup.py setup.py
 
 RUN pip3 install -r requirements.txt
 
-COPY /src src
+COPY /examples examples
+COPY /jet_leg jet_leg
+COPY /resources resources
+COPY /unit_tests unit_tests
 
 CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
