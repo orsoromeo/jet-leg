@@ -23,7 +23,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='jet_leg',
-    version='0.3.0',
+    version='0.4.0',
     description="Python Polyhedron Manipulation",
     url="https://github.com/orsoromeo/jet-leg",
     author="Romeo Orsolino",
@@ -38,5 +38,6 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Mathematics'],
-    packages=find_packages()
+    packages=find_packages(),
+    include_package_data=True,  # This tells setuptools to use MANIFEST.in
 )
