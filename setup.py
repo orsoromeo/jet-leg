@@ -27,16 +27,16 @@ setup(
     description="Python Polyhedron Manipulation",
     url="https://github.com/orsoromeo/jet-leg",
     author="Romeo Orsolino",
-    author_email="romeo.orsolino@iit.it",
+    author_email="orso.romeo@gmail.com",
     license="LGPL",
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: Education',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU Lesser General Public License (LGPL)',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Mathematics'],
     packages=find_packages()
 )
