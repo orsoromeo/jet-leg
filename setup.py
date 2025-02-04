@@ -23,7 +23,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='jet_leg',
-    version='0.1.0',
+    version='0.2.0',
     description="Python Polyhedron Manipulation",
     url="https://github.com/orsoromeo/jet-leg",
     author="Romeo Orsolino",

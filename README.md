@@ -17,9 +17,24 @@ polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions
 - compare different leg designs and understand their consequences on the robot's balancing capabilities; 
 - test various formulations of linear, convex or nonlinear trajectory optimization problems;
 
+## Quick installation
+You can directly install the pre-built library usign pip. First install the required dependencies:
+```
+sudo apt-get install -y cython libglpk-dev python3-tk
+pip install pytest numpy scipy matplotlib pycddlib pypoman pin 
+```
+and the run:
+```
+pip install jet-leg
+```
+To make sure that the installation worked as expected, you can make sure that the following command runs without errors:
+```
+python3 -c "import jet_leg"
+```
+Have a look to the [this](https://github.com/orsoromeo/jet-leg/tree/master/examples) folder for a few examples on how to use the library. 
 
-## Build and Installation
-After cloning the repo, you can build the package using docker with the following command:
+## Build from source
+For a source installation you need to clone the repo first. Then, you can build the package using the provided Docker environment. Do so by running the following command:
 ```
 cd jet-leg
 ./build.sh

@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: jet-leg
+Version: 0.2.0
+Summary: Python Polyhedron Manipulation
+Home-page: https://github.com/orsoromeo/jet-leg
+Author: Romeo Orsolino
+Author-email: orso.romeo@gmail.com
+License: LGPL
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+License-File: LICENSE
+
+UNKNOWN
+
