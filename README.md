@@ -18,18 +18,23 @@ polyhedra](https://en.wikipedia.org/wiki/Convex_polyhedron) in higher dimensions
 - test various formulations of linear, convex or nonlinear trajectory optimization problems;
 
 
-## Dependencies
-APT dependencies:
-- CVXOPT
-- GLPK
-- Cython
-
-ROS dependencies:
+## Build and Installation
+After cloning the repo, you can build the package using docker with the following command:
 ```
-sudo apt-get  install ros-kinetic-graph-msgs
+cd jet-leg
+./build.sh
 ```
+This will create a docker image with all the required dependencies. You can then attach the image by running:
+```
+./run.sh
+```
+To make sure that the installation worked successfully, you can run, for example:
+```
+python3 python3 src/examples/iterative_projection/single_iterative_projection_example.py
+```
+The example above should generate two figures representing the feasible region of the Anymal robot in a default configuration in 2D and 3D.
 
-Python dependencies:
+## Python dependencies:
 - Numpy
 - Scipy
 - Pycddlib
@@ -37,22 +42,19 @@ Python dependencies:
 - [Pypoman](https://github.com/stephane-caron/pypoman) for the manipulation of polyhedrical object
 - [Pinocchio](https://github.com/stack-of-tasks/pinocchio) 
 
-The above dependencies can be installed with the following commands:
+<!-- The above dependencies can be installed with the following commands:
 ```
 sudo apt-get install cython libglpk-dev python python-dev python-pip python-scipy
 CVXOPT_BUILD_GLPK=1 pip install cvxopt --user
 pip install pycddlib --user
 pip install pypoman
 ```
-You can remove all ``--user`` arguments to install these Python modules system-wide.
+You can remove all ``--user`` arguments to install these Python modules system-wide. -->
 
 ## Optional dependencies:
 
 - [Ipopt](https://projects.coin-or.org/Ipopt) and its Python interface [Pypi](https://pypi.org/project/ipopt/) for the solution of large-scale nonlinear optimization problems
 - [ffmpeg](https://www.ffmpeg.org/) for the generation of Matplotlib animations
-```
-sudo apt-get install ffmpeg
-```
 - [unittest](https://docs.python.org/3/library/unittest.html) for testing of dependencies installation and for development
 
 
@@ -67,18 +69,18 @@ python setup.py install --user
 ```
 -->
 
-## Testing the library
+<!-- ## Testing the library
 After completing the installation navigate to the [examples](https://gitlab.advr.iit.it/rorsolino/jet-leg/tree/master/examples) folder:
 
 - [single_iterative_projection_example.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/iterative_projection/single_iterative_projection_example.py) can be used to see how to set up an iterative projection problem in order to compute the friction/actuation/feasible region;
 - [check_stability_lp_example.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/static_equilibrium_check/check_stability_lp_example.py) can be used to quickly check whether the given robot configuration is statically stable or not (without explicitly computing the feasible region);
 - [plotIPstatistics.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/figures_code/plotIPstatistics.py) can be used to generate some statistics about the computation time of the IP algorithm for random feet positions (see Fig. 6 of the [preprint](https://arxiv.org/abs/1903.07999#));
-- [plotInstantaneousActuationRegionVariableMass.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/figures_code/plotInstantaneousActuationRegionVariableMass.py) can be used to generate a plot that shows how the feasible regions can changes depending on the gravitational force acting on the robot's center of mass (see Fig. 8 of the [preprint](https://arxiv.org/abs/1903.07999#)) 
+- [plotInstantaneousActuationRegionVariableMass.py](https://github.com/orsoromeo/jet-leg/blob/master/examples/figures_code/plotInstantaneousActuationRegionVariableMass.py) can be used to generate a plot that shows how the feasible regions can changes depending on the gravitational force acting on the robot's center of mass (see Fig. 8 of the [preprint](https://arxiv.org/abs/1903.07999#))  -->
 
 ## Troubleshooting
 
 - if CVXOPT is not found even after trying the pip-installation, we then suggest to try install the version 1.1.4 of CVXOPT using Synaptic or to clone and install it manually after building.
-- IMPORTANTE NOTE: delete every previous installation of cvxopt that is in the system using locate cvxopt (after sudo updatedb)
+- Note: delete every previous installation of cvxopt that is in the system using locate cvxopt (after sudo updatedb)
 
 ## See also
 
@@ -88,3 +90,4 @@ After completing the installation navigate to the [examples](https://gitlab.advr
   [Polyhedron](http://doc.sagemath.org/html/en/reference/discrete_geometry/sage/geometry/polyhedron/constructor.html) class in [Sage](http://www.sagemath.org/)
 - The [StabiliPy](https://github.com/haudren/stabilipy) package provides a more
   general recursive projection method
+- [Pinocchio](https://github.com/stack-of-tasks/pinocchio) is used to compute the Jacobian matrix and to solve the Inverse Kinematics (IK) problem.
