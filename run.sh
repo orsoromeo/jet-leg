@@ -2,13 +2,16 @@
 DOCKER_VOLUMES="
 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 --volume="${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority" \
---volume="./src/:/app/src/" \
+--volume="./examples/:/app/examples/" \
+--volume="./jet_leg/:/app/jet_leg/" \
+--volume="./resources/:/app/resources/" \
+--volume="./unit_tests/:/app/unit_tests/" \
 "
 
 DOCKER_ENV_VARS="
 --env="DISPLAY" \
 --env="QT_X11_NO_MITSHM=1" \
---env="PYTHONPATH="/app/src/ \
+--env="PYTHONPATH="/app/ \
 "
 
 DOCKER_ARGS=${DOCKER_VOLUMES}" "${DOCKER_ENV_VARS}

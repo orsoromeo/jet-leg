@@ -7,8 +7,8 @@ from pinocchio.utils import *
 
 class anymalKinematics():
     def __init__(self):
-        self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/../../../resources/urdfs/anymal/'
-        self.URDF = self.PKG + 'urdf/anymal_boxy.urdf'
+        self.PKG = os.path.dirname(os.path.abspath(__file__))
+        self.URDF = self.PKG + '/urdf/anymal_boxy.urdf'
         if self.PKG is None:
             self.robot = RobotWrapper.BuildFromURDF(self.URDF)
         else:

@@ -8,7 +8,7 @@ import os
 class hyqrealKinematics():
     def __init__(self):
 
-        self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/../../resources/urdfs/hyqreal/'
+        self.PKG = os.path.dirname(os.path.abspath(__file__)) + '/urdfs/hyqreal/'
         self.URDF = self.PKG + 'urdf/hyqreal.urdf'
         if self.PKG is None:
             self.robot = RobotWrapper.BuildFromURDF(self.URDF)
