@@ -79,8 +79,8 @@ After completing the installation navigate to the [examples](https://gitlab.advr
 
 ## Troubleshooting
 
-- if CVXOPT is not found even after trying the pip-installation, we then suggest to try install the version 1.1.4 of CVXOPT using Synaptic or to clone and install it manually after building.
-- Note: delete every previous installation of cvxopt that is in the system using locate cvxopt (after sudo updatedb)
+- Jet-leg has been tested using Python 3.8.17 and Docker;
+- If CVXOPT is not found even after trying the pip-installation, we then suggest to try install the version 1.1.4 of CVXOPT using Synaptic or to clone and install it manually after building. Note: delete every previous installation of cvxopt that is in the system using locate cvxopt (after sudo updatedb)
 
 ## See also
 
