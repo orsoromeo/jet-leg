@@ -19,13 +19,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.10
+    - name: Set up Python 3.8
       uses: actions/setup-python@v3
       with:
-        python-version: "3.10"
+        python-version: "3.8"
     - name: Install dependencies
       run: |
-        apt-get update && apt-get install -y cython libglpk-dev
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
