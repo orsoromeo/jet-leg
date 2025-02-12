@@ -49,9 +49,6 @@ RH_foot = np.array([-0.3, -0.2, -0.4])
 
 contacts = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
 
-# contacts = contactsToStack[0:nc+1, :]
-# print contacts
-
 ''' parameters to be tuned'''
 trunk_mass = 45.
 mu = 0.5

@@ -71,14 +71,11 @@ stanceIndex = []
 swingIndex = []
 startingPointX = 0.0
 startingPointY = 0.0
-print 'stance', stanceLegs
+print('stance', stanceLegs)
 for iter in range(0, 4):
     if stanceLegs[iter] == 1:
-        #               print 'new poly', stanceIndex, iter
-        #        print 'a',contacts[iter, 0]
         startingPointX += contacts[iter, 0]
         startingPointY += contacts[iter, 1]
-        print startingPointX, startingPointY
         stanceIndex = np.hstack([stanceIndex, iter])
     else:
         swingIndex = iter
@@ -86,9 +83,6 @@ for iter in range(0, 4):
 # number of contacts
 number_of_contacts = np.sum(stanceLegs)
 startingPoint = np.array([startingPointX/float(number_of_contacts), startingPointY/float(number_of_contacts), 0.0])
-print startingPoint
-
-
 
 LF_tau_lim = [50.0, 100.0, 100.0]
 RF_tau_lim = [50.0, 100.0, 100.0]
@@ -110,7 +104,7 @@ params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(total_mass)
     
 for angle in np.arange(0.0, 0.5, 0.25):
-    print '===============> new search angle: ', angle
+    print('===============> new search angle: ', angle)
     startingPoint = np.array([startingPointX/float(number_of_contacts) + np.random.normal(0.0, 0.05), 
                               startingPointY/float(number_of_contacts) + np.random.normal(0.0, 0.05), 0.0])
     params.setCoMPosWF(startingPoint)
@@ -118,8 +112,6 @@ for angle in np.arange(0.0, 0.5, 0.25):
     newLimitPoint, stackedErrors, stackedPolygons = pathIP.find_vertex_along_path(params, desired_direction, tolerance)
     comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, newLimitPoint])
 
-
-print 'Errors convergence: ', stackedErrors
 
 print("Actuation Region estimation time: --- %s seconds ---" % (time.time() - start_t_IPVC))
 
@@ -133,15 +125,12 @@ plt.plot(comTrajectoriesToStack[:,0], comTrajectoriesToStack[:,1], 'g--', linewi
 plt.plot(comTrajectoriesToStack[:,0], comTrajectoriesToStack[:,1], 'g^', markersize=20, label= 'Actuation region vertices')
 plt.plot(startingPoint[0], startingPoint[1], 'ro', markersize=20, label= 'Initial CoM position used in the SIP alg.')
 segment = np.vstack([comWF,newLimitPoint])
-print int(stanceIndex[0])
-print contacts[int(stanceIndex[0])][0]
 if number_of_contacts == 4:
     contactsX = [contacts[int(stanceIndex[0])][0], contacts[int(stanceIndex[1])][0], contacts[int(stanceIndex[2])][0], contacts[int(stanceIndex[3])][0]]
     contactsY = [contacts[int(stanceIndex[0])][1], contacts[int(stanceIndex[1])][1], contacts[int(stanceIndex[2])][1], contacts[int(stanceIndex[3])][1]]
 else:
     contactsX = [contacts[int(stanceIndex[0])][0], contacts[int(stanceIndex[1])][0], contacts[int(stanceIndex[2])][0]]
     contactsY = [contacts[int(stanceIndex[0])][1], contacts[int(stanceIndex[1])][1], contacts[int(stanceIndex[2])][1]]
-print contactsX, contactsY
 plt.plot(contactsX,contactsY,'ko',markersize=15, label='Stance feet')
 
 plt.xlim(-0.8, 0.6)

@@ -55,8 +55,8 @@ mu = 0.9
 
 stanceFeet = [1,1,1,1]
 randomSwingLeg = random.randint(0,3)
-print 'Swing leg', randomSwingLeg
-print 'stanceLegs ' ,stanceFeet
+print('Swing leg', randomSwingLeg)
+print('stanceLegs ' ,stanceFeet)
 
 axisZ= array([[0.0], [0.0], [1.0]])
 
@@ -96,8 +96,7 @@ feasible_points = np.zeros((0,3))
 unfeasible_points = np.zeros((0,3))
 contact_forces = np.zeros((0,nc*3))  
 LP_actuation_polygons, feasible_points, unfeasible_points, contact_forces = comp_dyn.compute_lp(params, feasible_points, unfeasible_points, contact_forces, comWF)
-print 'is point feasible?', feasible_points
-#print IP_points
+print('is point feasible?', feasible_points)
 
 ''' plotting Iterative Projection points '''
 feasiblePointsSize = np.size(feasible_points,0)

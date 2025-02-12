@@ -43,7 +43,6 @@ class VertexBasedProjection():
         
         return np.transpose(hull_matrix)
     
-    
     def compute_section_points(self, input_points, normal_plane, point_plane):
         
         #improved for loop: this has complexity n!/2!(n-2) = n^2/2 instead of n^2 (with the normal for)
@@ -60,14 +59,10 @@ class VertexBasedProjection():
                         alpha = np.dot(normal_plane, (lambda1 - point_plane)) / np.dot(normal_plane, (lambda1-lambda2))
                     
                         if(alpha>=0.0)&(alpha<=1.0):
-                            #print alpha
                             new_point = lambda1 + (lambda2 - lambda1)*alpha
                             output_points = np.vstack([output_points, new_point])
-        #print 'number of edges', np.size(points,0)
         return np.transpose(output_points), np.size(output_points,0)
  
-    
-         
     def project_points(self, vertices, mg):
         n = np.size(vertices,1)
         vertices2d = np.zeros((2,0))
@@ -78,11 +73,7 @@ class VertexBasedProjection():
             v_new_y = tau_x / mg
             v_new = np.array([[v_new_x],[v_new_y]])
             vertices2d = np.hstack([vertices2d, v_new])
-        #print 'number of com points', np.size(vertices2d,1)
-        print vertices2d
         return vertices2d
-    
-    
     
     def project(self, params):
         start_t = time.time()
@@ -123,9 +114,6 @@ class VertexBasedProjection():
             vertices_1 = np.transpose(constr.computeActuationPolygon(J_LF))
             vertices_2 = np.transpose(constr.computeActuationPolygon(J_RF))
             vertices_3 = np.transpose(constr.computeActuationPolygon(J_LH))
-            #print vertices_1
-            #print vertices_2
-            #print vertices_3
             
         elif constraint_mode == 'ONLY_FRICTION':
         
@@ -195,17 +183,12 @@ class VertexBasedProjection():
             
         
         print np.size(w123_hull,1) 
-        print "pointsfZ"        
         print np.size(pointsfZ,1)      
         print np.size(pointsfZhull,1) 
-        
-        print "pointsfy"
         print np.size(pointsfY,1)
         print np.size(pointsfYhull,1) #
-        print "pointsfx"
         print np.size(pointsfX,1)
         print np.size(pointsfXhull,1) #
-        print "pointstZx"
         print np.size(pointstZ,1)
         print np.size(pointstZhull,1) #
         

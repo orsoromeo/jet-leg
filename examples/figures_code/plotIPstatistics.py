@@ -124,7 +124,6 @@ def perform_statistics(number_of_tests, number_of_contacts, _constraint_mode):
         IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
         comp_time = comp_time * 1000.0
 
-        print comp_time
         computation_times[iter] = comp_time
     return computation_times
 
@@ -193,7 +192,6 @@ plot_time_range = max(maximum_time)
 
 print('max is', maximum_time)
 ''' plotting Iterative Projection points '''
-print 'producing plot'
 plotter = Plotter()
 
 ''' 2D figure '''
@@ -205,7 +203,6 @@ plt.ylabel("Y [m]")
 plt.plot([1,2,3])
 fig.suptitle('Computation times for ' + str(number_of_tests) + ' tests', fontsize=18)
 plt.subplot(321)
-#print tests
 plt.hist(onlyFrictionTests3contacts, color = "salmon", bins=np.arange(0,plot_time_range, plot_time_range/50))
 plt.xticks(np.arange(0, plot_time_range, plot_time_range/5))
 plt.yticks(np.arange(0, 400, 50))

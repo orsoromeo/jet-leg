@@ -35,9 +35,7 @@ r3 = array([-1.0, 1.0, 0.])
 r4 = array([-1.0, -1.0, 0.])
 
 std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/1000
-print ""
-print "standard dev:"
-print std_dev
+print("standard dev:", std_dev)
 noise = np.random.normal(0,std_dev,16)
 # I set the com coordinates to be in the bottom of the state array:
 # x = [f1_x, f1_y, f1_z, f2_x, f2_y, f2_z, ... , f4_x, f4_y, f4_z, com_x, com_y]
@@ -142,11 +140,8 @@ C4 = array([[-0.75, -0.75, -mu*1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
 # concatenate all the inequality constraints above
 C = vstack([C1, C2, C3, C4])
 
-print(C)
-
 # vector of known coefficients
 b = zeros((m_ineq,1)).reshape(m_ineq)
-print(b)
 ineq = (C, b)  # C * x <= b
 
 # Solve the projection problem
@@ -165,7 +160,5 @@ for j in range(0,len(vertices)):
     tau = array([vx, vy, 0.])
     p = np.cross(n,tau)
     points.append([p[0],p[1]])
-    #print points
 
-print points
 pypoman.plot_polygon(points)

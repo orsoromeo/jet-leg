@@ -27,7 +27,7 @@ class Math:
         
     def getGraspMatrix(self, r):
         math = Math()
-        G = block([[np.eye(3), np.zeros((3, 3))],
+        G = np.block([[np.eye(3), np.zeros((3, 3))],
                        [math.skew(r), np.eye(3)]])
         return G    
 
