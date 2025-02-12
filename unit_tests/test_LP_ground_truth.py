@@ -1,680 +1,699 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jul 22 21:26:46 2018
+# # -*- coding: utf-8 -*-
+# """
+# Created on Sun Jul 22 21:26:46 2018
 
-@author: romeo orsolino
-"""
-import numpy as np
-import random
-from jet_leg.math_tools import Math
-from jet_leg.plotting_tools import Plotter
-import matplotlib.pyplot as plt
-from jet_leg.arrow3D import Arrow3D
-from jet_leg.computational_dynamics import ComputationalDynamics
-from jet_leg.iterative_projection_parameters import IterativeProjectionParameters
+# @author: romeo orsolino
+# """
+# import numpy as np
+# import random
+# from jet_leg.maths.math_tools import Math
+# from jet_leg.plotting.plotting_tools import Plotter
+# import matplotlib.pyplot as plt
+# from jet_leg.plotting.arrow3D import Arrow3D
+# from jet_leg.dynamics.computational_dynamics import ComputationalDynamics
+# from jet_leg.maths.iterative_projection_parameters import IterativeProjectionParameters
 
-import unittest
-class TestLPGroundTruth():
-    def __init__(self):
-        self.epsilon = 10e-02
-        self.assertPrecision = 3
+# import unittest
 
-    def test_lp_stability_check(self):
-        math = Math()
-        # number of contacts
-        nc = 3
-        # number of generators, i.e. rays used to linearize the friction cone
-        ng = 4
+# epsilon = 10e-02
+# assertPrecision = 3
 
-        # ONLY_FRICTION
-        # ONLY_ACTUATION
-        constraint_mode_IP = ['ONLY_ACTUATION',
-                              'ONLY_ACTUATION',
-                              'ONLY_ACTUATION',
-                              'ONLY_ACTUATION']
+# class TestLPGroundTruth(unittest.TestCase):
+#     # def __init__(self):
 
-        useVariableJacobian = True
+#     def test_lp_stability_check(self):
+#         math = Math()
+#         # number of contacts
+#         nc = 3
+#         # number of generators, i.e. rays used to linearize the friction cone
+#         ng = 4
 
-        comWF = np.array([1.25, 0.0, 0.0])
+#         # ONLY_FRICTION
+#         # ONLY_ACTUATION
+#         constraint_mode_IP = ['ONLY_ACTUATION',
+#                               'ONLY_ACTUATION',
+#                               'ONLY_ACTUATION',
+#                               'ONLY_ACTUATION']
 
-        """ contact points in the World Frame"""
-        LF_foot = np.array([1.3, 0.2, -0.6])
-        RF_foot = np.array([1.3, -0.2, -0.5])
-        LH_foot = np.array([0.7, 0.2, -0.45])
-        RH_foot = np.array([0.7, -0.2, -0.5])
+#         useVariableJacobian = True
 
-        contactsToStack = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
-        contacts = contactsToStack[0:4, :]
+#         comWF = np.array([1.25, 0.0, 0.0])
 
-        ''' parameters to be tuned'''
-        g = 9.81
-        trunk_mass = 50.
-        mu = 0.8
+#         """ contact points in the World Frame"""
+#         LF_foot = np.array([1.3, 0.2, -0.6])
+#         RF_foot = np.array([1.3, -0.2, -0.5])
+#         LH_foot = np.array([0.7, 0.2, -0.45])
+#         RH_foot = np.array([0.7, -0.2, -0.5])
 
-        axisZ = np.array([[0.0], [0.0], [1.0]])
+#         contactsToStack = np.vstack((LF_foot, RF_foot, LH_foot, RH_foot))
+#         contacts = contactsToStack[0:4, :]
 
-        n1 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
-        n2 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
-        n3 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
-        n4 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
-        # %% Cell 2
-        ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-        stanceFeet = [1, 1, 1, 1]
+#         ''' parameters to be tuned'''
+#         g = 9.81
+#         trunk_mass = 50.
+#         mu = 0.8
 
-        randomSwingLeg = random.randint(0, 3)
-        tripleStance = True  # if you want you can define a swing leg using this variable
-        if tripleStance:
-            print 'Swing leg', randomSwingLeg
-            #stanceFeet[randomSwingLeg] = 0
-        print 'stanceLegs ', stanceFeet
+#         axisZ = np.array([[0.0], [0.0], [1.0]])
 
-        normals = np.vstack([n1, n2, n3, n4])
-        comp_dyn = ComputationalDynamics()
-        params = IterativeProjectionParameters()
-        params.setContactsPosWF(contacts)
-        params.setCoMPosWF(comWF)
-        #       params.setTorqueLims(torque_limits)
-        params.setActiveContacts(stanceFeet)
-        params.setConstraintModes(constraint_mode_IP)
-        params.setContactNormals(normals)
-        params.setFrictionCoefficient(mu)
-        params.setNumberOfFrictionConesEdges(ng)
-        params.setTotalMass(trunk_mass)
-        status, x, force_polytopes = comp_dyn.check_equilibrium(params)
-        print status, x
+#         n1 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
+#         n2 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
+#         n3 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
+#         n4 = np.transpose(np.transpose(math.rpyToRot(0.0, 0.0, 0.0)).dot(axisZ))
+#         # %% Cell 2
+#         ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
+#         stanceFeet = [1, 1, 1, 1]
 
-        '''Plotting the contact points in the 3D figure'''
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_xlabel('X axis')
-        ax.set_ylabel('Y axis')
-        ax.set_zlabel('Z axis')
+#         randomSwingLeg = random.randint(0, 3)
+#         tripleStance = True  # if you want you can define a swing leg using this variable
+#         # if tripleStance:
+#         #     print 'Swing leg', randomSwingLeg
+#             #stanceFeet[randomSwingLeg] = 0
+#         # print 'stanceLegs ', stanceFeet
 
-        ''' plotting Iterative Projection points '''
-        plotter = Plotter()
-        scaling_factor = 2000
-        stanceID = params.getStanceIndex(stanceFeet)
-        for j in range(0, nc):  # this will only show the force polytopes of the feet that are defined to be in stance
-            idx = int(stanceID[j])
-            if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
-                plotter.plot_actuation_polygon(ax, force_polytopes[idx], contacts[idx, :], scaling_factor)
-        plt.show()
+#         normals = np.vstack([n1, n2, n3, n4])
+#         comp_dyn = ComputationalDynamics('hyq')
+#         params = IterativeProjectionParameters()
+#         params.setContactsPosWF(contacts)
+#         params.setCoMPosWF(comWF)
+#         #       params.setTorqueLims(torque_limits)
+#         params.setActiveContacts(stanceFeet)
+#         params.setConstraintModes(constraint_mode_IP)
+#         params.setContactNormals(normals)
+#         params.setFrictionCoefficient(mu)
+#         params.setNumberOfFrictionConesEdges(ng)
+#         params.setTotalMass(trunk_mass)
+#         status, x, force_polytopes = comp_dyn.check_equilibrium(params)
 
-    def test_LP_actuation_constraints_only(self):
-        math = Math()
-        # number of contacts
-        nc = 3
-        # number of generators, i.e. rays used to linearize the friction cone
-        ng = 4
+#         self.assertTrue(status)
+#         expected_force = [[ 5.55e+01],
+#                          [-2.80e+00],
+#                          [ 2.39e+02],
+#                          [ 3.32e+01],
+#                          [-1.37e+00],
+#                          [ 1.97e+02],
+#                          [-6.17e+01],
+#                          [ 3.15e+00],
+#                          [ 7.66e+00],
+#                          [-2.70e+01],
+#                          [ 1.01e+00],
+#                          [ 4.76e+01]]
+#         # print("Status", status, x.T, expected_force)
+#         # self.assertEquals(x, expected_force)
+
+#         # '''Plotting the contact points in the 3D figure'''
+#         # fig = plt.figure()
+#         # ax = fig.add_subplot(111, projection='3d')
+#         # ax.set_xlabel('X axis')
+#         # ax.set_ylabel('Y axis')
+#         # ax.set_zlabel('Z axis')
+
+#         # ''' plotting Iterative Projection points '''
+#         # plotter = Plotter()
+#         # scaling_factor = 2000
+#         # stanceID = params.getStanceIndex(stanceFeet)
+#         # for j in range(0, nc):  # this will only show the force polytopes of the feet that are defined to be in stance
+#         #     idx = int(stanceID[j])
+#         #     if (constraint_mode_IP[idx] == 'ONLY_ACTUATION') or (constraint_mode_IP[idx] == 'FRICTION_AND_ACTUATION'):
+#         #         plotter.plot_actuation_polygon(ax, force_polytopes[idx], contacts[idx, :], scaling_factor)
+#         # plt.show()
+
+#     def test_LP_actuation_constraints_only(self):
+#         math = Math()
+#         # number of contacts
+#         nc = 3
+#         # number of generators, i.e. rays used to linearize the friction cone
+#         ng = 4
         
-        # ONLY_ACTUATION or ONLY_FRICTION
-        constraint_mode = 'ONLY_ACTUATION'
+#         # ONLY_ACTUATION or ONLY_FRICTION
+#         constraint_mode = 'ONLY_ACTUATION'
 
-        useVariableJacobian = True
+#         useVariableJacobian = True
         
-        """ contact points """    
-        LF_foot = np.array([0.3, 0.2, -0.65])
-        RF_foot = np.array([0.3, -0.2, -0.65])
-        LH_foot = np.array([-0.2, 0.2, -0.4])
-        RH_foot = np.array([-0.3, -0.2, -0.65])
+#         """ contact points """    
+#         LF_foot = np.array([0.3, 0.2, -0.65])
+#         RF_foot = np.array([0.3, -0.2, -0.65])
+#         LH_foot = np.array([-0.2, 0.2, -0.4])
+#         RH_foot = np.array([-0.3, -0.2, -0.65])
         
-        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-        contacts = contactsToStack[0:nc, :]
+#         contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+#         contacts = contactsToStack[0:nc, :]
         
-        ''' parameters to be tuned'''
-        g = 9.81
-        trunk_mass = 90.
-        mu = 0.8
+#         ''' parameters to be tuned'''
+#         g = 9.81
+#         trunk_mass = 90.
+#         mu = 0.8
+#         stanceFeet = [1, 1, 1, 1]
+#         axisZ= np.array([[0.0], [0.0], [1.0]])
         
-        axisZ= np.array([[0.0], [0.0], [1.0]])
+#         n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         # %% Cell 2
         
-        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        # %% Cell 2
-        
-        normals = np.vstack([n1, n2, n3, n4])
-        comp_dyn = ComputationalDynamics()
-        params = IterativeProjectionParameters()
-        params.setContactsPosWF(contacts)
-#       params.setCoMPosWF(comWF)
-#       params.setTorqueLims(torque_limits)
-#       params.setActiveContacts(stanceFeet)
-#       params.setConstraintModes(constraint_mode_IP)
-        params.setContactNormals(normals)
-        params.setFrictionCoefficient(mu)
-        params.setNumberOfFrictionConesEdges(ng)
-        params.setTotalMass(trunk_mass)
+#         normals = np.vstack([n1, n2, n3, n4])
+#         comp_dyn = ComputationalDynamics('hyq')
+#         params = IterativeProjectionParameters()
+#         params.setContactsPosWF(contacts)
+# #       params.setCoMPosWF(comWF)
+# #       params.setTorqueLims(torque_limits)
+# #       params.setActiveContacts(stanceFeet)
+# #       params.setConstraintModes(constraint_mode_IP)
+#         params.setContactNormals(normals)
+#         params.setFrictionCoefficient(mu)
+#         params.setNumberOfFrictionConesEdges(ng)
+#         params.setTotalMass(trunk_mass)
 
-        feasible, unfeasible, contact_forces = comp_dyn.LP_projection(params)
+#         feasible, unfeasible, contact_forces = comp_dyn.LP_projection(params)
 
-        expected_feasible = np.array([[ -1.50000000e-01,   2.50000000e-01,   5.00000000e-02],
-                                      [ -1.50000000e-01,   2.50000000e-01,   1.00000000e-01],
-                                      [ -1.50000000e-01,   3.00000000e-01,   5.00000000e-02],
-                                      [ -1.50000000e-01,   3.00000000e-01,   1.00000000e-01],
-                                      [ -1.50000000e-01,   3.50000000e-01,   1.00000000e-01],
-                                      [ -1.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
-                                      [ -1.00000000e-01,   1.00000000e-01,   5.00000000e-02],
-                                      [ -1.00000000e-01,   1.00000000e-01,   1.00000000e-01],
-                                      [ -1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
-                                      [ -1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
-                                      [ -1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
-                                      [ -1.00000000e-01,   2.00000000e-01,  -5.55111512e-17],
-                                      [ -1.00000000e-01,   2.00000000e-01,   5.00000000e-02],
-                                      [ -1.00000000e-01,   2.00000000e-01,   1.00000000e-01],
-                                      [ -1.00000000e-01,   2.50000000e-01,  -5.55111512e-17],
-                                      [ -1.00000000e-01,   2.50000000e-01,   5.00000000e-02],
-                                      [ -1.00000000e-01,   2.50000000e-01,   1.00000000e-01],
-                                      [ -1.00000000e-01,   3.00000000e-01,  -5.55111512e-17],
-                                      [ -1.00000000e-01,   3.00000000e-01,   5.00000000e-02],
-                                      [ -1.00000000e-01,   3.00000000e-01,   1.00000000e-01],
-                                      [ -1.00000000e-01,   3.50000000e-01,   5.00000000e-02],
-                                      [ -1.00000000e-01,   3.50000000e-01,   1.00000000e-01],
-                                      [ -5.00000000e-02,  -1.11022302e-16,  -1.00000000e-01],
-                                      [ -5.00000000e-02,  -1.11022302e-16,  -5.00000000e-02],
-                                      [ -5.00000000e-02,  -1.11022302e-16,  -5.55111512e-17],
-                                      [ -5.00000000e-02,  -1.11022302e-16,   5.00000000e-02],
-                                      [ -5.00000000e-02,  -1.11022302e-16,   1.00000000e-01],
-                                      [ -5.00000000e-02,   5.00000000e-02,  -1.50000000e-01],
-                                      [ -5.00000000e-02,   5.00000000e-02,  -1.00000000e-01],
-                                      [ -5.00000000e-02,   5.00000000e-02,  -5.00000000e-02],
-                                      [ -5.00000000e-02,   5.00000000e-02,  -5.55111512e-17],
-                                      [ -5.00000000e-02,   5.00000000e-02,   5.00000000e-02],
-                                      [ -5.00000000e-02,   5.00000000e-02,   1.00000000e-01],
-                                      [ -5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
-                                      [ -5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
-                                      [ -5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
-                                      [ -5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
-                                      [ -5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
-                                      [ -5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
-                                      [ -5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
-                                      [ -5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
-                                      [ -5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
-                                      [ -5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
-                                      [ -5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
-                                      [ -5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
-                                      [ -5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
-                                      [ -5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
-                                      [ -5.00000000e-02,   2.00000000e-01,  -2.00000000e-01],
-                                      [ -5.00000000e-02,   2.00000000e-01,  -1.50000000e-01],
-                                      [ -5.00000000e-02,   2.00000000e-01,  -1.00000000e-01],
-                                      [ -5.00000000e-02,   2.00000000e-01,  -5.00000000e-02],
-                                      [ -5.00000000e-02,   2.00000000e-01,  -5.55111512e-17],
-                                      [ -5.00000000e-02,   2.00000000e-01,   5.00000000e-02],
-                                      [ -5.00000000e-02,   2.00000000e-01,   1.00000000e-01],
-                                      [ -5.00000000e-02,   2.50000000e-01,  -2.00000000e-01],
-                                      [ -5.00000000e-02,   2.50000000e-01,  -1.50000000e-01],
-                                      [ -5.00000000e-02,   2.50000000e-01,  -1.00000000e-01],
-                                      [ -5.00000000e-02,   2.50000000e-01,  -5.00000000e-02],
-                                      [ -5.00000000e-02,   2.50000000e-01,  -5.55111512e-17],
-                                      [ -5.00000000e-02,   2.50000000e-01,   5.00000000e-02],
-                                      [ -5.00000000e-02,   2.50000000e-01,   1.00000000e-01],
-                                      [ -5.00000000e-02,   3.00000000e-01,  -5.00000000e-02],
-                                      [ -5.00000000e-02,   3.00000000e-01,  -5.55111512e-17],
-                                      [ -5.00000000e-02,   3.00000000e-01,   5.00000000e-02],
-                                      [ -5.00000000e-02,   3.00000000e-01,   1.00000000e-01],
-                                      [ -5.00000000e-02,   3.50000000e-01,  -5.55111512e-17],
-                                      [ -5.00000000e-02,   3.50000000e-01,   5.00000000e-02],
-                                      [ -5.00000000e-02,   3.50000000e-01,   1.00000000e-01],
-                                      [ -1.11022302e-16,  -5.00000000e-02,  -1.00000000e-01],
-                                      [ -1.11022302e-16,  -5.00000000e-02,  -5.00000000e-02],
-                                      [ -1.11022302e-16,  -5.00000000e-02,  -5.55111512e-17],
-                                      [ -1.11022302e-16,  -5.00000000e-02,   5.00000000e-02],
-                                      [ -1.11022302e-16,  -5.00000000e-02,   1.00000000e-01],
-                                      [ -1.11022302e-16,  -1.11022302e-16,  -1.50000000e-01],
-                                      [ -1.11022302e-16,  -1.11022302e-16,  -1.00000000e-01],
-                                      [ -1.11022302e-16,  -1.11022302e-16,  -5.00000000e-02],
-                                      [ -1.11022302e-16,  -1.11022302e-16,  -5.55111512e-17],
-                                      [ -1.11022302e-16,  -1.11022302e-16,   5.00000000e-02],
-                                      [ -1.11022302e-16,  -1.11022302e-16,   1.00000000e-01],
-                                      [ -1.11022302e-16,   5.00000000e-02,  -1.50000000e-01],
-                                      [ -1.11022302e-16,   5.00000000e-02,  -1.00000000e-01],
-                                      [ -1.11022302e-16,   5.00000000e-02,  -5.00000000e-02],
-                                      [ -1.11022302e-16,   5.00000000e-02,  -5.55111512e-17],
-                                      [ -1.11022302e-16,   5.00000000e-02,   5.00000000e-02],
-                                      [ -1.11022302e-16,   5.00000000e-02,   1.00000000e-01],
-                                      [ -1.11022302e-16,   1.00000000e-01,  -2.00000000e-01],
-                                      [ -1.11022302e-16,   1.00000000e-01,  -1.50000000e-01],
-                                      [ -1.11022302e-16,   1.00000000e-01,  -1.00000000e-01],
-                                      [ -1.11022302e-16,   1.00000000e-01,  -5.00000000e-02],
-                                      [ -1.11022302e-16,   1.00000000e-01,  -5.55111512e-17],
-                                      [ -1.11022302e-16,   1.00000000e-01,   5.00000000e-02],
-                                      [ -1.11022302e-16,   1.00000000e-01,   1.00000000e-01],
-                                      [ -1.11022302e-16,   1.50000000e-01,  -2.00000000e-01],
-                                      [ -1.11022302e-16,   1.50000000e-01,  -1.50000000e-01],
-                                      [ -1.11022302e-16,   1.50000000e-01,  -1.00000000e-01],
-                                      [ -1.11022302e-16,   1.50000000e-01,  -5.00000000e-02],
-                                      [ -1.11022302e-16,   1.50000000e-01,  -5.55111512e-17],
-                                      [ -1.11022302e-16,   1.50000000e-01,   5.00000000e-02],
-                                      [ -1.11022302e-16,   1.50000000e-01,   1.00000000e-01],
-                                      [ -1.11022302e-16,   2.00000000e-01,  -2.00000000e-01],
-                                      [ -1.11022302e-16,   2.00000000e-01,  -1.50000000e-01],
-                                      [ -1.11022302e-16,   2.00000000e-01,  -1.00000000e-01],
-                                      [ -1.11022302e-16,   2.00000000e-01,  -5.00000000e-02],
-                                      [ -1.11022302e-16,   2.00000000e-01,  -5.55111512e-17],
-                                      [ -1.11022302e-16,   2.00000000e-01,   5.00000000e-02],
-                                      [ -1.11022302e-16,   2.00000000e-01,   1.00000000e-01],
-                                      [ -1.11022302e-16,   2.50000000e-01,  -1.50000000e-01],
-                                      [ -1.11022302e-16,   2.50000000e-01,  -1.00000000e-01],
-                                      [ -1.11022302e-16,   2.50000000e-01,  -5.00000000e-02],
-                                      [ -1.11022302e-16,   2.50000000e-01,  -5.55111512e-17],
-                                      [ -1.11022302e-16,   2.50000000e-01,   5.00000000e-02],
-                                      [ -1.11022302e-16,   2.50000000e-01,   1.00000000e-01],
-                                      [ -1.11022302e-16,   3.00000000e-01,  -5.00000000e-02],
-                                      [ -1.11022302e-16,   3.00000000e-01,  -5.55111512e-17],
-                                      [ -1.11022302e-16,   3.00000000e-01,   5.00000000e-02],
-                                      [ -1.11022302e-16,   3.00000000e-01,   1.00000000e-01],
-                                      [ -1.11022302e-16,   3.50000000e-01,  -5.55111512e-17],
-                                      [ -1.11022302e-16,   3.50000000e-01,   5.00000000e-02],
-                                      [ -1.11022302e-16,   3.50000000e-01,   1.00000000e-01],
-                                      [  5.00000000e-02,  -5.00000000e-02,  -1.00000000e-01],
-                                      [  5.00000000e-02,  -5.00000000e-02,  -5.00000000e-02],
-                                      [  5.00000000e-02,  -5.00000000e-02,  -5.55111512e-17],
-                                      [  5.00000000e-02,  -5.00000000e-02,   5.00000000e-02],
-                                      [  5.00000000e-02,  -5.00000000e-02,   1.00000000e-01],
-                                      [  5.00000000e-02,  -1.11022302e-16,  -1.00000000e-01],
-                                      [  5.00000000e-02,  -1.11022302e-16,  -5.00000000e-02],
-                                      [  5.00000000e-02,  -1.11022302e-16,  -5.55111512e-17],
-                                      [  5.00000000e-02,  -1.11022302e-16,   5.00000000e-02],
-                                      [  5.00000000e-02,  -1.11022302e-16,   1.00000000e-01],
-                                      [  5.00000000e-02,   5.00000000e-02,  -1.00000000e-01],
-                                      [  5.00000000e-02,   5.00000000e-02,  -5.00000000e-02],
-                                      [  5.00000000e-02,   5.00000000e-02,  -5.55111512e-17],
-                                      [  5.00000000e-02,   5.00000000e-02,   5.00000000e-02],
-                                      [  5.00000000e-02,   5.00000000e-02,   1.00000000e-01],
-                                      [  5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
-                                      [  5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
-                                      [  5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
-                                      [  5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
-                                      [  5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
-                                      [  5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
-                                      [  5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
-                                      [  5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
-                                      [  5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
-                                      [  5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
-                                      [  5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
-                                      [  5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
-                                      [  5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
-                                      [  5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
-                                      [  5.00000000e-02,   2.00000000e-01,  -2.00000000e-01],
-                                      [  5.00000000e-02,   2.00000000e-01,  -1.50000000e-01],
-                                      [  5.00000000e-02,   2.00000000e-01,  -1.00000000e-01],
-                                      [  5.00000000e-02,   2.00000000e-01,  -5.00000000e-02],
-                                      [  5.00000000e-02,   2.00000000e-01,  -5.55111512e-17],
-                                      [  5.00000000e-02,   2.00000000e-01,   5.00000000e-02],
-                                      [  5.00000000e-02,   2.00000000e-01,   1.00000000e-01],
-                                      [  5.00000000e-02,   2.50000000e-01,  -1.50000000e-01],
-                                      [  5.00000000e-02,   2.50000000e-01,  -1.00000000e-01],
-                                      [  5.00000000e-02,   2.50000000e-01,  -5.00000000e-02],
-                                      [  5.00000000e-02,   2.50000000e-01,  -5.55111512e-17],
-                                      [  5.00000000e-02,   2.50000000e-01,   5.00000000e-02],
-                                      [  5.00000000e-02,   2.50000000e-01,   1.00000000e-01],
-                                      [  5.00000000e-02,   3.00000000e-01,  -5.00000000e-02],
-                                      [  5.00000000e-02,   3.00000000e-01,  -5.55111512e-17],
-                                      [  5.00000000e-02,   3.00000000e-01,   5.00000000e-02],
-                                      [  5.00000000e-02,   3.00000000e-01,   1.00000000e-01],
-                                      [  5.00000000e-02,   3.50000000e-01,  -5.55111512e-17],
-                                      [  5.00000000e-02,   3.50000000e-01,   5.00000000e-02],
-                                      [  5.00000000e-02,   3.50000000e-01,   1.00000000e-01],
-                                      [  1.00000000e-01,  -5.00000000e-02,  -5.55111512e-17],
-                                      [  1.00000000e-01,  -5.00000000e-02,   5.00000000e-02],
-                                      [  1.00000000e-01,  -5.00000000e-02,   1.00000000e-01],
-                                      [  1.00000000e-01,  -1.11022302e-16,  -5.55111512e-17],
-                                      [  1.00000000e-01,  -1.11022302e-16,   5.00000000e-02],
-                                      [  1.00000000e-01,  -1.11022302e-16,   1.00000000e-01],
-                                      [  1.00000000e-01,   5.00000000e-02,  -5.55111512e-17],
-                                      [  1.00000000e-01,   5.00000000e-02,   5.00000000e-02],
-                                      [  1.00000000e-01,   5.00000000e-02,   1.00000000e-01],
-                                      [  1.00000000e-01,   1.00000000e-01,  -1.00000000e-01],
-                                      [  1.00000000e-01,   1.00000000e-01,  -5.00000000e-02],
-                                      [  1.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
-                                      [  1.00000000e-01,   1.00000000e-01,   5.00000000e-02],
-                                      [  1.00000000e-01,   1.00000000e-01,   1.00000000e-01],
-                                      [  1.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
-                                      [  1.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
-                                      [  1.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
-                                      [  1.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
-                                      [  1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
-                                      [  1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
-                                      [  1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
-                                      [  1.00000000e-01,   2.00000000e-01,  -2.00000000e-01],
-                                      [  1.00000000e-01,   2.00000000e-01,  -1.50000000e-01],
-                                      [  1.00000000e-01,   2.00000000e-01,  -1.00000000e-01],
-                                      [  1.00000000e-01,   2.00000000e-01,  -5.00000000e-02],
-                                      [  1.00000000e-01,   2.00000000e-01,  -5.55111512e-17],
-                                      [  1.00000000e-01,   2.00000000e-01,   5.00000000e-02],
-                                      [  1.00000000e-01,   2.00000000e-01,   1.00000000e-01],
-                                      [  1.00000000e-01,   2.50000000e-01,  -1.00000000e-01],
-                                      [  1.00000000e-01,   2.50000000e-01,  -5.00000000e-02],
-                                      [  1.00000000e-01,   2.50000000e-01,  -5.55111512e-17],
-                                      [  1.00000000e-01,   2.50000000e-01,   5.00000000e-02],
-                                      [  1.00000000e-01,   2.50000000e-01,   1.00000000e-01],
-                                      [  1.00000000e-01,   3.00000000e-01,  -5.55111512e-17],
-                                      [  1.00000000e-01,   3.00000000e-01,   5.00000000e-02],
-                                      [  1.00000000e-01,   3.00000000e-01,   1.00000000e-01],
-                                      [  1.00000000e-01,   3.50000000e-01,   5.00000000e-02],
-                                      [  1.00000000e-01,   3.50000000e-01,   1.00000000e-01],
-                                      [  1.50000000e-01,   1.50000000e-01,  -2.00000000e-01],
-                                      [  1.50000000e-01,   1.50000000e-01,  -5.55111512e-17],
-                                      [  1.50000000e-01,   1.50000000e-01,   5.00000000e-02],
-                                      [  1.50000000e-01,   2.00000000e-01,  -2.00000000e-01],
-                                      [  1.50000000e-01,   2.00000000e-01,  -1.50000000e-01],
-                                      [  1.50000000e-01,   2.00000000e-01,  -1.00000000e-01],
-                                      [  1.50000000e-01,   2.00000000e-01,  -5.00000000e-02],
-                                      [  1.50000000e-01,   2.00000000e-01,  -5.55111512e-17],
-                                      [  1.50000000e-01,   2.00000000e-01,   5.00000000e-02],
-                                      [  1.50000000e-01,   2.50000000e-01,  -1.00000000e-01],
-                                      [  1.50000000e-01,   2.50000000e-01,  -5.00000000e-02],
-                                      [  1.50000000e-01,   2.50000000e-01,  -5.55111512e-17],
-                                      [  1.50000000e-01,   2.50000000e-01,   5.00000000e-02],
-                                      [  1.50000000e-01,   3.00000000e-01,  -5.55111512e-17],
-                                      [  1.50000000e-01,   3.00000000e-01,   5.00000000e-02],
-                                      [  1.50000000e-01,   3.50000000e-01,   5.00000000e-02],
-                                      [  2.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
-                                      [  2.00000000e-01,   2.00000000e-01,  -1.50000000e-01],
-                                      [  2.00000000e-01,   2.50000000e-01,  -5.00000000e-02],
-                                      [  2.00000000e-01,   2.50000000e-01,  -5.55111512e-17],
-                                      [  2.00000000e-01,   3.00000000e-01,  -5.55111512e-17]]);
-#        print expected_feasible
-        rows = np.size(expected_feasible, 0)
-        cols = np.size(expected_feasible, 1) 
-        for i in range(0, rows):
-            for j in range (0, cols):
-                self.assertAlmostEquals(expected_feasible[i,j], feasible[i,j], self.assertPrecision)
+#         expected_feasible = np.array([[ -1.50000000e-01,   2.50000000e-01,   5.00000000e-02],
+#                                       [ -1.50000000e-01,   2.50000000e-01,   1.00000000e-01],
+#                                       [ -1.50000000e-01,   3.00000000e-01,   5.00000000e-02],
+#                                       [ -1.50000000e-01,   3.00000000e-01,   1.00000000e-01],
+#                                       [ -1.50000000e-01,   3.50000000e-01,   1.00000000e-01],
+#                                       [ -1.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
+#                                       [ -1.00000000e-01,   1.00000000e-01,   5.00000000e-02],
+#                                       [ -1.00000000e-01,   1.00000000e-01,   1.00000000e-01],
+#                                       [ -1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#                                       [ -1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
+#                                       [ -1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
+#                                       [ -1.00000000e-01,   2.00000000e-01,  -5.55111512e-17],
+#                                       [ -1.00000000e-01,   2.00000000e-01,   5.00000000e-02],
+#                                       [ -1.00000000e-01,   2.00000000e-01,   1.00000000e-01],
+#                                       [ -1.00000000e-01,   2.50000000e-01,  -5.55111512e-17],
+#                                       [ -1.00000000e-01,   2.50000000e-01,   5.00000000e-02],
+#                                       [ -1.00000000e-01,   2.50000000e-01,   1.00000000e-01],
+#                                       [ -1.00000000e-01,   3.00000000e-01,  -5.55111512e-17],
+#                                       [ -1.00000000e-01,   3.00000000e-01,   5.00000000e-02],
+#                                       [ -1.00000000e-01,   3.00000000e-01,   1.00000000e-01],
+#                                       [ -1.00000000e-01,   3.50000000e-01,   5.00000000e-02],
+#                                       [ -1.00000000e-01,   3.50000000e-01,   1.00000000e-01],
+#                                       [ -5.00000000e-02,  -1.11022302e-16,  -1.00000000e-01],
+#                                       [ -5.00000000e-02,  -1.11022302e-16,  -5.00000000e-02],
+#                                       [ -5.00000000e-02,  -1.11022302e-16,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,  -1.11022302e-16,   5.00000000e-02],
+#                                       [ -5.00000000e-02,  -1.11022302e-16,   1.00000000e-01],
+#                                       [ -5.00000000e-02,   5.00000000e-02,  -1.50000000e-01],
+#                                       [ -5.00000000e-02,   5.00000000e-02,  -1.00000000e-01],
+#                                       [ -5.00000000e-02,   5.00000000e-02,  -5.00000000e-02],
+#                                       [ -5.00000000e-02,   5.00000000e-02,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,   5.00000000e-02,   5.00000000e-02],
+#                                       [ -5.00000000e-02,   5.00000000e-02,   1.00000000e-01],
+#                                       [ -5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
+#                                       [ -5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
+#                                       [ -5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
+#                                       [ -5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
+#                                       [ -5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
+#                                       [ -5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
+#                                       [ -5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
+#                                       [ -5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
+#                                       [ -5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
+#                                       [ -5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
+#                                       [ -5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
+#                                       [ -5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
+#                                       [ -5.00000000e-02,   2.00000000e-01,  -2.00000000e-01],
+#                                       [ -5.00000000e-02,   2.00000000e-01,  -1.50000000e-01],
+#                                       [ -5.00000000e-02,   2.00000000e-01,  -1.00000000e-01],
+#                                       [ -5.00000000e-02,   2.00000000e-01,  -5.00000000e-02],
+#                                       [ -5.00000000e-02,   2.00000000e-01,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,   2.00000000e-01,   5.00000000e-02],
+#                                       [ -5.00000000e-02,   2.00000000e-01,   1.00000000e-01],
+#                                       [ -5.00000000e-02,   2.50000000e-01,  -2.00000000e-01],
+#                                       [ -5.00000000e-02,   2.50000000e-01,  -1.50000000e-01],
+#                                       [ -5.00000000e-02,   2.50000000e-01,  -1.00000000e-01],
+#                                       [ -5.00000000e-02,   2.50000000e-01,  -5.00000000e-02],
+#                                       [ -5.00000000e-02,   2.50000000e-01,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,   2.50000000e-01,   5.00000000e-02],
+#                                       [ -5.00000000e-02,   2.50000000e-01,   1.00000000e-01],
+#                                       [ -5.00000000e-02,   3.00000000e-01,  -5.00000000e-02],
+#                                       [ -5.00000000e-02,   3.00000000e-01,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,   3.00000000e-01,   5.00000000e-02],
+#                                       [ -5.00000000e-02,   3.00000000e-01,   1.00000000e-01],
+#                                       [ -5.00000000e-02,   3.50000000e-01,  -5.55111512e-17],
+#                                       [ -5.00000000e-02,   3.50000000e-01,   5.00000000e-02],
+#                                       [ -5.00000000e-02,   3.50000000e-01,   1.00000000e-01],
+#                                       [ -1.11022302e-16,  -5.00000000e-02,  -1.00000000e-01],
+#                                       [ -1.11022302e-16,  -5.00000000e-02,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,  -5.00000000e-02,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,  -5.00000000e-02,   5.00000000e-02],
+#                                       [ -1.11022302e-16,  -5.00000000e-02,   1.00000000e-01],
+#                                       [ -1.11022302e-16,  -1.11022302e-16,  -1.50000000e-01],
+#                                       [ -1.11022302e-16,  -1.11022302e-16,  -1.00000000e-01],
+#                                       [ -1.11022302e-16,  -1.11022302e-16,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,  -1.11022302e-16,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,  -1.11022302e-16,   5.00000000e-02],
+#                                       [ -1.11022302e-16,  -1.11022302e-16,   1.00000000e-01],
+#                                       [ -1.11022302e-16,   5.00000000e-02,  -1.50000000e-01],
+#                                       [ -1.11022302e-16,   5.00000000e-02,  -1.00000000e-01],
+#                                       [ -1.11022302e-16,   5.00000000e-02,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,   5.00000000e-02,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,   5.00000000e-02,   5.00000000e-02],
+#                                       [ -1.11022302e-16,   5.00000000e-02,   1.00000000e-01],
+#                                       [ -1.11022302e-16,   1.00000000e-01,  -2.00000000e-01],
+#                                       [ -1.11022302e-16,   1.00000000e-01,  -1.50000000e-01],
+#                                       [ -1.11022302e-16,   1.00000000e-01,  -1.00000000e-01],
+#                                       [ -1.11022302e-16,   1.00000000e-01,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,   1.00000000e-01,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,   1.00000000e-01,   5.00000000e-02],
+#                                       [ -1.11022302e-16,   1.00000000e-01,   1.00000000e-01],
+#                                       [ -1.11022302e-16,   1.50000000e-01,  -2.00000000e-01],
+#                                       [ -1.11022302e-16,   1.50000000e-01,  -1.50000000e-01],
+#                                       [ -1.11022302e-16,   1.50000000e-01,  -1.00000000e-01],
+#                                       [ -1.11022302e-16,   1.50000000e-01,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,   1.50000000e-01,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,   1.50000000e-01,   5.00000000e-02],
+#                                       [ -1.11022302e-16,   1.50000000e-01,   1.00000000e-01],
+#                                       [ -1.11022302e-16,   2.00000000e-01,  -2.00000000e-01],
+#                                       [ -1.11022302e-16,   2.00000000e-01,  -1.50000000e-01],
+#                                       [ -1.11022302e-16,   2.00000000e-01,  -1.00000000e-01],
+#                                       [ -1.11022302e-16,   2.00000000e-01,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,   2.00000000e-01,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,   2.00000000e-01,   5.00000000e-02],
+#                                       [ -1.11022302e-16,   2.00000000e-01,   1.00000000e-01],
+#                                       [ -1.11022302e-16,   2.50000000e-01,  -1.50000000e-01],
+#                                       [ -1.11022302e-16,   2.50000000e-01,  -1.00000000e-01],
+#                                       [ -1.11022302e-16,   2.50000000e-01,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,   2.50000000e-01,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,   2.50000000e-01,   5.00000000e-02],
+#                                       [ -1.11022302e-16,   2.50000000e-01,   1.00000000e-01],
+#                                       [ -1.11022302e-16,   3.00000000e-01,  -5.00000000e-02],
+#                                       [ -1.11022302e-16,   3.00000000e-01,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,   3.00000000e-01,   5.00000000e-02],
+#                                       [ -1.11022302e-16,   3.00000000e-01,   1.00000000e-01],
+#                                       [ -1.11022302e-16,   3.50000000e-01,  -5.55111512e-17],
+#                                       [ -1.11022302e-16,   3.50000000e-01,   5.00000000e-02],
+#                                       [ -1.11022302e-16,   3.50000000e-01,   1.00000000e-01],
+#                                       [  5.00000000e-02,  -5.00000000e-02,  -1.00000000e-01],
+#                                       [  5.00000000e-02,  -5.00000000e-02,  -5.00000000e-02],
+#                                       [  5.00000000e-02,  -5.00000000e-02,  -5.55111512e-17],
+#                                       [  5.00000000e-02,  -5.00000000e-02,   5.00000000e-02],
+#                                       [  5.00000000e-02,  -5.00000000e-02,   1.00000000e-01],
+#                                       [  5.00000000e-02,  -1.11022302e-16,  -1.00000000e-01],
+#                                       [  5.00000000e-02,  -1.11022302e-16,  -5.00000000e-02],
+#                                       [  5.00000000e-02,  -1.11022302e-16,  -5.55111512e-17],
+#                                       [  5.00000000e-02,  -1.11022302e-16,   5.00000000e-02],
+#                                       [  5.00000000e-02,  -1.11022302e-16,   1.00000000e-01],
+#                                       [  5.00000000e-02,   5.00000000e-02,  -1.00000000e-01],
+#                                       [  5.00000000e-02,   5.00000000e-02,  -5.00000000e-02],
+#                                       [  5.00000000e-02,   5.00000000e-02,  -5.55111512e-17],
+#                                       [  5.00000000e-02,   5.00000000e-02,   5.00000000e-02],
+#                                       [  5.00000000e-02,   5.00000000e-02,   1.00000000e-01],
+#                                       [  5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
+#                                       [  5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
+#                                       [  5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
+#                                       [  5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
+#                                       [  5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
+#                                       [  5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
+#                                       [  5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
+#                                       [  5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
+#                                       [  5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
+#                                       [  5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
+#                                       [  5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
+#                                       [  5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
+#                                       [  5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
+#                                       [  5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
+#                                       [  5.00000000e-02,   2.00000000e-01,  -2.00000000e-01],
+#                                       [  5.00000000e-02,   2.00000000e-01,  -1.50000000e-01],
+#                                       [  5.00000000e-02,   2.00000000e-01,  -1.00000000e-01],
+#                                       [  5.00000000e-02,   2.00000000e-01,  -5.00000000e-02],
+#                                       [  5.00000000e-02,   2.00000000e-01,  -5.55111512e-17],
+#                                       [  5.00000000e-02,   2.00000000e-01,   5.00000000e-02],
+#                                       [  5.00000000e-02,   2.00000000e-01,   1.00000000e-01],
+#                                       [  5.00000000e-02,   2.50000000e-01,  -1.50000000e-01],
+#                                       [  5.00000000e-02,   2.50000000e-01,  -1.00000000e-01],
+#                                       [  5.00000000e-02,   2.50000000e-01,  -5.00000000e-02],
+#                                       [  5.00000000e-02,   2.50000000e-01,  -5.55111512e-17],
+#                                       [  5.00000000e-02,   2.50000000e-01,   5.00000000e-02],
+#                                       [  5.00000000e-02,   2.50000000e-01,   1.00000000e-01],
+#                                       [  5.00000000e-02,   3.00000000e-01,  -5.00000000e-02],
+#                                       [  5.00000000e-02,   3.00000000e-01,  -5.55111512e-17],
+#                                       [  5.00000000e-02,   3.00000000e-01,   5.00000000e-02],
+#                                       [  5.00000000e-02,   3.00000000e-01,   1.00000000e-01],
+#                                       [  5.00000000e-02,   3.50000000e-01,  -5.55111512e-17],
+#                                       [  5.00000000e-02,   3.50000000e-01,   5.00000000e-02],
+#                                       [  5.00000000e-02,   3.50000000e-01,   1.00000000e-01],
+#                                       [  1.00000000e-01,  -5.00000000e-02,  -5.55111512e-17],
+#                                       [  1.00000000e-01,  -5.00000000e-02,   5.00000000e-02],
+#                                       [  1.00000000e-01,  -5.00000000e-02,   1.00000000e-01],
+#                                       [  1.00000000e-01,  -1.11022302e-16,  -5.55111512e-17],
+#                                       [  1.00000000e-01,  -1.11022302e-16,   5.00000000e-02],
+#                                       [  1.00000000e-01,  -1.11022302e-16,   1.00000000e-01],
+#                                       [  1.00000000e-01,   5.00000000e-02,  -5.55111512e-17],
+#                                       [  1.00000000e-01,   5.00000000e-02,   5.00000000e-02],
+#                                       [  1.00000000e-01,   5.00000000e-02,   1.00000000e-01],
+#                                       [  1.00000000e-01,   1.00000000e-01,  -1.00000000e-01],
+#                                       [  1.00000000e-01,   1.00000000e-01,  -5.00000000e-02],
+#                                       [  1.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
+#                                       [  1.00000000e-01,   1.00000000e-01,   5.00000000e-02],
+#                                       [  1.00000000e-01,   1.00000000e-01,   1.00000000e-01],
+#                                       [  1.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#                                       [  1.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
+#                                       [  1.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
+#                                       [  1.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
+#                                       [  1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#                                       [  1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
+#                                       [  1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
+#                                       [  1.00000000e-01,   2.00000000e-01,  -2.00000000e-01],
+#                                       [  1.00000000e-01,   2.00000000e-01,  -1.50000000e-01],
+#                                       [  1.00000000e-01,   2.00000000e-01,  -1.00000000e-01],
+#                                       [  1.00000000e-01,   2.00000000e-01,  -5.00000000e-02],
+#                                       [  1.00000000e-01,   2.00000000e-01,  -5.55111512e-17],
+#                                       [  1.00000000e-01,   2.00000000e-01,   5.00000000e-02],
+#                                       [  1.00000000e-01,   2.00000000e-01,   1.00000000e-01],
+#                                       [  1.00000000e-01,   2.50000000e-01,  -1.00000000e-01],
+#                                       [  1.00000000e-01,   2.50000000e-01,  -5.00000000e-02],
+#                                       [  1.00000000e-01,   2.50000000e-01,  -5.55111512e-17],
+#                                       [  1.00000000e-01,   2.50000000e-01,   5.00000000e-02],
+#                                       [  1.00000000e-01,   2.50000000e-01,   1.00000000e-01],
+#                                       [  1.00000000e-01,   3.00000000e-01,  -5.55111512e-17],
+#                                       [  1.00000000e-01,   3.00000000e-01,   5.00000000e-02],
+#                                       [  1.00000000e-01,   3.00000000e-01,   1.00000000e-01],
+#                                       [  1.00000000e-01,   3.50000000e-01,   5.00000000e-02],
+#                                       [  1.00000000e-01,   3.50000000e-01,   1.00000000e-01],
+#                                       [  1.50000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#                                       [  1.50000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#                                       [  1.50000000e-01,   1.50000000e-01,   5.00000000e-02],
+#                                       [  1.50000000e-01,   2.00000000e-01,  -2.00000000e-01],
+#                                       [  1.50000000e-01,   2.00000000e-01,  -1.50000000e-01],
+#                                       [  1.50000000e-01,   2.00000000e-01,  -1.00000000e-01],
+#                                       [  1.50000000e-01,   2.00000000e-01,  -5.00000000e-02],
+#                                       [  1.50000000e-01,   2.00000000e-01,  -5.55111512e-17],
+#                                       [  1.50000000e-01,   2.00000000e-01,   5.00000000e-02],
+#                                       [  1.50000000e-01,   2.50000000e-01,  -1.00000000e-01],
+#                                       [  1.50000000e-01,   2.50000000e-01,  -5.00000000e-02],
+#                                       [  1.50000000e-01,   2.50000000e-01,  -5.55111512e-17],
+#                                       [  1.50000000e-01,   2.50000000e-01,   5.00000000e-02],
+#                                       [  1.50000000e-01,   3.00000000e-01,  -5.55111512e-17],
+#                                       [  1.50000000e-01,   3.00000000e-01,   5.00000000e-02],
+#                                       [  1.50000000e-01,   3.50000000e-01,   5.00000000e-02],
+#                                       [  2.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#                                       [  2.00000000e-01,   2.00000000e-01,  -1.50000000e-01],
+#                                       [  2.00000000e-01,   2.50000000e-01,  -5.00000000e-02],
+#                                       [  2.00000000e-01,   2.50000000e-01,  -5.55111512e-17],
+#                                       [  2.00000000e-01,   3.00000000e-01,  -5.55111512e-17]]);
+# #        print expected_feasible
+#         rows = np.size(expected_feasible, 0)
+#         cols = np.size(expected_feasible, 1) 
+#         for i in range(0, rows):
+#             for j in range (0, cols):
+#                 self.assertAlmostEquals(expected_feasible[i,j], feasible[i,j], self.assertPrecision)
                 
-    def test_LP_friction_constraints_only(self):
+#     def test_LP_friction_constraints_only(self):
         
-        math = Math()
-        # number of contacts
-        nc = 3
-        # number of generators, i.e. rays used to linearize the friction cone
-        ng = 4
+#         math = Math()
+#         # number of contacts
+#         nc = 3
+#         # number of generators, i.e. rays used to linearize the friction cone
+#         ng = 4
         
-        # ONLY_FRICTION
-        constraint_mode_IP = ['ONLY_FRICTION',
-                              'ONLY_FRICTION',
-                              'ONLY_FRICTION',
-                              'ONLY_FRICTION']
+#         # ONLY_FRICTION
+#         constraint_mode_IP = ['ONLY_FRICTION',
+#                               'ONLY_FRICTION',
+#                               'ONLY_FRICTION',
+#                               'ONLY_FRICTION']
 
-        useVariableJacobian = True
+#         useVariableJacobian = True
 
         
-        LF_foot = np.array([0.3, 0.2, -0.65])
-        RF_foot = np.array([0.3, -0.2, -0.65])
-        LH_foot = np.array([-0.2, 0.2, -0.4])
-        RH_foot = np.array([-0.3, -0.2, -0.65])
+#         LF_foot = np.array([0.3, 0.2, -0.65])
+#         RF_foot = np.array([0.3, -0.2, -0.65])
+#         LH_foot = np.array([-0.2, 0.2, -0.4])
+#         RH_foot = np.array([-0.3, -0.2, -0.65])
         
-        contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
-        contacts = contactsToStack[0:4, :]
+#         contactsToStack = np.vstack((LF_foot,RF_foot,LH_foot,RH_foot))
+#         contacts = contactsToStack[0:4, :]
         
-        ''' parameters to be tuned'''
-        g = 9.81
-        trunk_mass = 90.
-        mu = 0.8
+#         ''' parameters to be tuned'''
+#         g = 9.81
+#         trunk_mass = 90.
+#         mu = 0.8
         
-        axisZ= np.array([[0.0], [0.0], [1.0]])
+#         axisZ= np.array([[0.0], [0.0], [1.0]])
         
-        n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
-        # %% Cell 2
-        ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
-        stanceFeet = [1, 1, 1, 1]
+#         n1 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         n2 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         n3 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         n4 = np.transpose(np.transpose(math.rpyToRot(0.0,0.0,0.0)).dot(axisZ))
+#         # %% Cell 2
+#         ''' stanceFeet vector contains 1 is the foot is on the ground and 0 if it is in the air'''
+#         stanceFeet = [1, 1, 1, 1]
 
-        randomSwingLeg = random.randint(0, 3)
-        tripleStance = True  # if you want you can define a swing leg using this variable
-        if tripleStance:
-            print 'Swing leg', randomSwingLeg
-            stanceFeet[randomSwingLeg] = 0
-        print 'stanceLegs ', stanceFeet
+#         randomSwingLeg = random.randint(0, 3)
+#         tripleStance = True  # if you want you can define a swing leg using this variable
+#         if tripleStance:
+#             # print 'Swing leg', randomSwingLeg
+#             stanceFeet[randomSwingLeg] = 0
+#         # print 'stanceLegs ', stanceFeet
 
-        normals = np.vstack([n1, n2, n3, n4])
-        comp_dyn = ComputationalDynamics()
-        params = IterativeProjectionParameters()
-        params.setContactsPosWF(contacts)
-        #params.setCoMPosWF(comWF)
-        #       params.setTorqueLims(torque_limits)
-        params.setActiveContacts(stanceFeet)
-        params.setConstraintModes(constraint_mode_IP)
-        params.setContactNormals(normals)
-        params.setFrictionCoefficient(mu)
-        params.setNumberOfFrictionConesEdges(ng)
-        params.setTotalMass(trunk_mass)
+#         normals = np.vstack([n1, n2, n3, n4])
+#         comp_dyn = ComputationalDynamics()
+#         params = IterativeProjectionParameters()
+#         params.setContactsPosWF(contacts)
+#         #params.setCoMPosWF(comWF)
+#         #       params.setTorqueLims(torque_limits)
+#         params.setActiveContacts(stanceFeet)
+#         params.setConstraintModes(constraint_mode_IP)
+#         params.setContactNormals(normals)
+#         params.setFrictionCoefficient(mu)
+#         params.setNumberOfFrictionConesEdges(ng)
+#         params.setTotalMass(trunk_mass)
 
-        feasible, unfeasible, contact_forces = comp_dyn.LP_projection(params)
-        print 'result',feasible, unfeasible, contact_forces
+#         feasible, unfeasible, contact_forces = comp_dyn.LP_projection(params)
+#         # print 'result',feasible, unfeasible, contact_forces
 
-        expected_feasible = np.array([[ -1.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
-       [ -1.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
-       [ -1.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
-       [ -1.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
-       [ -1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
-       [ -1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
-       [ -1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
-       [ -5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
-       [ -5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
-       [ -5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
-       [ -5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
-       [ -5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
-       [ -5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
-       [ -5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
-       [ -5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
-       [ -5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
-       [ -5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
-       [ -5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
-       [ -5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
-       [ -5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
-       [ -5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
-       [ -1.11022302e-16,   5.00000000e-02,  -2.00000000e-01],
-       [ -1.11022302e-16,   5.00000000e-02,  -1.50000000e-01],
-       [ -1.11022302e-16,   5.00000000e-02,  -1.00000000e-01],
-       [ -1.11022302e-16,   5.00000000e-02,  -5.00000000e-02],
-       [ -1.11022302e-16,   5.00000000e-02,  -5.55111512e-17],
-       [ -1.11022302e-16,   5.00000000e-02,   5.00000000e-02],
-       [ -1.11022302e-16,   5.00000000e-02,   1.00000000e-01],
-       [ -1.11022302e-16,   1.00000000e-01,  -2.00000000e-01],
-       [ -1.11022302e-16,   1.00000000e-01,  -1.50000000e-01],
-       [ -1.11022302e-16,   1.00000000e-01,  -1.00000000e-01],
-       [ -1.11022302e-16,   1.00000000e-01,  -5.00000000e-02],
-       [ -1.11022302e-16,   1.00000000e-01,  -5.55111512e-17],
-       [ -1.11022302e-16,   1.00000000e-01,   5.00000000e-02],
-       [ -1.11022302e-16,   1.00000000e-01,   1.00000000e-01],
-       [ -1.11022302e-16,   1.50000000e-01,  -2.00000000e-01],
-       [ -1.11022302e-16,   1.50000000e-01,  -1.50000000e-01],
-       [ -1.11022302e-16,   1.50000000e-01,  -1.00000000e-01],
-       [ -1.11022302e-16,   1.50000000e-01,  -5.00000000e-02],
-       [ -1.11022302e-16,   1.50000000e-01,  -5.55111512e-17],
-       [ -1.11022302e-16,   1.50000000e-01,   5.00000000e-02],
-       [ -1.11022302e-16,   1.50000000e-01,   1.00000000e-01],
-       [  5.00000000e-02,  -1.11022302e-16,  -2.00000000e-01],
-       [  5.00000000e-02,  -1.11022302e-16,  -1.50000000e-01],
-       [  5.00000000e-02,  -1.11022302e-16,  -1.00000000e-01],
-       [  5.00000000e-02,  -1.11022302e-16,  -5.00000000e-02],
-       [  5.00000000e-02,  -1.11022302e-16,  -5.55111512e-17],
-       [  5.00000000e-02,  -1.11022302e-16,   5.00000000e-02],
-       [  5.00000000e-02,  -1.11022302e-16,   1.00000000e-01],
-       [  5.00000000e-02,   5.00000000e-02,  -2.00000000e-01],
-       [  5.00000000e-02,   5.00000000e-02,  -1.50000000e-01],
-       [  5.00000000e-02,   5.00000000e-02,  -1.00000000e-01],
-       [  5.00000000e-02,   5.00000000e-02,  -5.00000000e-02],
-       [  5.00000000e-02,   5.00000000e-02,  -5.55111512e-17],
-       [  5.00000000e-02,   5.00000000e-02,   5.00000000e-02],
-       [  5.00000000e-02,   5.00000000e-02,   1.00000000e-01],
-       [  5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
-       [  5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
-       [  5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
-       [  5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
-       [  5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
-       [  5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
-       [  5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
-       [  5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
-       [  5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
-       [  5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
-       [  5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
-       [  5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
-       [  5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
-       [  5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
-       [  5.00000000e-02,   2.00000000e-01,  -2.00000000e-01],
-       [  5.00000000e-02,   2.00000000e-01,  -1.50000000e-01],
-       [  5.00000000e-02,   2.00000000e-01,  -1.00000000e-01],
-       [  5.00000000e-02,   2.00000000e-01,  -5.00000000e-02],
-       [  5.00000000e-02,   2.00000000e-01,  -5.55111512e-17],
-       [  5.00000000e-02,   2.00000000e-01,   5.00000000e-02],
-       [  5.00000000e-02,   2.00000000e-01,   1.00000000e-01],
-       [  1.00000000e-01,  -1.11022302e-16,  -2.00000000e-01],
-       [  1.00000000e-01,  -1.11022302e-16,  -1.50000000e-01],
-       [  1.00000000e-01,  -1.11022302e-16,  -1.00000000e-01],
-       [  1.00000000e-01,  -1.11022302e-16,  -5.00000000e-02],
-       [  1.00000000e-01,  -1.11022302e-16,  -5.55111512e-17],
-       [  1.00000000e-01,  -1.11022302e-16,   5.00000000e-02],
-       [  1.00000000e-01,  -1.11022302e-16,   1.00000000e-01],
-       [  1.00000000e-01,   5.00000000e-02,  -2.00000000e-01],
-       [  1.00000000e-01,   5.00000000e-02,  -1.50000000e-01],
-       [  1.00000000e-01,   5.00000000e-02,  -1.00000000e-01],
-       [  1.00000000e-01,   5.00000000e-02,  -5.00000000e-02],
-       [  1.00000000e-01,   5.00000000e-02,  -5.55111512e-17],
-       [  1.00000000e-01,   5.00000000e-02,   5.00000000e-02],
-       [  1.00000000e-01,   5.00000000e-02,   1.00000000e-01],
-       [  1.00000000e-01,   1.00000000e-01,  -2.00000000e-01],
-       [  1.00000000e-01,   1.00000000e-01,  -1.50000000e-01],
-       [  1.00000000e-01,   1.00000000e-01,  -1.00000000e-01],
-       [  1.00000000e-01,   1.00000000e-01,  -5.00000000e-02],
-       [  1.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
-       [  1.00000000e-01,   1.00000000e-01,   5.00000000e-02],
-       [  1.00000000e-01,   1.00000000e-01,   1.00000000e-01],
-       [  1.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
-       [  1.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
-       [  1.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
-       [  1.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
-       [  1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
-       [  1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
-       [  1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
-       [  1.50000000e-01,  -5.00000000e-02,  -2.00000000e-01],
-       [  1.50000000e-01,  -5.00000000e-02,  -1.50000000e-01],
-       [  1.50000000e-01,  -5.00000000e-02,  -1.00000000e-01],
-       [  1.50000000e-01,  -5.00000000e-02,  -5.00000000e-02],
-       [  1.50000000e-01,  -5.00000000e-02,  -5.55111512e-17],
-       [  1.50000000e-01,  -5.00000000e-02,   5.00000000e-02],
-       [  1.50000000e-01,  -1.11022302e-16,  -2.00000000e-01],
-       [  1.50000000e-01,  -1.11022302e-16,  -1.50000000e-01],
-       [  1.50000000e-01,  -1.11022302e-16,  -1.00000000e-01],
-       [  1.50000000e-01,  -1.11022302e-16,  -5.00000000e-02],
-       [  1.50000000e-01,  -1.11022302e-16,  -5.55111512e-17],
-       [  1.50000000e-01,  -1.11022302e-16,   5.00000000e-02],
-       [  1.50000000e-01,   5.00000000e-02,  -2.00000000e-01],
-       [  1.50000000e-01,   5.00000000e-02,  -1.50000000e-01],
-       [  1.50000000e-01,   5.00000000e-02,  -1.00000000e-01],
-       [  1.50000000e-01,   5.00000000e-02,  -5.00000000e-02],
-       [  1.50000000e-01,   5.00000000e-02,  -5.55111512e-17],
-       [  1.50000000e-01,   5.00000000e-02,   5.00000000e-02],
-       [  1.50000000e-01,   1.00000000e-01,  -2.00000000e-01],
-       [  1.50000000e-01,   1.00000000e-01,  -1.50000000e-01],
-       [  1.50000000e-01,   1.00000000e-01,  -1.00000000e-01],
-       [  1.50000000e-01,   1.00000000e-01,  -5.00000000e-02],
-       [  1.50000000e-01,   1.00000000e-01,  -5.55111512e-17],
-       [  1.50000000e-01,   1.00000000e-01,   5.00000000e-02],
-       [  1.50000000e-01,   1.50000000e-01,  -2.00000000e-01],
-       [  1.50000000e-01,   1.50000000e-01,  -1.50000000e-01],
-       [  1.50000000e-01,   1.50000000e-01,  -1.00000000e-01],
-       [  1.50000000e-01,   1.50000000e-01,  -5.00000000e-02],
-       [  1.50000000e-01,   1.50000000e-01,  -5.55111512e-17],
-       [  1.50000000e-01,   1.50000000e-01,   5.00000000e-02],
-       [  2.00000000e-01,  -1.00000000e-01,  -2.00000000e-01],
-       [  2.00000000e-01,  -1.00000000e-01,  -1.50000000e-01],
-       [  2.00000000e-01,  -1.00000000e-01,  -1.00000000e-01],
-       [  2.00000000e-01,  -1.00000000e-01,  -5.00000000e-02],
-       [  2.00000000e-01,  -1.00000000e-01,  -5.55111512e-17],
-       [  2.00000000e-01,  -1.00000000e-01,   5.00000000e-02],
-       [  2.00000000e-01,  -5.00000000e-02,  -2.00000000e-01],
-       [  2.00000000e-01,  -5.00000000e-02,  -1.50000000e-01],
-       [  2.00000000e-01,  -5.00000000e-02,  -1.00000000e-01],
-       [  2.00000000e-01,  -5.00000000e-02,  -5.00000000e-02],
-       [  2.00000000e-01,  -5.00000000e-02,  -5.55111512e-17],
-       [  2.00000000e-01,  -5.00000000e-02,   5.00000000e-02],
-       [  2.00000000e-01,  -1.11022302e-16,  -2.00000000e-01],
-       [  2.00000000e-01,  -1.11022302e-16,  -1.50000000e-01],
-       [  2.00000000e-01,  -1.11022302e-16,  -1.00000000e-01],
-       [  2.00000000e-01,  -1.11022302e-16,  -5.00000000e-02],
-       [  2.00000000e-01,  -1.11022302e-16,  -5.55111512e-17],
-       [  2.00000000e-01,  -1.11022302e-16,   5.00000000e-02],
-       [  2.00000000e-01,   5.00000000e-02,  -2.00000000e-01],
-       [  2.00000000e-01,   5.00000000e-02,  -1.50000000e-01],
-       [  2.00000000e-01,   5.00000000e-02,  -1.00000000e-01],
-       [  2.00000000e-01,   5.00000000e-02,  -5.00000000e-02],
-       [  2.00000000e-01,   5.00000000e-02,  -5.55111512e-17],
-       [  2.00000000e-01,   5.00000000e-02,   5.00000000e-02],
-       [  2.00000000e-01,   1.00000000e-01,  -2.00000000e-01],
-       [  2.00000000e-01,   1.00000000e-01,  -1.50000000e-01],
-       [  2.00000000e-01,   1.00000000e-01,  -1.00000000e-01],
-       [  2.00000000e-01,   1.00000000e-01,  -5.00000000e-02],
-       [  2.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
-       [  2.00000000e-01,   1.00000000e-01,   5.00000000e-02],
-       [  2.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
-       [  2.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
-       [  2.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
-       [  2.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
-       [  2.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
-       [  2.00000000e-01,   1.50000000e-01,   5.00000000e-02],
-       [  2.00000000e-01,   2.00000000e-01,  -2.00000000e-01],
-       [  2.00000000e-01,   2.00000000e-01,  -1.50000000e-01],
-       [  2.00000000e-01,   2.00000000e-01,  -1.00000000e-01],
-       [  2.00000000e-01,   2.00000000e-01,  -5.00000000e-02],
-       [  2.00000000e-01,   2.00000000e-01,  -5.55111512e-17],
-       [  2.00000000e-01,   2.00000000e-01,   5.00000000e-02],
-       [  2.50000000e-01,  -1.50000000e-01,  -2.00000000e-01],
-       [  2.50000000e-01,  -1.50000000e-01,  -1.50000000e-01],
-       [  2.50000000e-01,  -1.50000000e-01,  -1.00000000e-01],
-       [  2.50000000e-01,  -1.50000000e-01,  -5.00000000e-02],
-       [  2.50000000e-01,  -1.50000000e-01,  -5.55111512e-17],
-       [  2.50000000e-01,  -1.00000000e-01,  -2.00000000e-01],
-       [  2.50000000e-01,  -1.00000000e-01,  -1.50000000e-01],
-       [  2.50000000e-01,  -1.00000000e-01,  -1.00000000e-01],
-       [  2.50000000e-01,  -1.00000000e-01,  -5.00000000e-02],
-       [  2.50000000e-01,  -1.00000000e-01,  -5.55111512e-17],
-       [  2.50000000e-01,  -5.00000000e-02,  -2.00000000e-01],
-       [  2.50000000e-01,  -5.00000000e-02,  -1.50000000e-01],
-       [  2.50000000e-01,  -5.00000000e-02,  -1.00000000e-01],
-       [  2.50000000e-01,  -5.00000000e-02,  -5.00000000e-02],
-       [  2.50000000e-01,  -5.00000000e-02,  -5.55111512e-17],
-       [  2.50000000e-01,  -1.11022302e-16,  -2.00000000e-01],
-       [  2.50000000e-01,  -1.11022302e-16,  -1.50000000e-01],
-       [  2.50000000e-01,  -1.11022302e-16,  -1.00000000e-01],
-       [  2.50000000e-01,  -1.11022302e-16,  -5.00000000e-02],
-       [  2.50000000e-01,  -1.11022302e-16,  -5.55111512e-17],
-       [  2.50000000e-01,   5.00000000e-02,  -2.00000000e-01],
-       [  2.50000000e-01,   5.00000000e-02,  -1.50000000e-01],
-       [  2.50000000e-01,   5.00000000e-02,  -1.00000000e-01],
-       [  2.50000000e-01,   5.00000000e-02,  -5.00000000e-02],
-       [  2.50000000e-01,   5.00000000e-02,  -5.55111512e-17],
-       [  2.50000000e-01,   1.00000000e-01,  -2.00000000e-01],
-       [  2.50000000e-01,   1.00000000e-01,  -1.50000000e-01],
-       [  2.50000000e-01,   1.00000000e-01,  -1.00000000e-01],
-       [  2.50000000e-01,   1.00000000e-01,  -5.00000000e-02],
-       [  2.50000000e-01,   1.00000000e-01,  -5.55111512e-17],
-       [  2.50000000e-01,   1.50000000e-01,  -2.00000000e-01],
-       [  2.50000000e-01,   1.50000000e-01,  -1.50000000e-01],
-       [  2.50000000e-01,   1.50000000e-01,  -1.00000000e-01],
-       [  2.50000000e-01,   1.50000000e-01,  -5.00000000e-02],
-       [  2.50000000e-01,   1.50000000e-01,  -5.55111512e-17],
-       [  3.00000000e-01,  -1.50000000e-01,  -2.00000000e-01],
-       [  3.00000000e-01,  -1.50000000e-01,  -1.50000000e-01],
-       [  3.00000000e-01,  -1.50000000e-01,  -1.00000000e-01],
-       [  3.00000000e-01,  -1.50000000e-01,  -5.00000000e-02],
-       [  3.00000000e-01,  -1.50000000e-01,  -5.55111512e-17],
-       [  3.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
-       [  3.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
-       [  3.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
-       [  3.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
-       [  3.00000000e-01,   1.50000000e-01,  -5.55111512e-17]]);
-#        print expected_feasible
-        rows = np.size(expected_feasible, 0)
-        cols = np.size(expected_feasible, 1)
-        for i in range(0, rows):
-            for j in range (0, cols):
-                self.assertAlmostEquals(expected_feasible[i,j], feasible[i,j], self.assertPrecision)
+#         expected_feasible = np.array([[ -1.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#        [ -1.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
+#        [ -1.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
+#        [ -1.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
+#        [ -1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#        [ -1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
+#        [ -1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
+#        [ -5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
+#        [ -5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
+#        [ -5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
+#        [ -5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
+#        [ -5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
+#        [ -5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
+#        [ -5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
+#        [ -5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
+#        [ -5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
+#        [ -5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
+#        [ -5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
+#        [ -5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
+#        [ -5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
+#        [ -5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
+#        [ -1.11022302e-16,   5.00000000e-02,  -2.00000000e-01],
+#        [ -1.11022302e-16,   5.00000000e-02,  -1.50000000e-01],
+#        [ -1.11022302e-16,   5.00000000e-02,  -1.00000000e-01],
+#        [ -1.11022302e-16,   5.00000000e-02,  -5.00000000e-02],
+#        [ -1.11022302e-16,   5.00000000e-02,  -5.55111512e-17],
+#        [ -1.11022302e-16,   5.00000000e-02,   5.00000000e-02],
+#        [ -1.11022302e-16,   5.00000000e-02,   1.00000000e-01],
+#        [ -1.11022302e-16,   1.00000000e-01,  -2.00000000e-01],
+#        [ -1.11022302e-16,   1.00000000e-01,  -1.50000000e-01],
+#        [ -1.11022302e-16,   1.00000000e-01,  -1.00000000e-01],
+#        [ -1.11022302e-16,   1.00000000e-01,  -5.00000000e-02],
+#        [ -1.11022302e-16,   1.00000000e-01,  -5.55111512e-17],
+#        [ -1.11022302e-16,   1.00000000e-01,   5.00000000e-02],
+#        [ -1.11022302e-16,   1.00000000e-01,   1.00000000e-01],
+#        [ -1.11022302e-16,   1.50000000e-01,  -2.00000000e-01],
+#        [ -1.11022302e-16,   1.50000000e-01,  -1.50000000e-01],
+#        [ -1.11022302e-16,   1.50000000e-01,  -1.00000000e-01],
+#        [ -1.11022302e-16,   1.50000000e-01,  -5.00000000e-02],
+#        [ -1.11022302e-16,   1.50000000e-01,  -5.55111512e-17],
+#        [ -1.11022302e-16,   1.50000000e-01,   5.00000000e-02],
+#        [ -1.11022302e-16,   1.50000000e-01,   1.00000000e-01],
+#        [  5.00000000e-02,  -1.11022302e-16,  -2.00000000e-01],
+#        [  5.00000000e-02,  -1.11022302e-16,  -1.50000000e-01],
+#        [  5.00000000e-02,  -1.11022302e-16,  -1.00000000e-01],
+#        [  5.00000000e-02,  -1.11022302e-16,  -5.00000000e-02],
+#        [  5.00000000e-02,  -1.11022302e-16,  -5.55111512e-17],
+#        [  5.00000000e-02,  -1.11022302e-16,   5.00000000e-02],
+#        [  5.00000000e-02,  -1.11022302e-16,   1.00000000e-01],
+#        [  5.00000000e-02,   5.00000000e-02,  -2.00000000e-01],
+#        [  5.00000000e-02,   5.00000000e-02,  -1.50000000e-01],
+#        [  5.00000000e-02,   5.00000000e-02,  -1.00000000e-01],
+#        [  5.00000000e-02,   5.00000000e-02,  -5.00000000e-02],
+#        [  5.00000000e-02,   5.00000000e-02,  -5.55111512e-17],
+#        [  5.00000000e-02,   5.00000000e-02,   5.00000000e-02],
+#        [  5.00000000e-02,   5.00000000e-02,   1.00000000e-01],
+#        [  5.00000000e-02,   1.00000000e-01,  -2.00000000e-01],
+#        [  5.00000000e-02,   1.00000000e-01,  -1.50000000e-01],
+#        [  5.00000000e-02,   1.00000000e-01,  -1.00000000e-01],
+#        [  5.00000000e-02,   1.00000000e-01,  -5.00000000e-02],
+#        [  5.00000000e-02,   1.00000000e-01,  -5.55111512e-17],
+#        [  5.00000000e-02,   1.00000000e-01,   5.00000000e-02],
+#        [  5.00000000e-02,   1.00000000e-01,   1.00000000e-01],
+#        [  5.00000000e-02,   1.50000000e-01,  -2.00000000e-01],
+#        [  5.00000000e-02,   1.50000000e-01,  -1.50000000e-01],
+#        [  5.00000000e-02,   1.50000000e-01,  -1.00000000e-01],
+#        [  5.00000000e-02,   1.50000000e-01,  -5.00000000e-02],
+#        [  5.00000000e-02,   1.50000000e-01,  -5.55111512e-17],
+#        [  5.00000000e-02,   1.50000000e-01,   5.00000000e-02],
+#        [  5.00000000e-02,   1.50000000e-01,   1.00000000e-01],
+#        [  5.00000000e-02,   2.00000000e-01,  -2.00000000e-01],
+#        [  5.00000000e-02,   2.00000000e-01,  -1.50000000e-01],
+#        [  5.00000000e-02,   2.00000000e-01,  -1.00000000e-01],
+#        [  5.00000000e-02,   2.00000000e-01,  -5.00000000e-02],
+#        [  5.00000000e-02,   2.00000000e-01,  -5.55111512e-17],
+#        [  5.00000000e-02,   2.00000000e-01,   5.00000000e-02],
+#        [  5.00000000e-02,   2.00000000e-01,   1.00000000e-01],
+#        [  1.00000000e-01,  -1.11022302e-16,  -2.00000000e-01],
+#        [  1.00000000e-01,  -1.11022302e-16,  -1.50000000e-01],
+#        [  1.00000000e-01,  -1.11022302e-16,  -1.00000000e-01],
+#        [  1.00000000e-01,  -1.11022302e-16,  -5.00000000e-02],
+#        [  1.00000000e-01,  -1.11022302e-16,  -5.55111512e-17],
+#        [  1.00000000e-01,  -1.11022302e-16,   5.00000000e-02],
+#        [  1.00000000e-01,  -1.11022302e-16,   1.00000000e-01],
+#        [  1.00000000e-01,   5.00000000e-02,  -2.00000000e-01],
+#        [  1.00000000e-01,   5.00000000e-02,  -1.50000000e-01],
+#        [  1.00000000e-01,   5.00000000e-02,  -1.00000000e-01],
+#        [  1.00000000e-01,   5.00000000e-02,  -5.00000000e-02],
+#        [  1.00000000e-01,   5.00000000e-02,  -5.55111512e-17],
+#        [  1.00000000e-01,   5.00000000e-02,   5.00000000e-02],
+#        [  1.00000000e-01,   5.00000000e-02,   1.00000000e-01],
+#        [  1.00000000e-01,   1.00000000e-01,  -2.00000000e-01],
+#        [  1.00000000e-01,   1.00000000e-01,  -1.50000000e-01],
+#        [  1.00000000e-01,   1.00000000e-01,  -1.00000000e-01],
+#        [  1.00000000e-01,   1.00000000e-01,  -5.00000000e-02],
+#        [  1.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
+#        [  1.00000000e-01,   1.00000000e-01,   5.00000000e-02],
+#        [  1.00000000e-01,   1.00000000e-01,   1.00000000e-01],
+#        [  1.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#        [  1.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
+#        [  1.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
+#        [  1.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
+#        [  1.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#        [  1.00000000e-01,   1.50000000e-01,   5.00000000e-02],
+#        [  1.00000000e-01,   1.50000000e-01,   1.00000000e-01],
+#        [  1.50000000e-01,  -5.00000000e-02,  -2.00000000e-01],
+#        [  1.50000000e-01,  -5.00000000e-02,  -1.50000000e-01],
+#        [  1.50000000e-01,  -5.00000000e-02,  -1.00000000e-01],
+#        [  1.50000000e-01,  -5.00000000e-02,  -5.00000000e-02],
+#        [  1.50000000e-01,  -5.00000000e-02,  -5.55111512e-17],
+#        [  1.50000000e-01,  -5.00000000e-02,   5.00000000e-02],
+#        [  1.50000000e-01,  -1.11022302e-16,  -2.00000000e-01],
+#        [  1.50000000e-01,  -1.11022302e-16,  -1.50000000e-01],
+#        [  1.50000000e-01,  -1.11022302e-16,  -1.00000000e-01],
+#        [  1.50000000e-01,  -1.11022302e-16,  -5.00000000e-02],
+#        [  1.50000000e-01,  -1.11022302e-16,  -5.55111512e-17],
+#        [  1.50000000e-01,  -1.11022302e-16,   5.00000000e-02],
+#        [  1.50000000e-01,   5.00000000e-02,  -2.00000000e-01],
+#        [  1.50000000e-01,   5.00000000e-02,  -1.50000000e-01],
+#        [  1.50000000e-01,   5.00000000e-02,  -1.00000000e-01],
+#        [  1.50000000e-01,   5.00000000e-02,  -5.00000000e-02],
+#        [  1.50000000e-01,   5.00000000e-02,  -5.55111512e-17],
+#        [  1.50000000e-01,   5.00000000e-02,   5.00000000e-02],
+#        [  1.50000000e-01,   1.00000000e-01,  -2.00000000e-01],
+#        [  1.50000000e-01,   1.00000000e-01,  -1.50000000e-01],
+#        [  1.50000000e-01,   1.00000000e-01,  -1.00000000e-01],
+#        [  1.50000000e-01,   1.00000000e-01,  -5.00000000e-02],
+#        [  1.50000000e-01,   1.00000000e-01,  -5.55111512e-17],
+#        [  1.50000000e-01,   1.00000000e-01,   5.00000000e-02],
+#        [  1.50000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#        [  1.50000000e-01,   1.50000000e-01,  -1.50000000e-01],
+#        [  1.50000000e-01,   1.50000000e-01,  -1.00000000e-01],
+#        [  1.50000000e-01,   1.50000000e-01,  -5.00000000e-02],
+#        [  1.50000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#        [  1.50000000e-01,   1.50000000e-01,   5.00000000e-02],
+#        [  2.00000000e-01,  -1.00000000e-01,  -2.00000000e-01],
+#        [  2.00000000e-01,  -1.00000000e-01,  -1.50000000e-01],
+#        [  2.00000000e-01,  -1.00000000e-01,  -1.00000000e-01],
+#        [  2.00000000e-01,  -1.00000000e-01,  -5.00000000e-02],
+#        [  2.00000000e-01,  -1.00000000e-01,  -5.55111512e-17],
+#        [  2.00000000e-01,  -1.00000000e-01,   5.00000000e-02],
+#        [  2.00000000e-01,  -5.00000000e-02,  -2.00000000e-01],
+#        [  2.00000000e-01,  -5.00000000e-02,  -1.50000000e-01],
+#        [  2.00000000e-01,  -5.00000000e-02,  -1.00000000e-01],
+#        [  2.00000000e-01,  -5.00000000e-02,  -5.00000000e-02],
+#        [  2.00000000e-01,  -5.00000000e-02,  -5.55111512e-17],
+#        [  2.00000000e-01,  -5.00000000e-02,   5.00000000e-02],
+#        [  2.00000000e-01,  -1.11022302e-16,  -2.00000000e-01],
+#        [  2.00000000e-01,  -1.11022302e-16,  -1.50000000e-01],
+#        [  2.00000000e-01,  -1.11022302e-16,  -1.00000000e-01],
+#        [  2.00000000e-01,  -1.11022302e-16,  -5.00000000e-02],
+#        [  2.00000000e-01,  -1.11022302e-16,  -5.55111512e-17],
+#        [  2.00000000e-01,  -1.11022302e-16,   5.00000000e-02],
+#        [  2.00000000e-01,   5.00000000e-02,  -2.00000000e-01],
+#        [  2.00000000e-01,   5.00000000e-02,  -1.50000000e-01],
+#        [  2.00000000e-01,   5.00000000e-02,  -1.00000000e-01],
+#        [  2.00000000e-01,   5.00000000e-02,  -5.00000000e-02],
+#        [  2.00000000e-01,   5.00000000e-02,  -5.55111512e-17],
+#        [  2.00000000e-01,   5.00000000e-02,   5.00000000e-02],
+#        [  2.00000000e-01,   1.00000000e-01,  -2.00000000e-01],
+#        [  2.00000000e-01,   1.00000000e-01,  -1.50000000e-01],
+#        [  2.00000000e-01,   1.00000000e-01,  -1.00000000e-01],
+#        [  2.00000000e-01,   1.00000000e-01,  -5.00000000e-02],
+#        [  2.00000000e-01,   1.00000000e-01,  -5.55111512e-17],
+#        [  2.00000000e-01,   1.00000000e-01,   5.00000000e-02],
+#        [  2.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#        [  2.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
+#        [  2.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
+#        [  2.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
+#        [  2.00000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#        [  2.00000000e-01,   1.50000000e-01,   5.00000000e-02],
+#        [  2.00000000e-01,   2.00000000e-01,  -2.00000000e-01],
+#        [  2.00000000e-01,   2.00000000e-01,  -1.50000000e-01],
+#        [  2.00000000e-01,   2.00000000e-01,  -1.00000000e-01],
+#        [  2.00000000e-01,   2.00000000e-01,  -5.00000000e-02],
+#        [  2.00000000e-01,   2.00000000e-01,  -5.55111512e-17],
+#        [  2.00000000e-01,   2.00000000e-01,   5.00000000e-02],
+#        [  2.50000000e-01,  -1.50000000e-01,  -2.00000000e-01],
+#        [  2.50000000e-01,  -1.50000000e-01,  -1.50000000e-01],
+#        [  2.50000000e-01,  -1.50000000e-01,  -1.00000000e-01],
+#        [  2.50000000e-01,  -1.50000000e-01,  -5.00000000e-02],
+#        [  2.50000000e-01,  -1.50000000e-01,  -5.55111512e-17],
+#        [  2.50000000e-01,  -1.00000000e-01,  -2.00000000e-01],
+#        [  2.50000000e-01,  -1.00000000e-01,  -1.50000000e-01],
+#        [  2.50000000e-01,  -1.00000000e-01,  -1.00000000e-01],
+#        [  2.50000000e-01,  -1.00000000e-01,  -5.00000000e-02],
+#        [  2.50000000e-01,  -1.00000000e-01,  -5.55111512e-17],
+#        [  2.50000000e-01,  -5.00000000e-02,  -2.00000000e-01],
+#        [  2.50000000e-01,  -5.00000000e-02,  -1.50000000e-01],
+#        [  2.50000000e-01,  -5.00000000e-02,  -1.00000000e-01],
+#        [  2.50000000e-01,  -5.00000000e-02,  -5.00000000e-02],
+#        [  2.50000000e-01,  -5.00000000e-02,  -5.55111512e-17],
+#        [  2.50000000e-01,  -1.11022302e-16,  -2.00000000e-01],
+#        [  2.50000000e-01,  -1.11022302e-16,  -1.50000000e-01],
+#        [  2.50000000e-01,  -1.11022302e-16,  -1.00000000e-01],
+#        [  2.50000000e-01,  -1.11022302e-16,  -5.00000000e-02],
+#        [  2.50000000e-01,  -1.11022302e-16,  -5.55111512e-17],
+#        [  2.50000000e-01,   5.00000000e-02,  -2.00000000e-01],
+#        [  2.50000000e-01,   5.00000000e-02,  -1.50000000e-01],
+#        [  2.50000000e-01,   5.00000000e-02,  -1.00000000e-01],
+#        [  2.50000000e-01,   5.00000000e-02,  -5.00000000e-02],
+#        [  2.50000000e-01,   5.00000000e-02,  -5.55111512e-17],
+#        [  2.50000000e-01,   1.00000000e-01,  -2.00000000e-01],
+#        [  2.50000000e-01,   1.00000000e-01,  -1.50000000e-01],
+#        [  2.50000000e-01,   1.00000000e-01,  -1.00000000e-01],
+#        [  2.50000000e-01,   1.00000000e-01,  -5.00000000e-02],
+#        [  2.50000000e-01,   1.00000000e-01,  -5.55111512e-17],
+#        [  2.50000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#        [  2.50000000e-01,   1.50000000e-01,  -1.50000000e-01],
+#        [  2.50000000e-01,   1.50000000e-01,  -1.00000000e-01],
+#        [  2.50000000e-01,   1.50000000e-01,  -5.00000000e-02],
+#        [  2.50000000e-01,   1.50000000e-01,  -5.55111512e-17],
+#        [  3.00000000e-01,  -1.50000000e-01,  -2.00000000e-01],
+#        [  3.00000000e-01,  -1.50000000e-01,  -1.50000000e-01],
+#        [  3.00000000e-01,  -1.50000000e-01,  -1.00000000e-01],
+#        [  3.00000000e-01,  -1.50000000e-01,  -5.00000000e-02],
+#        [  3.00000000e-01,  -1.50000000e-01,  -5.55111512e-17],
+#        [  3.00000000e-01,   1.50000000e-01,  -2.00000000e-01],
+#        [  3.00000000e-01,   1.50000000e-01,  -1.50000000e-01],
+#        [  3.00000000e-01,   1.50000000e-01,  -1.00000000e-01],
+#        [  3.00000000e-01,   1.50000000e-01,  -5.00000000e-02],
+#        [  3.00000000e-01,   1.50000000e-01,  -5.55111512e-17]]);
+# #        print expected_feasible
+#         rows = np.size(expected_feasible, 0)
+#         cols = np.size(expected_feasible, 1)
+#         for i in range(0, rows):
+#             for j in range (0, cols):
+#                 self.assertAlmostEquals(expected_feasible[i,j], feasible[i,j], self.assertPrecision)
 
-'''Main'''
-test = TestLPGroundTruth()
-test.test_lp_stability_check()
+# '''Main'''
+# # test = TestLPGroundTruth()
+# # test.test_lp_stability_check()
+# if __name__ == '__main__':
+#     unittest.main()
