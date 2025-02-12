@@ -130,10 +130,8 @@ stanceLegs = [1,1,1,1]
 nc = np.sum(stanceLegs)
 stanceIndex = []
 swingIndex = []
-print 'stance', stanceLegs
 for iter in range(0, 4):
     if stanceLegs[iter] == 1:
-#               print 'new poly', stanceIndex, iter
         stanceIndex = np.hstack([stanceIndex, iter])
     else:
         swingIndex = iter
@@ -226,7 +224,6 @@ for com_x in range(lowel_lim, upper_lim, 10):
     colorText = ('color: (%4.2f,%4.2f,%4.2f)'%(colorVal[0],colorVal[1],colorVal[2]))
     idx += 1
     comWF = np.array([com_x/100.0, 0.0, 0.0])
-    print idx, com_x
     if idx <=2 or idx >= 6:
         h2 = plt.plot(comWF[0], comWF[1], color = colorVal, marker='s', markersize=15)
     else:

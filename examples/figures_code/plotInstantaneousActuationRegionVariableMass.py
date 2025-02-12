@@ -84,10 +84,8 @@ stanceLegs = [1,1,1,1]
 nc = np.sum(stanceLegs)
 stanceIndex = []
 swingIndex = []
-print 'stance', stanceLegs
 for iter in range(0, 4):
     if stanceLegs[iter] == 1:
-#               print 'new poly', stanceIndex, iter
         stanceIndex = np.hstack([stanceIndex, iter])
     else:
         swingIndex = iter

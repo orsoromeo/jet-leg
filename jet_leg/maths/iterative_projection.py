@@ -112,8 +112,6 @@ class IterativeProjection:
         random.seed(9001)        
         direction1 = np.vstack([random.uniform(-1,1),random.uniform(-1,1)])
         inner_vertex1, force1 = self.expand_direction(constraint_mode, mass, contactsNumber, contacts, com, normals, direction1)
-        print inner_vertex1
-        print direction1        
         c1 = np.dot(np.transpose(inner_vertex1), direction1)
         line1 = np.vstack([direction1, c1])
 
@@ -179,9 +177,6 @@ class IterativeProjection:
             if not isConstraintOk:
                 print 'something is wrong in the inequalities'
             else:
-                #print p
-                #print G,h
-                #print A,b
                 sol=solvers.lp(p, G, h, A, b)
                 x = sol['x']
                 status = sol['status']

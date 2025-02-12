@@ -124,7 +124,6 @@ def perform_statistics(number_of_tests, number_of_contacts, _constraint_mode):
         IP_points, actuation_polygons, comp_time = comp_dyn.iterative_projection_bretl(params)
         comp_time = comp_time * 1000.0
 
-        print comp_time
         computation_times[iter] = comp_time
     return computation_times
 
