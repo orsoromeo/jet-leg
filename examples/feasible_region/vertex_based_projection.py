@@ -195,17 +195,12 @@ class VertexBasedProjection():
             
         
         print np.size(w123_hull,1) 
-        print "pointsfZ"        
         print np.size(pointsfZ,1)      
         print np.size(pointsfZhull,1) 
-        
-        print "pointsfy"
         print np.size(pointsfY,1)
         print np.size(pointsfYhull,1) #
-        print "pointsfx"
         print np.size(pointsfX,1)
         print np.size(pointsfXhull,1) #
-        print "pointstZx"
         print np.size(pointstZ,1)
         print np.size(pointstZhull,1) #
         

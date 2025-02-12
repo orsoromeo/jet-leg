@@ -18,7 +18,6 @@ A = vstack([+eye(n), -eye(n)])
 b = ones(2 * n)
 C = ones(n).reshape((1, n))
 d = array([0])
-print A,b
 ineq = (A, b)  # A * x <= b
 eq = (C, d)    # C * x == d
 

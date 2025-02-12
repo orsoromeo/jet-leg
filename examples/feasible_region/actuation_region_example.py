@@ -71,7 +71,7 @@ stanceIndex = []
 swingIndex = []
 startingPointX = 0.0
 startingPointY = 0.0
-print 'stance', stanceLegs
+print('stance', stanceLegs)
 for iter in range(0, 4):
     if stanceLegs[iter] == 1:
         #               print 'new poly', stanceIndex, iter
@@ -110,7 +110,7 @@ params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(total_mass)
     
 for angle in np.arange(0.0, 0.5, 0.25):
-    print '===============> new search angle: ', angle
+    print('===============> new search angle: ', angle)
     startingPoint = np.array([startingPointX/float(number_of_contacts) + np.random.normal(0.0, 0.05), 
                               startingPointY/float(number_of_contacts) + np.random.normal(0.0, 0.05), 0.0])
     params.setCoMPosWF(startingPoint)
@@ -118,8 +118,6 @@ for angle in np.arange(0.0, 0.5, 0.25):
     newLimitPoint, stackedErrors, stackedPolygons = pathIP.find_vertex_along_path(params, desired_direction, tolerance)
     comTrajectoriesToStack = np.vstack([comTrajectoriesToStack, newLimitPoint])
 
-
-print 'Errors convergence: ', stackedErrors
 
 print("Actuation Region estimation time: --- %s seconds ---" % (time.time() - start_t_IPVC))
 

@@ -37,9 +37,7 @@ r3 = array([-10.0, -10.0, 0.0])
 r4 = array([-10.0, 10.0, 0.0])
 
 std_dev = np.sqrt(r1[0]*r1[0]+r1[1]*r1[1])/1000
-print ""
-print "standard dev:"
-print std_dev
+print("standard dev:", std_dev)
 noise = np.random.normal(0,std_dev,16)
 # I set the com coordinates to be in the bottom of the state array:
 # x = [f1_x, f1_y, f1_z, f2_x, f2_y, f2_z, ... , f4_x, f4_y, f4_z, com_x, com_y]
@@ -112,7 +110,6 @@ A1 = np.hstack((a1, a2, a3, a4))
 #A = np.hstack((A1,A2))
 A = A1
 t = vstack([-grav, zeros((3,1))]).reshape((6))
-print A, t
 eq = (A, t)  # A * x == t
 
 ## Definition of the inequality constraints
@@ -126,14 +123,12 @@ U = np.block([[np.transpose(u1), zeros((3,3)), zeros((3,3)), zeros((3,3))],
                [zeros((3,3)), np.transpose(u2), zeros((3,3)), zeros((3,3))],
                 [zeros((3,3)), zeros((3,3)), np.transpose(u3), zeros((3,3))],
                  [zeros((3,3)), zeros((3,3)), zeros((3,3)), np.transpose(u4)]])
-#print(u1)
 ### Setting up the linear inequality constraints
 ## Linearized friction cone:
 b1 = eye(3)-np.dot(n1,np.transpose(n1))
 b2 = eye(3)-np.dot(n2,np.transpose(n2))
 b3 = eye(3)-np.dot(n3,np.transpose(n3))
 b4 = eye(3)-np.dot(n4,np.transpose(n4))
-#print(b1)
 B = np.block([[b1, zeros((3,3)), zeros((3,3)), zeros((3,3))],
             [zeros((3,3)), b2, zeros((3,3)), zeros((3,3))],
              [zeros((3,3)), zeros((3,3)), b3, zeros((3,3))],
@@ -172,5 +167,4 @@ for j in range(0,len(vertices)):
     points.append([p[0],p[1]])
     #print points
 
-print points
 pypoman.plot_polygon(points)
