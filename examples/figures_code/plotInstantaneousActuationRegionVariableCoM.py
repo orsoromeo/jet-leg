@@ -52,7 +52,7 @@ def colorline(
     z = np.asarray(z)
 
     segments = make_segments(x, y)
-    lc = mcoll.LineCollection(segments, array=z, cmap=cmap, norm=norm,
+    lc = LineCollection(segments, array=z, cmap=cmap, norm=norm,
                               linewidth=linewidth, alpha=alpha)
 
     ax = plt.gca()

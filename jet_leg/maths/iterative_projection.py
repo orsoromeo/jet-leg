@@ -173,9 +173,8 @@ class IterativeProjection:
             G = np.hstack([np.zeros((np.size(G_force,0),2)), G_force])
             G = matrix(G)
 
-            #print G, h
             if not isConstraintOk:
-                print 'something is wrong in the inequalities'
+                print('something is wrong in the inequalities')
             else:
                 sol=solvers.lp(p, G, h, A, b)
                 x = sol['x']

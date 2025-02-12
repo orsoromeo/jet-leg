@@ -192,7 +192,6 @@ plot_time_range = max(maximum_time)
 
 print('max is', maximum_time)
 ''' plotting Iterative Projection points '''
-print 'producing plot'
 plotter = Plotter()
 
 ''' 2D figure '''
@@ -204,7 +203,6 @@ plt.ylabel("Y [m]")
 plt.plot([1,2,3])
 fig.suptitle('Computation times for ' + str(number_of_tests) + ' tests', fontsize=18)
 plt.subplot(321)
-#print tests
 plt.hist(onlyFrictionTests3contacts, color = "salmon", bins=np.arange(0,plot_time_range, plot_time_range/50))
 plt.xticks(np.arange(0, plot_time_range, plot_time_range/5))
 plt.yticks(np.arange(0, 400, 50))
