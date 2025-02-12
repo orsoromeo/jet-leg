@@ -60,9 +60,7 @@ stanceFeet = [1, 1, 1, 1]
 randomSwingLeg = random.randint(0, 3)
 tripleStance = False  # if you want you can define a swing leg using this variable
 if tripleStance:
-    print 'Swing leg', randomSwingLeg
     stanceFeet[randomSwingLeg] = 0
-print 'stanceLegs ', stanceFeet
 
 ''' now I define the normals to the surface of the contact points. By default they are all vertical now'''
 axisZ = array([[0.0], [0.0], [1.0]])
@@ -102,10 +100,6 @@ params.setFrictionCoefficient(mu)
 params.setNumberOfFrictionConesEdges(ng)
 params.setTotalMass(trunk_mass)
 params.externalForceWF = extForceW  # params.externalForceWF is actually used anywhere at the moment
-
-# print "Inequalities", comp_dyn.ineq
-# print "actuation polygons"
-# print actuation_polygons
 
 '''I now check whether the given CoM configuration is stable or not'''
 C, d, isIKoutOfWorkSpace, forcePolytopes = comp_dyn.constr.getInequalities(params)
